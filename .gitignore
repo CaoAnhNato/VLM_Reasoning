@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Data and large binaries
+data/
+datasets/
+*.tar.gz
+*.zip
+*.7z
+*.pth
+*.pt
+*.bin
+*.safetensors
+*.onnx
+
+# Temporary / Scratch
+scratch/
+.system_generated/
+.agents/scratch/
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs & wandb
+logs/
+*.log
+wandb/
+runs/
