@@ -110,14 +110,15 @@ def locate_dataset_files(data_dir: str) -> Tuple[str, str]:
             if matches:
                 anno_path = matches[0]
 
-    # Tìm thư mục ảnh
+    # Tìm thư mục ảnh (ưu tiên st_images được giải nén từ ViTextVQA_images.zip)
     candidates_img = [
-        data_dir,
+        os.path.join(data_dir, "st_images"),
         os.path.join(data_dir, "ViTextVQA_images"),
         os.path.join(data_dir, "vitextvqa_images"),
         os.path.join(data_dir, "images"),
         os.path.join(data_dir, "test_images"),
         os.path.join(data_dir, "train_images"),
+        data_dir,
     ]
     img_dir = data_dir
     found_img_dir = False
@@ -146,29 +147,61 @@ def load_vitextvqa_test_data(anno_path: str, img_dir: str, max_samples: Optional
 
     # raw_data có thể là dict hoặc list
     items = []
-    if isinstance(raw_data, list):
-        items = raw_data
-    elif isinstance(raw_data, dict):
-        if "data" in raw_data:
-            items = raw_data["data"]
-        elif "annotations" in raw_data:
+    image_map = {}
+
+    if isinstance(raw_data, dict):
+        # Trích xuất bảng ánh xạ id -> tên file ảnh nếu có danh sách "images" (chuẩn COCO)
+        if "images" in raw_data and isinstance(raw_data["images"], list):
+            for img_info in raw_data["images"]:
+                if isinstance(img_info, dict):
+                    iid = img_info.get("id") or img_info.get("image_id")
+                    fname = img_info.get("file_name") or img_info.get("filename") or img_info.get("image_path")
+                    if iid is not None and fname:
+                        image_map[str(iid)] = fname
+                        image_map[iid] = fname
+
+        if "annotations" in raw_data:
             items = raw_data["annotations"]
+        elif "data" in raw_data:
+            items = raw_data["data"]
         else:
             items = list(raw_data.values())
+    elif isinstance(raw_data, list):
+        items = raw_data
 
     samples = []
+    data_dir = os.path.dirname(img_dir)
+
     for item in items:
-        # Trích xuất image_path
-        img_name = item.get("image_path") or item.get("image") or item.get("filename") or item.get("image_id")
+        # Trích xuất tên file ảnh
+        img_name = item.get("image_path") or item.get("image") or item.get("filename") or item.get("file_name")
+        if not img_name and item.get("image_id") is not None:
+            img_name = image_map.get(str(item.get("image_id"))) or image_map.get(item.get("image_id")) or item.get("image_id")
         if not img_name:
             continue
+
         if isinstance(img_name, int) or (isinstance(img_name, str) and not img_name.endswith(('.jpg', '.png', '.jpeg'))):
             img_name = f"{img_name}.jpg"
 
         full_img_path = os.path.join(img_dir, os.path.basename(str(img_name)))
         if not os.path.exists(full_img_path):
+            # Thử các trường hợp padding số 0
+            base_no_ext = os.path.splitext(os.path.basename(str(img_name)))[0]
+            if base_no_ext.isdigit():
+                padded_cands = [
+                    f"{int(base_no_ext):012d}.jpg",
+                    f"{int(base_no_ext):06d}.jpg",
+                    f"{int(base_no_ext)}.jpg",
+                ]
+                for p in padded_cands:
+                    p_path = os.path.join(img_dir, p)
+                    if os.path.exists(p_path):
+                        full_img_path = p_path
+                        break
+
+        if not os.path.exists(full_img_path):
             # Thử tìm đệ quy nếu tên file không nằm ngay ngoài img_dir
-            found = glob.glob(os.path.join(img_dir, "**", os.path.basename(str(img_name))), recursive=True)
+            found = glob.glob(os.path.join(data_dir, "**", os.path.basename(str(img_name))), recursive=True)
             if found:
                 full_img_path = found[0]
 
@@ -191,6 +224,7 @@ def load_vitextvqa_test_data(anno_path: str, img_dir: str, max_samples: Optional
         samples = samples[:max_samples]
 
     print(f"[DATA] Đã nạp thành công {len(samples)} mẫu câu hỏi từ: {anno_path}")
+    print(f"[DATA] Thư mục ảnh đang sử dụng: {img_dir}")
     return samples
 
 # ==============================================================================
