@@ -127,11 +127,29 @@ tmux new -s benchmark
 
 ---
 
-## 3. CƠ CHẾ NỐI TIẾP KHI CẦN TẮT MÁY ẢO (RESUME FROM MODEL #3)
+## 3. CƠ CHẾ NỐI TIẾP KHI CẦN TẮT MÁY ẢO HOẶC BỊ NGẮT GIỮA CHỪNG
 
-> **Tình huống thực tế:** Bạn đang chạy được Model 1 và Model 2, nhưng có việc bận cần tắt máy ảo (để không bị tính tiền thuê theo giờ). Làm thế nào hôm sau tiếp tục từ Model 3 mà không phải chạy lại từ đầu?
+> **Hệ thống hỗ trợ 2 CẤP ĐỘ RESUME TUYỆT ĐỐI:**
+> 1. **Cấp độ Mô hình (Model-level Resume):** Chạy xong Model #1, #2 $\to$ Tự động nhảy sang Model #3.
+> 2. **Cấp độ Mẫu dữ liệu (Sample-level Resume):** Giả sử đang chạy dở Model #1 đến mẫu số **133** thì bị tắt máy $\to$ Lần chạy sau sẽ **đọc file kết quả cũ và chạy tiếp ngay từ mẫu 133**, không phải chạy lại từ mẫu số 0!
 
-### KỊCH BẢN XỬ LÝ 3 BƯỚC CHUẨN XÁC:
+---
+
+### TÌNH HUỐNG 1: ĐANG CHẠY DỞ MẪU (VÍ DỤ ĐANG CHẠY MẪU 133 CỦA MODEL #1)
+
+* **Cơ chế ghi tức thời (Real-time Streaming Flush):** Mỗi khi mô hình sinh xong câu trả lời cho 1 câu hỏi, script gọi ngay hàm `flush()` để ghi đĩa trực tiếp vào `results/predictions/<tên_model>_preds.jsonl`. Dù máy bị tắt đột ngột, toàn bộ các mẫu trước đó vẫn an toàn 100%.
+* **Khi bật máy chạy lại:**
+  ```bash
+  ./scripts/benchmark/run_all_benchmarks.sh
+  ```
+  Script sẽ tự động:
+  1. Quét file `results/predictions/<model>_preds.jsonl`, phát hiện đã có 133 mẫu hoàn thành.
+  2. Bỏ qua 133 mẫu đã có, **tiếp tục đánh giá từ mẫu thứ 134 (index 133, id ...)**.
+  3. Ghép nối kết quả cũ và mới, tính toán điểm số tổng hợp toàn diện (Accuracy/EM, F1) và cập nhật vào `summary.csv`.
+
+---
+
+### TÌNH HUỐNG 2: ĐÃ CHẠY XONG MODEL #1 VÀ #2, CẦN TẮT MÁY ĐỂ HÔM SAU CHẠY MODEL #3
 
 #### Bước A: Trước khi tắt máy ảo (Lưu kết quả lên GitHub)
 Ngay trên máy ảo hiện tại, chạy lệnh commit và đẩy thư mục `results/` lên GitHub:
@@ -140,7 +158,7 @@ git config --global user.name "Cao Anh"
 git config --global user.email "your_email@example.com"
 
 git add results/
-git commit -m "feat(benchmark): save results for model 1 and 2"
+git commit -m "feat(benchmark): save results for completed models and samples"
 git push origin main
 ```
 *Sau khi push thành công, bạn bấm **Destroy / Stop Instance** trên web Vast.ai để ngừng tính tiền.*
@@ -157,22 +175,21 @@ chmod +x scripts/benchmark/*.sh
 ./scripts/benchmark/setup_vastai.sh
 ./scripts/benchmark/download_dataset.sh hf_your_token_here
 ```
-*Lưu ý: Vì bạn đã push `results/` lên GitHub ở Bước A, nên khi `git clone`, thư mục `results/` trên máy mới đã có sẵn kết quả của Model 1 và Model 2!*
+*Lưu ý: Vì bạn đã push `results/` lên GitHub ở Bước A, nên khi `git clone`, thư mục `results/` trên máy mới đã có sẵn kết quả cũ!*
 
 ---
 
-#### Bước C: Kích hoạt chạy tiếp từ Model số 3
-
+#### Bước C: Kích hoạt chạy tiếp nối
 Bạn có 2 cách cực kỳ linh hoạt:
 
 * **Cách 1: Chạy tự động (Khuyên dùng - Auto Resume):**
   ```bash
   tmux new -s benchmark "./scripts/benchmark/run_all_benchmarks.sh"
   ```
-  👉 **Script thông minh sẽ tự động quét thư mục `results/predictions/`:**
-  - Thấy Model 1 (`Qwen2.5-VL-3B`) đã có kết quả $\to$ **Tự động BỎ QUA**.
-  - Thấy Model 2 (`Qwen2.5-VL-7B`) đã có kết quả $\to$ **Tự động BỎ QUA**.
-  - Thấy Model 3 (`Vintern-1B-v3.5`) chưa có $\to$ **Tự động BẮT ĐẦU CHẠY NGAY TỪ MODEL 3!**
+  👉 **Script thông minh sẽ tự động rà soát:**
+  - Model #1 (`Qwen2.5-VL-3B`) đã đủ 100% mẫu $\to$ **Tự động BỎ QUA trong 1 giây**.
+  - Model #2 (`Qwen2.5-VL-7B`) đã đủ 100% mẫu $\to$ **Tự động BỎ QUA trong 1 giây**.
+  - Model #3 (`Vintern-1B-v3.5`) chưa có hoặc chạy dở $\to$ **Tự động CHẠY NỐI TIẾP NGAY LẬP TỨC!**
 
 * **Cách 2: Chỉ định rõ ràng mốc bắt đầu bằng cờ lệnh:**
   ```bash
@@ -181,6 +198,9 @@ Bạn có 2 cách cực kỳ linh hoạt:
 
   # Hoặc chỉ chạy DUY NHẤT một model số 3
   ./scripts/benchmark/run_all_benchmarks.sh --only 3
+
+  # Nếu muốn ép chạy lại từ đầu (bỏ qua kết quả cũ)
+  ./scripts/benchmark/run_all_benchmarks.sh --force
   ```
 
 ---

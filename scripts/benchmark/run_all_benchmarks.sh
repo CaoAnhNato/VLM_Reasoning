@@ -101,16 +101,19 @@ for i in "${!MODELS[@]}"; do
         continue
     fi
 
-    # 3. Cơ chế AUTO-RESUME: Kiểm tra nếu mô hình đã có kết quả hoàn tất
-    if [ "$FORCE_RERUN" = false ] && [ -f "$PRED_FILE" ] && [ -s "$PRED_FILE" ]; then
+    # 3. Thông báo trạng thái checkpoint / resume nếu đã có dữ liệu trước đó
+    if [ -f "$PRED_FILE" ] && [ -s "$PRED_FILE" ]; then
         COUNT_PREDS=$(wc -l < "$PRED_FILE" | tr -d ' ')
         echo ""
         echo "----------------------------------------------------------------------"
-        echo "[RESUME - ĐÃ HOÀN TẤT TRƯỚC ĐÓ] Model #$MODEL_NUM: $MODEL_NAME"
-        echo "Đã có sẵn file kết quả ($COUNT_PREDS câu trả lời) tại: $PRED_FILE"
-        echo "Tự động nhảy sang model tiếp theo!"
+        echo "[RESUME CHECKPOINT] Model #$MODEL_NUM ($MODEL_NAME)"
+        echo "Đã ghi nhận $COUNT_PREDS mẫu dự đoán tại: $PRED_FILE"
+        if [ "$FORCE_RERUN" = true ]; then
+            echo "Chế độ --force: Sẽ ghi đè và đánh giá lại toàn bộ từ đầu!"
+        else
+            echo "Tiến trình sẽ tự động tiếp tục từ mẫu tiếp theo (hoặc bỏ qua nếu đã đủ 100%)."
+        fi
         echo "----------------------------------------------------------------------"
-        continue
     fi
 
     echo ""
@@ -122,7 +125,10 @@ for i in "${!MODELS[@]}"; do
 
     EXTRA_ARGS=""
     if [ -n "$MAX_SAMPLES" ]; then
-        EXTRA_ARGS="--max_samples $MAX_SAMPLES"
+        EXTRA_ARGS="$EXTRA_ARGS --max_samples $MAX_SAMPLES"
+    fi
+    if [ "$FORCE_RERUN" = true ]; then
+        EXTRA_ARGS="$EXTRA_ARGS --overwrite"
     fi
 
     python3 scripts/benchmark/evaluate_vitextvqa.py \

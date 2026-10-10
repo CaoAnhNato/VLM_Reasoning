@@ -7,18 +7,6 @@ Tối ưu VRAM 16GB, Unsloth Fast Inference, và giải phóng Disk Cache tuần
 """
 
 import argparse
-import gc
-import glob
-import json
-import os
-import re
-import shutil
-import string
-import sys
-import time
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import argparse
 import csv
 import gc
 import glob
@@ -29,7 +17,7 @@ import shutil
 import string
 import sys
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from PIL import Image
 import torch
@@ -381,6 +369,77 @@ class VLMRunner:
                 shutil.rmtree(target_path, ignore_errors=True)
 
 # ==============================================================================
+# HỖ TRỢ RESUMPTION CẤP DỮ LIỆU (SAMPLE-LEVEL CHECKPOINTING & RESUME)
+# ==============================================================================
+
+def load_existing_predictions(output_jsonl_path: Optional[str]) -> Tuple[List[Dict[str, Any]], Set[str]]:
+    """
+    Nạp các mẫu đã dự đoán từ trước trong file JSONL để resume chính xác từng mẫu.
+    Trả về:
+      - records: danh sách các bản ghi kết quả đã có.
+      - evaluated_keys: tập hợp các key (question_id + image_name) để kiểm tra trùng lặp.
+    """
+    if not output_jsonl_path or not os.path.exists(output_jsonl_path):
+        return [], set()
+
+    records = []
+    evaluated_keys = set()
+    try:
+        with open(output_jsonl_path, "r", encoding="utf-8") as f:
+            for line_no, line in enumerate(f, start=1):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    item = json.loads(line)
+                    records.append(item)
+                    key = f"{item.get('question_id')}_{item.get('image_name')}"
+                    evaluated_keys.add(key)
+                except Exception as e:
+                    print(f"[CẢNH BÁO] Không parse được dòng JSON #{line_no} trong {output_jsonl_path}: {e}")
+    except Exception as e:
+        print(f"[CẢNH BÁO] Lỗi khi đọc file kết quả cũ {output_jsonl_path}: {e}")
+
+    return records, evaluated_keys
+
+
+def update_summary_csv(summary_csv_path: str, row: Dict[str, Any]):
+    """
+    Ghi hoặc cập nhật dòng kết quả của mô hình vào bảng CSV tổng hợp (tránh ghi trùng lặp).
+    """
+    os.makedirs(os.path.dirname(summary_csv_path), exist_ok=True)
+    fieldnames = [
+        "model_name", "backend", "num_samples",
+        "full_f1", "full_em", "subset_100_f1", "subset_100_em",
+        "elapsed_seconds", "timestamp"
+    ]
+
+    rows = []
+    found = False
+    if os.path.exists(summary_csv_path):
+        try:
+            with open(summary_csv_path, "r", encoding="utf-8-sig") as csv_file:
+                reader = csv.DictReader(csv_file)
+                for r in reader:
+                    if r.get("model_name") == row["model_name"]:
+                        rows.append(row)
+                        found = True
+                    else:
+                        rows.append(r)
+        except Exception as e:
+            print(f"[CẢNH BÁO] Lỗi khi đọc CSV tổng hợp cũ: {e}")
+
+    if not found:
+        rows.append(row)
+
+    with open(summary_csv_path, "w", newline="", encoding="utf-8-sig") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow(r)
+
+
+# ==============================================================================
 # HÀM THỰC THI CHÍNH
 # ==============================================================================
 
@@ -396,6 +455,7 @@ def main():
     parser.add_argument("--output_jsonl", type=str, default=None, help="File lưu chi tiết kết quả dự đoán")
     parser.add_argument("--summary_csv", type=str, default="results/vitextvqa_benchmark_summary.csv", help="File tổng hợp điểm số")
     parser.add_argument("--no_evict_cache", action="store_true", help="Không xóa cache sau khi chạy xong")
+    parser.add_argument("--overwrite", action="store_true", help="Ghi đè lại từ đầu, không resume từ kết quả cũ")
     args = parser.parse_args()
 
     # 1. Định vị và nạp dữ liệu
@@ -411,87 +471,159 @@ def main():
         print("[LỖI] Không tìm thấy mẫu kiểm thử nào! Vui lòng kiểm tra lại đường dẫn dataset.")
         sys.exit(1)
 
-    # 2. Khởi tạo Runner mô hình
+    total_samples_target = len(samples)
+
+    # 2. Kiểm tra kết quả đã chạy trước đó (Sample-level Resumption Check)
+    existing_predictions = []
+    evaluated_keys = set()
+    if args.output_jsonl and os.path.exists(args.output_jsonl) and not args.overwrite:
+        existing_predictions, evaluated_keys = load_existing_predictions(args.output_jsonl)
+
+    # Lọc danh sách mẫu còn lại chưa chạy
+    remaining_samples = []
+    for idx, item in enumerate(samples):
+        key = f"{item.get('question_id')}_{item.get('image_name')}"
+        if key not in evaluated_keys or args.overwrite:
+            item_with_idx = dict(item)
+            item_with_idx["_global_index"] = idx
+            remaining_samples.append(item_with_idx)
+
+    num_already_done = total_samples_target - len(remaining_samples)
+
+    # Trường hợp 1: Tất cả các mẫu đã hoàn thành 100%
+    if len(remaining_samples) == 0:
+        print("\n==================================================================")
+        print(f" [RESUME - ĐÃ HOÀN TẤT 100%] Model: {args.model_name}")
+        print(f" File kết quả {args.output_jsonl} đã có đủ {len(existing_predictions)} / {total_samples_target} mẫu.")
+        print(f" Bỏ qua bước nạp trọng số và suy luận lại!")
+        print("==================================================================")
+
+        all_predictions = sorted(existing_predictions, key=lambda x: x.get("index", 0))
+        total_em = sum(p["exact_match"] for p in all_predictions)
+        total_f1 = sum(p["f1_score"] for p in all_predictions)
+        avg_em = (total_em / len(all_predictions)) * 100 if all_predictions else 0.0
+        avg_f1 = (total_f1 / len(all_predictions)) if all_predictions else 0.0
+
+        subset_100 = all_predictions[:100]
+        subset_100_em = (sum(p["exact_match"] for p in subset_100) / max(1, len(subset_100))) * 100
+        subset_100_f1 = (sum(p["f1_score"] for p in subset_100) / max(1, len(subset_100)))
+
+        print(f" Full Test Set F1:           {avg_f1:.2f}%")
+        print(f" Full Test Set Exact Match:  {avg_em:.2f}%")
+        print(f" Subset 100 samples F1:      {subset_100_f1:.2f}%")
+        print(f" Subset 100 samples EM:      {subset_100_em:.2f}%")
+        print("==================================================================")
+
+        if args.summary_csv:
+            update_summary_csv(args.summary_csv, {
+                "model_name": args.model_name,
+                "backend": args.backend,
+                "num_samples": len(all_predictions),
+                "full_f1": round(avg_f1, 2),
+                "full_em": round(avg_em, 2),
+                "subset_100_f1": round(subset_100_f1, 2),
+                "subset_100_em": round(subset_100_em, 2),
+                "elapsed_seconds": 0.0,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            })
+        return
+
+    # Trường hợp 2: Có mẫu chưa hoàn thành (Chạy mới hoặc tiếp tục từ mốc bị ngắt)
+    if num_already_done > 0:
+        first_rem = remaining_samples[0]
+        print("\n==================================================================")
+        print(f" [SAMPLE RESUME DETECTED] Tìm thấy tiến độ dở dang cho: {args.model_name}")
+        print(f" Đã hoàn thành trước đó:     {num_already_done} / {total_samples_target} mẫu")
+        print(f" Số mẫu cần chạy tiếp:        {len(remaining_samples)} mẫu")
+        print(f" Bắt đầu suy luận từ mẫu thứ: #{num_already_done + 1} (Dataset Index: {first_rem['_global_index']}, ID: {first_rem['question_id']})")
+        print("==================================================================")
+    else:
+        print(f"\n[INFERENCE] Bắt đầu đánh giá mới từ đầu trên {len(samples)} mẫu...")
+
+    # Khởi tạo Runner mô hình
     runner = VLMRunner(args.model_name, backend=args.backend, load_in_4bit=args.load_in_4bit)
 
-    # 3. Chạy suy luận và tính điểm
-    print(f"\n[INFERENCE] Bắt đầu đánh giá Zero-shot trên {len(samples)} mẫu...")
-    predictions = []
-    total_em = 0.0
-    total_f1 = 0.0
+    # Chuẩn bị file ghi streaming
+    out_f = None
+    if args.output_jsonl:
+        os.makedirs(os.path.dirname(args.output_jsonl), exist_ok=True)
+        file_mode = "w" if (args.overwrite or not os.path.exists(args.output_jsonl)) else "a"
+        out_f = open(args.output_jsonl, file_mode, encoding="utf-8")
+
+    new_predictions = []
     start_time = time.time()
 
-    for idx, item in enumerate(tqdm(samples, desc=f"Evaluating {args.model_name}")):
-        pred = runner.generate(item["image_path"], item["question"])
-        em = compute_exact_match(pred, item["ground_truths"])
-        f1 = compute_f1_score(pred, item["ground_truths"])
+    try:
+        desc_msg = f"Resuming {args.model_name}" if num_already_done > 0 else f"Evaluating {args.model_name}"
+        for item in tqdm(remaining_samples, desc=desc_msg):
+            pred = runner.generate(item["image_path"], item["question"])
+            em = compute_exact_match(pred, item["ground_truths"])
+            f1 = compute_f1_score(pred, item["ground_truths"])
 
-        total_em += em
-        total_f1 += f1
+            record = {
+                "index": item.get("_global_index", len(existing_predictions) + len(new_predictions)),
+                "question_id": item["question_id"],
+                "image_name": item["image_name"],
+                "question": item["question"],
+                "ground_truths": item["ground_truths"],
+                "prediction": pred,
+                "exact_match": em,
+                "f1_score": round(f1 * 100, 2)
+            }
+            new_predictions.append(record)
 
-        record = {
-            "index": idx,
-            "question_id": item["question_id"],
-            "image_name": item["image_name"],
-            "question": item["question"],
-            "ground_truths": item["ground_truths"],
-            "prediction": pred,
-            "exact_match": em,
-            "f1_score": round(f1 * 100, 2)
-        }
-        predictions.append(record)
+            # Ghi trực tiếp xuống đĩa và FLUSH NGAY LẬP TỨC để chống rớt tiến độ khi ngắt máy
+            if out_f is not None:
+                out_f.write(json.dumps(record, ensure_ascii=False) + "\n")
+                out_f.flush()
+    finally:
+        if out_f is not None:
+            out_f.close()
 
     elapsed_time = time.time() - start_time
-    avg_em = (total_em / len(samples)) * 100
-    avg_f1 = (total_f1 / len(samples)) * 100
 
-    # Tính điểm riêng cho 100 mẫu đầu tiên (để đối chiếu với Paper gốc Table 5.6)
-    subset_100_em = (sum(p["exact_match"] for p in predictions[:100]) / min(100, len(predictions))) * 100
-    subset_100_f1 = (sum(p["f1_score"] for p in predictions[:100]) / min(100, len(predictions)))
+    # Hợp nhất dữ liệu đã có và dữ liệu mới sinh
+    all_predictions = (existing_predictions if not args.overwrite else []) + new_predictions
+    all_predictions.sort(key=lambda x: x.get("index", 0))
+
+    total_em = sum(p["exact_match"] for p in all_predictions)
+    total_f1 = sum(p["f1_score"] for p in all_predictions)
+    avg_em = (total_em / len(all_predictions)) * 100 if all_predictions else 0.0
+    avg_f1 = (total_f1 / len(all_predictions)) if all_predictions else 0.0
+
+    # Tính điểm riêng cho 100 mẫu đầu tiên
+    subset_100 = all_predictions[:100]
+    subset_100_em = (sum(p["exact_match"] for p in subset_100) / max(1, len(subset_100))) * 100
+    subset_100_f1 = (sum(p["f1_score"] for p in subset_100) / max(1, len(subset_100)))
 
     print("\n==================================================================")
     print(f" KẾT QUẢ ZERO-SHOT BENCHMARK: {args.model_name}")
     print("==================================================================")
-    print(f" Tổng số mẫu đánh giá:      {len(samples)}")
-    print(f" Thời gian thực thi:         {elapsed_time:.2f} giây ({elapsed_time/len(samples):.3f}s / mẫu)")
+    print(f" Tổng số mẫu hoàn thành:    {len(all_predictions)} / {total_samples_target}")
+    print(f" Mẫu mới hoàn thành phiên này: {len(new_predictions)}")
+    print(f" Thời gian chạy phiên này:   {elapsed_time:.2f} giây")
     print(f" Full Test Set F1:           {avg_f1:.2f}%")
     print(f" Full Test Set Exact Match:  {avg_em:.2f}%")
     print(f" Subset 100 samples F1:      {subset_100_f1:.2f}% (Paper GPT-4o: 55.51%)")
     print(f" Subset 100 samples EM:      {subset_100_em:.2f}% (Paper GPT-4o: 25.00%)")
     print("==================================================================")
 
-    # 4. Lưu kết quả chi tiết
-    if args.output_jsonl:
-        os.makedirs(os.path.dirname(args.output_jsonl), exist_ok=True)
-        with open(args.output_jsonl, "w", encoding="utf-8") as f:
-            for pred in predictions:
-                f.write(json.dumps(pred, ensure_ascii=False) + "\n")
-        print(f"[SAVED] Đã lưu chi tiết từng câu hỏi tại: {args.output_jsonl}")
-
-    # 5. Cập nhật bảng tổng kết CSV
+    # Cập nhật bảng tổng kết CSV
     if args.summary_csv:
-        os.makedirs(os.path.dirname(args.summary_csv), exist_ok=True)
-        row = {
+        update_summary_csv(args.summary_csv, {
             "model_name": args.model_name,
             "backend": runner.actual_backend,
-            "num_samples": len(samples),
+            "num_samples": len(all_predictions),
             "full_f1": round(avg_f1, 2),
             "full_em": round(avg_em, 2),
             "subset_100_f1": round(subset_100_f1, 2),
             "subset_100_em": round(subset_100_em, 2),
             "elapsed_seconds": round(elapsed_time, 2),
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-        }
-        fieldnames = ["model_name", "backend", "num_samples", "full_f1", "full_em", "subset_100_f1", "subset_100_em", "elapsed_seconds", "timestamp"]
-        file_exists = os.path.exists(args.summary_csv)
-        with open(args.summary_csv, "a", newline="", encoding="utf-8-sig") as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-            if not file_exists:
-                writer.writeheader()
-            writer.writerow(row)
+        })
         print(f"[SAVED] Đã cập nhật bảng tổng kết tại: {args.summary_csv}")
 
-    # 6. Dọn dẹp cache
+    # Dọn dẹp cache trọng số
     runner.unload(evict_hf_cache=(not args.no_evict_cache))
 
 if __name__ == "__main__":
