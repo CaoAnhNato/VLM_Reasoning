@@ -63,8 +63,31 @@ print('>>> Tải dữ liệu qua Python API thành công!')
 "
 fi
 
+# ==============================================================================
+# TỰ ĐỘNG GIẢI NÉN FILE ẢNH (.ZIP) VÀ GIẢI PHÓNG BỘ NHỚ ĐỆM Ổ CỨNG
+# ==============================================================================
+for zip_file in "$OUTPUT_DIR"/*.zip; do
+    if [ -f "$zip_file" ]; then
+        echo ""
+        echo "======================================================================"
+        echo ">>> PHÁT HIỆN TỆP NÉN ẢNH: $(basename "$zip_file")"
+        echo ">>> ĐANG TIẾN HÀNH GIẢI NÉN VÀO: $OUTPUT_DIR..."
+        echo "======================================================================"
+        if command -v unzip &> /dev/null; then
+            unzip -q -o "$zip_file" -d "$OUTPUT_DIR"
+        else
+            python3 -c "import zipfile; zipfile.ZipFile('$zip_file').extractall('$OUTPUT_DIR')"
+        fi
+        echo "[THÀNH CÔNG] Đã giải nén hoàn tất $(basename "$zip_file")!"
+
+        echo ">>> Đang xóa tệp nén $(basename "$zip_file") để giải phóng 5.3GB bộ nhớ SSD..."
+        rm -f "$zip_file"
+        echo "[DỌN DẸP] Đã giải phóng dung lượng ổ đĩa thành công!"
+    fi
+done
+
 echo "======================================================================"
-echo ">>> TẢI DỮ LIỆU HOÀN TẤT THÀNH CÔNG!"
+echo ">>> DỮ LIỆU ĐÃ SẴN SÀNG ĐỂ BENCHMARK!"
 echo ">>> DANH SÁCH TỆP TRONG $OUTPUT_DIR:"
 echo "======================================================================"
 ls -lh "$OUTPUT_DIR"

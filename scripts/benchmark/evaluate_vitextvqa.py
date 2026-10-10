@@ -84,9 +84,14 @@ def compute_f1_score(prediction: str, ground_truths: List[str]) -> float:
 def locate_dataset_files(data_dir: str) -> Tuple[str, str]:
     """Tìm kiếm file test annotations và thư mục ảnh trong thư mục dataset."""
     candidates_anno = [
-        os.path.join(data_dir, "test.json"),
+        # Ưu tiên các file có ground truth (chứa đáp án chuẩn)
+        os.path.join(data_dir, "ViTextVQA_test_gt.json"),
+        os.path.join(data_dir, "vitextvqa_test_gt.json"),
+        os.path.join(data_dir, "test_gt.json"),
         os.path.join(data_dir, "test_annotations.json"),
+        os.path.join(data_dir, "ViTextVQA_test.json"),
         os.path.join(data_dir, "vitextvqa_test.json"),
+        os.path.join(data_dir, "test.json"),
         os.path.join(data_dir, "annotations", "test.json"),
     ]
     anno_path = None
@@ -96,23 +101,38 @@ def locate_dataset_files(data_dir: str) -> Tuple[str, str]:
             break
 
     if not anno_path:
-        # Tìm bất kỳ file json nào có chữ test
-        matches = glob.glob(os.path.join(data_dir, "**", "*test*.json"), recursive=True)
-        if matches:
-            anno_path = matches[0]
+        # Tìm các file có chữ test_gt trước, sau đó mới đến test
+        matches_gt = glob.glob(os.path.join(data_dir, "**", "*test*gt*.json"), recursive=True)
+        if matches_gt:
+            anno_path = matches_gt[0]
+        else:
+            matches = glob.glob(os.path.join(data_dir, "**", "*test*.json"), recursive=True)
+            if matches:
+                anno_path = matches[0]
 
     # Tìm thư mục ảnh
     candidates_img = [
         data_dir,
+        os.path.join(data_dir, "ViTextVQA_images"),
+        os.path.join(data_dir, "vitextvqa_images"),
         os.path.join(data_dir, "images"),
         os.path.join(data_dir, "test_images"),
         os.path.join(data_dir, "train_images"),
     ]
     img_dir = data_dir
+    found_img_dir = False
     for cand in candidates_img:
         if os.path.isdir(cand) and any(f.lower().endswith(('.jpg', '.jpeg', '.png')) for f in os.listdir(cand)):
             img_dir = cand
+            found_img_dir = True
             break
+
+    if not found_img_dir:
+        # Quét đệ quy tìm bất kỳ thư mục con nào chứa ảnh
+        for root, dirs, files in os.walk(data_dir):
+            if any(f.lower().endswith(('.jpg', '.jpeg', '.png')) for f in files):
+                img_dir = root
+                break
 
     return anno_path, img_dir
 
