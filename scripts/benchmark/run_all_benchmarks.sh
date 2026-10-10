@@ -1,13 +1,54 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # SCRIPT ĐIỀU PHỐI BENCHMARK TOÀN DIỆN 7 MÔ HÌNH VLM TRÊN ViTextVQA
-# Thực thi tuần tự, dọn dẹp cache sau mỗi model để tối ưu dung lượng ổ đĩa.
+# Hỗ trợ tự động RESUME (bỏ qua mô hình đã chạy), chạy từ model chỉ định,
+# và dọn dẹp cache tuần tự sau mỗi model để tối ưu dung lượng ổ đĩa.
 # ==============================================================================
 set -e
 
 DATA_DIR="data/vitextvqa"
 OUT_DIR="results"
-MAX_SAMPLES="${1:-}"  # Truyền số nguyên nếu muốn chạy test nhanh (ví dụ: ./run_all_benchmarks.sh 10)
+START_INDEX=1
+ONLY_INDEX=""
+MAX_SAMPLES=""
+FORCE_RERUN=false
+
+# Phân tích tham số dòng lệnh
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --start|--start-from)
+            START_INDEX="$2"
+            shift 2
+            ;;
+        --only)
+            ONLY_INDEX="$2"
+            shift 2
+            ;;
+        --max-samples)
+            MAX_SAMPLES="$2"
+            shift 2
+            ;;
+        --force)
+            FORCE_RERUN=true
+            shift
+            ;;
+        [0-9]*)
+            # Nếu người dùng truyền trực tiếp số, hiểu là max_samples (ví dụ: ./run_all_benchmarks.sh 10)
+            MAX_SAMPLES="$1"
+            shift
+            ;;
+        *)
+            echo "Tham số không hợp lệ: $1"
+            echo "Cách dùng:"
+            echo "  ./run_all_benchmarks.sh                  # Chạy tự động resume các model còn lại"
+            echo "  ./run_all_benchmarks.sh --start 3        # Bắt đầu chạy từ model số 3"
+            echo "  ./run_all_benchmarks.sh --only 3         # Chỉ chạy riêng model số 3"
+            echo "  ./run_all_benchmarks.sh 10               # Chạy thử 10 mẫu (smoke test)"
+            echo "  ./run_all_benchmarks.sh --force          # Chạy lại tất cả, ghi đè kết quả cũ"
+            exit 1
+            ;;
+    esac
+done
 
 if [ ! -d "$DATA_DIR" ]; then
     echo "======================================================================"
@@ -31,47 +72,77 @@ MODELS=(
     "CohereForAI/aya-vision-8b:native"
 )
 
-EXTRA_ARGS=""
-if [ -n "$MAX_SAMPLES" ]; then
-    EXTRA_ARGS="--max_samples $MAX_SAMPLES"
-    echo "[CHẾ ĐỘ THỬ NGHIỆM NHANH] Đang giới hạn đánh giá tối đa $MAX_SAMPLES mẫu mỗi model."
-fi
+TOTAL_MODELS=${#MODELS[@]}
 
 echo "======================================================================"
-echo " BẮT ĐẦU CHUỖI ĐÁNH GIÁ 7 MÔ HÌNH ZERO-SHOT TRÊN ViTextVQA"
-echo " Tổng số mô hình: ${#MODELS[@]}"
+echo " CHƯƠNG TRÌNH BENCHMARK 7 MÔ HÌNH VLM TRÊN ViTextVQA"
+echo " Tổng số mô hình: $TOTAL_MODELS"
 echo " Thư mục kết quả: $OUT_DIR"
+if [ -n "$MAX_SAMPLES" ]; then echo " Giới hạn số mẫu: $MAX_SAMPLES mẫu/model (Test nhanh)"; fi
+if [ -n "$ONLY_INDEX" ]; then echo " Chỉ định chạy: Model số $ONLY_INDEX"; fi
+if [ "$START_INDEX" -gt 1 ]; then echo " Bắt đầu từ: Model số $START_INDEX"; fi
 echo "======================================================================"
 
-for ENTRY in "${MODELS[@]}"; do
+for i in "${!MODELS[@]}"; do
+    MODEL_NUM=$((i + 1))
+    ENTRY="${MODELS[$i]}"
     IFS=":" read -r MODEL_NAME BACKEND <<< "$ENTRY"
     SAFE_NAME=$(echo "$MODEL_NAME" | tr '/' '_')
-    
+    PRED_FILE="$OUT_DIR/predictions/${SAFE_NAME}_preds.jsonl"
+
+    # 1. Kiểm tra nếu chỉ định chạy 1 model cụ thể
+    if [ -n "$ONLY_INDEX" ] && [ "$MODEL_NUM" -ne "$ONLY_INDEX" ]; then
+        continue
+    fi
+
+    # 2. Kiểm tra nếu chỉ định bắt đầu từ model số X
+    if [ -z "$ONLY_INDEX" ] && [ "$MODEL_NUM" -lt "$START_INDEX" ]; then
+        echo "[BỎ QUA] Model #$MODEL_NUM ($MODEL_NAME) nhỏ hơn mốc bắt đầu #$START_INDEX."
+        continue
+    fi
+
+    # 3. Cơ chế AUTO-RESUME: Kiểm tra nếu mô hình đã có kết quả hoàn tất
+    if [ "$FORCE_RERUN" = false ] && [ -f "$PRED_FILE" ] && [ -s "$PRED_FILE" ]; then
+        COUNT_PREDS=$(wc -l < "$PRED_FILE" | tr -d ' ')
+        echo ""
+        echo "----------------------------------------------------------------------"
+        echo "[RESUME - ĐÃ HOÀN TẤT TRƯỚC ĐÓ] Model #$MODEL_NUM: $MODEL_NAME"
+        echo "Đã có sẵn file kết quả ($COUNT_PREDS câu trả lời) tại: $PRED_FILE"
+        echo "Tự động nhảy sang model tiếp theo!"
+        echo "----------------------------------------------------------------------"
+        continue
+    fi
+
     echo ""
     echo "######################################################################"
-    echo ">>> TIẾN HÀNH ĐÁNH GIÁ: $MODEL_NAME"
+    echo ">>> ĐANG CHẠY MODEL #$MODEL_NUM / $TOTAL_MODELS: $MODEL_NAME"
     echo ">>> BACKEND: $BACKEND"
-    echo ">>> THỜI GIAN: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo ">>> BẮT ĐẦU: $(date '+%Y-%m-%d %H:%M:%S')"
     echo "######################################################################"
-    
+
+    EXTRA_ARGS=""
+    if [ -n "$MAX_SAMPLES" ]; then
+        EXTRA_ARGS="--max_samples $MAX_SAMPLES"
+    fi
+
     python3 scripts/benchmark/evaluate_vitextvqa.py \
         --model_name "$MODEL_NAME" \
         --backend "$BACKEND" \
         --data_dir "$DATA_DIR" \
         $EXTRA_ARGS \
-        --output_jsonl "$OUT_DIR/predictions/${SAFE_NAME}_preds.jsonl" \
+        --output_jsonl "$PRED_FILE" \
         --summary_csv "$OUT_DIR/vitextvqa_benchmark_summary.csv" \
         2>&1 | tee "$OUT_DIR/logs/${SAFE_NAME}.log"
-        
-    echo "[HOÀN THÀNH] Mô hình $MODEL_NAME đã đánh giá xong và giải phóng ổ đĩa!"
+
+    echo "[HOÀN THÀNH MODEL #$MODEL_NUM] Đã đánh giá xong $MODEL_NAME và giải phóng ổ đĩa!"
 done
 
 echo ""
 echo "======================================================================"
-echo ">>> TẤT CẢ 7 MÔ HÌNH ĐÃ HOÀN THÀNH BENCHMARK THÀNH CÔNG! <<<"
-echo ">>> BẢNG TỔNG KẾT ĐIỂM SỐ TẠI: $OUT_DIR/vitextvqa_benchmark_summary.csv"
+echo ">>> TIẾN TRÌNH BENCHMARK ĐÃ KẾT THÚC! <<<"
+echo ">>> BẢNG TỔNG HỢP ĐIỂM SỐ HIỆN TẠI TẠI: $OUT_DIR/vitextvqa_benchmark_summary.csv"
 echo "======================================================================"
 
 if [ -f "$OUT_DIR/vitextvqa_benchmark_summary.csv" ]; then
-    cat "$OUT_DIR/vitextvqa_benchmark_summary.csv"
+    column -s, -t < "$OUT_DIR/vitextvqa_benchmark_summary.csv" 2>/dev/null || cat "$OUT_DIR/vitextvqa_benchmark_summary.csv"
 fi
