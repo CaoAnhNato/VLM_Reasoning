@@ -10,7 +10,6 @@ DATA_DIR="data/vitextvqa"
 OUT_DIR="results"
 START_INDEX=1
 ONLY_INDEX=""
-MAX_SAMPLES=""
 FORCE_RERUN=false
 
 # Phân tích tham số dòng lệnh
@@ -24,27 +23,17 @@ while [[ $# -gt 0 ]]; do
             ONLY_INDEX="$2"
             shift 2
             ;;
-        --max-samples)
-            MAX_SAMPLES="$2"
-            shift 2
-            ;;
         --force)
             FORCE_RERUN=true
-            shift
-            ;;
-        [0-9]*)
-            # Nếu người dùng truyền trực tiếp số, hiểu là max_samples (ví dụ: ./run_all_benchmarks.sh 10)
-            MAX_SAMPLES="$1"
             shift
             ;;
         *)
             echo "Tham số không hợp lệ: $1"
             echo "Cách dùng:"
-            echo "  ./run_all_benchmarks.sh                  # Chạy tự động resume các model còn lại"
-            echo "  ./run_all_benchmarks.sh --start 3        # Bắt đầu chạy từ model số 3"
-            echo "  ./run_all_benchmarks.sh --only 3         # Chỉ chạy riêng model số 3"
-            echo "  ./run_all_benchmarks.sh 10               # Chạy thử 10 mẫu (smoke test)"
-            echo "  ./run_all_benchmarks.sh --force          # Chạy lại tất cả, ghi đè kết quả cũ"
+            echo "  ./run_all_benchmarks.sh                  # Chạy Full-testcase 100% toàn bộ 7 mô hình (tự động resume)"
+            echo "  ./run_all_benchmarks.sh --start 3        # Bắt đầu chạy Full-testcase từ model số 3"
+            echo "  ./run_all_benchmarks.sh --only 3         # Chỉ chạy Full-testcase riêng model số 3"
+            echo "  ./run_all_benchmarks.sh --force          # Chạy lại tất cả từ đầu, ghi đè kết quả cũ"
             exit 1
             ;;
     esac
@@ -76,9 +65,9 @@ TOTAL_MODELS=${#MODELS[@]}
 
 echo "======================================================================"
 echo " CHƯƠNG TRÌNH BENCHMARK 7 MÔ HÌNH VLM TRÊN ViTextVQA"
+echo " CHẾ ĐỘ THỰC THI: FULL-TESTCASE (100% Tập Test Set)"
 echo " Tổng số mô hình: $TOTAL_MODELS"
 echo " Thư mục kết quả: $OUT_DIR"
-if [ -n "$MAX_SAMPLES" ]; then echo " Giới hạn số mẫu: $MAX_SAMPLES mẫu/model (Test nhanh)"; fi
 if [ -n "$ONLY_INDEX" ]; then echo " Chỉ định chạy: Model số $ONLY_INDEX"; fi
 if [ "$START_INDEX" -gt 1 ]; then echo " Bắt đầu từ: Model số $START_INDEX"; fi
 echo "======================================================================"
@@ -124,11 +113,8 @@ for i in "${!MODELS[@]}"; do
     echo "######################################################################"
 
     EXTRA_ARGS=""
-    if [ -n "$MAX_SAMPLES" ]; then
-        EXTRA_ARGS="$EXTRA_ARGS --max_samples $MAX_SAMPLES"
-    fi
     if [ "$FORCE_RERUN" = true ]; then
-        EXTRA_ARGS="$EXTRA_ARGS --overwrite"
+        EXTRA_ARGS="--overwrite"
     fi
 
     python3 scripts/benchmark/evaluate_vitextvqa.py \

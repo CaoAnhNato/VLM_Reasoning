@@ -410,7 +410,7 @@ def update_summary_csv(summary_csv_path: str, row: Dict[str, Any]):
     os.makedirs(os.path.dirname(summary_csv_path), exist_ok=True)
     fieldnames = [
         "model_name", "backend", "num_samples",
-        "full_f1", "full_em", "subset_100_f1", "subset_100_em",
+        "full_f1", "full_em",
         "elapsed_seconds", "timestamp"
     ]
 
@@ -504,14 +504,8 @@ def main():
         avg_em = (total_em / len(all_predictions)) * 100 if all_predictions else 0.0
         avg_f1 = (total_f1 / len(all_predictions)) if all_predictions else 0.0
 
-        subset_100 = all_predictions[:100]
-        subset_100_em = (sum(p["exact_match"] for p in subset_100) / max(1, len(subset_100))) * 100
-        subset_100_f1 = (sum(p["f1_score"] for p in subset_100) / max(1, len(subset_100)))
-
         print(f" Full Test Set F1:           {avg_f1:.2f}%")
         print(f" Full Test Set Exact Match:  {avg_em:.2f}%")
-        print(f" Subset 100 samples F1:      {subset_100_f1:.2f}%")
-        print(f" Subset 100 samples EM:      {subset_100_em:.2f}%")
         print("==================================================================")
 
         if args.summary_csv:
@@ -521,8 +515,6 @@ def main():
                 "num_samples": len(all_predictions),
                 "full_f1": round(avg_f1, 2),
                 "full_em": round(avg_em, 2),
-                "subset_100_f1": round(subset_100_f1, 2),
-                "subset_100_em": round(subset_100_em, 2),
                 "elapsed_seconds": 0.0,
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
             })
@@ -591,11 +583,6 @@ def main():
     avg_em = (total_em / len(all_predictions)) * 100 if all_predictions else 0.0
     avg_f1 = (total_f1 / len(all_predictions)) if all_predictions else 0.0
 
-    # Tính điểm riêng cho 100 mẫu đầu tiên
-    subset_100 = all_predictions[:100]
-    subset_100_em = (sum(p["exact_match"] for p in subset_100) / max(1, len(subset_100))) * 100
-    subset_100_f1 = (sum(p["f1_score"] for p in subset_100) / max(1, len(subset_100)))
-
     print("\n==================================================================")
     print(f" KẾT QUẢ ZERO-SHOT BENCHMARK: {args.model_name}")
     print("==================================================================")
@@ -604,8 +591,6 @@ def main():
     print(f" Thời gian chạy phiên này:   {elapsed_time:.2f} giây")
     print(f" Full Test Set F1:           {avg_f1:.2f}%")
     print(f" Full Test Set Exact Match:  {avg_em:.2f}%")
-    print(f" Subset 100 samples F1:      {subset_100_f1:.2f}% (Paper GPT-4o: 55.51%)")
-    print(f" Subset 100 samples EM:      {subset_100_em:.2f}% (Paper GPT-4o: 25.00%)")
     print("==================================================================")
 
     # Cập nhật bảng tổng kết CSV
@@ -616,8 +601,6 @@ def main():
             "num_samples": len(all_predictions),
             "full_f1": round(avg_f1, 2),
             "full_em": round(avg_em, 2),
-            "subset_100_f1": round(subset_100_f1, 2),
-            "subset_100_em": round(subset_100_em, 2),
             "elapsed_seconds": round(elapsed_time, 2),
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         })

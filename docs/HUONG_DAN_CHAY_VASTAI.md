@@ -10,10 +10,10 @@
 [1. Thuê GPU Vast.ai] ➔ [2. SSH vào máy ảo] ➔ [3. Clone GitHub Repo]
         │
         ▼
-[4. Chạy setup_vastai.sh] ➔ [5. Tải Dataset qua HF Token] ➔ [6. Smoke Test (10 mẫu)]
+[4. Chạy setup_vastai.sh] ➔ [5. Tải Dataset qua HF Token] ➔ [6. Chạy Full Benchmark 100% bằng tmux]
         │
         ▼
-[7. Chạy Full Benchmark ngầm bằng tmux] ➔ [8. Đẩy kết quả lên GitHub & Tắt máy]
+[7. Đẩy kết quả lên GitHub & Tắt máy ảo]
 ```
 
 ---
@@ -84,34 +84,20 @@ Vì bạn đã được cấp quyền truy cập vào repo chính thức `minhqu
 # Truyền token trực tiếp vào script
 ./scripts/benchmark/download_dataset.sh hf_your_token_here
 ```
-*Tốc độ: Nhờ mạng 2000 Mbps của máy chủ Vast.ai, tệp dữ liệu 5.8GB sẽ tải xong trong khoảng **20 – 35 giây**!*
+*Tốc độ: Nhờ mạng 2000 Mbps của máy chủ Vast.ai, tệp dữ liệu 5.8GB sẽ tải xong trong khoảng **20 – 35 giây**!*  
+*(Script sử dụng công cụ `hf download` thế hệ mới của Hugging Face Hub, tự động dự phòng qua Python `snapshot_download` nếu cần).*
 
 ---
 
-### BƯỚC 6: CHẠY THỬ NGHIỆM NHANH (SMOKE TEST 10 MẪU)
+### BƯỚC 6: CHẠY FULL BENCHMARK 100% TESTCASE TRONG NỀN BẰNG `TMUX`
 
-Trước khi chạy toàn bộ tập dữ liệu, hãy chạy kiểm thử nhanh 10 mẫu để xác nhận ảnh nạp tốt, mô hình sinh câu trả lời mượt mà:
-
-```bash
-./scripts/benchmark/run_all_benchmarks.sh 10
-```
-
-Kiểm tra kết quả nhanh sau 1–2 phút:
-```bash
-cat results/vitextvqa_benchmark_summary.csv
-```
-
----
-
-### BƯỚC 7: CHẠY FULL BENCHMARK TRONG NỀN BẰNG `TMUX`
-
-Chạy toàn bộ 7 mô hình tuần tự trong phiên `tmux` để có thể yên tâm tắt máy tính cá nhân mà tiến trình không bị dừng:
+Chạy toàn bộ 7 mô hình tuần tự trên 100% tập dữ liệu kiểm thử (Full Test Set) trong phiên `tmux` để có thể yên tâm ngắt kết nối SSH mà tiến trình vẫn chạy liên tục:
 
 ```bash
 # 1. Tạo phiên làm việc ngầm
 tmux new -s benchmark
 
-# 2. Khởi chạy toàn bộ mô hình (Mặc định tự động bỏ qua các model đã hoàn tất)
+# 2. Khởi chạy Full-Testcase (Tự động resume nối tiếp nếu có kết quả dở dang trước đó)
 ./scripts/benchmark/run_all_benchmarks.sh
 ```
 
@@ -221,17 +207,17 @@ Bạn có 2 cách cực kỳ linh hoạt:
 
 ## 5. BẢNG MẪU ĐỐI CHIẾU KẾT QUẢ VỚI PAPER GỐC
 
-Sau khi hoàn thành, file `results/vitextvqa_benchmark_summary.csv` sẽ cho ra kết quả đối chiếu trực tiếp với mốc tham chiếu:
+Sau khi hoàn thành, file `results/vitextvqa_benchmark_summary.csv` sẽ cho ra kết quả đối chiếu trực tiếp trên 100% tập kiểm thử (Full Test Set):
 
-| Mô Hình | Quy mô | F1 (Full Test) | EM (Full Test) | F1 (100 mẫu) | EM (100 mẫu) | Ghi Chú Đối Chiếu |
-| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **GPT-4o (Paper gốc)** | - | - | - | **55.51%** | **25.00%** | *Bảng 5.6 paper ViTextVQA gốc* |
-| **Gemini-1.5-Flash (Paper)** | - | - | - | **57.75%** | **26.00%** | *Bảng 5.6 paper ViTextVQA gốc* |
-| **QwenVL-7B (Paper)** | 7B | - | - | **53.80%** | **28.00%** | *Bảng 5.6 paper ViTextVQA gốc* |
-| **Qwen2.5-VL-7B** | 7B | ... | ... | ... | ... | *Thực nghiệm mới của nhóm* |
-| **Qwen2.5-VL-3B** | 3B | ... | ... | ... | ... | *Thực nghiệm mới của nhóm* |
-| **Vintern-1B-v3.5** | 1B | ... | ... | ... | ... | *Thực nghiệm mới của nhóm* |
-| **Vintern-3B-beta** | 3B | ... | ... | ... | ... | *Thực nghiệm mới của nhóm* |
-| **EraX-VL-2B-V1.5** | 2B | ... | ... | ... | ... | *Thực nghiệm mới của nhóm* |
-| **EraX-VL-7B-V1.5** | 7B | ... | ... | ... | ... | *Thực nghiệm mới của nhóm* |
-| **Aya Vision 8B** | 8B | ... | ... | ... | ... | *Thực nghiệm mới của nhóm* |
+| Mô Hình | Quy mô | F1 (Full Test) | EM / Accuracy (Full Test) | Ghi Chú Đối Chiếu |
+| :--- | :---: | :---: | :---: | :--- |
+| **GPT-4o (Paper gốc)** | - | *55.51%\** | *25.00%\** | *Paper gốc chỉ đo 100 mẫu do giới hạn API chi phí* |
+| **Gemini-1.5-Flash (Paper)** | - | *57.75%\** | *26.00%\** | *Paper gốc chỉ đo 100 mẫu do giới hạn API chi phí* |
+| **QwenVL-7B (Paper)** | 7B | *53.80%\** | *28.00%\** | *Paper gốc chỉ đo 100 mẫu do giới hạn chi phí* |
+| **Qwen2.5-VL-7B** | 7B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
+| **Qwen2.5-VL-3B** | 3B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
+| **Vintern-1B-v3.5** | 1B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
+| **Vintern-3B-beta** | 3B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
+| **EraX-VL-2B-V1.5** | 2B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
+| **EraX-VL-7B-V1.5** | 7B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
+| **Aya Vision 8B** | 8B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
