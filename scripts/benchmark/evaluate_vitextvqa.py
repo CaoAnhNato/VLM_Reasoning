@@ -457,8 +457,27 @@ class VLMRunner:
                     **hf_kwargs
                 ).eval()
 
+            # [CRITICAL FIX] Khắc phục triệt để lỗi "got multiple values for keyword argument 'return_dict'"
+            # trên Vintern-3B-beta / InternVL khi chạy cùng transformers >= 4.45
+            import functools
+            if hasattr(self.model, "language_model") and hasattr(self.model.language_model, "generate"):
+                _orig_llm_gen = self.model.language_model.generate
+                @functools.wraps(_orig_llm_gen)
+                def _safe_llm_gen(*args, **kwargs):
+                    kwargs.pop("return_dict", None)
+                    return _orig_llm_gen(*args, **kwargs)
+                self.model.language_model.generate = _safe_llm_gen
+
+            if hasattr(self.model, "generate"):
+                _orig_model_gen = self.model.generate
+                @functools.wraps(_orig_model_gen)
+                def _safe_model_gen(*args, **kwargs):
+                    kwargs.pop("return_dict", None)
+                    return _orig_model_gen(*args, **kwargs)
+                self.model.generate = _safe_model_gen
+
             self.actual_backend = "vintern_native"
-            print("[SUCCESS] Đã nạp thành công Vintern!")
+            print("[SUCCESS] Đã nạp thành công Vintern (đã tích hợp safe return_dict patch)!")
             return
 
         # [3] Nạp các dòng VLM thông thường: Qwen2.5-VL, EraX-VL, Aya Vision
@@ -573,6 +592,7 @@ class VLMRunner:
         # 2. Cơ chế sinh cho Vintern (InternVL architecture)
         elif self.actual_backend == "vintern_native":
             generation_config = dict(max_new_tokens=64, do_sample=False)
+            generation_config.pop("return_dict", None)
             with torch.inference_mode():
                 # Tiền xử lý pixel_values chuẩn theo hướng dẫn của 5CD-AI Vintern (phù hợp max_dynamic_patch)
                 max_patch = getattr(getattr(self.model, "config", None), "max_dynamic_patch", 6)
