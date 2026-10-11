@@ -31,6 +31,15 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from PIL import Image
 try:
     import torch
+    # Tự động vá lỗi thiếu all_tied_weights_keys trên transformers >= 5.0 đối với các mô hình custom (InternVL, Vintern)
+    if hasattr(torch.nn.Module, "__getattr__") and not getattr(torch.nn.Module, "_all_tied_weights_patched", False):
+        _orig_nn_getattr = torch.nn.Module.__getattr__
+        def _safe_nn_getattr(self, name):
+            if name == "all_tied_weights_keys":
+                return self.__dict__.get("all_tied_weights_keys", getattr(self, "_tied_weights_keys", {}))
+            return _orig_nn_getattr(self, name)
+        torch.nn.Module.__getattr__ = _safe_nn_getattr
+        torch.nn.Module._all_tied_weights_patched = True
 except ImportError:
     torch = None
 from tqdm import tqdm
@@ -245,6 +254,86 @@ def load_vitextvqa_test_data(anno_path: str, img_dir: str, max_samples: Optional
     return samples
 
 # ==============================================================================
+# HÀM TIỀN XỬ LÝ ẢNH CHUYÊN BIỆT CHO VINTERN (5CD-AI / InternVL Architecture)
+# ==============================================================================
+
+def build_vintern_transform(input_size: int = 448):
+    """Tạo bộ chuẩn hóa ảnh ImageNet chuyên biệt cho Vintern."""
+    try:
+        import torchvision.transforms as T
+        from torchvision.transforms.functional import InterpolationMode
+        return T.Compose([
+            T.Lambda(lambda img: img.convert("RGB") if img.mode != "RGB" else img),
+            T.Resize((input_size, input_size), interpolation=InterpolationMode.BICUBIC),
+            T.ToTensor(),
+            T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+        ])
+    except Exception:
+        return None
+
+def find_closest_aspect_ratio(aspect_ratio, target_ratios, width, height, image_size):
+    best_ratio_diff = float("inf")
+    best_ratio = (1, 1)
+    area = width * height
+    for ratio in target_ratios:
+        target_aspect_ratio = ratio[0] / ratio[1]
+        ratio_diff = abs(aspect_ratio - target_aspect_ratio)
+        if ratio_diff < best_ratio_diff:
+            best_ratio_diff = ratio_diff
+            best_ratio = ratio
+        elif ratio_diff == best_ratio_diff:
+            if area > 0.5 * image_size * image_size * ratio[0] * ratio[1]:
+                best_ratio = ratio
+    return best_ratio
+
+def dynamic_preprocess_vintern(image: Image.Image, min_num: int = 1, max_num: int = 6, image_size: int = 448, use_thumbnail: bool = True):
+    """Chia nhỏ ảnh theo tỉ lệ động (dynamic patch) theo chuẩn InternVL2.5 / Vintern-1B-v3.5."""
+    orig_width, orig_height = image.size
+    aspect_ratio = orig_width / orig_height
+
+    target_ratios = set(
+        (i, j) for n in range(min_num, max_num + 1)
+        for i in range(1, n + 1) for j in range(1, n + 1)
+        if i * j <= max_num and i * j >= min_num
+    )
+    target_ratios = sorted(target_ratios, key=lambda x: x[0] * x[1])
+
+    target_aspect_ratio = find_closest_aspect_ratio(
+        aspect_ratio, target_ratios, orig_width, orig_height, image_size
+    )
+
+    target_width = image_size * target_aspect_ratio[0]
+    target_height = image_size * target_aspect_ratio[1]
+    blocks = target_aspect_ratio[0] * target_aspect_ratio[1]
+
+    resized_img = image.resize((target_width, target_height))
+    processed_images = []
+    for i in range(blocks):
+        box = (
+            (i % (target_width // image_size)) * image_size,
+            (i // (target_width // image_size)) * image_size,
+            ((i % (target_width // image_size)) + 1) * image_size,
+            ((i // (target_width // image_size)) + 1) * image_size
+        )
+        split_img = resized_img.crop(box)
+        processed_images.append(split_img)
+
+    if use_thumbnail and len(processed_images) != 1:
+        thumbnail_img = image.resize((image_size, image_size))
+        processed_images.append(thumbnail_img)
+    return processed_images
+
+def load_vintern_pixel_values(image: Image.Image, input_size: int = 448, max_num: int = 6):
+    """Chuyển đổi PIL Image sang pixel_values Tensor 4D/5D chuẩn hóa cho Vintern."""
+    transform = build_vintern_transform(input_size=input_size)
+    if transform is None or torch is None:
+        return None
+    images = dynamic_preprocess_vintern(image, min_num=1, max_num=max_num, image_size=input_size, use_thumbnail=True)
+    pixel_values = [transform(img) for img in images]
+    return torch.stack(pixel_values)
+
+
+# ==============================================================================
 # QUẢN LÝ MÔ HÌNH VLM VÀ INFERENCE ĐA KIẾN TRÚC
 # ==============================================================================
 
@@ -254,6 +343,7 @@ class VLMRunner:
         self.backend = backend
         self.load_in_4bit = load_in_4bit or ("4bit" in model_name.lower())
         self.hf_token = hf_token or os.environ.get("HF_TOKEN") or None
+        self.device = "cuda" if (torch and torch.cuda.is_available()) else "cpu"
         self.model = None
         self.processor = None
         self.tokenizer = None
@@ -299,14 +389,29 @@ class VLMRunner:
             from transformers import AutoModel, AutoTokenizer
             print("[INFO] Đang nạp Vintern qua Hugging Face AutoModel (bfloat16)...")
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
-            self.model = AutoModel.from_pretrained(
-                self.model_name,
-                torch_dtype=torch.bfloat16,
-                low_cpu_mem_usage=True,
-                trust_remote_code=True,
-                device_map="auto",
-                **hf_kwargs
-            ).eval()
+
+            # Khởi tạo mô hình Vintern: ưu tiên nạp trực tiếp lên CUDA theo khuyến nghị của 5CD-AI
+            # Tránh hoàn toàn lỗi 'AttributeError: all_tied_weights_keys' do accelerate infer_auto_device_map
+            try:
+                print(f"[INFO] Nạp Vintern trực tiếp lên thiết bị {self.device} (chuẩn khuyến nghị 5CD-AI)...")
+                self.model = AutoModel.from_pretrained(
+                    self.model_name,
+                    torch_dtype=torch.bfloat16,
+                    low_cpu_mem_usage=True,
+                    trust_remote_code=True,
+                    **hf_kwargs
+                ).eval().to(self.device)
+            except Exception as direct_err:
+                print(f"[WARN] Nạp trực tiếp lên {self.device} gặp lỗi: {direct_err}. Đang thử fallback với device_map='auto'...")
+                self.model = AutoModel.from_pretrained(
+                    self.model_name,
+                    torch_dtype=torch.bfloat16,
+                    low_cpu_mem_usage=True,
+                    trust_remote_code=True,
+                    device_map="auto",
+                    **hf_kwargs
+                ).eval()
+
             self.actual_backend = "vintern_native"
             print("[SUCCESS] Đã nạp thành công Vintern!")
             return
@@ -420,26 +525,46 @@ class VLMRunner:
             response = self.processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
             return response.strip()
 
-        # 2. Cơ chế sinh cho Vintern
+        # 2. Cơ chế sinh cho Vintern (InternVL architecture)
         elif self.actual_backend == "vintern_native":
             generation_config = dict(max_new_tokens=64, do_sample=False)
             with torch.inference_mode():
-                # Vintern hỗ trợ hàm chat trực tiếp
+                # Tiền xử lý pixel_values chuẩn theo hướng dẫn của 5CD-AI Vintern
+                pixel_values = None
                 try:
-                    response, _ = self.model.chat(
-                        self.tokenizer,
-                        image,
-                        prompt_text,
-                        generation_config,
-                        history=None,
-                        return_history=True
-                    )
+                    pixel_values = load_vintern_pixel_values(image, max_num=6)
+                    if pixel_values is not None:
+                        pixel_values = pixel_values.to(torch.bfloat16).to(self.device)
+                except Exception:
+                    pixel_values = None
+
+                try:
+                    if pixel_values is not None:
+                        response, _ = self.model.chat(
+                            self.tokenizer,
+                            pixel_values,
+                            prompt_text,
+                            generation_config,
+                            history=None,
+                            return_history=True
+                        )
+                    else:
+                        response, _ = self.model.chat(
+                            self.tokenizer,
+                            image,
+                            prompt_text,
+                            generation_config,
+                            history=None,
+                            return_history=True
+                        )
                     return response.strip()
                 except Exception:
-                    # Nếu model cần pixel_values chuẩn
-                    pixel_values = self.model.extract_feature(image) if hasattr(self.model, 'extract_feature') else None
-                    response = self.model.chat(self.tokenizer, pixel_values, prompt_text, generation_config)
-                    return response.strip()
+                    # Fallback cuối cùng nếu model.chat yêu cầu cú pháp khác
+                    try:
+                        response = self.model.chat(self.tokenizer, pixel_values, prompt_text, generation_config)
+                        return response.strip()
+                    except Exception:
+                        return ""
 
         # 3. Cơ chế sinh cho Transformers Native (Qwen2.5-VL, EraX, Aya Vision)
         else:

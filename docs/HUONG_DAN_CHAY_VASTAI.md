@@ -254,3 +254,21 @@ Sau khi hoàn thành, file `results/vitextvqa_benchmark_summary.csv` sẽ cho ra
 | **EraX-VL-2B-V1.5** | 2B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
 | **EraX-VL-7B-V1.5** | 7B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
 | **Aya Vision 8B** | 8B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
+
+---
+
+## 6. XỬ LÝ LỖI PHỔ BIẾN & TƯƠNG THÍCH MÔ HÌNH VLM
+
+### 6.1. Lỗi `AttributeError: 'InternVLChatModel' object has no attribute 'all_tied_weights_keys'` khi nạp Vintern
+* **Nguyên nhân:** Môi trường vô tình cài đặt phiên bản bleeding-edge `transformers >= 5.0.0`. Trong khi đó, các mô hình dùng mã nguồn tuỳ chỉnh (`trust_remote_code=True`) như Vintern (kiến trúc InternVL) được xây dựng trên chuẩn `transformers 4.x` nên không khởi tạo thuộc tính `all_tied_weights_keys` khi `accelerate` phân bổ device map.
+* **Cách khắc phục trên máy ảo Vast.ai đang chạy:**
+  1. Cập nhật mã nguồn mới nhất:
+     ```bash
+     git pull origin main
+     ```
+  2. Hạ phiên bản `transformers` về nhánh 4.x ổn định (khuyên dùng `4.49.0`):
+     ```bash
+     pip install --no-cache-dir "transformers>=4.45.0,<5.0.0"
+     ```
+  3. Chạy lại benchmark bình thường, hệ thống đã tích hợp sẵn cơ chế **tự phục hồi (self-healing monkeypatch)** và nạp trực tiếp lên CUDA theo khuyến nghị của nhóm tác giả 5CD-AI.
+

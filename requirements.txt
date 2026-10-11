@@ -11,3 +11,6 @@ latex2mathml>=3.81.0
 huggingface-hub>=2.2.0
 psutil>=7.0.0
 pillow>=11.0.0
+transformers>=4.45.0,<5.0.0
+accelerate>=0.34.0
+torchvision

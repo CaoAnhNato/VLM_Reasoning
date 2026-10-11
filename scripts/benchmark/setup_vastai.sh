@@ -32,10 +32,11 @@ echo "=== [3/4] Cài đặt các thư viện bổ trợ cho VLM & Benchmark ==="
 python3 -m pip install --upgrade pip
 pip install --no-cache-dir \
     "huggingface_hub[cli,hf_xet]" hf hf-xet \
-    transformers>=4.45.0 \
+    "transformers>=4.45.0,<5.0.0" \
     accelerate>=0.34.0 \
     bitsandbytes>=0.43.0 \
     qwen-vl-utils \
+    torchvision \
     timm \
     einops \
     sentencepiece \
