@@ -418,7 +418,10 @@ class VLMRunner:
                 config_utils.PretrainedConfig.to_diff_dict = _safe_diff_dict
 
             print("[INFO] Đang nạp Vintern qua Hugging Face AutoModel (bfloat16)...")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
+            try:
+                self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, use_fast=False, **hf_kwargs)
+            except Exception:
+                self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
 
             # Nạp trước config an toàn
             config = None
@@ -571,42 +574,57 @@ class VLMRunner:
         elif self.actual_backend == "vintern_native":
             generation_config = dict(max_new_tokens=64, do_sample=False)
             with torch.inference_mode():
-                # Tiền xử lý pixel_values chuẩn theo hướng dẫn của 5CD-AI Vintern
+                # Tiền xử lý pixel_values chuẩn theo hướng dẫn của 5CD-AI Vintern (phù hợp max_dynamic_patch)
+                max_patch = getattr(getattr(self.model, "config", None), "max_dynamic_patch", 6)
                 pixel_values = None
                 try:
-                    pixel_values = load_vintern_pixel_values(image, max_num=6)
+                    pixel_values = load_vintern_pixel_values(image, max_num=max_patch)
                     if pixel_values is not None:
                         pixel_values = pixel_values.to(torch.bfloat16).to(self.device)
-                except Exception:
+                except Exception as pv_err:
+                    print(f"[WARN] Tiền xử lý pixel_values Vintern gặp lỗi: {pv_err}")
                     pixel_values = None
 
+                # Đảm bảo prompt có token <image>\n theo chuẩn InternVL
+                vintern_prompt = prompt_text if "<image>" in prompt_text else f"<image>\n{prompt_text}"
+                image_input = pixel_values if pixel_values is not None else image
+
                 try:
-                    if pixel_values is not None:
-                        response, _ = self.model.chat(
-                            self.tokenizer,
-                            pixel_values,
-                            prompt_text,
-                            generation_config,
-                            history=None,
-                            return_history=True
-                        )
-                    else:
-                        response, _ = self.model.chat(
-                            self.tokenizer,
-                            image,
-                            prompt_text,
-                            generation_config,
-                            history=None,
-                            return_history=True
-                        )
-                    return response.strip()
-                except Exception:
-                    # Fallback cuối cùng nếu model.chat yêu cầu cú pháp khác
+                    # Gọi chuẩn khuyến nghị từ tác giả (return_history=False, trả về chuỗi str)
+                    res = self.model.chat(
+                        self.tokenizer,
+                        image_input,
+                        vintern_prompt,
+                        generation_config,
+                        history=None,
+                        return_history=False
+                    )
+                    response = res[0] if isinstance(res, (tuple, list)) else res
+                    return str(response).strip()
+                except Exception as chat_err:
+                    print(f"[WARN] Vintern model.chat (return_history=False) gặp lỗi: {chat_err}. Thử fallback return_history=True...")
                     try:
-                        response = self.model.chat(self.tokenizer, pixel_values, prompt_text, generation_config)
-                        return response.strip()
-                    except Exception:
-                        return ""
+                        # Fallback 1: Thử với return_history=True
+                        res = self.model.chat(
+                            self.tokenizer,
+                            image_input,
+                            vintern_prompt,
+                            generation_config,
+                            history=None,
+                            return_history=True
+                        )
+                        response = res[0] if isinstance(res, (tuple, list)) else res
+                        return str(response).strip()
+                    except Exception as fb1_err:
+                        print(f"[WARN] Vintern fallback 1 gặp lỗi: {fb1_err}. Thử fallback gọi 4 tham số...")
+                        try:
+                            # Fallback 2: Thử gọi tối giản 4 tham số
+                            res = self.model.chat(self.tokenizer, image_input, vintern_prompt, generation_config)
+                            response = res[0] if isinstance(res, (tuple, list)) else res
+                            return str(response).strip()
+                        except Exception as fb2_err:
+                            print(f"[ERROR] Tất cả các phương thức sinh Vintern đều thất bại: {fb2_err}")
+                            return ""
 
         # 3. Cơ chế sinh cho Transformers Native (Qwen2.5-VL, EraX, Aya Vision)
         else:
