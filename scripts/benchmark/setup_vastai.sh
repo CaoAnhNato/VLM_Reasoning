@@ -32,6 +32,7 @@ echo "=== [3/4] Cài đặt các thư viện bổ trợ cho VLM & Benchmark ==="
 python3 -m pip install --upgrade pip
 pip install --no-cache-dir \
     "huggingface_hub[cli]" hf \
+    hf_transfer \
     transformers>=4.45.0 \
     accelerate>=0.34.0 \
     bitsandbytes>=0.43.0 \
@@ -50,6 +51,14 @@ pip install --no-deps "unsloth[cu124-torch240] @ git+https://github.com/unslotha
     echo "[GHI CHÚ] Unsloth không tương thích hoặc chưa có bản dựng cho kiến trúc GPU này. Hệ thống sẽ tự động dùng Hugging Face Transformers Native Fallback (bfloat16) ổn định 100%."
 }
 
+# Đăng nhập Hugging Face nếu có truyền token
+HF_TOKEN_ARG="${1:-}"
+if [ -n "$HF_TOKEN_ARG" ]; then
+    echo "=== Xác thực Hugging Face Hub CLI với Token ==="
+    huggingface-cli login --token "$HF_TOKEN_ARG" || true
+fi
+
 echo "=================================================================="
 echo ">>> THIẾT LẬP MÔI TRƯỜNG HOÀN TẤT TRONG CHƯA ĐẦY 1 PHÚT! <<<"
 echo "=================================================================="
+

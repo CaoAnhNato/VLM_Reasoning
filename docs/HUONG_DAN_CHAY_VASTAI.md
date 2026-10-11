@@ -65,10 +65,14 @@ chmod +x scripts/benchmark/*.sh
 
 ### BƯỚC 4: THIẾT LẬP MÔI TRƯỜNG TỰ ĐỘNG
 
-Chạy script cài đặt các thư viện bổ trợ (Hugging Face CLI, Unsloth, Transformers, accelerate...):
+Chạy script cài đặt các thư viện bổ trợ (Hugging Face CLI, Unsloth, Transformers, accelerate, hf_transfer...):
 
 ```bash
-./scripts/benchmark/setup_vastai.sh
+# Truyền kèm Hugging Face Token để đăng nhập CLI ngay từ đầu
+./scripts/benchmark/setup_vastai.sh hf_your_token_here
+
+# Hoặc thiết lập biến môi trường toàn cục (khuyên dùng):
+export HF_TOKEN="hf_your_token_here"
 ```
 *Lưu ý: Script sẽ tự phát hiện PyTorch CUDA có sẵn trong container và chỉ mất khoảng **30 – 45 giây** để hoàn tất toàn bộ.*
 
@@ -81,7 +85,7 @@ Vì bạn đã được cấp quyền truy cập vào repo chính thức `minhqu
 2. Chạy lệnh tải dữ liệu:
 
 ```bash
-# Truyền token trực tiếp vào script
+# Truyền token trực tiếp vào script (hoặc tự nhận từ biến $HF_TOKEN)
 ./scripts/benchmark/download_dataset.sh hf_your_token_here
 ```
 *Tốc độ: Nhờ mạng 2000 Mbps của máy chủ Vast.ai, tệp dữ liệu 5.8GB sẽ tải xong trong khoảng **20 – 35 giây**!*  
@@ -100,11 +104,11 @@ Trước khi chạy full 10.028 mẫu, bạn nên chạy chế độ profiling t
 Lệnh thực thi nhanh (chỉ mất ~2 - 3 phút cho mỗi model):
 
 ```bash
-# Chạy profiling 100 mẫu cho toàn bộ 7 mô hình
-./scripts/benchmark/run_all_benchmarks.sh --profile 100
+# Chạy profiling 100 mẫu cho toàn bộ 7 mô hình kèm HF Token
+./scripts/benchmark/run_all_benchmarks.sh --profile 100 --hf_token hf_your_token_here
 
 # Hoặc chỉ chạy profiling riêng mô hình số 1 (Qwen2.5-VL-3B-Instruct)
-./scripts/benchmark/run_all_benchmarks.sh --profile 100 --only 1
+./scripts/benchmark/run_all_benchmarks.sh --profile 100 --only 1 --hf_token hf_your_token_here
 ```
 
 *Kết quả profiling được lưu độc lập, không ảnh hưởng đến benchmark chính:*
@@ -123,7 +127,7 @@ Chạy toàn bộ 7 mô hình tuần tự trên 100% tập dữ liệu kiểm th
 tmux new -s benchmark
 
 # 2. Khởi chạy Full-Testcase (Tự động resume nối tiếp nếu có kết quả dở dang trước đó)
-./scripts/benchmark/run_all_benchmarks.sh
+./scripts/benchmark/run_all_benchmarks.sh --hf_token hf_your_token_here
 ```
 
 * **Thoát ra ngoài màn hình chính (Detach tmux):** Nhấn tổ hợp phím `Ctrl + B`, thả tay ra rồi nhấn phím `D`.

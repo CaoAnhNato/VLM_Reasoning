@@ -249,10 +249,11 @@ def load_vitextvqa_test_data(anno_path: str, img_dir: str, max_samples: Optional
 # ==============================================================================
 
 class VLMRunner:
-    def __init__(self, model_name: str, backend: str = "auto", load_in_4bit: bool = False):
+    def __init__(self, model_name: str, backend: str = "auto", load_in_4bit: bool = False, hf_token: Optional[str] = None):
         self.model_name = model_name
         self.backend = backend
         self.load_in_4bit = load_in_4bit or ("4bit" in model_name.lower())
+        self.hf_token = hf_token or os.environ.get("HF_TOKEN") or None
         self.model = None
         self.processor = None
         self.tokenizer = None
@@ -263,7 +264,11 @@ class VLMRunner:
         print(f"\n=======================================================")
         print(f" ĐANG NẠP MÔ HÌNH: {self.model_name}")
         print(f" Yêu cầu Backend: {self.backend}")
+        if self.hf_token:
+            print("[INFO] Đang sử dụng Hugging Face Access Token để nạp mô hình.")
         print(f"=======================================================")
+
+        hf_kwargs = {"token": self.hf_token} if self.hf_token else {}
 
         # [1] Thử nghiệm nạp qua Unsloth nếu mô hình được Unsloth hỗ trợ và yêu cầu backend phù hợp
         is_unsloth_supported = (
@@ -280,6 +285,7 @@ class VLMRunner:
                     self.model_name,
                     load_in_4bit=load_4bit,
                     use_gradient_checkpointing="unsloth",
+                    **hf_kwargs
                 )
                 FastVisionModel.for_inference(self.model)
                 self.actual_backend = "unsloth"
@@ -292,13 +298,14 @@ class VLMRunner:
         if "vintern" in self.model_name.lower():
             from transformers import AutoModel, AutoTokenizer
             print("[INFO] Đang nạp Vintern qua Hugging Face AutoModel (bfloat16)...")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
             self.model = AutoModel.from_pretrained(
                 self.model_name,
                 torch_dtype=torch.bfloat16,
                 low_cpu_mem_usage=True,
                 trust_remote_code=True,
-                device_map="auto"
+                device_map="auto",
+                **hf_kwargs
             ).eval()
             self.actual_backend = "vintern_native"
             print("[SUCCESS] Đã nạp thành công Vintern!")
@@ -310,12 +317,12 @@ class VLMRunner:
 
         print("[INFO] Đang nạp qua Hugging Face Transformers Native (bfloat16)...")
         try:
-            self.processor = AutoProcessor.from_pretrained(self.model_name, trust_remote_code=True)
+            self.processor = AutoProcessor.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
         except Exception as e:
             # Fallback sang AutoTokenizer nếu Processor chuyên biệt chưa tải được
             from transformers import AutoTokenizer
             try:
-                self.processor = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
+                self.processor = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
             except Exception as tok_err:
                 # Kiểm tra lỗi gated repo đối với Aya Vision
                 if ("aya-vision" in self.model_name.lower()) and ("unsloth" not in self.model_name.lower()):
@@ -348,7 +355,8 @@ class VLMRunner:
                     self.model_name,
                     torch_dtype=torch.bfloat16,
                     trust_remote_code=True,
-                    device_map="auto"
+                    device_map="auto",
+                    **hf_kwargs
                 ).eval()
                 model_loaded = True
                 print(f"[SUCCESS] Đã nạp thành công bằng class {cls_name}!")
@@ -630,7 +638,22 @@ def main():
     parser.add_argument("--profile", type=int, default=None, help="Kích hoạt chế độ profiling tốc độ và tài nguyên (ví dụ: --profile 100)")
     parser.add_argument("--profile_csv", type=str, default="results/profiling_summary.csv", help="File tổng hợp thông số profiling")
     parser.add_argument("--hourly_rate", type=float, default=0.21, help="Chi phí thuê GPU trên Vast.ai ($/giờ) để ngoại suy chi phí")
+    parser.add_argument("--hf_token", "--token", dest="hf_token", type=str, default=None,
+                        help="Hugging Face Access Token (hoặc tự động nhận từ biến môi trường HF_TOKEN)")
     args = parser.parse_args()
+
+    # 0. Thiết lập Hugging Face Token & Xác thực Hub
+    hf_token = args.hf_token or os.environ.get("HF_TOKEN") or None
+    if hf_token:
+        os.environ["HF_TOKEN"] = hf_token
+        try:
+            from huggingface_hub import login
+            login(token=hf_token, add_to_git_credential=False)
+            print("[AUTH] Đã kích hoạt xác thực Hugging Face Hub thành công (tăng tốc tải & mở rộng rate limit)!")
+        except Exception as e:
+            print(f"[AUTH] Đã gán HF_TOKEN vào biến môi trường ({e})")
+    else:
+        print("[CẢNH BÁO] Chưa cấu hình HF_TOKEN! Các yêu cầu tải model từ Hugging Face Hub sẽ ở chế độ unauthenticated (có thể bị giới hạn tốc độ).")
 
     # 1. Định vị và nạp dữ liệu
     anno_path = args.annotations
@@ -718,7 +741,7 @@ def main():
 
     # Khởi tạo Runner mô hình (Đo thời gian nạp)
     load_start_time = time.perf_counter()
-    runner = VLMRunner(args.model_name, backend=args.backend, load_in_4bit=args.load_in_4bit)
+    runner = VLMRunner(args.model_name, backend=args.backend, load_in_4bit=args.load_in_4bit, hf_token=hf_token)
     load_time_s = time.perf_counter() - load_start_time
 
     if torch is not None and torch.cuda.is_available():

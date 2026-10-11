@@ -13,10 +13,15 @@ ONLY_INDEX=""
 FORCE_RERUN=false
 PROFILE_MODE=false
 PROFILE_SAMPLES=100
+HF_TOKEN="${HF_TOKEN:-}"
 
 # Phân tích tham số dòng lệnh
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --token|--hf_token|--hf-token)
+            HF_TOKEN="$2"
+            shift 2
+            ;;
         --profile)
             PROFILE_MODE=true
             if [[ $# -ge 2 && "$2" =~ ^[0-9]+$ ]]; then
@@ -42,8 +47,10 @@ while [[ $# -gt 0 ]]; do
             echo "Tham số không hợp lệ: $1"
             echo "Cách dùng:"
             echo "  ./run_all_benchmarks.sh                  # Chạy Full-testcase 100% toàn bộ 7 mô hình (tự động resume)"
+            echo "  ./run_all_benchmarks.sh --hf_token <TOK> # Chạy Full-testcase kèm Hugging Face Token"
             echo "  ./run_all_benchmarks.sh --profile        # Chạy Profiling 100 mẫu đo tốc độ, VRAM, RAM và ngoại suy chi phí Vast.ai"
             echo "  ./run_all_benchmarks.sh --profile 50     # Chạy Profiling với 50 mẫu"
+            echo "  ./run_all_benchmarks.sh --profile 100 --hf_token <TOK> # Chạy Profiling 100 mẫu kèm token"
             echo "  ./run_all_benchmarks.sh --start 3        # Bắt đầu chạy từ model số 3"
             echo "  ./run_all_benchmarks.sh --only 3         # Chỉ chạy riêng model số 3"
             echo "  ./run_all_benchmarks.sh --force          # Chạy lại tất cả từ đầu, ghi đè kết quả cũ"
@@ -85,6 +92,12 @@ if [ "$PROFILE_MODE" = true ]; then
 else
     echo " CHẾ ĐỘ THỰC THI: FULL-TESTCASE (100% Tập Test Set)"
 fi
+if [ -n "$HF_TOKEN" ]; then
+    export HF_TOKEN="$HF_TOKEN"
+    echo " Hugging Face Token: [ĐÃ CẤU HÌNH (Authenticated)]"
+else
+    echo " Hugging Face Token: [CHƯA CẤU HÌNH (Unauthenticated)]"
+fi
 echo " Tổng số mô hình: $TOTAL_MODELS"
 echo " Thư mục kết quả: $OUT_DIR"
 if [ -n "$ONLY_INDEX" ]; then echo " Chỉ định chạy: Model số $ONLY_INDEX"; fi
@@ -120,6 +133,11 @@ for i in "${!MODELS[@]}"; do
         if [ "$FORCE_RERUN" = true ]; then
             EXTRA_ARGS="--overwrite"
         fi
+    fi
+
+    # Bổ sung HF Token vào tham số chạy nếu có
+    if [ -n "$HF_TOKEN" ]; then
+        EXTRA_ARGS="$EXTRA_ARGS --hf_token $HF_TOKEN"
     fi
 
     # 3. Thông báo trạng thái checkpoint / resume nếu đã có dữ liệu trước đó (chỉ áp dụng ở Full mode)
