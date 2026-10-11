@@ -42,6 +42,22 @@ try:
         torch.nn.Module._all_tied_weights_patched = True
 except ImportError:
     torch = None
+
+# Tự động vá lỗi KeyError: 'architectures' khi transformers gọi to_diff_dict() / __repr__() trên InternVLChatConfig (OpenGVLab)
+try:
+    import transformers.configuration_utils as config_utils
+    config_utils.PretrainedConfig.has_no_defaults_at_init = True
+    if hasattr(config_utils.PretrainedConfig, "to_diff_dict") and not getattr(config_utils.PretrainedConfig, "_safe_diff_dict_patched", False):
+        _orig_diff_dict = config_utils.PretrainedConfig.to_diff_dict
+        def _safe_diff_dict(cfg_self):
+            try:
+                return _orig_diff_dict(cfg_self)
+            except Exception:
+                return cfg_self.to_dict()
+        config_utils.PretrainedConfig.to_diff_dict = _safe_diff_dict
+        config_utils.PretrainedConfig._safe_diff_dict_patched = True
+except Exception:
+    pass
 from tqdm import tqdm
 
 try:
@@ -386,9 +402,32 @@ class VLMRunner:
 
         # [2] Nạp mô hình chuyên biệt tiếng Việt: Vintern (InternVL architecture)
         if "vintern" in self.model_name.lower():
-            from transformers import AutoModel, AutoTokenizer
+            import transformers.configuration_utils as config_utils
+            from transformers import AutoModel, AutoTokenizer, AutoConfig
+
+            # Khắc phục triệt để lỗi KeyError: 'architectures' trên Vintern-3B-beta / InternVLChatConfig (OpenGVLab)
+            config_utils.PretrainedConfig.has_no_defaults_at_init = True
+            if hasattr(config_utils.PretrainedConfig, "to_diff_dict"):
+                _orig_diff_dict = config_utils.PretrainedConfig.to_diff_dict
+                def _safe_diff_dict(cfg_self):
+                    try:
+                        return _orig_diff_dict(cfg_self)
+                    except Exception:
+                        return cfg_self.to_dict()
+                config_utils.PretrainedConfig.to_diff_dict = _safe_diff_dict
+
             print("[INFO] Đang nạp Vintern qua Hugging Face AutoModel (bfloat16)...")
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
+
+            # Nạp trước config an toàn
+            config = None
+            try:
+                config = AutoConfig.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
+                config.has_no_defaults_at_init = True
+            except Exception as cfg_err:
+                print(f"[WARN] AutoConfig nạp trước gặp cảnh báo: {cfg_err}. Tiếp tục nạp AutoModel...")
+
+            extra_model_kwargs = {"config": config} if config is not None else {}
 
             # Khởi tạo mô hình Vintern: ưu tiên nạp trực tiếp lên CUDA theo khuyến nghị của 5CD-AI
             # Tránh hoàn toàn lỗi 'AttributeError: all_tied_weights_keys' do accelerate infer_auto_device_map
@@ -399,6 +438,7 @@ class VLMRunner:
                     torch_dtype=torch.bfloat16,
                     low_cpu_mem_usage=True,
                     trust_remote_code=True,
+                    **extra_model_kwargs,
                     **hf_kwargs
                 ).eval().to(self.device)
             except Exception as direct_err:
@@ -409,6 +449,7 @@ class VLMRunner:
                     low_cpu_mem_usage=True,
                     trust_remote_code=True,
                     device_map="auto",
+                    **extra_model_kwargs,
                     **hf_kwargs
                 ).eval()
 
