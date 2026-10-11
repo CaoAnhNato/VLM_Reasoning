@@ -89,6 +89,31 @@ Vì bạn đã được cấp quyền truy cập vào repo chính thức `minhqu
 
 ---
 
+### BƯỚC 5.5: CHẠY PROFILING TRÊN 100 MẪU ĐẦU TIÊN (KHUYẾN NGHỊ TRƯỚC KHI CHẠY FULL)
+
+Trước khi chạy full 10.028 mẫu, bạn nên chạy chế độ profiling trên 100 mẫu đầu tiên để đo đạc và thẩm định chính xác:
+- **Tốc độ suy luận thực tế** (s/mẫu, throughput mẫu/phút).
+- **VRAM tiêu thụ thực tế** (GB allocated & reserved) và **RAM hệ thống** (GB qua `psutil`).
+- **Ngoại suy thời gian** cần thiết để chạy trọn vẹn 10.028 mẫu test set.
+- **Dự trù chi phí thuê GPU** trên Vast.ai (theo đơn giá \$0.21/h).
+
+Lệnh thực thi nhanh (chỉ mất ~2 - 3 phút cho mỗi model):
+
+```bash
+# Chạy profiling 100 mẫu cho toàn bộ 7 mô hình
+./scripts/benchmark/run_all_benchmarks.sh --profile 100
+
+# Hoặc chỉ chạy profiling riêng mô hình số 1 (Qwen2.5-VL-3B-Instruct)
+./scripts/benchmark/run_all_benchmarks.sh --profile 100 --only 1
+```
+
+*Kết quả profiling được lưu độc lập, không ảnh hưởng đến benchmark chính:*
+- Chi tiết dự đoán: `results/profiling/<model_name>_profile_100_preds.jsonl`
+- Bảng tổng hợp số liệu: `results/profiling_summary.csv`
+- Bảng Markdown trực quan hiển thị ngay trên màn hình terminal khi hoàn tất mỗi model.
+
+---
+
 ### BƯỚC 6: CHẠY FULL BENCHMARK 100% TESTCASE TRONG NỀN BẰNG `TMUX`
 
 Chạy toàn bộ 7 mô hình tuần tự trên 100% tập dữ liệu kiểm thử (Full Test Set) trong phiên `tmux` để có thể yên tâm ngắt kết nối SSH mà tiến trình vẫn chạy liên tục:
@@ -193,15 +218,15 @@ Bạn có 2 cách cực kỳ linh hoạt:
 
 ## 4. DANH SÁCH 7 MÔ HÌNH VÀ THỨ TỰ ĐÁNH GIÁ
 
-| Thứ tự (`ID`) | Tên Mô Hình | Quy mô | Backend | Ghi Chú Đánh Giá |
+| Thứ tự (`ID`) | Tên Mô Hình | Quy mô | Backend | Ghi Chú Đánh Giá & Tối Ưu Hóa |
 | :---: | :--- | :---: | :---: | :--- |
-| **#1** | `Qwen/Qwen2.5-VL-3B-Instruct` | 3B | Unsloth / Native | General VLM nhỏ (đối sánh 3B vs 7B) |
-| **#2** | `Qwen/Qwen2.5-VL-7B-Instruct` | 7B | Unsloth / Native | General VLM chính |
-| **#3** | `5CD-AI/Vintern-1B-v3.5` | 1B | Native (bfloat16) | Vietnamese VLM siêu nhỏ (chuyên OCR) |
-| **#4** | `5CD-AI/Vintern-3B-beta` | 3B | Native (bfloat16) | Vietnamese VLM 3B (so sánh trực tiếp Qwen 3B) |
-| **#5** | `EraX-AI/EraX-VL-2B-V1.5` | 2B | Native (bfloat16) | Vietnamese VLM 2B |
-| **#6** | `EraX-AI/EraX-VL-7B-V1.5` | 7B | Native (bfloat16) | Vietnamese VLM 7B (so sánh Qwen 7B) |
-| **#7** | `CohereForAI/aya-vision-8b` | 8B | Native (bfloat16) | Multilingual VLM family độc lập |
+| **#1** | `unsloth/Qwen2.5-VL-3B-Instruct-unsloth-bnb-4bit` | 3B | Unsloth Fast Inference | Pre-quantized 4-bit chính thức (~2.1GB, nạp siêu tốc) |
+| **#2** | `unsloth/Qwen2.5-VL-7B-Instruct-unsloth-bnb-4bit` | 7B | Unsloth Fast Inference | Pre-quantized 4-bit chính thức (~5.2GB, VRAM chỉ ~4.8GB) |
+| **#3** | `5CD-AI/Vintern-1B-v3_5` | 1B | Native (bfloat16) | Vietnamese VLM siêu nhẹ (1.8GB bfloat16, chuyên sâu OCR) |
+| **#4** | `5CD-AI/Vintern-3B-beta` | 3B | Native (bfloat16) | Vietnamese VLM 3B bản địa (đối sánh trực tiếp Qwen 3B) |
+| **#5** | `erax-ai/EraX-VL-2B-V1.5` | 2B | Native (bfloat16) | Vietnamese VLM 2B (~4.2GB bfloat16) |
+| **#6** | `erax-ai/EraX-VL-7B-V1.5` | 7B | Native (bfloat16) | Vietnamese VLM 7B bản địa |
+| **#7** | `unsloth/aya-vision-8b-unsloth-bnb-4bit` | 8B | Unsloth / Native | Pre-quantized 4-bit (~5.5GB, không gated, Command R) |
 
 ---
 
@@ -216,7 +241,7 @@ Sau khi hoàn thành, file `results/vitextvqa_benchmark_summary.csv` sẽ cho ra
 | **QwenVL-7B (Paper)** | 7B | *53.80%\** | *28.00%\** | *Paper gốc chỉ đo 100 mẫu do giới hạn chi phí* |
 | **Qwen2.5-VL-7B** | 7B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
 | **Qwen2.5-VL-3B** | 3B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
-| **Vintern-1B-v3.5** | 1B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
+| **Vintern-1B-v3_5** | 1B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
 | **Vintern-3B-beta** | 3B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
 | **EraX-VL-2B-V1.5** | 2B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |
 | **EraX-VL-7B-V1.5** | 7B | ... | ... | *Thực nghiệm Full-Testcase của nhóm* |

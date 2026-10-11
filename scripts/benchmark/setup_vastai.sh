@@ -41,10 +41,12 @@ pip install --no-cache-dir \
     sentencepiece \
     pillow \
     tqdm \
-    python-dotenv
+    python-dotenv \
+    psutil
 
-echo "=== [4/4] Cài đặt Unsloth cho VLM Fast Inference ==="
-pip install --no-deps "unsloth[cu124-torch240] @ git+https://github.com/unslothai/unsloth.git" 2>/dev/null || {
+echo "=== [4/4] Cài đặt Unsloth & Unsloth-Zoo cho VLM Fast Inference ==="
+pip install --no-cache-dir unsloth_zoo || true
+pip install --no-deps "unsloth[cu124-torch240] @ git+https://github.com/unslothai/unsloth.git" 2>/dev/null || pip install --no-cache-dir unsloth || {
     echo "[GHI CHÚ] Unsloth không tương thích hoặc chưa có bản dựng cho kiến trúc GPU này. Hệ thống sẽ tự động dùng Hugging Face Transformers Native Fallback (bfloat16) ổn định 100%."
 }
 

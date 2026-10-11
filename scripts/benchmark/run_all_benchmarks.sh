@@ -4,17 +4,28 @@
 # Hỗ trợ tự động RESUME (bỏ qua mô hình đã chạy), chạy từ model chỉ định,
 # và dọn dẹp cache tuần tự sau mỗi model để tối ưu dung lượng ổ đĩa.
 # ==============================================================================
-set -e
+set -eo pipefail
 
 DATA_DIR="data/vitextvqa"
 OUT_DIR="results"
 START_INDEX=1
 ONLY_INDEX=""
 FORCE_RERUN=false
+PROFILE_MODE=false
+PROFILE_SAMPLES=100
 
 # Phân tích tham số dòng lệnh
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --profile)
+            PROFILE_MODE=true
+            if [[ $# -ge 2 && "$2" =~ ^[0-9]+$ ]]; then
+                PROFILE_SAMPLES="$2"
+                shift 2
+            else
+                shift 1
+            fi
+            ;;
         --start|--start-from)
             START_INDEX="$2"
             shift 2
@@ -31,8 +42,10 @@ while [[ $# -gt 0 ]]; do
             echo "Tham số không hợp lệ: $1"
             echo "Cách dùng:"
             echo "  ./run_all_benchmarks.sh                  # Chạy Full-testcase 100% toàn bộ 7 mô hình (tự động resume)"
-            echo "  ./run_all_benchmarks.sh --start 3        # Bắt đầu chạy Full-testcase từ model số 3"
-            echo "  ./run_all_benchmarks.sh --only 3         # Chỉ chạy Full-testcase riêng model số 3"
+            echo "  ./run_all_benchmarks.sh --profile        # Chạy Profiling 100 mẫu đo tốc độ, VRAM, RAM và ngoại suy chi phí Vast.ai"
+            echo "  ./run_all_benchmarks.sh --profile 50     # Chạy Profiling với 50 mẫu"
+            echo "  ./run_all_benchmarks.sh --start 3        # Bắt đầu chạy từ model số 3"
+            echo "  ./run_all_benchmarks.sh --only 3         # Chỉ chạy riêng model số 3"
             echo "  ./run_all_benchmarks.sh --force          # Chạy lại tất cả từ đầu, ghi đè kết quả cũ"
             exit 1
             ;;
@@ -48,24 +61,30 @@ if [ ! -d "$DATA_DIR" ]; then
 fi
 
 mkdir -p "$OUT_DIR/predictions"
+mkdir -p "$OUT_DIR/profiling"
 mkdir -p "$OUT_DIR/logs"
+mkdir -p "$OUT_DIR/logs/profile"
 
 # Danh sách 7 mô hình ứng viên từ docs/Report.docx
 MODELS=(
-    "Qwen/Qwen2.5-VL-3B-Instruct:unsloth"
-    "Qwen/Qwen2.5-VL-7B-Instruct:unsloth"
-    "5CD-AI/Vintern-1B-v3.5:native"
+    "unsloth/Qwen2.5-VL-3B-Instruct-unsloth-bnb-4bit:unsloth"
+    "unsloth/Qwen2.5-VL-7B-Instruct-unsloth-bnb-4bit:unsloth"
+    "5CD-AI/Vintern-1B-v3_5:native"
     "5CD-AI/Vintern-3B-beta:native"
-    "EraX-AI/EraX-VL-2B-V1.5:native"
-    "EraX-AI/EraX-VL-7B-V1.5:native"
-    "CohereForAI/aya-vision-8b:native"
+    "erax-ai/EraX-VL-2B-V1.5:native"
+    "erax-ai/EraX-VL-7B-V1.5:native"
+    "unsloth/aya-vision-8b-unsloth-bnb-4bit:auto"
 )
 
 TOTAL_MODELS=${#MODELS[@]}
 
 echo "======================================================================"
 echo " CHƯƠNG TRÌNH BENCHMARK 7 MÔ HÌNH VLM TRÊN ViTextVQA"
-echo " CHẾ ĐỘ THỰC THI: FULL-TESTCASE (100% Tập Test Set)"
+if [ "$PROFILE_MODE" = true ]; then
+    echo " CHẾ ĐỘ THỰC THI: PROFILING HIỆU NĂNG ($PROFILE_SAMPLES mẫu đầu tiên)"
+else
+    echo " CHẾ ĐỘ THỰC THI: FULL-TESTCASE (100% Tập Test Set)"
+fi
 echo " Tổng số mô hình: $TOTAL_MODELS"
 echo " Thư mục kết quả: $OUT_DIR"
 if [ -n "$ONLY_INDEX" ]; then echo " Chỉ định chạy: Model số $ONLY_INDEX"; fi
@@ -77,7 +96,6 @@ for i in "${!MODELS[@]}"; do
     ENTRY="${MODELS[$i]}"
     IFS=":" read -r MODEL_NAME BACKEND <<< "$ENTRY"
     SAFE_NAME=$(echo "$MODEL_NAME" | tr '/' '_')
-    PRED_FILE="$OUT_DIR/predictions/${SAFE_NAME}_preds.jsonl"
 
     # 1. Kiểm tra nếu chỉ định chạy 1 model cụ thể
     if [ -n "$ONLY_INDEX" ] && [ "$MODEL_NUM" -ne "$ONLY_INDEX" ]; then
@@ -90,8 +108,22 @@ for i in "${!MODELS[@]}"; do
         continue
     fi
 
-    # 3. Thông báo trạng thái checkpoint / resume nếu đã có dữ liệu trước đó
-    if [ -f "$PRED_FILE" ] && [ -s "$PRED_FILE" ]; then
+    # Thiết lập đường dẫn file và cờ chạy theo chế độ
+    if [ "$PROFILE_MODE" = true ]; then
+        PRED_FILE="$OUT_DIR/profiling/${SAFE_NAME}_profile_${PROFILE_SAMPLES}_preds.jsonl"
+        LOG_FILE="$OUT_DIR/logs/profile/${SAFE_NAME}.log"
+        EXTRA_ARGS="--profile $PROFILE_SAMPLES --profile_csv $OUT_DIR/profiling_summary.csv"
+    else
+        PRED_FILE="$OUT_DIR/predictions/${SAFE_NAME}_preds.jsonl"
+        LOG_FILE="$OUT_DIR/logs/${SAFE_NAME}.log"
+        EXTRA_ARGS=""
+        if [ "$FORCE_RERUN" = true ]; then
+            EXTRA_ARGS="--overwrite"
+        fi
+    fi
+
+    # 3. Thông báo trạng thái checkpoint / resume nếu đã có dữ liệu trước đó (chỉ áp dụng ở Full mode)
+    if [ "$PROFILE_MODE" = false ] && [ -f "$PRED_FILE" ] && [ -s "$PRED_FILE" ]; then
         COUNT_PREDS=$(wc -l < "$PRED_FILE" | tr -d ' ')
         echo ""
         echo "----------------------------------------------------------------------"
@@ -112,11 +144,6 @@ for i in "${!MODELS[@]}"; do
     echo ">>> BẮT ĐẦU: $(date '+%Y-%m-%d %H:%M:%S')"
     echo "######################################################################"
 
-    EXTRA_ARGS=""
-    if [ "$FORCE_RERUN" = true ]; then
-        EXTRA_ARGS="--overwrite"
-    fi
-
     python3 scripts/benchmark/evaluate_vitextvqa.py \
         --model_name "$MODEL_NAME" \
         --backend "$BACKEND" \
@@ -124,17 +151,35 @@ for i in "${!MODELS[@]}"; do
         $EXTRA_ARGS \
         --output_jsonl "$PRED_FILE" \
         --summary_csv "$OUT_DIR/vitextvqa_benchmark_summary.csv" \
-        2>&1 | tee "$OUT_DIR/logs/${SAFE_NAME}.log"
+        2>&1 | tee "$LOG_FILE"
 
-    echo "[HOÀN THÀNH MODEL #$MODEL_NUM] Đã đánh giá xong $MODEL_NAME và giải phóng ổ đĩa!"
+    EXIT_CODE=${PIPESTATUS[0]}
+    if [ $EXIT_CODE -ne 0 ]; then
+        echo "======================================================================"
+        echo "[LỖI NGHIÊM TRỌNG] Model #$MODEL_NUM ($MODEL_NAME) gặp lỗi thoát (Exit code: $EXIT_CODE)!"
+        echo "Vui lòng kiểm tra chi tiết tại file log: $LOG_FILE"
+        echo "======================================================================"
+        exit $EXIT_CODE
+    fi
+
+    echo "[HOÀN THÀNH MODEL #$MODEL_NUM] Đã xử lý xong $MODEL_NAME và giải phóng ổ đĩa!"
 done
 
 echo ""
-echo "======================================================================"
-echo ">>> TIẾN TRÌNH BENCHMARK ĐÃ KẾT THÚC! <<<"
-echo ">>> BẢNG TỔNG HỢP ĐIỂM SỐ HIỆN TẠI TẠI: $OUT_DIR/vitextvqa_benchmark_summary.csv"
-echo "======================================================================"
-
-if [ -f "$OUT_DIR/vitextvqa_benchmark_summary.csv" ]; then
-    column -s, -t < "$OUT_DIR/vitextvqa_benchmark_summary.csv" 2>/dev/null || cat "$OUT_DIR/vitextvqa_benchmark_summary.csv"
+if [ "$PROFILE_MODE" = true ]; then
+    echo "======================================================================"
+    echo ">>> TIẾN TRÌNH PROFILING HIỆU NĂNG ĐÃ KẾT THÚC! <<<"
+    echo ">>> BẢNG TỔNG HỢP PROFILING HIỆU NĂNG TẠI: $OUT_DIR/profiling_summary.csv"
+    echo "======================================================================"
+    if [ -f "$OUT_DIR/profiling_summary.csv" ]; then
+        column -s, -t < "$OUT_DIR/profiling_summary.csv" 2>/dev/null || cat "$OUT_DIR/profiling_summary.csv"
+    fi
+else
+    echo "======================================================================"
+    echo ">>> TIẾN TRÌNH BENCHMARK ĐÃ KẾT THÚC! <<<"
+    echo ">>> BẢNG TỔNG HỢP ĐIỂM SỐ HIỆN TẠI TẠI: $OUT_DIR/vitextvqa_benchmark_summary.csv"
+    echo "======================================================================"
+    if [ -f "$OUT_DIR/vitextvqa_benchmark_summary.csv" ]; then
+        column -s, -t < "$OUT_DIR/vitextvqa_benchmark_summary.csv" 2>/dev/null || cat "$OUT_DIR/vitextvqa_benchmark_summary.csv"
+    fi
 fi

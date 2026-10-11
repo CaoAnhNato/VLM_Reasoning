@@ -12,21 +12,38 @@ import gc
 import glob
 import json
 import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import re
 import shutil
 import string
 import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from PIL import Image
-import torch
+try:
+    import torch
+except ImportError:
+    torch = None
 from tqdm import tqdm
 
 try:
     import pandas as pd
 except ImportError:
     pd = None
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 # ==============================================================================
@@ -235,7 +252,7 @@ class VLMRunner:
     def __init__(self, model_name: str, backend: str = "auto", load_in_4bit: bool = False):
         self.model_name = model_name
         self.backend = backend
-        self.load_in_4bit = load_in_4bit
+        self.load_in_4bit = load_in_4bit or ("4bit" in model_name.lower())
         self.model = None
         self.processor = None
         self.tokenizer = None
@@ -248,14 +265,20 @@ class VLMRunner:
         print(f" Yêu cầu Backend: {self.backend}")
         print(f"=======================================================")
 
-        # [1] Thử nghiệm nạp qua Unsloth nếu là họ Qwen2.5-VL và có Unsloth
-        if ("qwen2.5-vl" in self.model_name.lower()) and (self.backend in ["auto", "unsloth"]):
+        # [1] Thử nghiệm nạp qua Unsloth nếu mô hình được Unsloth hỗ trợ và yêu cầu backend phù hợp
+        is_unsloth_supported = (
+            "qwen2.5-vl" in self.model_name.lower() or
+            "aya-vision" in self.model_name.lower() or
+            "unsloth" in self.model_name.lower()
+        )
+        if is_unsloth_supported and (self.backend in ["auto", "unsloth"]):
             try:
                 from unsloth import FastVisionModel
-                print("[INFO] Đang nạp qua Unsloth FastVisionModel (4-bit/16-bit Fast Inference)...")
+                load_4bit = self.load_in_4bit or ("4bit" in self.model_name.lower())
+                print(f"[INFO] Đang nạp qua Unsloth FastVisionModel (load_in_4bit={load_4bit}, Fast Inference)...")
                 self.model, self.processor = FastVisionModel.from_pretrained(
                     self.model_name,
-                    load_in_4bit=self.load_in_4bit,
+                    load_in_4bit=load_4bit,
                     use_gradient_checkpointing="unsloth",
                 )
                 FastVisionModel.for_inference(self.model)
@@ -263,7 +286,7 @@ class VLMRunner:
                 print("[SUCCESS] Đã nạp thành công bằng Unsloth!")
                 return
             except Exception as e:
-                print(f"[WARN] Unsloth nạp không thành công: {e}. Chuyển sang Transformers Native Fallback...")
+                print(f"[WARN] Unsloth nạp không thành công ({e}). Tự động chuyển tiếp sang Transformers Native Fallback...")
 
         # [2] Nạp mô hình chuyên biệt tiếng Việt: Vintern (InternVL architecture)
         if "vintern" in self.model_name.lower():
@@ -282,33 +305,70 @@ class VLMRunner:
             return
 
         # [3] Nạp các dòng VLM thông thường: Qwen2.5-VL, EraX-VL, Aya Vision
-        from transformers import AutoProcessor, AutoModelForVision2Seq, AutoModelForCausalLM
+        import transformers
+        from transformers import AutoProcessor
+
         print("[INFO] Đang nạp qua Hugging Face Transformers Native (bfloat16)...")
         try:
             self.processor = AutoProcessor.from_pretrained(self.model_name, trust_remote_code=True)
-        except Exception:
+        except Exception as e:
+            # Fallback sang AutoTokenizer nếu Processor chuyên biệt chưa tải được
             from transformers import AutoTokenizer
-            self.processor = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
+            try:
+                self.processor = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True)
+            except Exception as tok_err:
+                # Kiểm tra lỗi gated repo đối với Aya Vision
+                if ("aya-vision" in self.model_name.lower()) and ("unsloth" not in self.model_name.lower()):
+                    print(f"[WARN] Lỗi truy cập repo gated '{self.model_name}': {tok_err}")
+                    print("[INFO] Tự động chuyển sang model cộng đồng công khai 100%: 'unsloth/aya-vision-8b'...")
+                    self.model_name = "unsloth/aya-vision-8b"
+                    self._load_model()
+                    return
+                raise tok_err
 
-        try:
-            # Ưu tiên AutoModelForVision2Seq
-            self.model = AutoModelForVision2Seq.from_pretrained(
-                self.model_name,
-                torch_dtype=torch.bfloat16,
-                trust_remote_code=True,
-                device_map="auto"
-            ).eval()
-        except Exception:
-            # Fallback sang AutoModelForCausalLM (ví dụ Qwen2.5-VL)
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
-                torch_dtype=torch.bfloat16,
-                trust_remote_code=True,
-                device_map="auto"
-            ).eval()
+        # Danh sách class loader theo thứ tự ưu tiên đa phiên bản transformers
+        candidate_classes = []
+        for cls_name in [
+            "AutoModelForImageTextToText",
+            "AutoModelForVision2Seq",
+            "Qwen2_5_VLForConditionalGeneration",
+            "AutoModelForCausalLM",
+            "AutoModel",
+        ]:
+            if hasattr(transformers, cls_name):
+                candidate_classes.append((cls_name, getattr(transformers, cls_name)))
+
+        model_loaded = False
+        last_error = None
+
+        for cls_name, cls_obj in candidate_classes:
+            try:
+                print(f"[INFO] Đang thử khởi tạo bằng class: {cls_name}...")
+                self.model = cls_obj.from_pretrained(
+                    self.model_name,
+                    torch_dtype=torch.bfloat16,
+                    trust_remote_code=True,
+                    device_map="auto"
+                ).eval()
+                model_loaded = True
+                print(f"[SUCCESS] Đã nạp thành công bằng class {cls_name}!")
+                break
+            except Exception as e:
+                last_error = e
+                # Nếu gặp lỗi quyền truy cập gated repo đối với CohereLabs/aya-vision-8b
+                err_str = str(e).lower()
+                if ("gated" in err_str or "401" in err_str or "403" in err_str or "access" in err_str) and ("aya-vision" in self.model_name.lower()) and ("unsloth" not in self.model_name.lower()):
+                    print(f"[WARN] Không có quyền truy cập repo gated '{self.model_name}'.")
+                    print("[INFO] Tự động fallback sang repo công khai 'unsloth/aya-vision-8b'...")
+                    self.model_name = "unsloth/aya-vision-8b"
+                    self._load_model()
+                    return
+
+        if not model_loaded:
+            raise RuntimeError(f"Không thể nạp mô hình {self.model_name} qua bất kỳ class nào! Lỗi: {last_error}")
 
         self.actual_backend = "transformers_native"
-        print(f"[SUCCESS] Đã nạp thành công bằng {self.actual_backend}!")
+        print(f"[SUCCESS] Đã nạp thành công mô hình bằng {self.actual_backend}!")
 
     def generate(self, image_path: str, question: str) -> str:
         """Sinh câu trả lời Zero-shot dựa trên ảnh và câu hỏi."""
@@ -324,7 +384,7 @@ class VLMRunner:
         # Prompt chuẩn tối giản từ ViTextVQA paper
         prompt_text = f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {question}"
 
-        # 1. Cơ chế sinh cho Unsloth (Qwen2.5-VL)
+        # 1. Cơ chế sinh cho Unsloth
         if self.actual_backend == "unsloth":
             messages = [
                 {"role": "user", "content": [
@@ -373,9 +433,9 @@ class VLMRunner:
                     response = self.model.chat(self.tokenizer, pixel_values, prompt_text, generation_config)
                     return response.strip()
 
-        # 3. Cơ chế sinh cho Transformers Native (Qwen2.5-VL, EraX, Aya)
+        # 3. Cơ chế sinh cho Transformers Native (Qwen2.5-VL, EraX, Aya Vision)
         else:
-            # Kiểm tra nếu là chat template chuẩn
+            model_device = getattr(self.model, "device", "cuda" if torch.cuda.is_available() else "cpu")
             if hasattr(self.processor, "apply_chat_template"):
                 messages = [
                     {"role": "user", "content": [
@@ -383,10 +443,22 @@ class VLMRunner:
                         {"type": "text", "text": prompt_text}
                     ]}
                 ]
-                text_input = self.processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
-                inputs = self.processor(text=[text_input], images=[image], return_tensors="pt").to("cuda")
+                try:
+                    # Hỗ trợ chuẩn multimodal mới của AutoProcessor (Aya-Vision, Transformers 4.49+)
+                    inputs = self.processor.apply_chat_template(
+                        messages,
+                        padding=True,
+                        add_generation_prompt=True,
+                        tokenize=True,
+                        return_dict=True,
+                        return_tensors="pt"
+                    ).to(model_device)
+                except Exception:
+                    # Định dạng phân tách text & images (Qwen2-VL, EraX)
+                    text_input = self.processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
+                    inputs = self.processor(text=[text_input], images=[image], return_tensors="pt").to(model_device)
             else:
-                inputs = self.processor(images=image, text=prompt_text, return_tensors="pt").to("cuda")
+                inputs = self.processor(images=image, text=prompt_text, return_tensors="pt").to(model_device)
 
             with torch.inference_mode():
                 output_ids = self.model.generate(
@@ -394,10 +466,16 @@ class VLMRunner:
                     max_new_tokens=64,
                     do_sample=False
                 )
-            # Cắt bớt input tokens nếu có
             if hasattr(inputs, "input_ids"):
                 output_ids = output_ids[:, inputs.input_ids.shape[1]:]
-            response = self.processor.decode(output_ids[0], skip_special_tokens=True)
+
+            if hasattr(self.processor, "decode"):
+                response = self.processor.decode(output_ids[0], skip_special_tokens=True)
+            elif hasattr(self.processor, "tokenizer") and hasattr(self.processor.tokenizer, "decode"):
+                response = self.processor.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+            else:
+                response = str(output_ids[0])
+
             return response.strip()
 
     def unload(self, evict_hf_cache: bool = True):
@@ -493,6 +571,45 @@ def update_summary_csv(summary_csv_path: str, row: Dict[str, Any]):
             writer.writerow(r)
 
 
+def update_profiling_csv(profiling_csv_path: str, row: Dict[str, Any]):
+    """
+    Ghi hoặc cập nhật dòng kết quả profiling của mô hình vào bảng CSV profiling (tránh ghi trùng lặp).
+    """
+    os.makedirs(os.path.dirname(profiling_csv_path), exist_ok=True)
+    fieldnames = [
+        "model_name", "backend", "profile_samples",
+        "load_time_s", "avg_latency_s", "throughput_samples_per_min",
+        "peak_vram_allocated_gb", "peak_vram_reserved_gb", "peak_ram_gb",
+        "preliminary_f1", "preliminary_em",
+        "est_full_10028_hours", "est_full_10028_cost_usd", "timestamp"
+    ]
+
+    rows = []
+    found = False
+    if os.path.exists(profiling_csv_path):
+        try:
+            with open(profiling_csv_path, "r", encoding="utf-8-sig") as csv_file:
+                reader = csv.DictReader(csv_file)
+                for r in reader:
+                    if r.get("model_name") == row["model_name"]:
+                        rows.append(row)
+                        found = True
+                    else:
+                        rows.append(r)
+        except Exception as e:
+            print(f"[CẢNH BÁO] Lỗi khi đọc CSV profiling cũ: {e}")
+
+    if not found:
+        rows.append(row)
+
+    with open(profiling_csv_path, "w", newline="", encoding="utf-8-sig") as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow(r)
+
+
+
 # ==============================================================================
 # HÀM THỰC THI CHÍNH
 # ==============================================================================
@@ -510,6 +627,9 @@ def main():
     parser.add_argument("--summary_csv", type=str, default="results/vitextvqa_benchmark_summary.csv", help="File tổng hợp điểm số")
     parser.add_argument("--no_evict_cache", action="store_true", help="Không xóa cache sau khi chạy xong")
     parser.add_argument("--overwrite", action="store_true", help="Ghi đè lại từ đầu, không resume từ kết quả cũ")
+    parser.add_argument("--profile", type=int, default=None, help="Kích hoạt chế độ profiling tốc độ và tài nguyên (ví dụ: --profile 100)")
+    parser.add_argument("--profile_csv", type=str, default="results/profiling_summary.csv", help="File tổng hợp thông số profiling")
+    parser.add_argument("--hourly_rate", type=float, default=0.21, help="Chi phí thuê GPU trên Vast.ai ($/giờ) để ngoại suy chi phí")
     args = parser.parse_args()
 
     # 1. Định vị và nạp dữ liệu
@@ -524,6 +644,15 @@ def main():
     if not samples:
         print("[LỖI] Không tìm thấy mẫu kiểm thử nào! Vui lòng kiểm tra lại đường dẫn dataset.")
         sys.exit(1)
+
+    is_profile_mode = (args.profile is not None and args.profile > 0)
+    if is_profile_mode:
+        profile_target_count = args.profile
+        samples = samples[:profile_target_count]
+        args.overwrite = True
+        safe_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', args.model_name)
+        if not args.output_jsonl:
+            args.output_jsonl = f"results/profiling/{safe_name}_profile_{profile_target_count}_preds.jsonl"
 
     total_samples_target = len(samples)
 
@@ -562,7 +691,7 @@ def main():
         print(f" Full Test Set Exact Match:  {avg_em:.2f}%")
         print("==================================================================")
 
-        if args.summary_csv:
+        if args.summary_csv and not is_profile_mode:
             update_summary_csv(args.summary_csv, {
                 "model_name": args.model_name,
                 "backend": args.backend,
@@ -584,10 +713,16 @@ def main():
         print(f" Bắt đầu suy luận từ mẫu thứ: #{num_already_done + 1} (Dataset Index: {first_rem['_global_index']}, ID: {first_rem['question_id']})")
         print("==================================================================")
     else:
-        print(f"\n[INFERENCE] Bắt đầu đánh giá mới từ đầu trên {len(samples)} mẫu...")
+        mode_label = f"PROFILING ({total_samples_target} mẫu)" if is_profile_mode else f"ĐÁNH GIÁ MỚI ({len(samples)} mẫu)"
+        print(f"\n[INFERENCE] Bắt đầu {mode_label} cho mô hình {args.model_name}...")
 
-    # Khởi tạo Runner mô hình
+    # Khởi tạo Runner mô hình (Đo thời gian nạp)
+    load_start_time = time.perf_counter()
     runner = VLMRunner(args.model_name, backend=args.backend, load_in_4bit=args.load_in_4bit)
+    load_time_s = time.perf_counter() - load_start_time
+
+    if torch is not None and torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
 
     # Chuẩn bị file ghi streaming
     out_f = None
@@ -597,12 +732,17 @@ def main():
         out_f = open(args.output_jsonl, file_mode, encoding="utf-8")
 
     new_predictions = []
+    sample_latencies = []
     start_time = time.time()
 
     try:
-        desc_msg = f"Resuming {args.model_name}" if num_already_done > 0 else f"Evaluating {args.model_name}"
+        desc_msg = f"Profiling {args.model_name}" if is_profile_mode else (f"Resuming {args.model_name}" if num_already_done > 0 else f"Evaluating {args.model_name}")
         for item in tqdm(remaining_samples, desc=desc_msg):
+            t_sample_start = time.perf_counter()
             pred = runner.generate(item["image_path"], item["question"])
+            s_lat = time.perf_counter() - t_sample_start
+            sample_latencies.append(s_lat)
+
             em = compute_exact_match(pred, item["ground_truths"])
             f1 = compute_f1_score(pred, item["ground_truths"])
 
@@ -614,7 +754,8 @@ def main():
                 "ground_truths": item["ground_truths"],
                 "prediction": pred,
                 "exact_match": em,
-                "f1_score": round(f1 * 100, 2)
+                "f1_score": round(f1 * 100, 2),
+                "latency_s": round(s_lat, 3)
             }
             new_predictions.append(record)
 
@@ -637,28 +778,81 @@ def main():
     avg_em = (total_em / len(all_predictions)) * 100 if all_predictions else 0.0
     avg_f1 = (total_f1 / len(all_predictions)) if all_predictions else 0.0
 
-    print("\n==================================================================")
-    print(f" KẾT QUẢ ZERO-SHOT BENCHMARK: {args.model_name}")
-    print("==================================================================")
-    print(f" Tổng số mẫu hoàn thành:    {len(all_predictions)} / {total_samples_target}")
-    print(f" Mẫu mới hoàn thành phiên này: {len(new_predictions)}")
-    print(f" Thời gian chạy phiên này:   {elapsed_time:.2f} giây")
-    print(f" Full Test Set F1:           {avg_f1:.2f}%")
-    print(f" Full Test Set Exact Match:  {avg_em:.2f}%")
-    print("==================================================================")
+    if is_profile_mode:
+        num_prof = len(new_predictions)
+        avg_latency = (sum(sample_latencies) / len(sample_latencies)) if sample_latencies else 0.0
+        throughput = (60.0 / avg_latency) if avg_latency > 0 else 0.0
 
-    # Cập nhật bảng tổng kết CSV
-    if args.summary_csv:
-        update_summary_csv(args.summary_csv, {
-            "model_name": args.model_name,
-            "backend": runner.actual_backend,
-            "num_samples": len(all_predictions),
-            "full_f1": round(avg_f1, 2),
-            "full_em": round(avg_em, 2),
-            "elapsed_seconds": round(elapsed_time, 2),
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-        })
-        print(f"[SAVED] Đã cập nhật bảng tổng kết tại: {args.summary_csv}")
+        peak_vram_alloc = (torch.cuda.max_memory_allocated() / (1024 ** 3)) if (torch is not None and torch.cuda.is_available()) else 0.0
+        peak_vram_res = (torch.cuda.max_memory_reserved() / (1024 ** 3)) if (torch is not None and torch.cuda.is_available()) else 0.0
+        peak_ram = (psutil.Process().memory_info().rss / (1024 ** 3)) if psutil is not None else 0.0
+
+        # Ngoại suy trên toàn bộ 10,028 mẫu của test set ViTextVQA
+        total_dataset_samples = 10028
+        est_full_hours = ((avg_latency * total_dataset_samples) + load_time_s) / 3600.0
+        est_cost_usd = est_full_hours * args.hourly_rate
+
+        print("\n========================================================================================")
+        print(f" BÁO CÁO PROFILING HIỆU NĂNG MÔ HÌNH: {args.model_name}")
+        print(f" Backend thực tế: {runner.actual_backend}")
+        print("========================================================================================")
+        print(f" - Số mẫu profiling:               {num_prof} mẫu (indices 0..{num_prof - 1})")
+        print(f" - Thời gian nạp mô hình:           {load_time_s:.2f} s")
+        print(f" - Tốc độ suy luận trung bình:      {avg_latency:.2f} s/mẫu")
+        print(f" - Thông lượng (Throughput):        {throughput:.2f} mẫu/phút")
+        print(f" - VRAM tiêu thụ đỉnh (Allocated):  {peak_vram_alloc:.2f} GB")
+        print(f" - VRAM tiêu thụ đỉnh (Reserved):   {peak_vram_res:.2f} GB")
+        print(f" - RAM hệ thống tiêu thụ:           {peak_ram:.2f} GB")
+        print(f" - Điểm sơ bộ (Preliminary):        F1: {avg_f1:.2f}% | Exact Match: {avg_em:.2f}%")
+        print("----------------------------------------------------------------------------------------")
+        print(" - DỰ ĐOÁN NGOẠI SUY TẬP TEST (10.028 MẪU):")
+        print(f"   * Tổng thời gian ước tính:       {est_full_hours:.2f} giờ (~{est_full_hours * 60:.1f} phút)")
+        print(f"   * Ước tính chi phí Vast.ai (${args.hourly_rate:.2f}/h): ${est_cost_usd:.2f} USD")
+        print("========================================================================================")
+
+        if args.profile_csv:
+            prof_row = {
+                "model_name": args.model_name,
+                "backend": runner.actual_backend,
+                "profile_samples": num_prof,
+                "load_time_s": round(load_time_s, 2),
+                "avg_latency_s": round(avg_latency, 2),
+                "throughput_samples_per_min": round(throughput, 2),
+                "peak_vram_allocated_gb": round(peak_vram_alloc, 2),
+                "peak_vram_reserved_gb": round(peak_vram_res, 2),
+                "peak_ram_gb": round(peak_ram, 2),
+                "preliminary_f1": round(avg_f1, 2),
+                "preliminary_em": round(avg_em, 2),
+                "est_full_10028_hours": round(est_full_hours, 2),
+                "est_full_10028_cost_usd": round(est_cost_usd, 2),
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            update_profiling_csv(args.profile_csv, prof_row)
+            print(f"[SAVED] Đã lưu kết quả profiling tại: {args.profile_csv}")
+
+    else:
+        print("\n==================================================================")
+        print(f" KẾT QUẢ ZERO-SHOT BENCHMARK: {args.model_name}")
+        print("==================================================================")
+        print(f" Tổng số mẫu hoàn thành:    {len(all_predictions)} / {total_samples_target}")
+        print(f" Mẫu mới hoàn thành phiên này: {len(new_predictions)}")
+        print(f" Thời gian chạy phiên này:   {elapsed_time:.2f} giây")
+        print(f" Full Test Set F1:           {avg_f1:.2f}%")
+        print(f" Full Test Set Exact Match:  {avg_em:.2f}%")
+        print("==================================================================")
+
+        # Cập nhật bảng tổng kết CSV
+        if args.summary_csv:
+            update_summary_csv(args.summary_csv, {
+                "model_name": args.model_name,
+                "backend": runner.actual_backend,
+                "num_samples": len(all_predictions),
+                "full_f1": round(avg_f1, 2),
+                "full_em": round(avg_em, 2),
+                "elapsed_seconds": round(elapsed_time, 2),
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            })
+            print(f"[SAVED] Đã cập nhật bảng tổng kết tại: {args.summary_csv}")
 
     # Dọn dẹp cache trọng số
     runner.unload(evict_hf_cache=(not args.no_evict_cache))
