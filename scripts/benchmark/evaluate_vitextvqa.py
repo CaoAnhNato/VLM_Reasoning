@@ -7,6 +7,7 @@ Tối ưu VRAM 16GB, Unsloth Fast Inference, và giải phóng Disk Cache tuần
 """
 
 import argparse
+import atexit
 import csv
 import gc
 import glob
@@ -667,12 +668,51 @@ class VLMRunner:
             torch.cuda.ipc_collect()
 
         if evict_hf_cache:
-            cache_dir = os.path.expanduser("~/.cache/huggingface/hub")
+            candidate_cache_dirs = []
+            if os.environ.get("HF_HOME"):
+                candidate_cache_dirs.append(os.environ["HF_HOME"])
+                candidate_cache_dirs.append(os.path.join(os.environ["HF_HOME"], "hub"))
+            if os.environ.get("HUGGINGFACE_HUB_CACHE"):
+                candidate_cache_dirs.append(os.environ["HUGGINGFACE_HUB_CACHE"])
+
+            candidate_cache_dirs.extend([
+                "/workspace/.hf_home/hub",
+                "/workspace/.hf_home",
+                os.path.expanduser("~/.cache/huggingface/hub"),
+                os.path.expanduser("~/.cache/huggingface"),
+                "/root/.cache/huggingface/hub",
+                "/root/.cache/huggingface",
+            ])
+
+            try:
+                from huggingface_hub import constants
+                if hasattr(constants, "HF_HUB_CACHE"):
+                    candidate_cache_dirs.append(str(constants.HF_HUB_CACHE))
+                if hasattr(constants, "HF_HOME"):
+                    candidate_cache_dirs.append(str(constants.HF_HOME))
+            except Exception:
+                pass
+
             target_repo = "models--" + self.model_name.replace("/", "--")
-            target_path = os.path.join(cache_dir, target_repo)
-            if os.path.exists(target_path):
-                print(f"[DISK CLEANUP] Đã xóa cache trọng số: {target_path}")
-                shutil.rmtree(target_path, ignore_errors=True)
+            deleted_any = False
+            for cdir in set(candidate_cache_dirs):
+                if not cdir or not os.path.exists(cdir):
+                    continue
+                target_path = os.path.join(cdir, target_repo)
+                if os.path.exists(target_path):
+                    print(f"[DISK CLEANUP] Đang xóa cache trọng số: {target_path}")
+                    shutil.rmtree(target_path, ignore_errors=True)
+                    deleted_any = True
+
+            if not deleted_any:
+                for cdir in set(candidate_cache_dirs):
+                    if not cdir or not os.path.exists(cdir):
+                        continue
+                    found = glob.glob(os.path.join(cdir, "**", target_repo), recursive=True)
+                    for f in found:
+                        if os.path.isdir(f):
+                            print(f"[DISK CLEANUP] Đã xóa cache trọng số tìm thấy: {f}")
+                            shutil.rmtree(f, ignore_errors=True)
 
 # ==============================================================================
 # HỖ TRỢ RESUMPTION CẤP DỮ LIỆU (SAMPLE-LEVEL CHECKPOINTING & RESUME)
@@ -910,6 +950,12 @@ def main():
     load_start_time = time.perf_counter()
     runner = VLMRunner(args.model_name, backend=args.backend, load_in_4bit=args.load_in_4bit, hf_token=hf_token)
     load_time_s = time.perf_counter() - load_start_time
+
+    # Đăng ký tự động dọn dẹp bộ nhớ và xóa cache đĩa khi kết thúc tiến trình (kể cả khi crash)
+    def _cleanup_on_exit():
+        if runner is not None and getattr(runner, "model", None) is not None:
+            runner.unload(evict_hf_cache=(not args.no_evict_cache))
+    atexit.register(_cleanup_on_exit)
 
     if torch is not None and torch.cuda.is_available():
         torch.cuda.reset_peak_memory_stats()

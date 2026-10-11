@@ -111,6 +111,50 @@ if [ -n "$ONLY_INDEX" ]; then echo " Chỉ định chạy: Model số $ONLY_INDE
 if [ "$START_INDEX" -gt 1 ]; then echo " Bắt đầu từ: Model số $START_INDEX"; fi
 echo "======================================================================"
 
+cleanup_hf_models() {
+    echo ""
+    echo "----------------------------------------------------------------------"
+    echo "[DỌN DẸP Ổ ĐĨA] Đang xóa sạch model weights cache để giải phóng tối đa ổ đĩa..."
+    local CACHE_DIRS=(
+        "${HF_HOME:-/workspace/.hf_home}/hub"
+        "${HF_HOME:-/workspace/.hf_home}"
+        "/workspace/.hf_home/hub"
+        "/workspace/.hf_home"
+        "${HUGGINGFACE_HUB_CACHE:-}"
+        "$HOME/.cache/huggingface/hub"
+        "$HOME/.cache/huggingface"
+        "/root/.cache/huggingface/hub"
+        "/root/.cache/huggingface"
+    )
+
+    for cdir in "${CACHE_DIRS[@]}"; do
+        if [ -n "$cdir" ] && [ -d "$cdir" ]; then
+            find "$cdir" -maxdepth 2 -type d -name "models--*" -prune -exec rm -rf {} + 2>/dev/null || true
+            find "$cdir" -maxdepth 2 -type d -name ".tmp*" -prune -exec rm -rf {} + 2>/dev/null || true
+            find "$cdir" -maxdepth 2 -type d -name "tmp*" -prune -exec rm -rf {} + 2>/dev/null || true
+        fi
+    done
+
+    local MODULE_DIRS=(
+        "/workspace/.hf_home/modules"
+        "$HOME/.cache/huggingface/modules"
+        "/root/.cache/huggingface/modules"
+    )
+    for mdir in "${MODULE_DIRS[@]}"; do
+        if [ -d "$mdir" ]; then
+            rm -rf "$mdir"/* 2>/dev/null || true
+        fi
+    done
+
+    rm -rf /tmp/huggingface* /tmp/xet* /tmp/torch* /tmp/*models* 2>/dev/null || true
+    echo "-> Dung lượng ổ đĩa khả dụng hiện tại:"
+    df -h / | awk 'NR==1 || NR==2'
+    echo "----------------------------------------------------------------------"
+}
+
+# Dọn dẹp sơ bộ trước khi bắt đầu chuỗi thực nghiệm
+cleanup_hf_models
+
 for i in "${!MODELS[@]}"; do
     MODEL_NUM=$((i + 1))
     ENTRY="${MODELS[$i]}"
@@ -127,6 +171,9 @@ for i in "${!MODELS[@]}"; do
         echo "[BỎ QUA] Model #$MODEL_NUM ($MODEL_NAME) nhỏ hơn mốc bắt đầu #$START_INDEX."
         continue
     fi
+
+    # Đảm bảo dọn dẹp sạch sẽ ổ đĩa trước khi tải model mới
+    cleanup_hf_models
 
     # Thiết lập đường dẫn file và cờ chạy theo chế độ
     if [ "$PROFILE_MODE" = true ]; then
@@ -179,6 +226,10 @@ for i in "${!MODELS[@]}"; do
         2>&1 | tee "$LOG_FILE"
 
     EXIT_CODE=${PIPESTATUS[0]}
+
+    # Luôn dọn dẹp model weights ngay sau khi hoàn thành lượt chạy (hoặc khi gặp lỗi)
+    cleanup_hf_models
+
     if [ $EXIT_CODE -ne 0 ]; then
         echo "======================================================================"
         echo "[LỖI NGHIÊM TRỌNG] Model #$MODEL_NUM ($MODEL_NAME) gặp lỗi thoát (Exit code: $EXIT_CODE)!"

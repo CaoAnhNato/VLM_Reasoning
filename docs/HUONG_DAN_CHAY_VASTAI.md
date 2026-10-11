@@ -272,3 +272,13 @@ Sau khi hoàn thành, file `results/vitextvqa_benchmark_summary.csv` sẽ cho ra
      ```
   3. Chạy lại benchmark bình thường, hệ thống đã tích hợp sẵn cơ chế **tự phục hồi (self-healing monkeypatch)** và nạp trực tiếp lên CUDA theo khuyến nghị của nhóm tác giả 5CD-AI.
 
+### 6.2. Lỗi đầy ổ đĩa (Disk Full) do tải nhiều mô hình liên tiếp
+* **Nguyên nhân:** Khi chạy qua nhiều mô hình lớn (Qwen 3B, Qwen 7B, Vintern 1B, Vintern 3B...), Hugging Face lưu trữ trọng số trong cache (`/workspace/.hf_home/hub` hoặc `~/.cache/huggingface/hub`) có thể chiếm 30GB – 40GB dẫn đến cạn kiệt dung lượng ổ đĩa.
+* **Cách khắc phục tức thì trên máy ảo:**
+  Chạy script dọn dẹp chuyên dụng để giải phóng ngay lập tức toàn bộ weights của các model cũ mà không làm mất dataset và file kết quả:
+  ```bash
+  chmod +x scripts/benchmark/cleanup_cache.sh
+  ./scripts/benchmark/cleanup_cache.sh
+  ```
+* **Cơ chế tự động:** Script `run_all_benchmarks.sh` và `evaluate_vitextvqa.py` hiện đã tích hợp cơ chế tự động dọn dẹp sạch sẽ toàn bộ model weights của các lượt chạy trước trước khi bắt đầu tải mô hình mới, đảm bảo dung lượng ổ đĩa luôn duy trì ở mức tối ưu.
+
