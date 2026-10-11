@@ -642,7 +642,8 @@ def main():
                         help="Hugging Face Access Token (hoặc tự động nhận từ biến môi trường HF_TOKEN)")
     args = parser.parse_args()
 
-    # 0. Thiết lập Hugging Face Token & Xác thực Hub
+    # 0. Thiết lập Hugging Face Token & Xác thực Hub (Kích hoạt Xet High Performance)
+    os.environ["HF_XET_HIGH_PERFORMANCE"] = "1"
     hf_token = args.hf_token or os.environ.get("HF_TOKEN") or None
     if hf_token:
         os.environ["HF_TOKEN"] = hf_token

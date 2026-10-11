@@ -63,18 +63,22 @@ chmod +x scripts/benchmark/*.sh
 
 ---
 
-### BƯỚC 4: THIẾT LẬP MÔI TRƯỜNG TỰ ĐỘNG
+### BƯỚC 4: THIẾT LẬP MÔI TRƯỜNG TỰ ĐỘNG & KÍCH HOẠT XET HIGH PERFORMANCE
 
-Chạy script cài đặt các thư viện bổ trợ (Hugging Face CLI, Unsloth, Transformers, accelerate, hf_transfer...):
+Chạy script cài đặt các thư viện bổ trợ (Hugging Face `hf` CLI, `hf-xet`, Unsloth, Transformers, accelerate...):
 
 ```bash
-# Truyền kèm Hugging Face Token để đăng nhập CLI ngay từ đầu
+# 1. Kích hoạt chế độ tải dữ liệu siêu tốc bằng Xet & gán Token (khuyên dùng):
+export HF_XET_HIGH_PERFORMANCE=1
+export HF_TOKEN="hf_your_token_here"
+
+# 2. Chạy setup môi trường (tự động cài đặt hf, hf-xet, unsloth, torch...):
 ./scripts/benchmark/setup_vastai.sh hf_your_token_here
 
-# Hoặc thiết lập biến môi trường toàn cục (khuyên dùng):
-export HF_TOKEN="hf_your_token_here"
+# 3. (Tùy chọn) Xác thực phiên CLI thế hệ mới của Hugging Face:
+hf auth login --token $HF_TOKEN
 ```
-*Lưu ý: Script sẽ tự phát hiện PyTorch CUDA có sẵn trong container và chỉ mất khoảng **30 – 45 giây** để hoàn tất toàn bộ.*
+*Lưu ý: Hugging Face đã chính thức chuyển đổi từ `huggingface-cli login` sang CLI thế hệ mới `hf auth login`, đồng thời thay thế `hf_transfer` cũ bằng công nghệ `HF_XET_HIGH_PERFORMANCE=1` để đạt tốc độ truyền tải tối đa trên mạng 2000 Mbps.*
 
 ---
 

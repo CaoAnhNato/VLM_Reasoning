@@ -92,12 +92,19 @@ if [ "$PROFILE_MODE" = true ]; then
 else
     echo " CHẾ ĐỘ THỰC THI: FULL-TESTCASE (100% Tập Test Set)"
 fi
+# Kích hoạt chế độ tải dữ liệu siêu tốc bằng Xet High Performance của Hugging Face
+export HF_XET_HIGH_PERFORMANCE=1
+
 if [ -n "$HF_TOKEN" ]; then
     export HF_TOKEN="$HF_TOKEN"
     echo " Hugging Face Token: [ĐÃ CẤU HÌNH (Authenticated)]"
+    if command -v hf &> /dev/null; then
+        hf auth login --token "$HF_TOKEN" &>/dev/null || true
+    fi
 else
-    echo " Hugging Face Token: [CHƯA CẤU HÌNH (Unauthenticated)]"
+    echo " Hugging Face Token: [CHƯA CẤU HÌNH (Unauthenticated - Khuyến nghị dùng --hf_token)]"
 fi
+echo " Chế độ tăng tốc Hub: Xet High Performance (HF_XET_HIGH_PERFORMANCE=1)"
 echo " Tổng số mô hình: $TOTAL_MODELS"
 echo " Thư mục kết quả: $OUT_DIR"
 if [ -n "$ONLY_INDEX" ]; then echo " Chỉ định chạy: Model số $ONLY_INDEX"; fi
