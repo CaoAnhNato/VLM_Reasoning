@@ -1,0 +1,9 @@
+﻿model_name,backend,num_samples,full_f1,full_em,elapsed_seconds,timestamp
+unsloth/Qwen2.5-VL-3B-Instruct-unsloth-bnb-4bit,unsloth,10028,41.37,16.16,0.0,2026-10-12 09:22:22
+Qwen/Qwen2.5-VL-3B-Instruct,native,10028,41.37,16.16,0.0,2026-10-12 13:45:47
+Qwen/Qwen2.5-VL-7B-Instruct,native,10028,37.28,10.21,0.0,2026-10-12 13:45:49
+5CD-AI/Vintern-1B-v3_5,native,10028,39.38,11.61,0.0,2026-10-12 13:45:51
+5CD-AI/Vintern-3B-beta,native,10028,41.37,16.16,0.0,2026-10-12 13:45:53
+erax-ai/EraX-VL-2B-V1.5,native,10028,28.65,1.25,0.0,2026-10-12 13:45:55
+erax-ai/EraX-VL-7B-V1.5,native,10028,41.92,13.32,0.0,2026-10-12 13:45:57
+CohereLabs/aya-vision-8b,transformers_native,10028,20.24,4.9,4835.29,2026-10-12 15:10:39
