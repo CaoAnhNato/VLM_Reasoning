@@ -14,10 +14,12 @@ import glob
 import json
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+import queue
 import re
 import shutil
 import string
 import sys
+import threading
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -536,20 +538,47 @@ class VLMRunner:
         model_loaded = False
         last_error = None
 
+        # Cấu hình tối ưu hóa nhân Attention (Ưu tiên SDPA / FlashAttention-2 cho Ada Lovelace & Blackwell)
+        extra_model_load_kwargs = dict(hf_kwargs)
+        if torch is not None and torch.cuda.is_available():
+            try:
+                import flash_attn
+                extra_model_load_kwargs["attn_implementation"] = "flash_attention_2"
+            except Exception:
+                extra_model_load_kwargs["attn_implementation"] = "sdpa"
+
         for cls_name, cls_obj in candidate_classes:
             try:
-                print(f"[INFO] Đang thử khởi tạo bằng class: {cls_name}...")
+                attn_mode = extra_model_load_kwargs.get("attn_implementation", "default")
+                print(f"[INFO] Đang thử khởi tạo bằng class: {cls_name} (attn={attn_mode})...")
                 self.model = cls_obj.from_pretrained(
                     self.model_name,
                     torch_dtype=torch.bfloat16,
                     trust_remote_code=True,
                     device_map="auto",
-                    **hf_kwargs
+                    **extra_model_load_kwargs
                 ).eval()
                 model_loaded = True
                 print(f"[SUCCESS] Đã nạp thành công bằng class {cls_name}!")
                 break
             except Exception as e:
+                # Nếu không nhận diện attn_implementation, fallback sang nạp mặc định
+                if "attn_implementation" in extra_model_load_kwargs:
+                    try:
+                        fallback_kwargs = dict(extra_model_load_kwargs)
+                        fallback_kwargs.pop("attn_implementation", None)
+                        self.model = cls_obj.from_pretrained(
+                            self.model_name,
+                            torch_dtype=torch.bfloat16,
+                            trust_remote_code=True,
+                            device_map="auto",
+                            **fallback_kwargs
+                        ).eval()
+                        model_loaded = True
+                        print(f"[SUCCESS] Đã nạp thành công bằng class {cls_name} (default attn fallback)!")
+                        break
+                    except Exception:
+                        pass
                 last_error = e
                 # Nếu gặp lỗi quyền truy cập gated repo đối với CohereLabs/aya-vision-8b
                 err_str = str(e).lower()
@@ -721,18 +750,26 @@ class VLMRunner:
             return 2
         return 4
 
-    def generate_multi(self, image_path: str, questions: List[str], max_chunk_size: int = 4) -> List[str]:
-        """Sinh câu trả lời cho danh sách nhiều câu hỏi cùng chung một hình ảnh (tối ưu gom nhóm)."""
+    def generate_multi(
+        self,
+        image_path: str,
+        questions: List[str],
+        max_chunk_size: int = 4,
+        preloaded_image: Optional[Image.Image] = None
+    ) -> List[str]:
+        """Sinh câu trả lời cho danh sách nhiều câu hỏi cùng chung một hình ảnh (tối ưu gom nhóm & cache ảnh)."""
         if not questions:
             return []
-        if not os.path.exists(image_path):
-            return ["" for _ in questions]
 
-        try:
-            image = Image.open(image_path).convert("RGB")
-        except Exception as e:
-            print(f"[ERROR] Không đọc được ảnh {image_path}: {e}")
-            return ["" for _ in questions]
+        image = preloaded_image
+        if image is None:
+            if not os.path.exists(image_path):
+                return ["" for _ in questions]
+            try:
+                image = Image.open(image_path).convert("RGB")
+            except Exception as e:
+                print(f"[ERROR] Không đọc được ảnh {image_path}: {e}")
+                return ["" for _ in questions]
 
         all_responses: List[str] = []
         chunks = chunk_list(questions, max(1, max_chunk_size))
@@ -820,6 +857,21 @@ class VLMRunner:
 
     def _generate_unsloth_batch(self, image: Image.Image, questions: List[str]) -> List[str]:
         """Tối ưu sinh đồng thời cho Unsloth: cùng 1 ảnh, nhân bản tham chiếu và batched forward."""
+        if len(questions) == 1:
+            q = questions[0]
+            p = f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {q}"
+            msgs = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": p}]}]
+            try:
+                in_text = self.processor.apply_chat_template(msgs, add_generation_prompt=True)
+                inps = self.processor(image, in_text, add_special_tokens=False, return_tensors="pt").to("cuda")
+                with torch.inference_mode():
+                    outs = self.model.generate(**inps, max_new_tokens=64, use_cache=True, temperature=0.01, do_sample=False)
+                g_ids = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inps.input_ids, outs)]
+                r = self.processor.batch_decode(g_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
+                return [str(r).strip()]
+            except Exception:
+                return [""]
+
         prompts = [
             f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {q}"
             for q in questions
@@ -875,12 +927,36 @@ class VLMRunner:
 
     def _generate_transformers_batch(self, image: Image.Image, questions: List[str]) -> List[str]:
         """Tối ưu sinh đồng thời cho Transformers Native (EraX, Qwen-VL)."""
+        model_device = getattr(self.model, "device", "cuda" if torch.cuda.is_available() else "cpu")
+        if len(questions) == 1:
+            q = questions[0]
+            p = f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {q}"
+            msgs = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": p}]}]
+            try:
+                if hasattr(self.processor, "apply_chat_template"):
+                    text_input = self.processor.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
+                    inputs = self.processor(text=[text_input], images=[image], return_tensors="pt").to(model_device)
+                else:
+                    inputs = self.processor(images=image, text=p, return_tensors="pt").to(model_device)
+                with torch.inference_mode():
+                    output_ids = self.model.generate(**inputs, max_new_tokens=64, do_sample=False)
+                if hasattr(inputs, "input_ids"):
+                    output_ids = output_ids[:, inputs.input_ids.shape[1]:]
+                if hasattr(self.processor, "batch_decode"):
+                    r = self.processor.batch_decode(output_ids, skip_special_tokens=True)[0]
+                elif hasattr(self.processor, "tokenizer") and hasattr(self.processor.tokenizer, "batch_decode"):
+                    r = self.processor.tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0]
+                else:
+                    r = str(output_ids[0])
+                return [str(r).strip()]
+            except Exception:
+                return [""]
+
         prompts = [
             f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {q}"
             for q in questions
         ]
         images = [image] * len(questions)
-        model_device = getattr(self.model, "device", "cuda" if torch.cuda.is_available() else "cpu")
         try:
             if hasattr(self.processor, "apply_chat_template"):
                 messages_batch = [
@@ -1225,6 +1301,91 @@ def resolve_models_to_run(model_arg: str, user_backend: str = "auto", user_4bit:
     }]
 
 
+# ==============================================================================
+# BỘ NẠP TRƯỚC BẤT ĐỒNG BỘ CHO DỮ LIỆU GOM NHÓM (ASYNC PREFETCH PIPELINE)
+# ==============================================================================
+
+class AsyncGroupedPrefetcher:
+    """
+    Bộ nạp trước bất đồng bộ (Producer-Consumer Double Buffering Queue) cho các lô câu hỏi gom nhóm theo ảnh.
+    Một luồng nền (Worker Thread) độc lập chịu trách nhiệm:
+      1. Đọc tệp ảnh từ đĩa NVMe và giải mã PIL.Image trước trong nền.
+      2. Tái sử dụng đối tượng PIL.Image này cho tất cả các chunk thuộc về cùng một ảnh (không đọc lại đĩa).
+      3. Đẩy tuple (img_path, image, chunk_items) vào hàng đợi có giới hạn kích thước (queue.Queue(maxsize=prefetch_depth)).
+    
+    Cơ chế này che giấu hoàn toàn độ trễ đọc đĩa (Disk I/O latency) và triệt tiêu hiện tượng
+    trễ bong bóng (GPU Starvation / Pipeline Bubbles), duy trì GPU ở trạng thái bận rộn liên tục.
+    """
+    def __init__(self, grouped_samples: Dict[str, List[Dict[str, Any]]], effective_bs: int, prefetch_depth: int = 3):
+        self.grouped_samples = grouped_samples
+        self.effective_bs = max(1, effective_bs)
+        self.prefetch_depth = max(1, prefetch_depth)
+        self.queue: queue.Queue = queue.Queue(maxsize=self.prefetch_depth)
+        self.stop_event = threading.Event()
+        self.worker_thread = threading.Thread(target=self._producer_loop, daemon=True)
+
+    def _producer_loop(self):
+        try:
+            for img_path, items in self.grouped_samples.items():
+                if self.stop_event.is_set():
+                    break
+
+                # Đọc ảnh một lần duy nhất trong RAM cho toàn bộ các chunk của ảnh này
+                image = None
+                if os.path.exists(img_path):
+                    try:
+                        image = Image.open(img_path).convert("RGB")
+                    except Exception as e:
+                        print(f"[PREFETCH WARN] Lỗi đọc ảnh {img_path}: {e}")
+                        image = None
+
+                chunks = chunk_list(items, self.effective_bs)
+                for chunk_items in chunks:
+                    if self.stop_event.is_set():
+                        break
+                    while not self.stop_event.is_set():
+                        try:
+                            self.queue.put((img_path, image, chunk_items), timeout=0.2)
+                            break
+                        except queue.Full:
+                            continue
+        except Exception as e:
+            print(f"[PREFETCH ERROR] Ngoại lệ trong luồng nạp trước: {e}")
+        finally:
+            while not self.stop_event.is_set():
+                try:
+                    self.queue.put((None, None, None), timeout=0.2)
+                    break
+                except queue.Full:
+                    continue
+
+    def __enter__(self):
+        self.worker_thread.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop_event.set()
+        while not self.queue.empty():
+            try:
+                self.queue.get_nowait()
+            except queue.Empty:
+                break
+        self.worker_thread.join(timeout=2.0)
+
+    def __iter__(self):
+        while True:
+            try:
+                img_path, image, chunk_items = self.queue.get(timeout=30.0)
+            except queue.Empty:
+                print("[PREFETCH TIMEOUT] Hàng đợi nạp trước bị quá hạn thời gian chờ!")
+                break
+
+            if img_path is None and chunk_items is None:
+                break
+
+            yield img_path, image, chunk_items
+
+
 def evaluate_single_model(
     model_cfg: Dict[str, Any],
     samples: List[Dict[str, Any]],
@@ -1370,21 +1531,26 @@ def evaluate_single_model(
                     out_f.write(json.dumps(record, ensure_ascii=False) + "\n")
                     out_f.flush()
         else:
-            # Chế độ tối ưu hóa gom nhóm theo ảnh (Image-Grouped Multi-Quest Processing)
+            # Chế độ tối ưu hóa gom nhóm theo ảnh & Asynchronous Prefetch Pipeline
             grouped_samples = group_samples_by_image(remaining_samples)
             effective_bs = args.batch_size if args.batch_size > 0 else runner.get_recommended_batch_size()
-            print(f"\n[OPTIMIZATION] Bật cơ chế Image-Grouped Multi-Quest Processing!")
+            print(f"\n[OPTIMIZATION] Bật cơ chế Image-Grouped Processing & Asynchronous Prefetch Pipeline!")
             print(f" - Tổng số câu hỏi cần chạy:      {len(remaining_samples)} câu")
             print(f" - Số lượng hình ảnh duy nhất:     {len(grouped_samples)} ảnh")
             print(f" - Kích thước lô tối đa (B_max):   {effective_bs} câu hỏi/lô")
+            print(f" - Hàng đợi nạp trước Double Buffering: 3 ảnh (Ẩn hoàn toàn Disk I/O)")
 
-            with tqdm(total=len(remaining_samples), desc=desc_msg) as pbar:
-                for img_path, items in grouped_samples.items():
-                    chunks = chunk_list(items, effective_bs)
-                    for chunk_items in chunks:
+            with AsyncGroupedPrefetcher(grouped_samples, effective_bs=effective_bs, prefetch_depth=3) as prefetcher:
+                with tqdm(total=len(remaining_samples), desc=desc_msg) as pbar:
+                    for img_path, image, chunk_items in prefetcher:
                         chunk_questions = [c["question"] for c in chunk_items]
                         t_chunk_start = time.perf_counter()
-                        chunk_preds = runner.generate_multi(img_path, chunk_questions, max_chunk_size=effective_bs)
+                        chunk_preds = runner.generate_multi(
+                            img_path,
+                            chunk_questions,
+                            max_chunk_size=effective_bs,
+                            preloaded_image=image
+                        )
                         chunk_dur = time.perf_counter() - t_chunk_start
 
                         while len(chunk_preds) < len(chunk_items):
