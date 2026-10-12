@@ -285,7 +285,7 @@ def group_samples_by_image(samples: List[Dict[str, Any]]) -> Dict[str, List[Dict
     """
     grouped: Dict[str, List[Dict[str, Any]]] = {}
     for s in samples:
-        img_p = s["image_path"]
+        img_p = s.get("image_path") or s.get("image_name", "")
         if img_p not in grouped:
             grouped[img_p] = []
         grouped[img_p].append(s)
@@ -1192,17 +1192,17 @@ def update_profiling_csv(profiling_csv_path: str, row: Dict[str, Any]):
 BENCHMARK_MODEL_REGISTRY = [
     {
         "id": 1,
-        "name": "unsloth/Qwen2.5-VL-3B-Instruct-unsloth-bnb-4bit",
-        "backend": "unsloth",
-        "load_in_4bit": True,
-        "description": "Qwen2.5-VL 3B 4-bit qua Unsloth"
+        "name": "Qwen/Qwen2.5-VL-3B-Instruct",
+        "backend": "native",
+        "load_in_4bit": False,
+        "description": "Qwen2.5-VL 3B Native BF16 (Không qua bnb-4bit)"
     },
     {
         "id": 2,
-        "name": "unsloth/Qwen2.5-VL-7B-Instruct-unsloth-bnb-4bit",
-        "backend": "unsloth",
-        "load_in_4bit": True,
-        "description": "Qwen2.5-VL 7B 4-bit qua Unsloth"
+        "name": "Qwen/Qwen2.5-VL-7B-Instruct",
+        "backend": "native",
+        "load_in_4bit": False,
+        "description": "Qwen2.5-VL 7B Native BF16 (Không qua bnb-4bit)"
     },
     {
         "id": 3,
@@ -1424,6 +1424,25 @@ def evaluate_single_model(
     overwrite_flag = args.overwrite if not is_profile_mode else True
 
     # 1. Kiểm tra tiến độ đã hoàn thành trước đó (Sample-level Resumption Check)
+    # Tự động kế thừa checkpoint nếu file mới chưa có nhưng có file tương ứng từ phiên bản cũ (ví dụ unsloth 4-bit)
+    if out_jsonl and (not os.path.exists(out_jsonl) or os.path.getsize(out_jsonl) == 0) and not overwrite_flag:
+        out_dir = os.path.dirname(out_jsonl)
+        if os.path.exists(out_dir):
+            cand_files = []
+            if "qwen2" in safe_name.lower():
+                tag = "7b" if "7b" in safe_name.lower() else ("3b" if "3b" in safe_name.lower() else "")
+                if tag:
+                    cand_files = glob.glob(os.path.join(out_dir, f"*qwen*{tag}*preds.jsonl"))
+            for cand in cand_files:
+                if os.path.abspath(cand) != os.path.abspath(out_jsonl) and os.path.exists(cand) and os.path.getsize(cand) > 0:
+                    print("\n==================================================================")
+                    print(f" [CHECKPOINT INHERITANCE DETECTED]")
+                    print(f" Tìm thấy tiến độ đã chạy từ phiên bản: {os.path.basename(cand)}")
+                    print(f" Tự động kế thừa sang: {os.path.basename(out_jsonl)} để bảo toàn toàn bộ mẫu cũ!")
+                    print("==================================================================")
+                    shutil.copyfile(cand, out_jsonl)
+                    break
+
     existing_predictions = []
     evaluated_keys = set()
     if out_jsonl and os.path.exists(out_jsonl) and not overwrite_flag:

@@ -85,8 +85,8 @@ mkdir -p "$OUT_DIR/logs/profile"
 
 # Danh sách 7 mô hình ứng viên từ docs/Report.docx
 MODELS=(
-    "unsloth/Qwen2.5-VL-3B-Instruct-unsloth-bnb-4bit:unsloth"
-    "unsloth/Qwen2.5-VL-7B-Instruct-unsloth-bnb-4bit:unsloth"
+    "Qwen/Qwen2.5-VL-3B-Instruct:native"
+    "Qwen/Qwen2.5-VL-7B-Instruct:native"
     "5CD-AI/Vintern-1B-v3_5:native"
     "5CD-AI/Vintern-3B-beta:native"
     "erax-ai/EraX-VL-2B-V1.5:native"
@@ -223,6 +223,26 @@ for i in "${!MODELS[@]}"; do
         PYTHON_CMD="python3"
     elif command -v python &>/dev/null; then
         PYTHON_CMD="python"
+    fi
+
+    # 2.5. Tự động kế thừa checkpoint nếu chuyển đổi từ bản unsloth-bnb-4bit sang Native BF16
+    if [ ! -f "$PRED_FILE" ] || [ ! -s "$PRED_FILE" ]; then
+        LEGACY_4BIT=$(find "$OUT_DIR/predictions" -name "*${SAFE_NAME}*preds.jsonl" 2>/dev/null | head -n 1)
+        if [ -z "$LEGACY_4BIT" ]; then
+            if [[ "$MODEL_NAME" == *"7B"* ]]; then
+                LEGACY_4BIT=$(find "$OUT_DIR/predictions" -name "*Qwen*7B*preds.jsonl" 2>/dev/null | head -n 1)
+            elif [[ "$MODEL_NAME" == *"3B"* ]]; then
+                LEGACY_4BIT=$(find "$OUT_DIR/predictions" -name "*Qwen*3B*preds.jsonl" 2>/dev/null | head -n 1)
+            fi
+        fi
+        if [ -n "$LEGACY_4BIT" ] && [ -f "$LEGACY_4BIT" ] && [ -s "$LEGACY_4BIT" ]; then
+            echo ""
+            echo "======================================================================"
+            echo "[CHECKPOINT INHERITANCE] Tìm thấy tiến độ cũ từ: $(basename "$LEGACY_4BIT")"
+            echo "-> Tự động kế thừa sang $PRED_FILE để bảo toàn $(wc -l < "$LEGACY_4BIT" | tr -d ' ') mẫu đã chạy!"
+            echo "======================================================================"
+            cp "$LEGACY_4BIT" "$PRED_FILE"
+        fi
     fi
 
     # 3. Thông báo trạng thái checkpoint / resume nếu đã có dữ liệu trước đó (chỉ áp dụng ở Full mode)
