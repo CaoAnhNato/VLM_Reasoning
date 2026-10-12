@@ -14,6 +14,8 @@ FORCE_RERUN=false
 PROFILE_MODE=false
 PROFILE_SAMPLES=100
 HF_TOKEN="${HF_TOKEN:-}"
+BATCH_SIZE=0
+HOURLY_RATE=""
 
 # Phân tích tham số dòng lệnh
 while [[ $# -gt 0 ]]; do
@@ -43,14 +45,23 @@ while [[ $# -gt 0 ]]; do
             FORCE_RERUN=true
             shift
             ;;
+        --batch_size|--batch-size)
+            BATCH_SIZE="$2"
+            shift 2
+            ;;
+        --hourly_rate|--hourly-rate)
+            HOURLY_RATE="$2"
+            shift 2
+            ;;
         *)
             echo "Tham số không hợp lệ: $1"
             echo "Cách dùng:"
             echo "  ./run_all_benchmarks.sh                  # Chạy Full-testcase 100% toàn bộ 7 mô hình (tự động resume)"
             echo "  ./run_all_benchmarks.sh --hf_token <TOK> # Chạy Full-testcase kèm Hugging Face Token"
+            echo "  ./run_all_benchmarks.sh --batch_size 4   # Chỉ định kích thước lô tối đa"
             echo "  ./run_all_benchmarks.sh --profile        # Chạy Profiling 100 mẫu đo tốc độ, VRAM, RAM và ngoại suy chi phí Vast.ai"
             echo "  ./run_all_benchmarks.sh --profile 50     # Chạy Profiling với 50 mẫu"
-            echo "  ./run_all_benchmarks.sh --profile 100 --hf_token <TOK> # Chạy Profiling 100 mẫu kèm token"
+            echo "  ./run_all_benchmarks.sh --profile 100 --hf_token <TOK> --hourly_rate 0.469 # Profiling kèm giá thuê RTX 5090"
             echo "  ./run_all_benchmarks.sh --start 3        # Bắt đầu chạy từ model số 3"
             echo "  ./run_all_benchmarks.sh --only 3         # Chỉ chạy riêng model số 3"
             echo "  ./run_all_benchmarks.sh --force          # Chạy lại tất cả từ đầu, ghi đè kết quả cũ"
@@ -194,6 +205,26 @@ for i in "${!MODELS[@]}"; do
         EXTRA_ARGS="$EXTRA_ARGS --hf_token $HF_TOKEN"
     fi
 
+    # Bổ sung batch_size và hourly_rate nếu người dùng cấu hình
+    if [ "$BATCH_SIZE" -gt 0 ] 2>/dev/null; then
+        EXTRA_ARGS="$EXTRA_ARGS --batch_size $BATCH_SIZE"
+    fi
+    if [ -n "$HOURLY_RATE" ]; then
+        EXTRA_ARGS="$EXTRA_ARGS --hourly_rate $HOURLY_RATE"
+    fi
+
+    # Tự động phát hiện python binary
+    PYTHON_CMD="python3"
+    if [ -f "/venv/main/bin/python" ]; then
+        PYTHON_CMD="/venv/main/bin/python"
+    elif [ -f "./venv/bin/python" ]; then
+        PYTHON_CMD="./venv/bin/python"
+    elif command -v python3 &>/dev/null; then
+        PYTHON_CMD="python3"
+    elif command -v python &>/dev/null; then
+        PYTHON_CMD="python"
+    fi
+
     # 3. Thông báo trạng thái checkpoint / resume nếu đã có dữ liệu trước đó (chỉ áp dụng ở Full mode)
     if [ "$PROFILE_MODE" = false ] && [ -f "$PRED_FILE" ] && [ -s "$PRED_FILE" ]; then
         COUNT_PREDS=$(wc -l < "$PRED_FILE" | tr -d ' ')
@@ -216,7 +247,7 @@ for i in "${!MODELS[@]}"; do
     echo ">>> BẮT ĐẦU: $(date '+%Y-%m-%d %H:%M:%S')"
     echo "######################################################################"
 
-    python3 scripts/benchmark/evaluate_vitextvqa.py \
+    $PYTHON_CMD scripts/benchmark/evaluate_vitextvqa.py \
         --model_name "$MODEL_NAME" \
         --backend "$BACKEND" \
         --data_dir "$DATA_DIR" \
