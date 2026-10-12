@@ -14,7 +14,7 @@ FORCE_RERUN=false
 PROFILE_MODE=false
 PROFILE_SAMPLES=100
 HF_TOKEN="${HF_TOKEN:-}"
-BATCH_SIZE=0
+BATCH_SIZE=4
 HOURLY_RATE=""
 
 # Phân tích tham số dòng lệnh

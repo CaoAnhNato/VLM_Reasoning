@@ -740,14 +740,23 @@ class VLMRunner:
             return response.strip()
 
     def get_recommended_batch_size(self) -> int:
-        """Định đoạt kích thước lô (batch size) tối ưu dựa trên số lượng tham số của mô hình."""
+        """Định đoạt kích thước lô (batch size) tối ưu dựa trên số lượng tham số của mô hình và dung lượng VRAM."""
         name = self.model_name.lower()
+        has_large_vram = False
+        if torch is not None and torch.cuda.is_available():
+            try:
+                total_vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
+                if total_vram_gb >= 20.0:
+                    has_large_vram = True
+            except Exception:
+                pass
+
         if "1b" in name or "2b" in name:
             return 8
         elif "3b" in name:
-            return 4
+            return 8 if has_large_vram else 4
         elif "7b" in name or "8b" in name:
-            return 2
+            return 4 if (has_large_vram or getattr(self, "load_in_4bit", False) or "4bit" in name) else 2
         return 4
 
     def generate_multi(
