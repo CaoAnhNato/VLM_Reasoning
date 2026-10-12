@@ -1,0 +1,19 @@
+Note: Environment variable`HF_TOKEN` is set and is the current active token independently from the token you've just configured.
+[AUTH] Đã kích hoạt xác thực Hugging Face Hub thành công (tăng tốc tải & mở rộng rate limit)!
+[DATA] Đã nạp thành công 10028 mẫu câu hỏi từ: data/vitextvqa/ViTextVQA_test_gt.json
+[DATA] Thư mục ảnh đang sử dụng: data/vitextvqa/st_images
+
+==================================================================
+ CHƯƠNG TRÌNH BENCHMARK VLM TRÊN ViTextVQA
+ Số lượng mô hình sẽ thực thi: 1
+   1. unsloth/Qwen2.5-VL-3B-Instruct-unsloth-bnb-4bit (Backend: unsloth)
+==================================================================
+
+==================================================================
+ [RESUME - ĐÃ HOÀN TẤT 100%] Model: unsloth/Qwen2.5-VL-3B-Instruct-unsloth-bnb-4bit
+ File kết quả results/predictions/unsloth_Qwen2.5-VL-3B-Instruct-unsloth-bnb-4bit_preds.jsonl đã có đủ 10028 / 10028 mẫu.
+ Bỏ qua bước nạp trọng số và suy luận lại!
+==================================================================
+ Full Test Set F1:           41.37%
+ Full Test Set Exact Match:  16.16%
+==================================================================

@@ -1,0 +1,19 @@
+Note: Environment variable`HF_TOKEN` is set and is the current active token independently from the token you've just configured.
+[AUTH] Đã kích hoạt xác thực Hugging Face Hub thành công (tăng tốc tải & mở rộng rate limit)!
+[DATA] Đã nạp thành công 10028 mẫu câu hỏi từ: data/vitextvqa/ViTextVQA_test_gt.json
+[DATA] Thư mục ảnh đang sử dụng: data/vitextvqa/st_images
+
+==================================================================
+ CHƯƠNG TRÌNH BENCHMARK VLM TRÊN ViTextVQA
+ Số lượng mô hình sẽ thực thi: 1
+   1. 5CD-AI/Vintern-1B-v3_5 (Backend: native)
+==================================================================
+
+==================================================================
+ [RESUME - ĐÃ HOÀN TẤT 100%] Model: 5CD-AI/Vintern-1B-v3_5
+ File kết quả results/predictions/5CD-AI_Vintern-1B-v3_5_preds.jsonl đã có đủ 10028 / 10028 mẫu.
+ Bỏ qua bước nạp trọng số và suy luận lại!
+==================================================================
+ Full Test Set F1:           39.38%
+ Full Test Set Exact Match:  11.61%
+==================================================================
