@@ -509,15 +509,23 @@ class VLMRunner:
         try:
             self.processor = AutoProcessor.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
         except Exception as e:
+            err_str = str(e).lower()
+            if ("gated" in err_str or "401" in err_str or "403" in err_str or "access" in err_str) and ("aya-vision" in self.model_name.lower()) and ("unsloth" not in self.model_name.lower()):
+                print(f"[WARN] Không có quyền truy cập repo gated '{self.model_name}': {e}")
+                print("[INFO] Tự động chuyển sang model cộng đồng công khai 100%: 'unsloth/aya-vision-8b' (Native BF16)...")
+                self.model_name = "unsloth/aya-vision-8b"
+                self._load_model()
+                return
             # Fallback sang AutoTokenizer nếu Processor chuyên biệt chưa tải được
             from transformers import AutoTokenizer
             try:
                 self.processor = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
             except Exception as tok_err:
                 # Kiểm tra lỗi gated repo đối với Aya Vision
-                if ("aya-vision" in self.model_name.lower()) and ("unsloth" not in self.model_name.lower()):
+                tok_err_str = str(tok_err).lower()
+                if ("gated" in tok_err_str or "401" in tok_err_str or "403" in tok_err_str or "access" in tok_err_str) and ("aya-vision" in self.model_name.lower()) and ("unsloth" not in self.model_name.lower()):
                     print(f"[WARN] Lỗi truy cập repo gated '{self.model_name}': {tok_err}")
-                    print("[INFO] Tự động chuyển sang model cộng đồng công khai 100%: 'unsloth/aya-vision-8b'...")
+                    print("[INFO] Tự động chuyển sang model cộng đồng công khai 100%: 'unsloth/aya-vision-8b' (Native BF16)...")
                     self.model_name = "unsloth/aya-vision-8b"
                     self._load_model()
                     return
@@ -526,6 +534,7 @@ class VLMRunner:
         # Danh sách class loader theo thứ tự ưu tiên đa phiên bản transformers
         candidate_classes = []
         for cls_name in [
+            "AutoModelForMultimodalLM",
             "AutoModelForImageTextToText",
             "AutoModelForVision2Seq",
             "Qwen2_5_VLForConditionalGeneration",
@@ -943,8 +952,18 @@ class VLMRunner:
             msgs = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": p}]}]
             try:
                 if hasattr(self.processor, "apply_chat_template"):
-                    text_input = self.processor.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
-                    inputs = self.processor(text=[text_input], images=[image], return_tensors="pt").to(model_device)
+                    try:
+                        inputs = self.processor.apply_chat_template(
+                            msgs,
+                            padding=True,
+                            add_generation_prompt=True,
+                            tokenize=True,
+                            return_dict=True,
+                            return_tensors="pt"
+                        ).to(model_device)
+                    except Exception:
+                        text_input = self.processor.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
+                        inputs = self.processor(text=[text_input], images=[image], return_tensors="pt").to(model_device)
                 else:
                     inputs = self.processor(images=image, text=p, return_tensors="pt").to(model_device)
                 with torch.inference_mode():
@@ -973,13 +992,23 @@ class VLMRunner:
                     for img, p in zip(images, prompts)
                 ]
                 try:
-                    text_inputs = [
-                        self.processor.apply_chat_template(m, add_generation_prompt=True, tokenize=False)
-                        for m in messages_batch
-                    ]
-                    inputs = self.processor(text=text_inputs, images=images, padding=True, return_tensors="pt").to(model_device)
+                    inputs = self.processor.apply_chat_template(
+                        messages_batch,
+                        padding=True,
+                        add_generation_prompt=True,
+                        tokenize=True,
+                        return_dict=True,
+                        return_tensors="pt"
+                    ).to(model_device)
                 except Exception:
-                    inputs = self.processor(images=images, text=prompts, padding=True, return_tensors="pt").to(model_device)
+                    try:
+                        text_inputs = [
+                            self.processor.apply_chat_template(m, add_generation_prompt=True, tokenize=False)
+                            for m in messages_batch
+                        ]
+                        inputs = self.processor(text=text_inputs, images=images, padding=True, return_tensors="pt").to(model_device)
+                    except Exception:
+                        inputs = self.processor(images=images, text=prompts, padding=True, return_tensors="pt").to(model_device)
             else:
                 inputs = self.processor(images=images, text=prompts, padding=True, return_tensors="pt").to(model_device)
 
@@ -1234,10 +1263,10 @@ BENCHMARK_MODEL_REGISTRY = [
     },
     {
         "id": 7,
-        "name": "unsloth/aya-vision-8b-unsloth-bnb-4bit",
-        "backend": "auto",
-        "load_in_4bit": True,
-        "description": "Aya Vision 8B 4-bit qua Unsloth"
+        "name": "CohereLabs/aya-vision-8b",
+        "backend": "native",
+        "load_in_4bit": False,
+        "description": "Aya Vision 8B Native BF16 (Cohere upstream hoặc unsloth 16-bit fallback)"
     },
 ]
 
@@ -1433,15 +1462,22 @@ def evaluate_single_model(
                 tag = "7b" if "7b" in safe_name.lower() else ("3b" if "3b" in safe_name.lower() else "")
                 if tag:
                     cand_files = glob.glob(os.path.join(out_dir, f"*qwen*{tag}*preds.jsonl"))
-            for cand in cand_files:
-                if os.path.abspath(cand) != os.path.abspath(out_jsonl) and os.path.exists(cand) and os.path.getsize(cand) > 0:
-                    print("\n==================================================================")
-                    print(f" [CHECKPOINT INHERITANCE DETECTED]")
-                    print(f" Tìm thấy tiến độ đã chạy từ phiên bản: {os.path.basename(cand)}")
-                    print(f" Tự động kế thừa sang: {os.path.basename(out_jsonl)} để bảo toàn toàn bộ mẫu cũ!")
-                    print("==================================================================")
-                    shutil.copyfile(cand, out_jsonl)
-                    break
+            elif "aya" in safe_name.lower():
+                cand_files = glob.glob(os.path.join(out_dir, "*aya*vision*preds.jsonl"))
+
+            valid_cands = [
+                cand for cand in cand_files
+                if os.path.abspath(cand) != os.path.abspath(out_jsonl) and os.path.exists(cand) and os.path.getsize(cand) > 0
+            ]
+            if valid_cands:
+                valid_cands.sort(key=lambda x: os.path.getsize(x), reverse=True)
+                best_cand = valid_cands[0]
+                print("\n==================================================================")
+                print(f" [CHECKPOINT INHERITANCE DETECTED]")
+                print(f" Tìm thấy tiến độ đã chạy từ phiên bản: {os.path.basename(best_cand)}")
+                print(f" Tự động kế thừa sang: {os.path.basename(out_jsonl)} để bảo toàn toàn bộ mẫu cũ!")
+                print("==================================================================")
+                shutil.copyfile(best_cand, out_jsonl)
 
     existing_predictions = []
     evaluated_keys = set()

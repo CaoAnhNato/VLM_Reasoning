@@ -91,7 +91,7 @@ MODELS=(
     "5CD-AI/Vintern-3B-beta:native"
     "erax-ai/EraX-VL-2B-V1.5:native"
     "erax-ai/EraX-VL-7B-V1.5:native"
-    "unsloth/aya-vision-8b-unsloth-bnb-4bit:auto"
+    "CohereLabs/aya-vision-8b:native"
 )
 
 TOTAL_MODELS=${#MODELS[@]}
@@ -229,10 +229,12 @@ for i in "${!MODELS[@]}"; do
     if [ ! -f "$PRED_FILE" ] || [ ! -s "$PRED_FILE" ]; then
         LEGACY_4BIT=$(find "$OUT_DIR/predictions" -name "*${SAFE_NAME}*preds.jsonl" 2>/dev/null | head -n 1)
         if [ -z "$LEGACY_4BIT" ]; then
-            if [[ "$MODEL_NAME" == *"7B"* ]]; then
+            if [[ "$MODEL_NAME" == *"7B"* ]] && [[ "$MODEL_NAME" == *"Qwen"* ]]; then
                 LEGACY_4BIT=$(find "$OUT_DIR/predictions" -name "*Qwen*7B*preds.jsonl" 2>/dev/null | head -n 1)
-            elif [[ "$MODEL_NAME" == *"3B"* ]]; then
+            elif [[ "$MODEL_NAME" == *"3B"* ]] && [[ "$MODEL_NAME" == *"Qwen"* ]]; then
                 LEGACY_4BIT=$(find "$OUT_DIR/predictions" -name "*Qwen*3B*preds.jsonl" 2>/dev/null | head -n 1)
+            elif [[ "$MODEL_NAME" == *"aya"* ]] || [[ "$MODEL_NAME" == *"Aya"* ]]; then
+                LEGACY_4BIT=$(find "$OUT_DIR/predictions" -name "*aya*vision*preds.jsonl" 2>/dev/null | head -n 1)
             fi
         fi
         if [ -n "$LEGACY_4BIT" ] && [ -f "$LEGACY_4BIT" ] && [ -s "$LEGACY_4BIT" ]; then
