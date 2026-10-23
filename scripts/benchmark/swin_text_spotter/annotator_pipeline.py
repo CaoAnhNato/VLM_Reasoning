@@ -8,12 +8,14 @@ while automatically detecting, recognizing, and classifying scene text into:
 2. Auxiliary / Distractor Scene Text Regions (`role = "auxiliary"`)
 """
 
+from collections import deque
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
 import gc
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Deque, Dict, List, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -32,6 +34,96 @@ from .vintext_decoder import (
 )
 
 logger = logging.getLogger("SwinTextSpotterAnnotator")
+
+
+class RAMPrefetchCache:
+    """
+    Asynchronous CPU->RAM Prefetch Cache with `pin_memory=True`.
+
+    Decodes and resizes upcoming images on background CPU threads and pins their contiguous
+    (3, H_resized, W_resized) uint8 tensors in page-locked host memory (`pin_memory=True`),
+    allowing zero-wait asynchronous DMA transfers (`.to(device, non_blocking=True)`) to the L4 GPU.
+    """
+
+    def __init__(
+        self,
+        min_size_test: int = 1000,
+        max_size_test: int = 1800,
+        pin_memory: bool = True,
+        num_workers: int = 4,
+        max_prefetched: int = 64,
+        keep_rgb_for_vis: bool = False,
+    ):
+        self.min_size_test = min_size_test
+        self.max_size_test = max_size_test
+        self.pin_memory = bool(pin_memory and torch.cuda.is_available())
+        self.num_workers = max(1, num_workers)
+        self.max_prefetched = max(2, max_prefetched)
+        self.keep_rgb_for_vis = keep_rgb_for_vis
+
+        self._executor = ThreadPoolExecutor(max_workers=self.num_workers)
+        self._pending_paths: Deque[str] = deque()
+        self._in_flight: Dict[str, Future] = {}
+
+    def _load_and_pin_single(
+        self, image_path: str
+    ) -> Tuple[torch.Tensor, int, int, Optional[np.ndarray]]:
+        with Image.open(image_path) as pil_img:
+            rgb_img = np.asarray(pil_img.convert("RGB"))
+
+        orig_h, orig_w = rgb_img.shape[:2]
+        scale = float(self.min_size_test) / float(min(orig_h, orig_w))
+        if round(scale * max(orig_h, orig_w)) > self.max_size_test:
+            scale = float(self.max_size_test) / float(max(orig_h, orig_w))
+
+        new_h = max(32, int(round(orig_h * scale)))
+        new_w = max(32, int(round(orig_w * scale)))
+
+        if (new_h, new_w) != (orig_h, orig_w):
+            resized_rgb = cv2.resize(rgb_img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+        else:
+            resized_rgb = rgb_img
+
+        # Pin as contiguous uint8 (4x smaller in pinned RAM & 4x faster PCIe DMA than float32)
+        cpu_tensor = torch.from_numpy(resized_rgb).permute(2, 0, 1).contiguous()
+        if self.pin_memory:
+            cpu_tensor = cpu_tensor.pin_memory()
+
+        vis_rgb = rgb_img if self.keep_rgb_for_vis else None
+        return cpu_tensor, orig_h, orig_w, vis_rgb
+
+    def _refill_window(self) -> None:
+        while len(self._in_flight) < self.max_prefetched and self._pending_paths:
+            next_path = self._pending_paths.popleft()
+            if next_path not in self._in_flight:
+                self._in_flight[next_path] = self._executor.submit(
+                    self._load_and_pin_single, next_path
+                )
+
+    def enqueue(self, image_paths: List[str]) -> None:
+        """Schedule a list of image paths for background prefetching into pinned RAM."""
+        for p in image_paths:
+            self._pending_paths.append(p)
+        self._refill_window()
+
+    def get(
+        self, image_path: str, need_vis_rgb: bool = False
+    ) -> Tuple[torch.Tensor, int, int, Optional[np.ndarray]]:
+        """Retrieve a prefetched pinned tensor (or load on-demand) and advance the prefetch window."""
+        fut = self._in_flight.pop(image_path, None)
+        self._refill_window()
+        if fut is not None:
+            cpu_tensor, orig_h, orig_w, vis_rgb = fut.result()
+            if need_vis_rgb and vis_rgb is None:
+                with Image.open(image_path) as pil_img:
+                    vis_rgb = np.asarray(pil_img.convert("RGB"))
+            return cpu_tensor, orig_h, orig_w, vis_rgb
+        return self._load_and_pin_single(image_path)
+
+    def close(self) -> None:
+        self._pending_paths.clear()
+        self._in_flight.clear()
+        self._executor.shutdown(wait=False)
 
 
 @dataclass
@@ -98,6 +190,7 @@ class MemoryGuard:
 class SwinTextSpotterAnnotator:
     """
     Modular Pipe-and-Filter Auto-Annotation Pipeline using official SWINTS-swin-vintext.
+    Supports Colab L4 High-Speed Mode (`use_amp_bf16=True`, `disable_empty_cache=True`, `pin_memory=True`).
     """
 
     def __init__(
@@ -109,6 +202,9 @@ class SwinTextSpotterAnnotator:
         max_size_test: int = 1600,
         confidence_threshold: float = 0.40,
         nms_iou_threshold: float = 0.50,
+        use_amp_bf16: bool = False,
+        disable_empty_cache: bool = False,
+        pin_memory: bool = False,
         classifier: Optional[BaseTextRoleClassifier] = None,
         memory_guard: Optional[MemoryGuard] = None,
     ):
@@ -121,13 +217,24 @@ class SwinTextSpotterAnnotator:
         self.max_size_test = max_size_test
         self.confidence_threshold = confidence_threshold
         self.nms_iou_threshold = nms_iou_threshold
+        self.use_amp_bf16 = bool(use_amp_bf16 and self.device.type == "cuda")
+        self.disable_empty_cache = bool(disable_empty_cache)
+        self.pin_memory = bool(pin_memory and self.device.type == "cuda")
         self.classifier = classifier or SpatioLexicalGTClassifier()
         self.memory_guard = memory_guard or MemoryGuard()
+
+        if self.device.type == "cuda":
+            torch.backends.cuda.matmul.allow_tf32 = True
+            torch.backends.cudnn.allow_tf32 = True
+            torch.backends.cudnn.benchmark = True
+            if hasattr(torch, "set_float32_matmul_precision"):
+                torch.set_float32_matmul_precision("high")
 
         self.model = self._load_model()
 
     def _load_model(self) -> SWINTS:
-        self.memory_guard.cleanup(force_cuda_empty=True)
+        if not self.disable_empty_cache:
+            self.memory_guard.cleanup(force_cuda_empty=True)
         model = SWINTS(npz_path=self.npz_path)
 
         ckpt = torch.load(self.ckpt_path, map_location="cpu", weights_only=False)
@@ -139,18 +246,32 @@ class SwinTextSpotterAnnotator:
         # Immediately free CPU checkpoint dicts before moving to GPU
         del state_dict
         del ckpt
-        self.memory_guard.cleanup(force_cuda_empty=True)
+        gc.collect()
 
         model.to(self.device)
         model.eval()
         self.memory_guard.snapshot()
         return model
 
-    def _preprocess_image(self, image_path: str) -> Tuple[torch.Tensor, int, int, np.ndarray]:
+    def _preprocess_image(
+        self,
+        image_path: str,
+        need_vis_rgb: bool = False,
+        prefetch_cache: Optional[RAMPrefetchCache] = None,
+    ) -> Tuple[torch.Tensor, int, int, Optional[np.ndarray]]:
         """
-        Read image in RGB (matching Base-SWINTS_swin.yaml INPUT.FORMAT: 'RGB') and resize
-        following Detectron2 ResizeShortestEdge(min_size_test, max_size_test).
+        Fetch pre-resized pinned tensor from `RAMPrefetchCache` (if active) or read on-demand,
+        then transfer asynchronously to GPU via `non_blocking=True`.
         """
+        if prefetch_cache is not None:
+            cpu_tensor, orig_h, orig_w, vis_rgb = prefetch_cache.get(
+                image_path, need_vis_rgb=need_vis_rgb
+            )
+            img_tensor = cpu_tensor.to(
+                device=self.device, dtype=torch.float32, non_blocking=self.pin_memory
+            )
+            return img_tensor, orig_h, orig_w, vis_rgb
+
         with Image.open(image_path) as pil_img:
             rgb_img = np.asarray(pil_img.convert("RGB"))
 
@@ -167,12 +288,13 @@ class SwinTextSpotterAnnotator:
         else:
             resized_rgb = rgb_img
 
-        img_tensor = (
-            torch.from_numpy(resized_rgb).permute(2, 0, 1).contiguous().to(
-                device=self.device, dtype=torch.float32
-            )
+        cpu_tensor = torch.from_numpy(resized_rgb).permute(2, 0, 1).contiguous()
+        if self.pin_memory:
+            cpu_tensor = cpu_tensor.pin_memory()
+        img_tensor = cpu_tensor.to(
+            device=self.device, dtype=torch.float32, non_blocking=self.pin_memory
         )
-        return img_tensor, orig_h, orig_w, rgb_img
+        return img_tensor, orig_h, orig_w, (rgb_img if need_vis_rgb else None)
 
     @torch.inference_mode()
     def annotate_image(
@@ -181,24 +303,31 @@ class SwinTextSpotterAnnotator:
         image_id: Any,
         qa_annotations: Optional[List[Dict[str, Any]]] = None,
         vis_output_path: Optional[str] = None,
+        prefetch_cache: Optional[RAMPrefetchCache] = None,
     ) -> Dict[str, Any]:
         """
-        Run full auto-annotation pipeline on a single image with strict RAM/VRAM reclamation.
+        Run full auto-annotation pipeline on a single image.
+        In `disable_empty_cache=True` mode (Colab L4), avoids `torch.cuda.empty_cache()` and `gc.collect()`
+        stalls while using `bfloat16` AMP and `pin_memory=True` async DMA transfers.
         """
         t0 = time.perf_counter()
-        self.memory_guard.check_and_reclaim()
+        if not self.disable_empty_cache:
+            self.memory_guard.check_and_reclaim()
 
-        img_tensor, orig_h, orig_w, rgb_img = self._preprocess_image(image_path)
+        need_vis = vis_output_path is not None
+        img_tensor, orig_h, orig_w, rgb_img = self._preprocess_image(
+            image_path, need_vis_rgb=need_vis, prefetch_cache=prefetch_cache
+        )
         raw_out = self.model.inference_single_image(
             img_tensor,
             orig_h=orig_h,
             orig_w=orig_w,
             confidence_threshold=self.confidence_threshold,
+            use_amp_bf16=self.use_amp_bf16,
         )
 
-        # Free GPU input tensor immediately after forward pass
         del img_tensor
-        if torch.cuda.is_available():
+        if not self.disable_empty_cache and torch.cuda.is_available():
             torch.cuda.empty_cache()
 
         boxes = raw_out["boxes"]
@@ -248,7 +377,7 @@ class SwinTextSpotterAnnotator:
             img_h=orig_h,
         )
 
-        if vis_output_path:
+        if vis_output_path and rgb_img is not None:
             self._render_visualization(
                 rgb_img=rgb_img,
                 detections=sorted_detections,
@@ -259,7 +388,10 @@ class SwinTextSpotterAnnotator:
             )
 
         del rgb_img
-        mem_snap = self.memory_guard.cleanup(force_cuda_empty=True)
+        if self.disable_empty_cache:
+            mem_snap = self.memory_guard.snapshot()
+        else:
+            mem_snap = self.memory_guard.cleanup(force_cuda_empty=True)
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
 
         return {

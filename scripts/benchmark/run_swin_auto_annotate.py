@@ -49,7 +49,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", ".."))
 if THIS_DIR not in sys.path:
     sys.path.insert(0, THIS_DIR)
 
-from swin_text_spotter import MemoryGuard, SwinTextSpotterAnnotator
+from swin_text_spotter import MemoryGuard, RAMPrefetchCache, SwinTextSpotterAnnotator
 
 
 DEFAULT_CKPT = os.path.join(
@@ -268,6 +268,28 @@ def parse_args() -> argparse.Namespace:
         help="HuggingFace token (or set HF_TOKEN env var) for authenticated high-speed dataset streaming.",
     )
     parser.add_argument(
+        "--colab-l4",
+        action="store_true",
+        help=(
+            "Enable dedicated Colab L4 High-Speed Profile: "
+            "(1) Remove torch.cuda.empty_cache() stalls, "
+            "(2) Enable native bfloat16 AMP autocast + TF32, "
+            "(3) Enable RAMPrefetchCache with pin_memory=True & async non_blocking=True H2D DMA."
+        ),
+    )
+    parser.add_argument(
+        "--prefetch-workers",
+        type=int,
+        default=4,
+        help="Number of CPU threads for RAMPrefetchCache (default: 4).",
+    )
+    parser.add_argument(
+        "--prefetch-size",
+        type=int,
+        default=0,
+        help="Max images held in pinned RAMPrefetchCache (0 = auto: 400 on Colab L4, 32 on local PC).",
+    )
+    parser.add_argument(
         "--test",
         action="store_true",
         help="Run quick verification test on 8 images with visual overlays.",
@@ -396,18 +418,21 @@ def main() -> None:
     if save_vis:
         os.makedirs(vis_dir, exist_ok=True)
 
-    # Detect GPU & auto-configure VRAM guard + max_size for L4 (24GB) vs Local (4GB)
+    # Detect GPU & auto-configure Colab L4 High-Speed Profile vs Local 4GB GPU
     total_vram_mb = 0.0
     if torch.cuda.is_available():
         total_vram_mb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 2)
-    max_vram_guard_mb = max(3400.0, total_vram_mb * 0.80) if total_vram_mb > 0 else 3400.0
+    is_l4_class_gpu = total_vram_mb >= 15000
+    fast_l4_mode = bool(args.colab_l4 or is_l4_class_gpu)
+
+    max_vram_guard_mb = max(3400.0, total_vram_mb * 0.85) if total_vram_mb > 0 else 3400.0
     max_size_test = (
         args.max_size
         if args.max_size > 0
-        else (1800 if total_vram_mb >= 15000 else 1600)
+        else (1800 if is_l4_class_gpu else 1600)
     )
 
-    memory_guard = MemoryGuard(max_ram_percent=82.0, max_vram_mb=max_vram_guard_mb)
+    memory_guard = MemoryGuard(max_ram_percent=85.0, max_vram_mb=max_vram_guard_mb)
     init_snap = memory_guard.snapshot()
     gpu_label = (
         f"cuda ({torch.cuda.get_device_name(0)}, {total_vram_mb / 1024:.1f} GB VRAM)"
@@ -416,6 +441,7 @@ def main() -> None:
     )
     print(
         f"[INIT] Device: {gpu_label} | max_size={max_size_test} | "
+        f"Colab-L4 Fast Mode: {'ON (no empty_cache + AMP bf16 + RAMPrefetch pin_memory=True)' if fast_l4_mode else 'OFF'} | "
         f"System RAM: {init_snap.ram_used_gb:.2f}/{init_snap.ram_total_gb:.2f} GB ({init_snap.ram_percent:.1f}%)"
     )
 
@@ -427,7 +453,8 @@ def main() -> None:
 
     # 2. Load QA pairs and select target images (default: 400 images)
     id_to_filename, img_to_qas = load_qa_annotations(args.split, hf_token=args.hf_token)
-    memory_guard.cleanup(force_cuda_empty=False)
+    if not fast_l4_mode:
+        memory_guard.cleanup(force_cuda_empty=False)
 
     all_sorted_ids = sorted(img_to_qas.keys())
     target_count = args.num_test_images if args.test else args.num_images
@@ -452,6 +479,9 @@ def main() -> None:
         min_size_test=args.min_size,
         max_size_test=max_size_test,
         confidence_threshold=args.conf_thresh,
+        use_amp_bf16=fast_l4_mode,
+        disable_empty_cache=fast_l4_mode,
+        pin_memory=fast_l4_mode,
         memory_guard=memory_guard,
     )
     post_load_snap = memory_guard.snapshot()
@@ -488,6 +518,32 @@ def main() -> None:
         if completed_records:
             print(f"[RESUME] Found {len(completed_records)} already-annotated images in {jsonl_path}")
 
+    # Initialize RAMPrefetchCache (pin_memory=True) for pending images
+    prefetch_cache: Optional[RAMPrefetchCache] = None
+    if fast_l4_mode:
+        auto_prefetch_cap = (
+            args.prefetch_size
+            if args.prefetch_size > 0
+            else (400 if init_snap.ram_total_gb >= 28.0 else 32)
+        )
+        pending_paths = [
+            os.path.join(DEFAULT_IMAGE_DIR, id_to_filename.get(iid, f"{iid}.jpg"))
+            for iid in target_img_ids
+            if iid not in completed_records
+        ]
+        prefetch_cache = RAMPrefetchCache(
+            min_size_test=args.min_size,
+            max_size_test=max_size_test,
+            pin_memory=True,
+            num_workers=args.prefetch_workers,
+            max_prefetched=auto_prefetch_cap,
+            keep_rgb_for_vis=save_vis,
+        )
+        prefetch_cache.enqueue(pending_paths)
+        print(
+            f"[PREFETCH] RAMPrefetchCache active (pin_memory=True, workers={args.prefetch_workers}, window={auto_prefetch_cap})"
+        )
+
     editable_records: List[Dict[str, Any]] = []
     results_summary: List[Dict[str, Any]] = []
     total_qas = 0
@@ -496,60 +552,65 @@ def main() -> None:
     t_start = time.perf_counter()
 
     mode_flag = "w" if (args.test or args.no_resume or not completed_records) else "a"
-    with open(jsonl_path, mode_flag, encoding="utf-8") as jsonl_fp:
-        for idx, img_id in enumerate(target_img_ids, 1):
-            fname = id_to_filename.get(img_id, f"{img_id}.jpg")
-            img_path = os.path.join(DEFAULT_IMAGE_DIR, fname)
-            vis_path = os.path.join(vis_dir, f"annot_{fname}") if save_vis else None
+    try:
+        with open(jsonl_path, mode_flag, encoding="utf-8") as jsonl_fp:
+            for idx, img_id in enumerate(target_img_ids, 1):
+                fname = id_to_filename.get(img_id, f"{img_id}.jpg")
+                img_path = os.path.join(DEFAULT_IMAGE_DIR, fname)
+                vis_path = os.path.join(vis_dir, f"annot_{fname}") if save_vis else None
 
-            if img_id in completed_records:
-                res = completed_records[img_id]
-            else:
-                res = annotator.annotate_image(
-                    image_path=img_path,
-                    image_id=img_id,
-                    qa_annotations=img_to_qas[img_id],
-                    vis_output_path=vis_path,
+                if img_id in completed_records:
+                    res = completed_records[img_id]
+                else:
+                    res = annotator.annotate_image(
+                        image_path=img_path,
+                        image_id=img_id,
+                        qa_annotations=img_to_qas[img_id],
+                        vis_output_path=vis_path,
+                        prefetch_cache=prefetch_cache,
+                    )
+                    jsonl_fp.write(json.dumps(res, ensure_ascii=False) + "\n")
+                    jsonl_fp.flush()
+
+                compact_rec = build_compact_editable_record(res)
+                editable_records.append(compact_rec)
+
+                qas = res["qa_groundings"]
+                n_qas = len(qas)
+                n_matched = sum(1 for q in qas if q.get("answer_region_bbox") is not None)
+                n_regions = res.get("num_answer_regions", len(res.get("answer_regions", [])))
+                total_qas += n_qas
+                matched_qas += n_matched
+                total_answer_regions += n_regions
+
+                print(
+                    f"[{idx:03d}/{len(target_img_ids):03d}] {fname} ({res['width']}x{res['height']}) | "
+                    f"Quests: {n_qas} (Matched: {n_matched}/{n_qas}) -> Answer BBoxes: {n_regions} | "
+                    f"Lines: {res['num_total_lines']} | "
+                    f"Time: {res['latency_ms']:.0f}ms | "
+                    f"RAM: {res['memory']['ram_used_gb']:.2f}GB ({res['memory']['ram_percent']:.1f}%) | "
+                    f"VRAM Peak: {res['memory']['vram_peak_mb']:.0f}MB"
                 )
-                jsonl_fp.write(json.dumps(res, ensure_ascii=False) + "\n")
-                jsonl_fp.flush()
 
-            compact_rec = build_compact_editable_record(res)
-            editable_records.append(compact_rec)
-
-            qas = res["qa_groundings"]
-            n_qas = len(qas)
-            n_matched = sum(1 for q in qas if q.get("answer_region_bbox") is not None)
-            n_regions = res.get("num_answer_regions", len(res.get("answer_regions", [])))
-            total_qas += n_qas
-            matched_qas += n_matched
-            total_answer_regions += n_regions
-
-            print(
-                f"[{idx:03d}/{len(target_img_ids):03d}] {fname} ({res['width']}x{res['height']}) | "
-                f"Quests: {n_qas} (Matched: {n_matched}/{n_qas}) -> Answer BBoxes: {n_regions} | "
-                f"Lines: {res['num_total_lines']} | "
-                f"Time: {res['latency_ms']:.0f}ms | "
-                f"RAM: {res['memory']['ram_used_gb']:.2f}GB ({res['memory']['ram_percent']:.1f}%) | "
-                f"VRAM Peak: {res['memory']['vram_peak_mb']:.0f}MB"
-            )
-
-            results_summary.append(
-                {
-                    "image_id": img_id,
-                    "image_name": fname,
-                    "resolution": f"{res['width']}x{res['height']}",
-                    "latency_ms": res["latency_ms"],
-                    "num_quests": n_qas,
-                    "num_matched_quests": n_matched,
-                    "num_answer_regions": n_regions,
-                    "num_total_lines": res["num_total_lines"],
-                    "answer_regions": compact_rec["answer_regions"],
-                    "quests": compact_rec["quests"],
-                    "vis_path": vis_path,
-                    "memory": res["memory"],
-                }
-            )
+                results_summary.append(
+                    {
+                        "image_id": img_id,
+                        "image_name": fname,
+                        "resolution": f"{res['width']}x{res['height']}",
+                        "latency_ms": res["latency_ms"],
+                        "num_quests": n_qas,
+                        "num_matched_quests": n_matched,
+                        "num_answer_regions": n_regions,
+                        "num_total_lines": res["num_total_lines"],
+                        "answer_regions": compact_rec["answer_regions"],
+                        "quests": compact_rec["quests"],
+                        "vis_path": vis_path,
+                        "memory": res["memory"],
+                    }
+                )
+    finally:
+        if prefetch_cache is not None:
+            prefetch_cache.close()
 
     total_time_s = time.perf_counter() - t_start
     final_snap = memory_guard.cleanup(force_cuda_empty=True)

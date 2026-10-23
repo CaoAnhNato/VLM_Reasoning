@@ -166,7 +166,8 @@ class ROIPooler(nn.Module):
         for level, pooler in enumerate(self.level_poolers):
             inds = torch.nonzero(level_assignments == level, as_tuple=True)[0]
             if inds.numel() > 0:
-                output.index_put_((inds,), pooler(x[level], pooler_fmt_boxes[inds]))
+                pooled_lvl = pooler(x[level], pooler_fmt_boxes[inds]).to(dtype=output.dtype)
+                output.index_put_((inds,), pooled_lvl)
 
         return output
 
@@ -210,13 +211,16 @@ class PCAMaskEncoding(nn.Module):
         self.means = nn.Parameter(torch.zeros(self.mask_size ** 2), requires_grad=False)
 
     def decoder(self, X: torch.Tensor, is_train: bool = False) -> torch.Tensor:
+        X_f = X.float()
         if self.whiten:
-            components_ = self.components * torch.sqrt(self.explained_variances.unsqueeze(1))
+            components_ = self.components.float() * torch.sqrt(
+                self.explained_variances.float().unsqueeze(1)
+            )
         else:
-            components_ = self.components
-        X_transformed = torch.matmul(X, components_)
+            components_ = self.components.float()
+        X_transformed = torch.matmul(X_f, components_)
         if self.means is not None:
-            X_transformed = X_transformed + self.means
+            X_transformed = X_transformed + self.means.float()
         if not is_train:
             if self.sigmoid:
                 X_transformed = torch.sigmoid(X_transformed)
@@ -262,10 +266,14 @@ class DynamicConv(nn.Module):
         param1 = parameters[:, :, : self.num_params].view(-1, self.hidden_dim, self.dim_dynamic)
         param2 = parameters[:, :, self.num_params :].view(-1, self.dim_dynamic, self.hidden_dim)
 
+        if features.dtype != param1.dtype:
+            features = features.to(dtype=param1.dtype)
         features = torch.bmm(features, param1)
         features = self.norm1(features)
         features = self.activation(features)
 
+        if features.dtype != param2.dtype:
+            features = features.to(dtype=param2.dtype)
         features = torch.bmm(features, param2)
         features = self.norm2(features)
         features = self.activation(features)
@@ -1158,7 +1166,7 @@ class Attn(nn.Module):
     def score(self, hidden: torch.Tensor, encoder_outputs: torch.Tensor) -> torch.Tensor:
         energy = torch.tanh(self.attn(torch.cat([hidden, encoder_outputs], 2)))
         energy = energy.transpose(2, 1)
-        v = self.v.repeat(encoder_outputs.data.shape[0], 1).unsqueeze(1)
+        v = self.v.to(dtype=energy.dtype).repeat(encoder_outputs.data.shape[0], 1).unsqueeze(1)
         energy = torch.bmm(v, energy)
         return energy.squeeze(1)
 
@@ -1198,14 +1206,17 @@ class BahdanauAttnDecoderRNN(nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         word_embedded_onehot = self.embedding(word_input).view(1, word_input.size(0), -1)
         word_embedded = self.word_linear(word_embedded_onehot)
+        if last_hidden.dtype != encoder_outputs.dtype:
+            last_hidden = last_hidden.to(dtype=encoder_outputs.dtype)
         attn_weights = self.attn(last_hidden, encoder_outputs)
-        context = attn_weights.bmm(encoder_outputs.transpose(0, 1))
+        context = attn_weights.to(dtype=encoder_outputs.dtype).bmm(encoder_outputs.transpose(0, 1))
         context = context.transpose(0, 1)
 
-        rnn_input = torch.cat((word_embedded, context), 2)
+        rnn_input = torch.cat((word_embedded.to(dtype=context.dtype), context), 2)
         last_hidden = last_hidden.view(last_hidden.size(0), -1)
         rnn_input = rnn_input.view(word_input.size(0), -1)
-        hidden = self.rnn(rnn_input, last_hidden)
+        # GRUCell runs in fp32 when weights are fp32 under autocast
+        hidden = self.rnn(rnn_input.float(), last_hidden.float())
         if not self.training:
             output = F.softmax(self.out(hidden), dim=1)
         else:
@@ -1273,10 +1284,18 @@ class SequencePredictor(nn.Module):
 
         B = seq_decoder_input.size(0)
         x_onehot_embedding = (
-            self.x_onehot(x_t).transpose(0, 2).transpose(1, 2).repeat(B, 1, 1, 1)
+            self.x_onehot(x_t)
+            .to(dtype=seq_decoder_input.dtype)
+            .transpose(0, 2)
+            .transpose(1, 2)
+            .repeat(B, 1, 1, 1)
         )
         y_onehot_embedding = (
-            self.y_onehot(y_t).transpose(0, 2).transpose(1, 2).repeat(B, 1, 1, 1)
+            self.y_onehot(y_t)
+            .to(dtype=seq_decoder_input.dtype)
+            .transpose(0, 2)
+            .transpose(1, 2)
+            .repeat(B, 1, 1, 1)
         )
         seq_decoder_input_loc = torch.cat(
             [seq_decoder_input, x_onehot_embedding, y_onehot_embedding], 1
@@ -1289,12 +1308,13 @@ class SequencePredictor(nn.Module):
 
         # Batched greedy decoding across all B proposals simultaneously on GPU
         decoder_input = torch.zeros((B, 1), dtype=torch.long, device=device)
-        decoder_hidden = torch.zeros((B, 256), dtype=x.dtype, device=device)
+        decoder_hidden = torch.zeros((B, 256), dtype=seq_decoder_input_reshape.dtype, device=device)
         decoded_words = torch.zeros((B, self.MAX_LENGTH), dtype=torch.int32, device=device)
         active = torch.ones(B, dtype=torch.bool, device=device)
 
         for di in range(self.MAX_LENGTH):
-            if not active.any():
+            # Only check active.any() periodically to avoid per-step GPU->CPU stream sync overhead
+            if di >= 10 and (di % 6 == 0) and not active.any():
                 break
             decoder_output, decoder_hidden, _ = self.seq_decoder(
                 decoder_input, decoder_hidden, seq_decoder_input_reshape
@@ -1337,10 +1357,14 @@ class DynamicConv_v2(nn.Module):
         param1 = parameters[:, :, : self.num_params].view(-1, self.hidden_dim, self.dim_dynamic)
         param2 = parameters[:, :, self.num_params :].view(-1, self.dim_dynamic, self.hidden_dim)
 
+        if features.dtype != param1.dtype:
+            features = features.to(dtype=param1.dtype)
         features = torch.bmm(features, param1)
         features = self.norm1(features)
         features = self.activation(features)
 
+        if features.dtype != param2.dtype:
+            features = features.to(dtype=param2.dtype)
         features = torch.bmm(features, param2)
         features = self.norm2(features)
         features = self.activation(features)
@@ -1862,10 +1886,12 @@ class SWINTS(nn.Module):
         orig_h: int,
         orig_w: int,
         confidence_threshold: float = 0.4,
+        use_amp_bf16: bool = False,
     ) -> Dict[str, torch.Tensor]:
         """
         Run full SwinTextSpotter forward pass on a single resized RGB tensor (3, H_in, W_in).
         Matches swints.py forward() and detectron2/modeling/postprocessing.py (detector_postprocess).
+        Supports native hardware bfloat16 AMP (`use_amp_bf16=True`) for L4 / Ampere+ GPUs.
         """
         _, h_in, w_in = img_rgb_tensor.shape
         size_div = self.size_divisibility
@@ -1876,27 +1902,38 @@ class SWINTS(nn.Module):
         if pad_h > 0 or pad_w > 0:
             x = F.pad(x, (0, pad_w, 0, pad_h), value=0.0)
 
-        src = self.backbone(x)
-        features = [src[f] for f in self.in_features]
+        amp_enabled = bool(use_amp_bf16 and x.is_cuda)
+        with torch.amp.autocast("cuda", dtype=torch.bfloat16, enabled=amp_enabled):
+            src = self.backbone(x)
+            features = [src[f] for f in self.in_features]
 
-        images_whwh = torch.tensor([[w_in, h_in, w_in, h_in]], dtype=torch.float32, device=x.device)
-        proposal_boxes = self.init_proposal_boxes.weight.clone()
-        proposal_boxes = box_cxcywh_to_xyxy(proposal_boxes)
-        proposal_boxes = proposal_boxes[None] * images_whwh[:, None, :]
+            images_whwh = torch.tensor(
+                [[w_in, h_in, w_in, h_in]], dtype=torch.float32, device=x.device
+            )
+            proposal_boxes = self.init_proposal_boxes.weight.clone()
+            proposal_boxes = box_cxcywh_to_xyxy(proposal_boxes)
+            proposal_boxes = proposal_boxes[None] * images_whwh[:, None, :]
 
-        img_feats = self.IFE(features)
-        pos_embeddings = self.pos_embeddings.weight[None].repeat(1, 1, 1)
-        proposal_feats = img_feats + pos_embeddings
+            img_feats = self.IFE(features)
+            pos_embeddings = self.pos_embeddings.weight[None].repeat(1, 1, 1)
+            proposal_feats = img_feats + pos_embeddings
 
-        outputs_class, outputs_coord, outputs_mask, out_rec = self.head(
-            features, proposal_boxes, proposal_feats, mask_encoding=self.mask_encoding
-        )
+            outputs_class, outputs_coord, outputs_mask, out_rec = self.head(
+                features, proposal_boxes, proposal_feats, mask_encoding=self.mask_encoding
+            )
 
-        # In swints.py lines 195-203 & postprocessing.py lines 40-44:
-        # box_cls = outputs_class[-1] (shape: (100,), already sigmoid probabilities from head.py)
-        scores = outputs_class[-1].squeeze(0) if outputs_class[-1].dim() > 1 else outputs_class[-1]
-        box_pred = outputs_coord[-1].squeeze(0) if outputs_coord[-1].dim() > 2 else outputs_coord[-1]
-        mask_pred = outputs_mask[-1].squeeze(0).squeeze(1) if outputs_mask[-1].dim() > 4 else outputs_mask[-1].squeeze(1)
+        # Post-processing in float32
+        scores = (
+            outputs_class[-1].squeeze(0) if outputs_class[-1].dim() > 1 else outputs_class[-1]
+        ).float()
+        box_pred = (
+            outputs_coord[-1].squeeze(0) if outputs_coord[-1].dim() > 2 else outputs_coord[-1]
+        ).float()
+        mask_pred = (
+            outputs_mask[-1].squeeze(0).squeeze(1)
+            if outputs_mask[-1].dim() > 4
+            else outputs_mask[-1].squeeze(1)
+        ).float()
 
         keep = scores >= confidence_threshold
         kept_scores = scores[keep]
