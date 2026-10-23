@@ -26,13 +26,14 @@ Usage:
 
 import argparse
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 import sys
 import time
 import urllib.request
 import zipfile
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -103,17 +104,38 @@ def ensure_swin_weights(ckpt_path: str, npz_path: str) -> None:
 
 def load_qa_annotations(
     split: str,
+    hf_token: Optional[str] = None,
 ) -> Tuple[Dict[int, str], Dict[int, List[Dict[str, Any]]]]:
     """
-    Load ViTextVQA image filenames and multi-question annotations from `data/vitextvqa/ViTextVQA_<split>.json`
-    if available, or automatically fall back to Git-tracked `results/predictions/5CD-AI_Vintern-1B-v3_5_preds.jsonl`.
+    Load ViTextVQA image filenames and multi-question annotations from `data/vitextvqa/ViTextVQA_<split>.json`.
+    If missing locally and `hf_token` is provided, automatically downloads `ViTextVQA_<split>.json`
+    from `minhquan6203/ViTextVQA`; otherwise falls back to Git-tracked `results/predictions/5CD-AI_Vintern-1B-v3_5_preds.jsonl`.
     """
     split_file_map = {
         "dev": "ViTextVQA_dev.json",
         "test_gt": "ViTextVQA_test_gt.json",
         "train": "ViTextVQA_train.json",
     }
-    json_path = os.path.join(PROJECT_ROOT, "data", "vitextvqa", split_file_map[split])
+    vitext_dir = os.path.join(PROJECT_ROOT, "data", "vitextvqa")
+    json_path = os.path.join(vitext_dir, split_file_map[split])
+
+    if not os.path.exists(json_path) and hf_token:
+        try:
+            from huggingface_hub import hf_hub_download
+
+            os.makedirs(vitext_dir, exist_ok=True)
+            print(
+                f"[DATA] Downloading {split_file_map[split]} from minhquan6203/ViTextVQA with HF token..."
+            )
+            hf_hub_download(
+                repo_id="minhquan6203/ViTextVQA",
+                repo_type="dataset",
+                filename=split_file_map[split],
+                local_dir=vitext_dir,
+                token=hf_token,
+            )
+        except Exception as e:
+            print(f"[DATA] Direct JSON download skipped ({e}); checking fallback...")
 
     id_to_filename: Dict[int, str] = {}
     img_to_qas: Dict[int, List[Dict[str, Any]]] = defaultdict(list)
@@ -165,53 +187,85 @@ def load_qa_annotations(
         return id_to_filename, img_to_qas
 
     raise FileNotFoundError(
-        f"Neither {json_path} nor {FALLBACK_PREDS_JSONL} found. Please clone full repo or run download_dataset.sh."
+        f"Neither {json_path} nor {FALLBACK_PREDS_JSONL} found. Please clone full repo or pass --hf-token."
     )
 
 
-def ensure_target_images(image_names: Set[str], image_dir: str) -> None:
+def ensure_target_images(
+    image_names: Set[str],
+    image_dir: str,
+    hf_token: Optional[str] = None,
+    num_workers: int = 8,
+) -> None:
     """
     Ensure all target `.jpg` files exist in `image_dir`.
-    If running on Colab without `data/vitextvqa/st_images/` pre-populated, streams ONLY the missing
-    target images directly from HuggingFace `datasets/nhonhoccode/ViTextVQA/images.zip`.
+    Combines authenticated HuggingFace token (`hf_token`, lifting anonymous rate limits)
+    with multi-threaded HTTP Range streaming (`ThreadPoolExecutor`) so fetching 400 target images
+    completes in seconds without downloading the entire 5.3GB archive.
     """
     os.makedirs(image_dir, exist_ok=True)
-    missing = {
+    missing = sorted(
         name
         for name in image_names
         if not (
             os.path.exists(os.path.join(image_dir, name))
             and os.path.getsize(os.path.join(image_dir, name)) > 0
         )
-    }
+    )
     if not missing:
         return
 
+    auth_mode = "Authenticated (HF Token)" if hf_token else "Anonymous"
     print(
-        f"[DATA] Fetching {len(missing)} missing target images from HuggingFace (nhonhoccode/ViTextVQA)..."
+        f"[DATA] Streaming {len(missing)} missing target images from HuggingFace [{auth_mode}, {num_workers} threads]..."
     )
     from huggingface_hub import HfFileSystem
 
-    fs = HfFileSystem()
     zip_uri = "datasets/nhonhoccode/ViTextVQA/images.zip"
-    with fs.open(zip_uri, "rb") as fp:
+    fs_main = HfFileSystem(token=hf_token)
+    with fs_main.open(zip_uri, "rb") as fp:
         with zipfile.ZipFile(fp) as zf:
             name_map = {os.path.basename(n): n for n in zf.namelist() if not n.endswith("/")}
-            fetched = 0
-            for target_name in sorted(missing):
-                if target_name in name_map:
-                    data = zf.read(name_map[target_name])
+
+    valid_targets = [t for t in missing if t in name_map]
+    if not valid_targets:
+        return
+
+    workers = max(1, min(num_workers, len(valid_targets)))
+    chunks = [valid_targets[i::workers] for i in range(workers)]
+
+    def _fetch_chunk(chunk_targets: List[str]) -> int:
+        if not chunk_targets:
+            return 0
+        local_fs = HfFileSystem(token=hf_token)
+        count = 0
+        with local_fs.open(zip_uri, "rb") as fp_w:
+            with zipfile.ZipFile(fp_w) as zf_w:
+                for target_name in chunk_targets:
+                    data = zf_w.read(name_map[target_name])
                     out_p = os.path.join(image_dir, target_name)
                     with open(out_p, "wb") as out_f:
                         out_f.write(data)
-                    fetched += 1
-                    if fetched % 50 == 0 or fetched == len(missing):
-                        print(f"  -> Cached {fetched}/{len(missing)} images...")
+                    count += 1
+        return count
+
+    t_dl = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        fetched_total = sum(pool.map(_fetch_chunk, chunks))
+    print(
+        f"[DATA] Cached {fetched_total}/{len(missing)} images in {time.perf_counter() - t_dl:.1f}s"
+    )
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="SwinTextSpotter Answer-Region BBox Auto-Annotation Pipeline (Colab L4 & Local GPU)"
+    )
+    parser.add_argument(
+        "--hf-token",
+        type=str,
+        default=os.environ.get("HF_TOKEN", None),
+        help="HuggingFace token (or set HF_TOKEN env var) for authenticated high-speed dataset streaming.",
     )
     parser.add_argument(
         "--test",
@@ -366,10 +420,13 @@ def main() -> None:
     )
 
     # 1. Ensure SwinTextSpotter weights are present (auto-downloads on Colab if missing)
+    if args.hf_token:
+        os.environ["HF_TOKEN"] = args.hf_token
+        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
     ensure_swin_weights(DEFAULT_CKPT, DEFAULT_NPZ)
 
     # 2. Load QA pairs and select target images (default: 400 images)
-    id_to_filename, img_to_qas = load_qa_annotations(args.split)
+    id_to_filename, img_to_qas = load_qa_annotations(args.split, hf_token=args.hf_token)
     memory_guard.cleanup(force_cuda_empty=False)
 
     all_sorted_ids = sorted(img_to_qas.keys())
@@ -378,7 +435,7 @@ def main() -> None:
 
     # 3. Ensure target `.jpg` files exist locally (streams from HF zip on Colab if missing)
     needed_filenames = {id_to_filename.get(iid, f"{iid}.jpg") for iid in target_img_ids}
-    ensure_target_images(needed_filenames, DEFAULT_IMAGE_DIR)
+    ensure_target_images(needed_filenames, DEFAULT_IMAGE_DIR, hf_token=args.hf_token)
 
     # Filter to existing images
     target_img_ids = [
