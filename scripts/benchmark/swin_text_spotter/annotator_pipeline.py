@@ -250,6 +250,7 @@ class SwinTextSpotterAnnotator:
 
         model.to(self.device)
         model.eval()
+        model.requires_grad_(False)
         self.memory_guard.snapshot()
         return model
 

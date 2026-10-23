@@ -567,13 +567,27 @@ def main() -> None:
     t_start = time.perf_counter()
 
     mode_flag = "w" if (args.test or args.no_resume or not completed_records) else "a"
+    outer_amp_enabled = bool(fast_l4_mode and torch.cuda.is_available())
     try:
-        with open(jsonl_path, mode_flag, encoding="utf-8") as jsonl_fp, tqdm(
-            total=len(target_img_ids),
-            desc="[DETECT] SwinTextSpotter",
-            unit="img",
-            dynamic_ncols=True,
-        ) as pbar:
+        # Outer persistent inference_mode + autocast(cache_enabled=True) context:
+        # Casts FP32 -> BF16 leaf weights ONLY ONCE on Image #1 and keeps them cached
+        # in GPU memory across all remaining 399 images (matching Native BF16 speed).
+        with (
+            torch.inference_mode(),
+            torch.amp.autocast(
+                "cuda",
+                dtype=torch.bfloat16,
+                enabled=outer_amp_enabled,
+                cache_enabled=True,
+            ),
+            open(jsonl_path, mode_flag, encoding="utf-8") as jsonl_fp,
+            tqdm(
+                total=len(target_img_ids),
+                desc="[DETECT] SwinTextSpotter",
+                unit="img",
+                dynamic_ncols=True,
+            ) as pbar,
+        ):
             for idx, img_id in enumerate(target_img_ids, 1):
                 fname = id_to_filename.get(img_id, f"{img_id}.jpg")
                 img_path = os.path.join(DEFAULT_IMAGE_DIR, fname)

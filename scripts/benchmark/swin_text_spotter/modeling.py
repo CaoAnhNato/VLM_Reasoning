@@ -209,18 +209,28 @@ class PCAMaskEncoding(nn.Module):
             torch.zeros(self.dim_mask), requires_grad=False
         )
         self.means = nn.Parameter(torch.zeros(self.mask_size ** 2), requires_grad=False)
+        self._cached_whitened_components: Optional[torch.Tensor] = None
+        self._cached_means_f32: Optional[torch.Tensor] = None
 
     def decoder(self, X: torch.Tensor, is_train: bool = False) -> torch.Tensor:
         X_f = X.float()
-        if self.whiten:
-            components_ = self.components.float() * torch.sqrt(
-                self.explained_variances.float().unsqueeze(1)
+        if (
+            self._cached_whitened_components is None
+            or self._cached_whitened_components.device != X.device
+        ):
+            if self.whiten:
+                self._cached_whitened_components = (
+                    self.components.float()
+                    * torch.sqrt(self.explained_variances.float().unsqueeze(1))
+                ).detach()
+            else:
+                self._cached_whitened_components = self.components.float().detach()
+            self._cached_means_f32 = (
+                self.means.float().detach() if self.means is not None else None
             )
-        else:
-            components_ = self.components.float()
-        X_transformed = torch.matmul(X_f, components_)
-        if self.means is not None:
-            X_transformed = X_transformed + self.means.float()
+        X_transformed = torch.matmul(X_f, self._cached_whitened_components)
+        if self._cached_means_f32 is not None:
+            X_transformed = X_transformed + self._cached_means_f32
         if not is_train:
             if self.sigmoid:
                 X_transformed = torch.sigmoid(X_transformed)
@@ -1262,6 +1272,7 @@ class SequencePredictor(nn.Module):
         self.x_onehot.weight.data = torch.eye(x_onehot_size)
         self.y_onehot = nn.Embedding(y_onehot_size, y_onehot_size)
         self.y_onehot.weight.data = torch.eye(y_onehot_size)
+        self._cached_loc_embed: Optional[torch.Tensor] = None
 
     def forward(
         self,
@@ -1275,31 +1286,38 @@ class SequencePredictor(nn.Module):
         x_onehot_size = int(self.RESIZE_WIDTH / 2)
         y_onehot_size = int(self.RESIZE_HEIGHT / 2)
 
-        x_t, y_t = np.meshgrid(
-            np.linspace(0, x_onehot_size - 1, x_onehot_size),
-            np.linspace(0, y_onehot_size - 1, y_onehot_size),
-        )
-        x_t = torch.as_tensor(x_t, dtype=torch.long, device=device)
-        y_t = torch.as_tensor(y_t, dtype=torch.long, device=device)
-
         B = seq_decoder_input.size(0)
-        x_onehot_embedding = (
-            self.x_onehot(x_t)
-            .to(dtype=seq_decoder_input.dtype)
-            .transpose(0, 2)
-            .transpose(1, 2)
-            .repeat(B, 1, 1, 1)
-        )
-        y_onehot_embedding = (
-            self.y_onehot(y_t)
-            .to(dtype=seq_decoder_input.dtype)
-            .transpose(0, 2)
-            .transpose(1, 2)
-            .repeat(B, 1, 1, 1)
-        )
-        seq_decoder_input_loc = torch.cat(
-            [seq_decoder_input, x_onehot_embedding, y_onehot_embedding], 1
-        )
+        if (
+            self._cached_loc_embed is None
+            or self._cached_loc_embed.device != device
+            or self._cached_loc_embed.dtype != seq_decoder_input.dtype
+        ):
+            x_t, y_t = np.meshgrid(
+                np.linspace(0, x_onehot_size - 1, x_onehot_size),
+                np.linspace(0, y_onehot_size - 1, y_onehot_size),
+            )
+            x_t = torch.as_tensor(x_t, dtype=torch.long, device=device)
+            y_t = torch.as_tensor(y_t, dtype=torch.long, device=device)
+            x_onehot_embedding = (
+                self.x_onehot(x_t)
+                .to(dtype=seq_decoder_input.dtype)
+                .transpose(0, 2)
+                .transpose(1, 2)
+                .unsqueeze(0)
+            )
+            y_onehot_embedding = (
+                self.y_onehot(y_t)
+                .to(dtype=seq_decoder_input.dtype)
+                .transpose(0, 2)
+                .transpose(1, 2)
+                .unsqueeze(0)
+            )
+            self._cached_loc_embed = torch.cat(
+                [x_onehot_embedding, y_onehot_embedding], dim=1
+            ).contiguous()
+
+        loc_embed_batch = self._cached_loc_embed.expand(B, -1, -1, -1)
+        seq_decoder_input_loc = torch.cat([seq_decoder_input, loc_embed_batch], 1)
         seq_decoder_input_reshape = (
             seq_decoder_input_loc.view(B, seq_decoder_input_loc.size(1), -1)
             .transpose(0, 2)
@@ -1903,7 +1921,9 @@ class SWINTS(nn.Module):
             x = F.pad(x, (0, pad_w, 0, pad_h), value=0.0)
 
         amp_enabled = bool(use_amp_bf16 and x.is_cuda)
-        with torch.amp.autocast("cuda", dtype=torch.bfloat16, enabled=amp_enabled):
+        with torch.amp.autocast(
+            "cuda", dtype=torch.bfloat16, enabled=amp_enabled, cache_enabled=True
+        ):
             src = self.backbone(x)
             features = [src[f] for f in self.in_features]
 
