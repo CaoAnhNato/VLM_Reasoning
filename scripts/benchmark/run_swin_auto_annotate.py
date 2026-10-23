@@ -43,6 +43,7 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 import torch
+from tqdm.auto import tqdm
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", ".."))
@@ -234,24 +235,31 @@ def ensure_target_images(
     workers = max(1, min(num_workers, len(valid_targets)))
     chunks = [valid_targets[i::workers] for i in range(workers)]
 
-    def _fetch_chunk(chunk_targets: List[str]) -> int:
-        if not chunk_targets:
-            return 0
-        local_fs = HfFileSystem(token=hf_token)
-        count = 0
-        with local_fs.open(zip_uri, "rb") as fp_w:
-            with zipfile.ZipFile(fp_w) as zf_w:
-                for target_name in chunk_targets:
-                    data = zf_w.read(name_map[target_name])
-                    out_p = os.path.join(image_dir, target_name)
-                    with open(out_p, "wb") as out_f:
-                        out_f.write(data)
-                    count += 1
-        return count
-
     t_dl = time.perf_counter()
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        fetched_total = sum(pool.map(_fetch_chunk, chunks))
+    with tqdm(
+        total=len(valid_targets),
+        desc="[DATA] Streaming HF images",
+        unit="img",
+        dynamic_ncols=True,
+    ) as dl_pbar:
+        def _fetch_chunk(chunk_targets: List[str]) -> int:
+            if not chunk_targets:
+                return 0
+            local_fs = HfFileSystem(token=hf_token)
+            count = 0
+            with local_fs.open(zip_uri, "rb") as fp_w:
+                with zipfile.ZipFile(fp_w) as zf_w:
+                    for target_name in chunk_targets:
+                        data = zf_w.read(name_map[target_name])
+                        out_p = os.path.join(image_dir, target_name)
+                        with open(out_p, "wb") as out_f:
+                            out_f.write(data)
+                        count += 1
+                        dl_pbar.update(1)
+            return count
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            fetched_total = sum(pool.map(_fetch_chunk, chunks))
     print(
         f"[DATA] Cached {fetched_total}/{len(missing)} images in {time.perf_counter() - t_dl:.1f}s"
     )
@@ -296,9 +304,16 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--num-images",
+        "--target-images",
+        dest="num_images",
         type=int,
         default=400,
         help="Target number of images to auto-annotate in batch mode (default: 400).",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print per-image detailed log lines alongside the tqdm progress bar.",
     )
     parser.add_argument(
         "--num-test-images",
@@ -553,7 +568,12 @@ def main() -> None:
 
     mode_flag = "w" if (args.test or args.no_resume or not completed_records) else "a"
     try:
-        with open(jsonl_path, mode_flag, encoding="utf-8") as jsonl_fp:
+        with open(jsonl_path, mode_flag, encoding="utf-8") as jsonl_fp, tqdm(
+            total=len(target_img_ids),
+            desc="[DETECT] SwinTextSpotter",
+            unit="img",
+            dynamic_ncols=True,
+        ) as pbar:
             for idx, img_id in enumerate(target_img_ids, 1):
                 fname = id_to_filename.get(img_id, f"{img_id}.jpg")
                 img_path = os.path.join(DEFAULT_IMAGE_DIR, fname)
@@ -583,14 +603,22 @@ def main() -> None:
                 matched_qas += n_matched
                 total_answer_regions += n_regions
 
-                print(
-                    f"[{idx:03d}/{len(target_img_ids):03d}] {fname} ({res['width']}x{res['height']}) | "
-                    f"Quests: {n_qas} (Matched: {n_matched}/{n_qas}) -> Answer BBoxes: {n_regions} | "
-                    f"Lines: {res['num_total_lines']} | "
-                    f"Time: {res['latency_ms']:.0f}ms | "
-                    f"RAM: {res['memory']['ram_used_gb']:.2f}GB ({res['memory']['ram_percent']:.1f}%) | "
-                    f"VRAM Peak: {res['memory']['vram_peak_mb']:.0f}MB"
+                pbar.update(1)
+                pbar.set_postfix_str(
+                    f"img={fname} | matched={matched_qas}/{total_qas} | "
+                    f"bboxes={total_answer_regions} | {res['latency_ms']:.0f}ms | "
+                    f"VRAM={res['memory']['vram_peak_mb']:.0f}MB"
                 )
+
+                if args.test or args.verbose:
+                    pbar.write(
+                        f"[{idx:03d}/{len(target_img_ids):03d}] {fname} ({res['width']}x{res['height']}) | "
+                        f"Quests: {n_qas} (Matched: {n_matched}/{n_qas}) -> Answer BBoxes: {n_regions} | "
+                        f"Lines: {res['num_total_lines']} | "
+                        f"Time: {res['latency_ms']:.0f}ms | "
+                        f"RAM: {res['memory']['ram_used_gb']:.2f}GB ({res['memory']['ram_percent']:.1f}%) | "
+                        f"VRAM Peak: {res['memory']['vram_peak_mb']:.0f}MB"
+                    )
 
                 results_summary.append(
                     {
