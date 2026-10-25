@@ -75,10 +75,15 @@ Mỗi câu hỏi trên ảnh được gán 1 nhãn màu riêng biệt (`Q1_gt`, 
 
 ---
 
-## 4. Gộp kết quả sau khi 4 thành viên hoàn thành
+## 4. Nộp kết quả sau khi hoàn thành
 
-Sau khi các thành viên hoàn tất và push các file `.json` trong thư mục của mình lên Git, chạy lệnh sau để tổng hợp toàn bộ 400 ảnh (cùng các đáp án bổ sung mới) vào `results/swintextspotter_auto_annot/answer_bboxes_400_verified.json`:
+1. **Đối với các thành viên (`Cao_Anh`, `Trieu`, `Cam_Tu`, `Thanh_Tam`)**:
+   - Sau khi kiểm tra và gán nhãn xong toàn bộ 100 ảnh trong thư mục của mình (`data/xanylabeling_workspace/<Tên_Thành_Viên>`), **upload nguyên thư mục của mình** lên Google Drive chung tại link sau:
+   - 🔗 **Link nộp bài (Google Drive):** [https://drive.google.com/drive/folders/1WR7wmf57ljGHHpia6R3b4xs-15bl0xH3?usp=drive_link](https://drive.google.com/drive/folders/1WR7wmf57ljGHHpia6R3b4xs-15bl0xH3?usp=drive_link)
 
-```powershell
-.\venv\Scripts\python.exe scripts/benchmark/setup_xanylabeling_workspace.py --merge
-```
+2. **Đối với Leader (`Cao_Anh`) — Gộp kết quả 400 ảnh**:
+   - Tải 4 thư mục đã hoàn thành từ Google Drive về đặt lại vào `data/xanylabeling_workspace/`, sau đó chạy lệnh gộp dữ liệu chuẩn:
+   ```powershell
+   .\venv\Scripts\python.exe scripts/benchmark/setup_xanylabeling_workspace.py --merge
+   ```
+   - File kết quả tổng hợp cuối cùng sẽ được xuất ra tại: `results/swintextspotter_auto_annot/answer_bboxes_400_verified.json`.

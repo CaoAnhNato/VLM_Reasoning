@@ -30,3 +30,7 @@ python -m venv venv
 3. Nhập đáp án mới vào ô **Description** (góc dưới bên phải) của box vừa vẽ.
 
 ![Ví dụ 126.jpg](guide_previews/xany_preview_126.jpg)
+
+## 4. Nộp kết quả sau khi hoàn thành
+- Sau khi hoàn thành 100 ảnh, mỗi thành viên upload nguyên thư mục của mình (`Cao_Anh_001_100`, `Trieu_101_200`, `Cam_Tu_201_300`, `Thanh_Tam_301_400`) lên Google Drive:
+- 🔗 **Link Google Drive nộp bài:** [https://drive.google.com/drive/folders/1WR7wmf57ljGHHpia6R3b4xs-15bl0xH3?usp=drive_link](https://drive.google.com/drive/folders/1WR7wmf57ljGHHpia6R3b4xs-15bl0xH3?usp=drive_link)
