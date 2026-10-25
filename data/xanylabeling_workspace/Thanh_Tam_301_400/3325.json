@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          86.0,
+          52.0
+        ],
+        [
+          591.0,
+          52.0
+        ],
+        [
+          591.0,
+          276.0
+        ],
+        [
+          86.0,
+          276.0
+        ]
+      ],
+      "group_id": 9905,
+      "description": "Hỏi: tâm là tấm bảng hiệu của nơi nào ? || ĐA: thẩm mỹ chi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9905,
+        "question_ids": [
+          9905
+        ],
+        "question": "tâm là tấm bảng hiệu của nơi nào ?",
+        "gt_answer": "thẩm mỹ chi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          122.0,
+          301.0
+        ],
+        [
+          616.0,
+          301.0
+        ],
+        [
+          616.0,
+          390.0
+        ],
+        [
+          122.0,
+          390.0
+        ]
+      ],
+      "group_id": 9906,
+      "description": "Hỏi: thẩm mĩ chi chuyên làm gì ? || ĐA: gội đầu - hấp dầu - uốn mi làm móng - vẽ móng - tẩy trắng - lột mụn đắp dưỡng - massage - đắp collagen chạy collgen chống lão hóa",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9906,
+        "question_ids": [
+          9906
+        ],
+        "question": "thẩm mĩ chi chuyên làm gì ?",
+        "gt_answer": "gội đầu - hấp dầu - uốn mi làm móng - vẽ móng - tẩy trắng - lột mụn đắp dưỡng - massage - đắp collagen chạy collgen chống lão hóa"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          376.0,
+          459.0
+        ],
+        [
+          490.0,
+          459.0
+        ],
+        [
+          490.0,
+          522.0
+        ],
+        [
+          376.0,
+          522.0
+        ]
+      ],
+      "group_id": 9907,
+      "description": "Hỏi: số điện thoại để liên hệ đến nơi trong tấm bảng là gì ? || ĐA: 0906 . 945 655",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9907,
+        "question_ids": [
+          9907
+        ],
+        "question": "số điện thoại để liên hệ đến nơi trong tấm bảng là gì ?",
+        "gt_answer": "0906 . 945 655"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3325.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 800,
+  "description": "Ảnh: 3325.jpg (ID=3325) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tâm là tấm bảng hiệu của nơi nào ? || ĐA: thẩm mỹ chi\n• Q2_gt: Hỏi: thẩm mĩ chi chuyên làm gì ? || ĐA: gội đầu - hấp dầu - uốn mi làm móng - vẽ móng - tẩy trắng - lột mụn đắp dưỡng - massage - đắp collagen chạy collgen chống lão hóa\n• Q3_gt: Hỏi: số điện thoại để liên hệ đến nơi trong tấm bảng là gì ? || ĐA: 0906 . 945 655"
+}

@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          173.0,
+          142.0
+        ],
+        [
+          520.0,
+          142.0
+        ],
+        [
+          520.0,
+          237.0
+        ],
+        [
+          173.0,
+          237.0
+        ]
+      ],
+      "group_id": 10977,
+      "description": "Hỏi: quán ở trong ảnh là quán gì ? || ĐA: chay từ thiện",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10977,
+        "question_ids": [
+          10977
+        ],
+        "question": "quán ở trong ảnh là quán gì ?",
+        "gt_answer": "chay từ thiện"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          435.0,
+          215.0
+        ],
+        [
+          499.0,
+          215.0
+        ],
+        [
+          499.0,
+          240.0
+        ],
+        [
+          435.0,
+          240.0
+        ]
+      ],
+      "group_id": 10978,
+      "description": "Hỏi: dòng chữ ở dưới quán chay từ thiện là gì ? || ĐA: vegetarian food to go",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10978,
+        "question_ids": [
+          10978
+        ],
+        "question": "dòng chữ ở dưới quán chay từ thiện là gì ?",
+        "gt_answer": "vegetarian food to go"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 10979,
+      "description": "Hỏi: muốn làm bảng quảng cáo giá rẻ thì ta liên lạc vào số nào ? || ĐA: 0935 248 949",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10979,
+        "question_ids": [
+          10979
+        ],
+        "question": "muốn làm bảng quảng cáo giá rẻ thì ta liên lạc vào số nào ?",
+        "gt_answer": "0935 248 949"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          214.0,
+          260.0
+        ],
+        [
+          441.0,
+          260.0
+        ],
+        [
+          441.0,
+          285.0
+        ],
+        [
+          214.0,
+          285.0
+        ]
+      ],
+      "group_id": 10980,
+      "description": "Hỏi: ta gọi vào số hotline trong ảnh khi muốn làm bảng quảng cáo giá gì ? || ĐA: rẻ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 10980,
+        "question_ids": [
+          10980
+        ],
+        "question": "ta gọi vào số hotline trong ảnh khi muốn làm bảng quảng cáo giá gì ?",
+        "gt_answer": "rẻ"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3680.jpg",
+  "imageData": null,
+  "imageHeight": 488,
+  "imageWidth": 650,
+  "description": "Ảnh: 3680.jpg (ID=3680) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: quán ở trong ảnh là quán gì ? || ĐA: chay từ thiện\n• Q2_gt: Hỏi: dòng chữ ở dưới quán chay từ thiện là gì ? || ĐA: vegetarian food to go\n• Q3_gt: Hỏi: muốn làm bảng quảng cáo giá rẻ thì ta liên lạc vào số nào ? || ĐA: 0935 248 949\n• Q4_gt: Hỏi: ta gọi vào số hotline trong ảnh khi muốn làm bảng quảng cáo giá gì ? || ĐA: rẻ"
+}

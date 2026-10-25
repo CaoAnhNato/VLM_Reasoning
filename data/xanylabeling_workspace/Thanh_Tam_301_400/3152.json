@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          416.0,
+          1337.0
+        ],
+        [
+          660.0,
+          1337.0
+        ],
+        [
+          660.0,
+          1386.0
+        ],
+        [
+          416.0,
+          1386.0
+        ]
+      ],
+      "group_id": 9352,
+      "description": "Hỏi: số điện thoại liên hệ của cửa hàng này là gì ? || ĐA: 036 912 4565 032 957 6282",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9352,
+        "question_ids": [
+          9352
+        ],
+        "question": "số điện thoại liên hệ của cửa hàng này là gì ?",
+        "gt_answer": "036 912 4565 032 957 6282"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9183,
+      "points": [
+        [
+          463.0,
+          0.0
+        ],
+        [
+          737.0,
+          0.0
+        ],
+        [
+          737.0,
+          61.0
+        ],
+        [
+          463.0,
+          61.0
+        ]
+      ],
+      "group_id": 9353,
+      "description": "Hỏi: cửa hàng này kinh doanh sản phẩm gì ? || ĐA: kệ siêu thị miền nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9353,
+        "question_ids": [
+          9353
+        ],
+        "question": "cửa hàng này kinh doanh sản phẩm gì ?",
+        "gt_answer": "kệ siêu thị miền nam"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          205.0,
+          1276.0
+        ],
+        [
+          311.0,
+          1276.0
+        ],
+        [
+          311.0,
+          1352.0
+        ],
+        [
+          205.0,
+          1352.0
+        ]
+      ],
+      "group_id": 9354,
+      "description": "Hỏi: tên của cửa hàng này là gì ? || ĐA: hanatech",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9354,
+        "question_ids": [
+          9354
+        ],
+        "question": "tên của cửa hàng này là gì ?",
+        "gt_answer": "hanatech"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3152.jpg",
+  "imageData": null,
+  "imageHeight": 1386,
+  "imageWidth": 1200,
+  "description": "Ảnh: 3152.jpg (ID=3152) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: số điện thoại liên hệ của cửa hàng này là gì ? || ĐA: 036 912 4565 032 957 6282\n• Q2_gt: Hỏi: cửa hàng này kinh doanh sản phẩm gì ? || ĐA: kệ siêu thị miền nam\n• Q3_gt: Hỏi: tên của cửa hàng này là gì ? || ĐA: hanatech"
+}

@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8,
+      "points": [
+        [
+          113.0,
+          2.0
+        ],
+        [
+          231.0,
+          2.0
+        ],
+        [
+          231.0,
+          27.0
+        ],
+        [
+          113.0,
+          27.0
+        ]
+      ],
+      "group_id": 9064,
+      "description": "Hỏi: bức hình này được lấy nguồn từ đâu ? || ĐA: eros",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9064,
+        "question_ids": [
+          9064
+        ],
+        "question": "bức hình này được lấy nguồn từ đâu ?",
+        "gt_answer": "eros"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          116.0,
+          5.0
+        ],
+        [
+          234.0,
+          5.0
+        ],
+        [
+          234.0,
+          30.0
+        ],
+        [
+          116.0,
+          30.0
+        ]
+      ],
+      "group_id": 9065,
+      "description": "Hỏi: tên đại chỉ online để lấy bức hình này ? || ĐA: ww . aeros . vn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9065,
+        "question_ids": [
+          9065
+        ],
+        "question": "tên đại chỉ online để lấy bức hình này ?",
+        "gt_answer": "ww . aeros . vn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          112.0,
+          30.0
+        ],
+        [
+          233.0,
+          30.0
+        ],
+        [
+          233.0,
+          79.0
+        ],
+        [
+          112.0,
+          79.0
+        ]
+      ],
+      "group_id": 9066,
+      "description": "Hỏi: liên hệ với aeros thì liên hệ qua số nào ? || ĐA: 0901 806 999 0905 224 888",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9066,
+        "question_ids": [
+          9066
+        ],
+        "question": "liên hệ với aeros thì liên hệ qua số nào ?",
+        "gt_answer": "0901 806 999 0905 224 888"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          112.0,
+          53.0
+        ],
+        [
+          233.0,
+          53.0
+        ],
+        [
+          233.0,
+          79.0
+        ],
+        [
+          112.0,
+          79.0
+        ]
+      ],
+      "group_id": 9067,
+      "description": "Hỏi: liên hệ với aeros ngoài số điện thoại 0901 806 999 ? || ĐA: 0905 224 888",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 9067,
+        "question_ids": [
+          9067
+        ],
+        "question": "liên hệ với aeros ngoài số điện thoại 0901 806 999 ?",
+        "gt_answer": "0905 224 888"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          112.0,
+          30.0
+        ],
+        [
+          231.0,
+          30.0
+        ],
+        [
+          231.0,
+          55.0
+        ],
+        [
+          112.0,
+          55.0
+        ]
+      ],
+      "group_id": 9068,
+      "description": "Hỏi: liên hệ với aeros ngoài số điện thoại 0905 224 888 ? || ĐA: 0901 806 999",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 9068,
+        "question_ids": [
+          9068
+        ],
+        "question": "liên hệ với aeros ngoài số điện thoại 0905 224 888 ?",
+        "gt_answer": "0901 806 999"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3071.jpg",
+  "imageData": null,
+  "imageHeight": 400,
+  "imageWidth": 600,
+  "description": "Ảnh: 3071.jpg (ID=3071) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: bức hình này được lấy nguồn từ đâu ? || ĐA: eros\n• Q2_gt: Hỏi: tên đại chỉ online để lấy bức hình này ? || ĐA: ww . aeros . vn\n• Q3_gt: Hỏi: liên hệ với aeros thì liên hệ qua số nào ? || ĐA: 0901 806 999 0905 224 888\n• Q4_gt: Hỏi: liên hệ với aeros ngoài số điện thoại 0901 806 999 ? || ĐA: 0905 224 888\n• Q5_gt: Hỏi: liên hệ với aeros ngoài số điện thoại 0905 224 888 ? || ĐA: 0901 806 999"
+}

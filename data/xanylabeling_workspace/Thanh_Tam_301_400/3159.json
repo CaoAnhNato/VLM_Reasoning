@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9,
+      "points": [
+        [
+          162.0,
+          96.0
+        ],
+        [
+          494.0,
+          96.0
+        ],
+        [
+          494.0,
+          214.0
+        ],
+        [
+          162.0,
+          214.0
+        ]
+      ],
+      "group_id": 9373,
+      "description": "Hỏi: tên của cửa hàng trên biển quảng cáo bằng gỗ là gì ? || ĐA: hoàng yến",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9373,
+        "question_ids": [
+          9373
+        ],
+        "question": "tên của cửa hàng trên biển quảng cáo bằng gỗ là gì ?",
+        "gt_answer": "hoàng yến"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          428.0,
+          272.0
+        ],
+        [
+          586.0,
+          272.0
+        ],
+        [
+          586.0,
+          292.0
+        ],
+        [
+          428.0,
+          292.0
+        ]
+      ],
+      "group_id": 9374,
+      "description": "Hỏi: tên của cửa hàng trên biển quảng cáo góc dưới trái là gì ? || ĐA: phan long laser",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9374,
+        "question_ids": [
+          9374
+        ],
+        "question": "tên của cửa hàng trên biển quảng cáo góc dưới trái là gì ?",
+        "gt_answer": "phan long laser"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          21.0,
+          326.0
+        ],
+        [
+          172.0,
+          326.0
+        ],
+        [
+          172.0,
+          385.0
+        ],
+        [
+          21.0,
+          385.0
+        ]
+      ],
+      "group_id": 9375,
+      "description": "Hỏi: công ty tài trợ cửa hàng trên biển quảng cáo góc dưới trái là gì ? || ĐA: công ty phan long việt nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9375,
+        "question_ids": [
+          9375
+        ],
+        "question": "công ty tài trợ cửa hàng trên biển quảng cáo góc dưới trái là gì ?",
+        "gt_answer": "công ty phan long việt nam"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3159.jpg",
+  "imageData": null,
+  "imageHeight": 463,
+  "imageWidth": 610,
+  "description": "Ảnh: 3159.jpg (ID=3159) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tên của cửa hàng trên biển quảng cáo bằng gỗ là gì ? || ĐA: hoàng yến\n• Q2_gt: Hỏi: tên của cửa hàng trên biển quảng cáo góc dưới trái là gì ? || ĐA: phan long laser\n• Q3_gt: Hỏi: công ty tài trợ cửa hàng trên biển quảng cáo góc dưới trái là gì ? || ĐA: công ty phan long việt nam"
+}

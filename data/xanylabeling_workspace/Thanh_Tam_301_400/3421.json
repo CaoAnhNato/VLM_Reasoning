@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          279.0,
+          11.0
+        ],
+        [
+          558.0,
+          11.0
+        ],
+        [
+          558.0,
+          86.0
+        ],
+        [
+          279.0,
+          86.0
+        ]
+      ],
+      "group_id": 10222,
+      "description": "Hỏi: siêu thị này có tên là gì ? || ĐA: paintmart",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10222,
+        "question_ids": [
+          10222
+        ],
+        "question": "siêu thị này có tên là gì ?",
+        "gt_answer": "paintmart"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          289.0,
+          51.0
+        ],
+        [
+          553.0,
+          51.0
+        ],
+        [
+          553.0,
+          95.0
+        ],
+        [
+          289.0,
+          95.0
+        ]
+      ],
+      "group_id": 10223,
+      "description": "Hỏi: paintmart là siêu thị bán gì ? || ĐA: sơn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10223,
+        "question_ids": [
+          10223
+        ],
+        "question": "paintmart là siêu thị bán gì ?",
+        "gt_answer": "sơn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          292.0,
+          54.0
+        ],
+        [
+          556.0,
+          54.0
+        ],
+        [
+          556.0,
+          98.0
+        ],
+        [
+          292.0,
+          98.0
+        ]
+      ],
+      "group_id": 10224,
+      "description": "Hỏi: siêu thị này bán sơn như thế nào ? || ĐA: số 1 việt nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10224,
+        "question_ids": [
+          10224
+        ],
+        "question": "siêu thị này bán sơn như thế nào ?",
+        "gt_answer": "số 1 việt nam"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7287,
+      "points": [
+        [
+          87.0,
+          72.0
+        ],
+        [
+          180.0,
+          72.0
+        ],
+        [
+          180.0,
+          94.0
+        ],
+        [
+          87.0,
+          94.0
+        ]
+      ],
+      "group_id": 10225,
+      "description": "Hỏi: siêu thị dùng số 1 900 234 535 để làm gì ? || ĐA: tư vấn & đặt hàng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 10225,
+        "question_ids": [
+          10225
+        ],
+        "question": "siêu thị dùng số 1 900 234 535 để làm gì ?",
+        "gt_answer": "tư vấn & đặt hàng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          67.0,
+          80.0
+        ],
+        [
+          181.0,
+          80.0
+        ],
+        [
+          181.0,
+          105.0
+        ],
+        [
+          67.0,
+          105.0
+        ]
+      ],
+      "group_id": 10226,
+      "description": "Hỏi: khi muốn nhận tư vấn & đặt hàng thì gọi tới số nào ? || ĐA: 1 900 234 535",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 10226,
+        "question_ids": [
+          10226
+        ],
+        "question": "khi muốn nhận tư vấn & đặt hàng thì gọi tới số nào ?",
+        "gt_answer": "1 900 234 535"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3421.jpg",
+  "imageData": null,
+  "imageHeight": 414,
+  "imageWidth": 736,
+  "description": "Ảnh: 3421.jpg (ID=3421) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: siêu thị này có tên là gì ? || ĐA: paintmart\n• Q2_gt: Hỏi: paintmart là siêu thị bán gì ? || ĐA: sơn\n• Q3_gt: Hỏi: siêu thị này bán sơn như thế nào ? || ĐA: số 1 việt nam\n• Q4_gt: Hỏi: siêu thị dùng số 1 900 234 535 để làm gì ? || ĐA: tư vấn & đặt hàng\n• Q5_gt: Hỏi: khi muốn nhận tư vấn & đặt hàng thì gọi tới số nào ? || ĐA: 1 900 234 535"
+}

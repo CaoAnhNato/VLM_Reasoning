@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          207.0,
+          137.0
+        ],
+        [
+          579.0,
+          137.0
+        ],
+        [
+          579.0,
+          242.0
+        ],
+        [
+          207.0,
+          242.0
+        ]
+      ],
+      "group_id": 11256,
+      "description": "Hỏi: xe hàng của bà ốc chuyên bán gì ? || ĐA: thịt chó gia truyền",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11256,
+        "question_ids": [
+          11256
+        ],
+        "question": "xe hàng của bà ốc chuyên bán gì ?",
+        "gt_answer": "thịt chó gia truyền"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          400.0,
+          265.0
+        ],
+        [
+          616.0,
+          265.0
+        ],
+        [
+          616.0,
+          358.0
+        ],
+        [
+          400.0,
+          358.0
+        ]
+      ],
+      "group_id": 11257,
+      "description": "Hỏi: thắng trôi có đặc sản là gì ? || ĐA: thịt chó",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11257,
+        "question_ids": [
+          11257
+        ],
+        "question": "thắng trôi có đặc sản là gì ?",
+        "gt_answer": "thịt chó"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          224.0,
+          209.0
+        ],
+        [
+          393.0,
+          209.0
+        ],
+        [
+          393.0,
+          242.0
+        ],
+        [
+          224.0,
+          242.0
+        ]
+      ],
+      "group_id": 11258,
+      "description": "Hỏi: cửa tiệm thắng trôi nhận làm những gì ? || ĐA: đặt tiệc - liên hoan",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 11258,
+        "question_ids": [
+          11258
+        ],
+        "question": "cửa tiệm thắng trôi nhận làm những gì ?",
+        "gt_answer": "đặt tiệc - liên hoan"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3788.jpg",
+  "imageData": null,
+  "imageHeight": 429,
+  "imageWidth": 660,
+  "description": "Ảnh: 3788.jpg (ID=3788) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: xe hàng của bà ốc chuyên bán gì ? || ĐA: thịt chó gia truyền\n• Q2_gt: Hỏi: thắng trôi có đặc sản là gì ? || ĐA: thịt chó\n• Q3_gt: Hỏi: cửa tiệm thắng trôi nhận làm những gì ? || ĐA: đặt tiệc - liên hoan"
+}

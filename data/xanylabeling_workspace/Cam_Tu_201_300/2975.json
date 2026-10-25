@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          245.0,
+          156.0
+        ],
+        [
+          323.0,
+          156.0
+        ],
+        [
+          323.0,
+          181.0
+        ],
+        [
+          245.0,
+          181.0
+        ]
+      ],
+      "group_id": 8730,
+      "description": "Hỏi: ở ngay giữa trung tâm là gian hàng của thương hiệu nào ? || ĐA: dong xuan art",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8730,
+        "question_ids": [
+          8730
+        ],
+        "question": "ở ngay giữa trung tâm là gian hàng của thương hiệu nào ?",
+        "gt_answer": "dong xuan art"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6875,
+      "points": [
+        [
+          500.0,
+          25.0
+        ],
+        [
+          575.0,
+          25.0
+        ],
+        [
+          575.0,
+          46.0
+        ],
+        [
+          500.0,
+          46.0
+        ]
+      ],
+      "group_id": 8731,
+      "description": "Hỏi: bức hình này được lấy nguồn ở đâu ? || ĐA: kenh14 . vn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8731,
+        "question_ids": [
+          8731
+        ],
+        "question": "bức hình này được lấy nguồn ở đâu ?",
+        "gt_answer": "kenh14 . vn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2975.jpg",
+  "imageData": null,
+  "imageHeight": 413,
+  "imageWidth": 620,
+  "description": "Ảnh: 2975.jpg (ID=2975) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: ở ngay giữa trung tâm là gian hàng của thương hiệu nào ? || ĐA: dong xuan art\n• Q2_gt: Hỏi: bức hình này được lấy nguồn ở đâu ? || ĐA: kenh14 . vn"
+}

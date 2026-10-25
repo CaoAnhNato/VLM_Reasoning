@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.95,
+      "points": [
+        [
+          94.0,
+          372.0
+        ],
+        [
+          233.0,
+          372.0
+        ],
+        [
+          233.0,
+          406.0
+        ],
+        [
+          94.0,
+          406.0
+        ]
+      ],
+      "group_id": 4590,
+      "description": "Hỏi: nguồn của bưc hình là gì ? || ĐA: kenh14 . vn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4590,
+        "question_ids": [
+          4590
+        ],
+        "question": "nguồn của bưc hình là gì ?",
+        "gt_answer": "kenh14 . vn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          413.0,
+          198.0
+        ],
+        [
+          575.0,
+          198.0
+        ],
+        [
+          575.0,
+          245.0
+        ],
+        [
+          413.0,
+          245.0
+        ]
+      ],
+      "group_id": 4591,
+      "description": "Hỏi: người đàn ông đang đứng ở đâu ? || ĐA: địa điểm cách ly y tế",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4591,
+        "question_ids": [
+          4591
+        ],
+        "question": "người đàn ông đang đứng ở đâu ?",
+        "gt_answer": "địa điểm cách ly y tế"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          417.0,
+          237.0
+        ],
+        [
+          562.0,
+          237.0
+        ],
+        [
+          562.0,
+          268.0
+        ],
+        [
+          417.0,
+          268.0
+        ]
+      ],
+      "group_id": 4592,
+      "description": "Hỏi: địa điểm cách ly y tế này được lập ra với mục đích gì ? || ĐA: phòng , chống dịch bệnh covid - 19",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4592,
+        "question_ids": [
+          4592
+        ],
+        "question": "địa điểm cách ly y tế này được lập ra với mục đích gì ?",
+        "gt_answer": "phòng , chống dịch bệnh covid - 19"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9222,
+      "points": [
+        [
+          420.0,
+          168.0
+        ],
+        [
+          571.0,
+          168.0
+        ],
+        [
+          571.0,
+          202.0
+        ],
+        [
+          420.0,
+          202.0
+        ]
+      ],
+      "group_id": 4593,
+      "description": "Hỏi: địa điểm cách ly y tế này thuộc cơ quan nào ? || ĐA: bcđ phòng chống dịch covid - 19 phường hàng bồ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 4593,
+        "question_ids": [
+          4593
+        ],
+        "question": "địa điểm cách ly y tế này thuộc cơ quan nào ?",
+        "gt_answer": "bcđ phòng chống dịch covid - 19 phường hàng bồ"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1629.jpg",
+  "imageData": null,
+  "imageHeight": 410,
+  "imageWidth": 660,
+  "description": "Ảnh: 1629.jpg (ID=1629) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: nguồn của bưc hình là gì ? || ĐA: kenh14 . vn\n• Q2_gt: Hỏi: người đàn ông đang đứng ở đâu ? || ĐA: địa điểm cách ly y tế\n• Q3_gt: Hỏi: địa điểm cách ly y tế này được lập ra với mục đích gì ? || ĐA: phòng , chống dịch bệnh covid - 19\n• Q4_gt: Hỏi: địa điểm cách ly y tế này thuộc cơ quan nào ? || ĐA: bcđ phòng chống dịch covid - 19 phường hàng bồ"
+}

@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.965,
+      "points": [
+        [
+          48.0,
+          117.0
+        ],
+        [
+          240.0,
+          117.0
+        ],
+        [
+          240.0,
+          144.0
+        ],
+        [
+          48.0,
+          144.0
+        ]
+      ],
+      "group_id": 4271,
+      "description": "Hỏi: nội dung của tấm hình này là gì ? || ĐA: an ninh quảng ngãi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4271,
+        "question_ids": [
+          4271
+        ],
+        "question": "nội dung của tấm hình này là gì ?",
+        "gt_answer": "an ninh quảng ngãi"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1529.jpg",
+  "imageData": null,
+  "imageHeight": 168,
+  "imageWidth": 300,
+  "description": "Ảnh: 1529.jpg (ID=1529) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: nội dung của tấm hình này là gì ? || ĐA: an ninh quảng ngãi"
+}

@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": true,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          949.5102040816327,
+          1089.795918367347
+        ],
+        [
+          1841.34693877551,
+          1089.795918367347
+        ],
+        [
+          1841.34693877551,
+          1540.8163265306123
+        ],
+        [
+          949.5102040816327,
+          1540.8163265306123
+        ]
+      ],
+      "group_id": 267,
+      "description": "Hỏi: tên của sản phẩm này là gì ? || ĐA: nước cốt dừa tươi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 267,
+        "question_ids": [
+          267
+        ],
+        "question": "tên của sản phẩm này là gì ?",
+        "gt_answer": "nước cốt dừa tươi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6486,
+      "points": [
+        [
+          1178.0816326530612,
+          828.5714285714286
+        ],
+        [
+          1674.0,
+          828.5714285714286
+        ],
+        [
+          1674.0,
+          1102.0408163265306
+        ],
+        [
+          1178.0816326530612,
+          1102.0408163265306
+        ]
+      ],
+      "group_id": 268,
+      "description": "Hỏi: sản phẩm thuộc của hãng nào ? || ĐA: cocoxim",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 268,
+        "question_ids": [
+          268
+        ],
+        "question": "sản phẩm thuộc của hãng nào ?",
+        "gt_answer": "cocoxim"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.6,
+      "points": [
+        [
+          1044.0,
+          2139.0
+        ],
+        [
+          1413.3939393939393,
+          2139.0
+        ],
+        [
+          1413.3939393939393,
+          2280.30303030303
+        ],
+        [
+          1044.0,
+          2280.30303030303
+        ]
+      ],
+      "group_id": 269,
+      "description": "Hỏi: thể tích thực của sản phẩm là bao nhiêu ? || ĐA: 400ml",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 269,
+        "question_ids": [
+          269
+        ],
+        "question": "thể tích thực của sản phẩm là bao nhiêu ?",
+        "gt_answer": "400ml"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "76.jpg",
+  "imageData": null,
+  "imageHeight": 3264,
+  "imageWidth": 2448,
+  "description": "Ảnh: 76.jpg (ID=76) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tên của sản phẩm này là gì ? || ĐA: nước cốt dừa tươi\n• Q2_gt: Hỏi: sản phẩm thuộc của hãng nào ? || ĐA: cocoxim\n• Q3_gt: Hỏi: thể tích thực của sản phẩm là bao nhiêu ? || ĐA: 400ml"
+}

@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          140.0,
+          58.0
+        ],
+        [
+          701.0,
+          58.0
+        ],
+        [
+          701.0,
+          174.0
+        ],
+        [
+          140.0,
+          174.0
+        ]
+      ],
+      "group_id": 7102,
+      "description": "Hỏi: người phụ nữ đeo khẩu trang đang đứng ở quán gì ? || ĐA: bún đậu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7102,
+        "question_ids": [
+          7102
+        ],
+        "question": "người phụ nữ đeo khẩu trang đang đứng ở quán gì ?",
+        "gt_answer": "bún đậu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          138.0,
+          57.0
+        ],
+        [
+          703.0,
+          57.0
+        ],
+        [
+          703.0,
+          175.0
+        ],
+        [
+          138.0,
+          175.0
+        ]
+      ],
+      "group_id": 7103,
+      "description": "Hỏi: quán bún đậu có tên là gì ? || ĐA: cầu gỗ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7103,
+        "question_ids": [
+          7103
+        ],
+        "question": "quán bún đậu có tên là gì ?",
+        "gt_answer": "cầu gỗ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          118.0,
+          154.0
+        ],
+        [
+          354.0,
+          154.0
+        ],
+        [
+          354.0,
+          185.0
+        ],
+        [
+          118.0,
+          185.0
+        ]
+      ],
+      "group_id": 7104,
+      "description": "Hỏi: người phụ nữ đeo khẩu trang đang đứng tại địa chỉ nào ? || ĐA: 444 phan xích long",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7104,
+        "question_ids": [
+          7104
+        ],
+        "question": "người phụ nữ đeo khẩu trang đang đứng tại địa chỉ nào ?",
+        "gt_answer": "444 phan xích long"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          502.0,
+          152.0
+        ],
+        [
+          685.0,
+          152.0
+        ],
+        [
+          685.0,
+          186.0
+        ],
+        [
+          502.0,
+          186.0
+        ]
+      ],
+      "group_id": 7105,
+      "description": "Hỏi: bức hình chụp chi nhánh thứ mấy của bún đậu cầu gỗ ? || ĐA: chi nhánh 1",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7105,
+        "question_ids": [
+          7105
+        ],
+        "question": "bức hình chụp chi nhánh thứ mấy của bún đậu cầu gỗ ?",
+        "gt_answer": "chi nhánh 1"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.6133,
+      "points": [
+        [
+          121.0,
+          157.0
+        ],
+        [
+          357.0,
+          157.0
+        ],
+        [
+          357.0,
+          188.0
+        ],
+        [
+          121.0,
+          188.0
+        ]
+      ],
+      "group_id": 7106,
+      "description": "Hỏi: số điện thoại của quán bún đậu cầu gỗ chi nhánh 1 là gì ? || ĐA: 0908 335 778",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 7106,
+        "question_ids": [
+          7106
+        ],
+        "question": "số điện thoại của quán bún đậu cầu gỗ chi nhánh 1 là gì ?",
+        "gt_answer": "0908 335 778"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2456.jpg",
+  "imageData": null,
+  "imageHeight": 450,
+  "imageWidth": 800,
+  "description": "Ảnh: 2456.jpg (ID=2456) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: người phụ nữ đeo khẩu trang đang đứng ở quán gì ? || ĐA: bún đậu\n• Q2_gt: Hỏi: quán bún đậu có tên là gì ? || ĐA: cầu gỗ\n• Q3_gt: Hỏi: người phụ nữ đeo khẩu trang đang đứng tại địa chỉ nào ? || ĐA: 444 phan xích long\n• Q4_gt: Hỏi: bức hình chụp chi nhánh thứ mấy của bún đậu cầu gỗ ? || ĐA: chi nhánh 1\n• Q5_gt: Hỏi: số điện thoại của quán bún đậu cầu gỗ chi nhánh 1 là gì ? || ĐA: 0908 335 778"
+}

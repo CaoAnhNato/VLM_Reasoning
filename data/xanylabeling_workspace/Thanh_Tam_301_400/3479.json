@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          43.0,
+          0.0
+        ],
+        [
+          345.0,
+          0.0
+        ],
+        [
+          345.0,
+          77.0
+        ],
+        [
+          43.0,
+          77.0
+        ]
+      ],
+      "group_id": 10398,
+      "description": "Hỏi: cái cây này thuộc nơi nào ? || ĐA: vườn ươm văn hiến",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10398,
+        "question_ids": [
+          10398
+        ],
+        "question": "cái cây này thuộc nơi nào ?",
+        "gt_answer": "vườn ươm văn hiến"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          42.0,
+          0.0
+        ],
+        [
+          346.0,
+          0.0
+        ],
+        [
+          346.0,
+          78.0
+        ],
+        [
+          42.0,
+          78.0
+        ]
+      ],
+      "group_id": 10399,
+      "description": "Hỏi: vườn ươm trong hình có tên là gì ? || ĐA: văn hiến",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10399,
+        "question_ids": [
+          10399
+        ],
+        "question": "vườn ươm trong hình có tên là gì ?",
+        "gt_answer": "văn hiến"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.575,
+      "points": [
+        [
+          78.0,
+          88.0
+        ],
+        [
+          175.0,
+          88.0
+        ],
+        [
+          175.0,
+          150.0
+        ],
+        [
+          78.0,
+          150.0
+        ]
+      ],
+      "group_id": 10400,
+      "description": "Hỏi: số điện thoại để gọi đến vườn ươm văn hiến là gì ? || ĐA: 0915 . 599 . 143",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10400,
+        "question_ids": [
+          10400
+        ],
+        "question": "số điện thoại để gọi đến vườn ươm văn hiến là gì ?",
+        "gt_answer": "0915 . 599 . 143"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3479.jpg",
+  "imageData": null,
+  "imageHeight": 552,
+  "imageWidth": 736,
+  "description": "Ảnh: 3479.jpg (ID=3479) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: cái cây này thuộc nơi nào ? || ĐA: vườn ươm văn hiến\n• Q2_gt: Hỏi: vườn ươm trong hình có tên là gì ? || ĐA: văn hiến\n• Q3_gt: Hỏi: số điện thoại để gọi đến vườn ươm văn hiến là gì ? || ĐA: 0915 . 599 . 143"
+}

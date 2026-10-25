@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          240.0,
+          163.0
+        ],
+        [
+          418.0,
+          163.0
+        ],
+        [
+          418.0,
+          219.0
+        ],
+        [
+          240.0,
+          219.0
+        ]
+      ],
+      "group_id": 3136,
+      "description": "Hỏi: tên cửa hàng là gì ? || ĐA: đại việt",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3136,
+        "question_ids": [
+          3136
+        ],
+        "question": "tên cửa hàng là gì ?",
+        "gt_answer": "đại việt"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8616,
+      "points": [
+        [
+          153.0,
+          176.0
+        ],
+        [
+          253.0,
+          176.0
+        ],
+        [
+          253.0,
+          197.0
+        ],
+        [
+          153.0,
+          197.0
+        ]
+      ],
+      "group_id": 3137,
+      "description": "Hỏi: đại việt thuộc công ty nào ? || ĐA: công ty tnhh tm & dv vlxd",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3137,
+        "question_ids": [
+          3137
+        ],
+        "question": "đại việt thuộc công ty nào ?",
+        "gt_answer": "công ty tnhh tm & dv vlxd"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          73.0,
+          208.0
+        ],
+        [
+          122.0,
+          208.0
+        ],
+        [
+          122.0,
+          355.0
+        ],
+        [
+          73.0,
+          355.0
+        ]
+      ],
+      "group_id": 3138,
+      "description": "Hỏi: ở cạnh cửa hàng đại việt là điểm bán gì ? || ĐA: điểm bán bảo hiểm xe máy",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 3138,
+        "question_ids": [
+          3138
+        ],
+        "question": "ở cạnh cửa hàng đại việt là điểm bán gì ?",
+        "gt_answer": "điểm bán bảo hiểm xe máy"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9244,
+      "points": [
+        [
+          231.0,
+          105.0
+        ],
+        [
+          424.0,
+          105.0
+        ],
+        [
+          424.0,
+          138.0
+        ],
+        [
+          231.0,
+          138.0
+        ]
+      ],
+      "group_id": 3139,
+      "description": "Hỏi: của hàng đại việt bán cái gì ? || ĐA: thiết bị điện , ông nước và phụ kiện",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 3139,
+        "question_ids": [
+          3139
+        ],
+        "question": "của hàng đại việt bán cái gì ?",
+        "gt_answer": "thiết bị điện , ông nước và phụ kiện"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1143.jpg",
+  "imageData": null,
+  "imageHeight": 411,
+  "imageWidth": 660,
+  "description": "Ảnh: 1143.jpg (ID=1143) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: tên cửa hàng là gì ? || ĐA: đại việt\n• Q2_gt: Hỏi: đại việt thuộc công ty nào ? || ĐA: công ty tnhh tm & dv vlxd\n• Q3_gt: Hỏi: ở cạnh cửa hàng đại việt là điểm bán gì ? || ĐA: điểm bán bảo hiểm xe máy\n• Q4_gt: Hỏi: của hàng đại việt bán cái gì ? || ĐA: thiết bị điện , ông nước và phụ kiện"
+}

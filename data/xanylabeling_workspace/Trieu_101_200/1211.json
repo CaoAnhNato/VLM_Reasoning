@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9741,
+      "points": [
+        [
+          141.0,
+          130.0
+        ],
+        [
+          598.0,
+          130.0
+        ],
+        [
+          598.0,
+          172.0
+        ],
+        [
+          141.0,
+          172.0
+        ]
+      ],
+      "group_id": 3311,
+      "description": "Hỏi: đây là đâu ? || ĐA: khu di tích lịch sử địa dạo củ chi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3311,
+        "question_ids": [
+          3311
+        ],
+        "question": "đây là đâu ?",
+        "gt_answer": "khu di tích lịch sử địa dạo củ chi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6928,
+      "points": [
+        [
+          352.0,
+          54.0
+        ],
+        [
+          419.0,
+          54.0
+        ],
+        [
+          419.0,
+          81.0
+        ],
+        [
+          352.0,
+          81.0
+        ]
+      ],
+      "group_id": 3312,
+      "description": "Hỏi: khu di tích lịch sử địa đạo củ chi thuộc thành phố nào ? || ĐA: thành phố hồ chí minh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3312,
+        "question_ids": [
+          3312
+        ],
+        "question": "khu di tích lịch sử địa đạo củ chi thuộc thành phố nào ?",
+        "gt_answer": "thành phố hồ chí minh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          144.0,
+          133.0
+        ],
+        [
+          601.0,
+          133.0
+        ],
+        [
+          601.0,
+          175.0
+        ],
+        [
+          144.0,
+          175.0
+        ]
+      ],
+      "group_id": 3313,
+      "description": "Hỏi: đây là địa điểm nào ? || ĐA: khu di tích",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 3313,
+        "question_ids": [
+          3313
+        ],
+        "question": "đây là địa điểm nào ?",
+        "gt_answer": "khu di tích"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1211.jpg",
+  "imageData": null,
+  "imageHeight": 445,
+  "imageWidth": 800,
+  "description": "Ảnh: 1211.jpg (ID=1211) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: đây là đâu ? || ĐA: khu di tích lịch sử địa dạo củ chi\n• Q2_gt: Hỏi: khu di tích lịch sử địa đạo củ chi thuộc thành phố nào ? || ĐA: thành phố hồ chí minh\n• Q3_gt: Hỏi: đây là địa điểm nào ? || ĐA: khu di tích"
+}

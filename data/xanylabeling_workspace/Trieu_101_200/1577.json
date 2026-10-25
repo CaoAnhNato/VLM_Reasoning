@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.6486,
+      "points": [
+        [
+          1.0,
+          2.0
+        ],
+        [
+          85.0,
+          2.0
+        ],
+        [
+          85.0,
+          43.0
+        ],
+        [
+          1.0,
+          43.0
+        ]
+      ],
+      "group_id": 4426,
+      "description": "Hỏi: bức hình chụp cửa hàng trang trí đồ tết này lấy nguồn từ đâu ? || ĐA: afamily",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4426,
+        "question_ids": [
+          4426
+        ],
+        "question": "bức hình chụp cửa hàng trang trí đồ tết này lấy nguồn từ đâu ?",
+        "gt_answer": "afamily"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.875,
+      "points": [
+        [
+          0.0,
+          123.0
+        ],
+        [
+          55.0,
+          123.0
+        ],
+        [
+          55.0,
+          159.0
+        ],
+        [
+          0.0,
+          159.0
+        ]
+      ],
+      "group_id": 4427,
+      "description": "Hỏi: tòa nhà bên trái cửa hàng trang trí đồ tết có tên là gì ? || ĐA: mobifone",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4427,
+        "question_ids": [
+          4427
+        ],
+        "question": "tòa nhà bên trái cửa hàng trang trí đồ tết có tên là gì ?",
+        "gt_answer": "mobifone"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1577.jpg",
+  "imageData": null,
+  "imageHeight": 440,
+  "imageWidth": 660,
+  "description": "Ảnh: 1577.jpg (ID=1577) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: bức hình chụp cửa hàng trang trí đồ tết này lấy nguồn từ đâu ? || ĐA: afamily\n• Q2_gt: Hỏi: tòa nhà bên trái cửa hàng trang trí đồ tết có tên là gì ? || ĐA: mobifone"
+}

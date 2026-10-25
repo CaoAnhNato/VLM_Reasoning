@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 5226,
+      "description": "Hỏi: chủ sở hữu tấm ảnh này là ai ? || ĐA: khampha24",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5226,
+        "question_ids": [
+          5226
+        ],
+        "question": "chủ sở hữu tấm ảnh này là ai ?",
+        "gt_answer": "khampha24"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1834.jpg",
+  "imageData": null,
+  "imageHeight": 533,
+  "imageWidth": 800,
+  "description": "Ảnh: 1834.jpg (ID=1834) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: chủ sở hữu tấm ảnh này là ai ? || ĐA: khampha24"
+}

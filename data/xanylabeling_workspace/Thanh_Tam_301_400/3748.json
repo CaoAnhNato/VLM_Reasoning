@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          619.0,
+          304.0
+        ],
+        [
+          842.0,
+          304.0
+        ],
+        [
+          842.0,
+          354.0
+        ],
+        [
+          619.0,
+          354.0
+        ]
+      ],
+      "group_id": 11139,
+      "description": "Hỏi: tấm bảng đỏ trong ảnh nói về tuyến đường như thế nào ? || ĐA: có camera quan sát",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11139,
+        "question_ids": [
+          11139
+        ],
+        "question": "tấm bảng đỏ trong ảnh nói về tuyến đường như thế nào ?",
+        "gt_answer": "có camera quan sát"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8974,
+      "points": [
+        [
+          754.0,
+          241.0
+        ],
+        [
+          841.0,
+          241.0
+        ],
+        [
+          841.0,
+          278.0
+        ],
+        [
+          754.0,
+          278.0
+        ]
+      ],
+      "group_id": 11140,
+      "description": "Hỏi: tấm bảng đỏ được sở hữu bởi đơn vị nào ? || ĐA: công an xã hội nghĩa",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11140,
+        "question_ids": [
+          11140
+        ],
+        "question": "tấm bảng đỏ được sở hữu bởi đơn vị nào ?",
+        "gt_answer": "công an xã hội nghĩa"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.825,
+      "points": [
+        [
+          576.0,
+          330.0
+        ],
+        [
+          839.0,
+          330.0
+        ],
+        [
+          839.0,
+          380.0
+        ],
+        [
+          576.0,
+          380.0
+        ]
+      ],
+      "group_id": 11141,
+      "description": "Hỏi: đường dây nóng liên lạc cho công an xã hội nghĩa là gì ? || ĐA: ( 0274 ) 3640083",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 11141,
+        "question_ids": [
+          11141
+        ],
+        "question": "đường dây nóng liên lạc cho công an xã hội nghĩa là gì ?",
+        "gt_answer": "( 0274 ) 3640083"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.85,
+      "points": [
+        [
+          222.0,
+          508.0
+        ],
+        [
+          444.0,
+          508.0
+        ],
+        [
+          444.0,
+          539.0
+        ],
+        [
+          222.0,
+          539.0
+        ]
+      ],
+      "group_id": 11142,
+      "description": "Hỏi: các camera được lắp đặt được đơn vị nào thực hiện ? || ĐA: công ty tnhh mtv tm dv camera24h",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 11142,
+        "question_ids": [
+          11142
+        ],
+        "question": "các camera được lắp đặt được đơn vị nào thực hiện ?",
+        "gt_answer": "công ty tnhh mtv tm dv camera24h"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.575,
+      "points": [
+        [
+          854.0,
+          512.0
+        ],
+        [
+          924.0,
+          512.0
+        ],
+        [
+          924.0,
+          539.0
+        ],
+        [
+          854.0,
+          539.0
+        ]
+      ],
+      "group_id": 11143,
+      "description": "Hỏi: số hotline của đơn vị camera24h là gì ? || ĐA: 093 880 3646",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 11143,
+        "question_ids": [
+          11143
+        ],
+        "question": "số hotline của đơn vị camera24h là gì ?",
+        "gt_answer": "093 880 3646"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.75,
+      "points": [
+        [
+          857.0,
+          515.0
+        ],
+        [
+          927.0,
+          515.0
+        ],
+        [
+          927.0,
+          540.0
+        ],
+        [
+          857.0,
+          540.0
+        ]
+      ],
+      "group_id": 11144,
+      "description": "Hỏi: bốn số cuối của số hotline camera24h là gì ? || ĐA: 3646",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 11144,
+        "question_ids": [
+          11144
+        ],
+        "question": "bốn số cuối của số hotline camera24h là gì ?",
+        "gt_answer": "3646"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3748.jpg",
+  "imageData": null,
+  "imageHeight": 540,
+  "imageWidth": 960,
+  "description": "Ảnh: 3748.jpg (ID=3748) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: tấm bảng đỏ trong ảnh nói về tuyến đường như thế nào ? || ĐA: có camera quan sát\n• Q2_gt: Hỏi: tấm bảng đỏ được sở hữu bởi đơn vị nào ? || ĐA: công an xã hội nghĩa\n• Q3_gt: Hỏi: đường dây nóng liên lạc cho công an xã hội nghĩa là gì ? || ĐA: ( 0274 ) 3640083\n• Q4_gt: Hỏi: các camera được lắp đặt được đơn vị nào thực hiện ? || ĐA: công ty tnhh mtv tm dv camera24h\n• Q5_gt: Hỏi: số hotline của đơn vị camera24h là gì ? || ĐA: 093 880 3646\n• Q6_gt: Hỏi: bốn số cuối của số hotline camera24h là gì ? || ĐA: 3646"
+}

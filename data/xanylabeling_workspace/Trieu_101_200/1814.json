@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8354,
+      "points": [
+        [
+          533.0,
+          488.0
+        ],
+        [
+          1975.0,
+          488.0
+        ],
+        [
+          1975.0,
+          804.0
+        ],
+        [
+          533.0,
+          804.0
+        ]
+      ],
+      "group_id": 5158,
+      "description": "Hỏi: cuốn truyện trong ảnh có tên tiếng việt là gì ? || ĐA: cuộc chiến luân hồi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5158,
+        "question_ids": [
+          5158
+        ],
+        "question": "cuốn truyện trong ảnh có tên tiếng việt là gì ?",
+        "gt_answer": "cuộc chiến luân hồi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          104.0,
+          174.0
+        ],
+        [
+          2457.0,
+          174.0
+        ],
+        [
+          2457.0,
+          641.0
+        ],
+        [
+          104.0,
+          641.0
+        ]
+      ],
+      "group_id": 5159,
+      "description": "Hỏi: cuốn truyện trong ảnh có tên gốc là gì ? || ĐA: all you nees is kill",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5159,
+        "question_ids": [
+          5159
+        ],
+        "question": "cuốn truyện trong ảnh có tên gốc là gì ?",
+        "gt_answer": "all you nees is kill"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          987.0,
+          3258.0
+        ],
+        [
+          1860.0,
+          3258.0
+        ],
+        [
+          1860.0,
+          3321.0
+        ],
+        [
+          987.0,
+          3321.0
+        ]
+      ],
+      "group_id": 5160,
+      "description": "Hỏi: cuốn sách này được minh họa bởi ai ? || ĐA: takeshi obata",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5160,
+        "question_ids": [
+          5160
+        ],
+        "question": "cuốn sách này được minh họa bởi ai ?",
+        "gt_answer": "takeshi obata"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.495,
+      "points": [
+        [
+          993.0,
+          3330.0
+        ],
+        [
+          1739.0,
+          3330.0
+        ],
+        [
+          1739.0,
+          3440.0
+        ],
+        [
+          993.0,
+          3440.0
+        ]
+      ],
+      "group_id": 5161,
+      "description": "Hỏi: người sáng tác cuốn sách này tên là gì ? || ĐA: hiroshi sakurazaka",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 5161,
+        "question_ids": [
+          5161
+        ],
+        "question": "người sáng tác cuốn sách này tên là gì ?",
+        "gt_answer": "hiroshi sakurazaka"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          1085.0,
+          3491.0
+        ],
+        [
+          1526.0,
+          3491.0
+        ],
+        [
+          1526.0,
+          3617.0
+        ],
+        [
+          1085.0,
+          3617.0
+        ]
+      ],
+      "group_id": 5162,
+      "description": "Hỏi: cuốn truyện này được dịch bởi ai ? || ĐA: đỗ phan thu hà",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 5162,
+        "question_ids": [
+          5162
+        ],
+        "question": "cuốn truyện này được dịch bởi ai ?",
+        "gt_answer": "đỗ phan thu hà"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.5878,
+      "points": [
+        [
+          529.0,
+          484.0
+        ],
+        [
+          1979.0,
+          484.0
+        ],
+        [
+          1979.0,
+          808.0
+        ],
+        [
+          529.0,
+          808.0
+        ]
+      ],
+      "group_id": 5163,
+      "description": "Hỏi: nhà xuất bản cuốn sách này là ai ? || ĐA: hội nhà văn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 5163,
+        "question_ids": [
+          5163
+        ],
+        "question": "nhà xuất bản cuốn sách này là ai ?",
+        "gt_answer": "hội nhà văn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1814.jpg",
+  "imageData": null,
+  "imageHeight": 4032,
+  "imageWidth": 3024,
+  "description": "Ảnh: 1814.jpg (ID=1814) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: cuốn truyện trong ảnh có tên tiếng việt là gì ? || ĐA: cuộc chiến luân hồi\n• Q2_gt: Hỏi: cuốn truyện trong ảnh có tên gốc là gì ? || ĐA: all you nees is kill\n• Q3_gt: Hỏi: cuốn sách này được minh họa bởi ai ? || ĐA: takeshi obata\n• Q4_gt: Hỏi: người sáng tác cuốn sách này tên là gì ? || ĐA: hiroshi sakurazaka\n• Q5_gt: Hỏi: cuốn truyện này được dịch bởi ai ? || ĐA: đỗ phan thu hà\n• Q6_gt: Hỏi: nhà xuất bản cuốn sách này là ai ? || ĐA: hội nhà văn"
+}

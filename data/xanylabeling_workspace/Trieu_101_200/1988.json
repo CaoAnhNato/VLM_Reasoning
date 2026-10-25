@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8365,
+      "points": [
+        [
+          223.0,
+          199.0
+        ],
+        [
+          292.0,
+          199.0
+        ],
+        [
+          292.0,
+          237.0
+        ],
+        [
+          223.0,
+          237.0
+        ]
+      ],
+      "group_id": 5757,
+      "description": "Hỏi: mọi người đang cầm sản phẩm gì ? || ĐA: miến dong bình liêu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5757,
+        "question_ids": [
+          5757
+        ],
+        "question": "mọi người đang cầm sản phẩm gì ?",
+        "gt_answer": "miến dong bình liêu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.72,
+      "points": [
+        [
+          234.0,
+          220.0
+        ],
+        [
+          304.0,
+          220.0
+        ],
+        [
+          304.0,
+          250.0
+        ],
+        [
+          234.0,
+          250.0
+        ]
+      ],
+      "group_id": 5758,
+      "description": "Hỏi: giá của miến dong bình liêu là bao nhiêu ? || ĐA: 90 . 00 / 1 , 0 kg",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5758,
+        "question_ids": [
+          5758
+        ],
+        "question": "giá của miến dong bình liêu là bao nhiêu ?",
+        "gt_answer": "90 . 00 / 1 , 0 kg"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8461,
+      "points": [
+        [
+          190.0,
+          31.0
+        ],
+        [
+          341.0,
+          31.0
+        ],
+        [
+          341.0,
+          57.0
+        ],
+        [
+          190.0,
+          57.0
+        ]
+      ],
+      "group_id": 5759,
+      "description": "Hỏi: phía sau mọi người là gian hàng nào ? || ĐA: khu gian hàng huyện đầm hà",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5759,
+        "question_ids": [
+          5759
+        ],
+        "question": "phía sau mọi người là gian hàng nào ?",
+        "gt_answer": "khu gian hàng huyện đầm hà"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1988.jpg",
+  "imageData": null,
+  "imageHeight": 288,
+  "imageWidth": 512,
+  "description": "Ảnh: 1988.jpg (ID=1988) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: mọi người đang cầm sản phẩm gì ? || ĐA: miến dong bình liêu\n• Q2_gt: Hỏi: giá của miến dong bình liêu là bao nhiêu ? || ĐA: 90 . 00 / 1 , 0 kg\n• Q3_gt: Hỏi: phía sau mọi người là gian hàng nào ? || ĐA: khu gian hàng huyện đầm hà"
+}

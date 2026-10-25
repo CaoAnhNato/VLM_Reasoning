@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          61.0,
+          304.0
+        ],
+        [
+          484.0,
+          304.0
+        ],
+        [
+          484.0,
+          380.0
+        ],
+        [
+          61.0,
+          380.0
+        ]
+      ],
+      "group_id": 1498,
+      "description": "Hỏi: đề thi năm nay như thế nào ? || ĐA: đề thi năm nay không khó",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1498,
+        "question_ids": [
+          1498
+        ],
+        "question": "đề thi năm nay như thế nào ?",
+        "gt_answer": "đề thi năm nay không khó"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          59.0,
+          303.0
+        ],
+        [
+          486.0,
+          303.0
+        ],
+        [
+          486.0,
+          381.0
+        ],
+        [
+          59.0,
+          381.0
+        ]
+      ],
+      "group_id": 1499,
+      "description": "Hỏi: đề thi năm nay có khó không ? || ĐA: không khó",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1499,
+        "question_ids": [
+          1499
+        ],
+        "question": "đề thi năm nay có khó không ?",
+        "gt_answer": "không khó"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          114.0,
+          363.0
+        ],
+        [
+          428.0,
+          363.0
+        ],
+        [
+          428.0,
+          430.0
+        ],
+        [
+          114.0,
+          430.0
+        ]
+      ],
+      "group_id": 1500,
+      "description": "Hỏi: chàng trai chỉ làm sai mấy câi ? || ĐA: em chỉ làm sai 1 câu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1500,
+        "question_ids": [
+          1500
+        ],
+        "question": "chàng trai chỉ làm sai mấy câi ?",
+        "gt_answer": "em chỉ làm sai 1 câu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9611,
+      "points": [
+        [
+          58.0,
+          413.0
+        ],
+        [
+          480.0,
+          413.0
+        ],
+        [
+          480.0,
+          483.0
+        ],
+        [
+          58.0,
+          483.0
+        ]
+      ],
+      "group_id": 1501,
+      "description": "Hỏi: chàng trai làm những câu còn lại như thế nào ? || ĐA: mấy câu kia em không làm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 1501,
+        "question_ids": [
+          1501
+        ],
+        "question": "chàng trai làm những câu còn lại như thế nào ?",
+        "gt_answer": "mấy câu kia em không làm"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "518.jpg",
+  "imageData": null,
+  "imageHeight": 495,
+  "imageWidth": 540,
+  "description": "Ảnh: 518.jpg (ID=518) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: đề thi năm nay như thế nào ? || ĐA: đề thi năm nay không khó\n• Q2_gt: Hỏi: đề thi năm nay có khó không ? || ĐA: không khó\n• Q3_gt: Hỏi: chàng trai chỉ làm sai mấy câi ? || ĐA: em chỉ làm sai 1 câu\n• Q4_gt: Hỏi: chàng trai làm những câu còn lại như thế nào ? || ĐA: mấy câu kia em không làm"
+}

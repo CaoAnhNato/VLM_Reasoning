@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          288.0,
+          0.0
+        ],
+        [
+          1043.0,
+          0.0
+        ],
+        [
+          1043.0,
+          285.0
+        ],
+        [
+          288.0,
+          285.0
+        ]
+      ],
+      "group_id": 4864,
+      "description": "Hỏi: nơi được ghi trên tấm bảng gọi là gì ? || ĐA: đỗ gia",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4864,
+        "question_ids": [
+          4864
+        ],
+        "question": "nơi được ghi trên tấm bảng gọi là gì ?",
+        "gt_answer": "đỗ gia"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9533,
+      "points": [
+        [
+          73.0,
+          291.0
+        ],
+        [
+          1215.0,
+          291.0
+        ],
+        [
+          1215.0,
+          392.0
+        ],
+        [
+          73.0,
+          392.0
+        ]
+      ],
+      "group_id": 4865,
+      "description": "Hỏi: đỗ gia tọa lạc tại địa chỉ nào ? || ĐA: số 6 , ngách 43 / 128 cổ nhuế , p . cổ nhuế 2 , q . bắc từ liêm , hà nội",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4865,
+        "question_ids": [
+          4865
+        ],
+        "question": "đỗ gia tọa lạc tại địa chỉ nào ?",
+        "gt_answer": "số 6 , ngách 43 / 128 cổ nhuế , p . cổ nhuế 2 , q . bắc từ liêm , hà nội"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          71.0,
+          290.0
+        ],
+        [
+          1217.0,
+          290.0
+        ],
+        [
+          1217.0,
+          392.0
+        ],
+        [
+          71.0,
+          392.0
+        ]
+      ],
+      "group_id": 4866,
+      "description": "Hỏi: đỗ gia thuộc quận nào hà nội ? || ĐA: q . bắc từ liêm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4866,
+        "question_ids": [
+          4866
+        ],
+        "question": "đỗ gia thuộc quận nào hà nội ?",
+        "gt_answer": "q . bắc từ liêm"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1710.jpg",
+  "imageData": null,
+  "imageHeight": 392,
+  "imageWidth": 1321,
+  "description": "Ảnh: 1710.jpg (ID=1710) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: nơi được ghi trên tấm bảng gọi là gì ? || ĐA: đỗ gia\n• Q2_gt: Hỏi: đỗ gia tọa lạc tại địa chỉ nào ? || ĐA: số 6 , ngách 43 / 128 cổ nhuế , p . cổ nhuế 2 , q . bắc từ liêm , hà nội\n• Q3_gt: Hỏi: đỗ gia thuộc quận nào hà nội ? || ĐA: q . bắc từ liêm"
+}

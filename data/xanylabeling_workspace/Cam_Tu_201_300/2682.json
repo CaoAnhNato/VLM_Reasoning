@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9344,
+      "points": [
+        [
+          10.0,
+          293.0
+        ],
+        [
+          590.0,
+          293.0
+        ],
+        [
+          590.0,
+          332.0
+        ],
+        [
+          10.0,
+          332.0
+        ]
+      ],
+      "group_id": 7818,
+      "description": "Hỏi: tấm ảnh này được lấy từ nguồn nào ? || ĐA: tạp chí điện tử thương hiệu & sản phẩm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7818,
+        "question_ids": [
+          7818
+        ],
+        "question": "tấm ảnh này được lấy từ nguồn nào ?",
+        "gt_answer": "tạp chí điện tử thương hiệu & sản phẩm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9563,
+      "points": [
+        [
+          13.0,
+          296.0
+        ],
+        [
+          593.0,
+          296.0
+        ],
+        [
+          593.0,
+          335.0
+        ],
+        [
+          13.0,
+          335.0
+        ]
+      ],
+      "group_id": 7819,
+      "description": "Hỏi: tạp chí điện tử sở hữu tấm ảnh này tên là gì ? || ĐA: thương hiệu & sản phẩm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7819,
+        "question_ids": [
+          7819
+        ],
+        "question": "tạp chí điện tử sở hữu tấm ảnh này tên là gì ?",
+        "gt_answer": "thương hiệu & sản phẩm"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2682.jpg",
+  "imageData": null,
+  "imageHeight": 337,
+  "imageWidth": 600,
+  "description": "Ảnh: 2682.jpg (ID=2682) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: tấm ảnh này được lấy từ nguồn nào ? || ĐA: tạp chí điện tử thương hiệu & sản phẩm\n• Q2_gt: Hỏi: tạp chí điện tử sở hữu tấm ảnh này tên là gì ? || ĐA: thương hiệu & sản phẩm"
+}

@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          461.0,
+          359.0
+        ],
+        [
+          504.0,
+          359.0
+        ],
+        [
+          504.0,
+          381.0
+        ],
+        [
+          461.0,
+          381.0
+        ]
+      ],
+      "group_id": 7909,
+      "description": "Hỏi: tấm ảnh này được sở hữu bởi tổ chức nào ? || ĐA: báo đà nẵng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7909,
+        "question_ids": [
+          7909
+        ],
+        "question": "tấm ảnh này được sở hữu bởi tổ chức nào ?",
+        "gt_answer": "báo đà nẵng"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2709.jpg",
+  "imageData": null,
+  "imageHeight": 414,
+  "imageWidth": 620,
+  "description": "Ảnh: 2709.jpg (ID=2709) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: tấm ảnh này được sở hữu bởi tổ chức nào ? || ĐA: báo đà nẵng"
+}

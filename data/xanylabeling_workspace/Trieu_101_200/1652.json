@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 4662,
+      "description": "Hỏi: tên của quán ăn hàn quốc này là gì ? || ĐA: lava 2",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4662,
+        "question_ids": [
+          4662
+        ],
+        "question": "tên của quán ăn hàn quốc này là gì ?",
+        "gt_answer": "lava 2"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          50.0,
+          35.0
+        ],
+        [
+          1030.0,
+          35.0
+        ],
+        [
+          1030.0,
+          405.0
+        ],
+        [
+          50.0,
+          405.0
+        ]
+      ],
+      "group_id": 4663,
+      "description": "Hỏi: quán lava 2 bán đồ ăn gì ? || ĐA: hàn quốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4663,
+        "question_ids": [
+          4663
+        ],
+        "question": "quán lava 2 bán đồ ăn gì ?",
+        "gt_answer": "hàn quốc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.875,
+      "points": [
+        [
+          62.0,
+          131.0
+        ],
+        [
+          1080.0,
+          131.0
+        ],
+        [
+          1080.0,
+          405.0
+        ],
+        [
+          62.0,
+          405.0
+        ]
+      ],
+      "group_id": 4664,
+      "description": "Hỏi: slagon tiếng anh của quán ăn hàn quốc lava 2 là gì ? || ĐA: good food good mood",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4664,
+        "question_ids": [
+          4664
+        ],
+        "question": "slagon tiếng anh của quán ăn hàn quốc lava 2 là gì ?",
+        "gt_answer": "good food good mood"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1652.jpg",
+  "imageData": null,
+  "imageHeight": 1440,
+  "imageWidth": 1080,
+  "description": "Ảnh: 1652.jpg (ID=1652) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tên của quán ăn hàn quốc này là gì ? || ĐA: lava 2\n• Q2_gt: Hỏi: quán lava 2 bán đồ ăn gì ? || ĐA: hàn quốc\n• Q3_gt: Hỏi: slagon tiếng anh của quán ăn hàn quốc lava 2 là gì ? || ĐA: good food good mood"
+}

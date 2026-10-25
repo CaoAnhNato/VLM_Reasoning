@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          122.0,
+          139.0
+        ],
+        [
+          590.0,
+          139.0
+        ],
+        [
+          590.0,
+          245.0
+        ],
+        [
+          122.0,
+          245.0
+        ]
+      ],
+      "group_id": 4700,
+      "description": "Hỏi: đây là thương hiệu gì ? || ĐA: vinamilk",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4700,
+        "question_ids": [
+          4700
+        ],
+        "question": "đây là thương hiệu gì ?",
+        "gt_answer": "vinamilk"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1664.jpg",
+  "imageData": null,
+  "imageHeight": 480,
+  "imageWidth": 720,
+  "description": "Ảnh: 1664.jpg (ID=1664) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: đây là thương hiệu gì ? || ĐA: vinamilk"
+}

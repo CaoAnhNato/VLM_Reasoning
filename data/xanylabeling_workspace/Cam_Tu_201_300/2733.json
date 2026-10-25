@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          984.0,
+          264.0
+        ],
+        [
+          1046.0,
+          264.0
+        ],
+        [
+          1046.0,
+          299.0
+        ],
+        [
+          984.0,
+          299.0
+        ]
+      ],
+      "group_id": 7984,
+      "description": "Hỏi: các món hàng ở trong ảnh là của thương hiệu nào ? || ĐA: no brand",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7984,
+        "question_ids": [
+          7984
+        ],
+        "question": "các món hàng ở trong ảnh là của thương hiệu nào ?",
+        "gt_answer": "no brand"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6937,
+      "points": [
+        [
+          399.0,
+          164.0
+        ],
+        [
+          570.0,
+          164.0
+        ],
+        [
+          570.0,
+          229.0
+        ],
+        [
+          399.0,
+          229.0
+        ]
+      ],
+      "group_id": 7985,
+      "description": "Hỏi: khẩu hiệu của no brand là gì ? || ĐA: không phải nhãn hiệu , là người tiêu dùng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7985,
+        "question_ids": [
+          7985
+        ],
+        "question": "khẩu hiệu của no brand là gì ?",
+        "gt_answer": "không phải nhãn hiệu , là người tiêu dùng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.95,
+      "points": [
+        [
+          491.0,
+          468.0
+        ],
+        [
+          602.0,
+          468.0
+        ],
+        [
+          602.0,
+          519.0
+        ],
+        [
+          491.0,
+          519.0
+        ]
+      ],
+      "group_id": 7986,
+      "description": "Hỏi: giá của chảo điện của no brand là bao nhiêu ? || ĐA: 589 . 000",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7986,
+        "question_ids": [
+          7986
+        ],
+        "question": "giá của chảo điện của no brand là bao nhiêu ?",
+        "gt_answer": "589 . 000"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          1353.0,
+          1027.0
+        ],
+        [
+          1452.0,
+          1027.0
+        ],
+        [
+          1452.0,
+          1050.0
+        ],
+        [
+          1353.0,
+          1050.0
+        ]
+      ],
+      "group_id": 7987,
+      "description": "Hỏi: emart tạo ra cái gì ? || ĐA: những người thông minh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7987,
+        "question_ids": [
+          7987
+        ],
+        "question": "emart tạo ra cái gì ?",
+        "gt_answer": "những người thông minh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.594,
+      "points": [
+        [
+          386.0,
+          123.0
+        ],
+        [
+          508.0,
+          123.0
+        ],
+        [
+          508.0,
+          170.0
+        ],
+        [
+          386.0,
+          170.0
+        ]
+      ],
+      "group_id": 7988,
+      "description": "Hỏi: vì đòi hỏi vai trò mới của siêu thị nên no brand đã làm thế giới bất ngờ với cái gì ? || ĐA: sản phẩm và giá cả",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 7988,
+        "question_ids": [
+          7988
+        ],
+        "question": "vì đòi hỏi vai trò mới của siêu thị nên no brand đã làm thế giới bất ngờ với cái gì ?",
+        "gt_answer": "sản phẩm và giá cả"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2733.jpg",
+  "imageData": null,
+  "imageHeight": 1125,
+  "imageWidth": 1500,
+  "description": "Ảnh: 2733.jpg (ID=2733) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: các món hàng ở trong ảnh là của thương hiệu nào ? || ĐA: no brand\n• Q2_gt: Hỏi: khẩu hiệu của no brand là gì ? || ĐA: không phải nhãn hiệu , là người tiêu dùng\n• Q3_gt: Hỏi: giá của chảo điện của no brand là bao nhiêu ? || ĐA: 589 . 000\n• Q4_gt: Hỏi: emart tạo ra cái gì ? || ĐA: những người thông minh\n• Q5_gt: Hỏi: vì đòi hỏi vai trò mới của siêu thị nên no brand đã làm thế giới bất ngờ với cái gì ? || ĐA: sản phẩm và giá cả"
+}

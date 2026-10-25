@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7287,
+      "points": [
+        [
+          935.0,
+          623.0
+        ],
+        [
+          1040.0,
+          623.0
+        ],
+        [
+          1040.0,
+          679.0
+        ],
+        [
+          935.0,
+          679.0
+        ]
+      ],
+      "group_id": 6746,
+      "description": "Hỏi: hình ảnh được lấy nguồn từ đâu ? || ĐA: quảng cáo sóc nhí",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6746,
+        "question_ids": [
+          6746
+        ],
+        "question": "hình ảnh được lấy nguồn từ đâu ?",
+        "gt_answer": "quảng cáo sóc nhí"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          404.0,
+          19.0
+        ],
+        [
+          677.0,
+          19.0
+        ],
+        [
+          677.0,
+          103.0
+        ],
+        [
+          404.0,
+          103.0
+        ]
+      ],
+      "group_id": 6747,
+      "description": "Hỏi: hình ảnh nói về điều gì ? || ĐA: bảng tin lớp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 6747,
+        "question_ids": [
+          6747
+        ],
+        "question": "hình ảnh nói về điều gì ?",
+        "gt_answer": "bảng tin lớp"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          174.0,
+          552.0
+        ],
+        [
+          355.0,
+          552.0
+        ],
+        [
+          355.0,
+          636.0
+        ],
+        [
+          174.0,
+          636.0
+        ]
+      ],
+      "group_id": 6748,
+      "description": "Hỏi: các từ trên cây nói về điều gì ? || ĐA: quy ước lớp chúng mình",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 6748,
+        "question_ids": [
+          6748
+        ],
+        "question": "các từ trên cây nói về điều gì ?",
+        "gt_answer": "quy ước lớp chúng mình"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2334.jpg",
+  "imageData": null,
+  "imageHeight": 771,
+  "imageWidth": 1514,
+  "description": "Ảnh: 2334.jpg (ID=2334) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: hình ảnh được lấy nguồn từ đâu ? || ĐA: quảng cáo sóc nhí\n• Q2_gt: Hỏi: hình ảnh nói về điều gì ? || ĐA: bảng tin lớp\n• Q3_gt: Hỏi: các từ trên cây nói về điều gì ? || ĐA: quy ước lớp chúng mình"
+}

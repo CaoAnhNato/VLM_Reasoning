@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1.0,
+          555.0
+        ],
+        [
+          96.0,
+          555.0
+        ],
+        [
+          96.0,
+          576.0
+        ],
+        [
+          1.0,
+          576.0
+        ]
+      ],
+      "group_id": 5173,
+      "description": "Hỏi: tấm ảnh này được trích từ nguồn nào ? || ĐA: todata . vn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5173,
+        "question_ids": [
+          5173
+        ],
+        "question": "tấm ảnh này được trích từ nguồn nào ?",
+        "gt_answer": "todata . vn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1817.jpg",
+  "imageData": null,
+  "imageHeight": 582,
+  "imageWidth": 800,
+  "description": "Ảnh: 1817.jpg (ID=1817) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: tấm ảnh này được trích từ nguồn nào ? || ĐA: todata . vn"
+}

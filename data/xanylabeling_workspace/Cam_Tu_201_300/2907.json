@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          303.0,
+          480.0
+        ],
+        [
+          327.0,
+          480.0
+        ],
+        [
+          327.0,
+          497.0
+        ],
+        [
+          303.0,
+          497.0
+        ]
+      ],
+      "group_id": 8563,
+      "description": "Hỏi: khách sạn mày trắng có số nhà là bao nhiêu ? || ĐA: 23",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8563,
+        "question_ids": [
+          8563
+        ],
+        "question": "khách sạn mày trắng có số nhà là bao nhiêu ?",
+        "gt_answer": "23"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          523.0,
+          258.0
+        ],
+        [
+          646.0,
+          258.0
+        ],
+        [
+          646.0,
+          286.0
+        ],
+        [
+          523.0,
+          286.0
+        ]
+      ],
+      "group_id": 8564,
+      "description": "Hỏi: khách sạn màu trắng tên là gì ? || ĐA: antique legend",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8564,
+        "question_ids": [
+          8564
+        ],
+        "question": "khách sạn màu trắng tên là gì ?",
+        "gt_answer": "antique legend"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2907.jpg",
+  "imageData": null,
+  "imageHeight": 700,
+  "imageWidth": 1000,
+  "description": "Ảnh: 2907.jpg (ID=2907) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: khách sạn mày trắng có số nhà là bao nhiêu ? || ĐA: 23\n• Q2_gt: Hỏi: khách sạn màu trắng tên là gì ? || ĐA: antique legend"
+}

@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.54,
+      "points": [
+        [
+          72.0,
+          571.0
+        ],
+        [
+          121.0,
+          571.0
+        ],
+        [
+          121.0,
+          593.0
+        ],
+        [
+          72.0,
+          593.0
+        ]
+      ],
+      "group_id": 2482,
+      "description": "Hỏi: khu vực tô màu ở đâu ? || ĐA: thành phố hồ chí minh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2482,
+        "question_ids": [
+          2482
+        ],
+        "question": "khu vực tô màu ở đâu ?",
+        "gt_answer": "thành phố hồ chí minh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.93,
+      "points": [
+        [
+          72.0,
+          507.0
+        ],
+        [
+          309.0,
+          507.0
+        ],
+        [
+          309.0,
+          568.0
+        ],
+        [
+          72.0,
+          568.0
+        ]
+      ],
+      "group_id": 2483,
+      "description": "Hỏi: vùng xanh là vùng gì ? || ĐA: cấp 1 ( nguy cơ thấp )",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2483,
+        "question_ids": [
+          2483
+        ],
+        "question": "vùng xanh là vùng gì ?",
+        "gt_answer": "cấp 1 ( nguy cơ thấp )"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          112.0,
+          541.0
+        ],
+        [
+          309.0,
+          541.0
+        ],
+        [
+          309.0,
+          568.0
+        ],
+        [
+          112.0,
+          568.0
+        ]
+      ],
+      "group_id": 2484,
+      "description": "Hỏi: vùng vàng là vùng gì ? || ĐA: cấp 2 ( nguy cơ trung bình )",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 2484,
+        "question_ids": [
+          2484
+        ],
+        "question": "vùng vàng là vùng gì ?",
+        "gt_answer": "cấp 2 ( nguy cơ trung bình )"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          112.0,
+          599.0
+        ],
+        [
+          299.0,
+          599.0
+        ],
+        [
+          299.0,
+          626.0
+        ],
+        [
+          112.0,
+          626.0
+        ]
+      ],
+      "group_id": 2485,
+      "description": "Hỏi: vùng cam là vùng gì ? || ĐA: cấp 3 ( nguy cơ cao )",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 2485,
+        "question_ids": [
+          2485
+        ],
+        "question": "vùng cam là vùng gì ?",
+        "gt_answer": "cấp 3 ( nguy cơ cao )"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          73.0,
+          629.0
+        ],
+        [
+          277.0,
+          629.0
+        ],
+        [
+          277.0,
+          659.0
+        ],
+        [
+          73.0,
+          659.0
+        ]
+      ],
+      "group_id": 2486,
+      "description": "Hỏi: vùng đỏ là vùng gì ? || ĐA: cấp 4 ( nguy cơ rất cao )",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 2486,
+        "question_ids": [
+          2486
+        ],
+        "question": "vùng đỏ là vùng gì ?",
+        "gt_answer": "cấp 4 ( nguy cơ rất cao )"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          72.0,
+          665.0
+        ],
+        [
+          121.0,
+          665.0
+        ],
+        [
+          121.0,
+          687.0
+        ],
+        [
+          72.0,
+          687.0
+        ]
+      ],
+      "group_id": 2487,
+      "description": "Hỏi: vùng xám là vùng gì ? || ĐA: đang cập nhật",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 2487,
+        "question_ids": [
+          2487
+        ],
+        "question": "vùng xám là vùng gì ?",
+        "gt_answer": "đang cập nhật"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "929.jpg",
+  "imageData": null,
+  "imageHeight": 691,
+  "imageWidth": 1000,
+  "description": "Ảnh: 929.jpg (ID=929) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: khu vực tô màu ở đâu ? || ĐA: thành phố hồ chí minh\n• Q2_gt: Hỏi: vùng xanh là vùng gì ? || ĐA: cấp 1 ( nguy cơ thấp )\n• Q3_gt: Hỏi: vùng vàng là vùng gì ? || ĐA: cấp 2 ( nguy cơ trung bình )\n• Q4_gt: Hỏi: vùng cam là vùng gì ? || ĐA: cấp 3 ( nguy cơ cao )\n• Q5_gt: Hỏi: vùng đỏ là vùng gì ? || ĐA: cấp 4 ( nguy cơ rất cao )\n• Q6_gt: Hỏi: vùng xám là vùng gì ? || ĐA: đang cập nhật"
+}

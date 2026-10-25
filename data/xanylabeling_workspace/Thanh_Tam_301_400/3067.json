@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          481.0,
+          25.0
+        ],
+        [
+          532.0,
+          25.0
+        ],
+        [
+          532.0,
+          58.0
+        ],
+        [
+          481.0,
+          58.0
+        ]
+      ],
+      "group_id": 9048,
+      "description": "Hỏi: chữ phía trên dấu mũi tên là chữ gì ? || ĐA: mở",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9048,
+        "question_ids": [
+          9048
+        ],
+        "question": "chữ phía trên dấu mũi tên là chữ gì ?",
+        "gt_answer": "mở"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          467.0,
+          73.0
+        ],
+        [
+          540.0,
+          73.0
+        ],
+        [
+          540.0,
+          99.0
+        ],
+        [
+          467.0,
+          99.0
+        ]
+      ],
+      "group_id": 9049,
+      "description": "Hỏi: chữ phía dưới dấu mũi tên là chữ gì ? || ĐA: open",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9049,
+        "question_ids": [
+          9049
+        ],
+        "question": "chữ phía dưới dấu mũi tên là chữ gì ?",
+        "gt_answer": "open"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3067.jpg",
+  "imageData": null,
+  "imageHeight": 432,
+  "imageWidth": 666,
+  "description": "Ảnh: 3067.jpg (ID=3067) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: chữ phía trên dấu mũi tên là chữ gì ? || ĐA: mở\n• Q2_gt: Hỏi: chữ phía dưới dấu mũi tên là chữ gì ? || ĐA: open"
+}

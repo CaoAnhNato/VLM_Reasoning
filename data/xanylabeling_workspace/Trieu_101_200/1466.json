@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.602,
+      "points": [
+        [
+          1056.0,
+          1407.0
+        ],
+        [
+          2616.0,
+          1407.0
+        ],
+        [
+          2616.0,
+          2799.0
+        ],
+        [
+          1056.0,
+          2799.0
+        ]
+      ],
+      "group_id": 4079,
+      "description": "Hỏi: cuốn sách này tên là gì ? || ĐA: từ điển triệu chứng và chuẩn đoán",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4079,
+        "question_ids": [
+          4079
+        ],
+        "question": "cuốn sách này tên là gì ?",
+        "gt_answer": "từ điển triệu chứng và chuẩn đoán"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6084,
+      "points": [
+        [
+          2701.0,
+          623.0
+        ],
+        [
+          3306.0,
+          623.0
+        ],
+        [
+          3306.0,
+          1089.0
+        ],
+        [
+          2701.0,
+          1089.0
+        ]
+      ],
+      "group_id": 4080,
+      "description": "Hỏi: cuốn sách này do ai biên soạn ? || ĐA: bác sĩ lương phán",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4080,
+        "question_ids": [
+          4080
+        ],
+        "question": "cuốn sách này do ai biên soạn ?",
+        "gt_answer": "bác sĩ lương phán"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.5252,
+      "points": [
+        [
+          3752.0,
+          948.0
+        ],
+        [
+          3907.0,
+          948.0
+        ],
+        [
+          3907.0,
+          1104.0
+        ],
+        [
+          3752.0,
+          1104.0
+        ]
+      ],
+      "group_id": 4081,
+      "description": "Hỏi: ai là nhà xuất bản cuốn sách này ? || ĐA: nhà xuất bản tổng hợp thành phố hồ chí minh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4081,
+        "question_ids": [
+          4081
+        ],
+        "question": "ai là nhà xuất bản cuốn sách này ?",
+        "gt_answer": "nhà xuất bản tổng hợp thành phố hồ chí minh"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1466.jpg",
+  "imageData": null,
+  "imageHeight": 3468,
+  "imageWidth": 4624,
+  "description": "Ảnh: 1466.jpg (ID=1466) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: cuốn sách này tên là gì ? || ĐA: từ điển triệu chứng và chuẩn đoán\n• Q2_gt: Hỏi: cuốn sách này do ai biên soạn ? || ĐA: bác sĩ lương phán\n• Q3_gt: Hỏi: ai là nhà xuất bản cuốn sách này ? || ĐA: nhà xuất bản tổng hợp thành phố hồ chí minh"
+}

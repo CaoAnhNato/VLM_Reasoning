@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.93,
+      "points": [
+        [
+          314.0,
+          246.0
+        ],
+        [
+          473.0,
+          246.0
+        ],
+        [
+          473.0,
+          284.0
+        ],
+        [
+          314.0,
+          284.0
+        ]
+      ],
+      "group_id": 9883,
+      "description": "Hỏi: chiếc xe màu trắng là xe gì ? || ĐA: cấp cứu 115 hà hội",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9883,
+        "question_ids": [
+          9883
+        ],
+        "question": "chiếc xe màu trắng là xe gì ?",
+        "gt_answer": "cấp cứu 115 hà hội"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 9884,
+      "description": "Hỏi: chiếc xe cấp cứu mang biển số gì ? || ĐA: 31a - 8011",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9884,
+        "question_ids": [
+          9884
+        ],
+        "question": "chiếc xe cấp cứu mang biển số gì ?",
+        "gt_answer": "31a - 8011"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          377.0,
+          234.0
+        ],
+        [
+          417.0,
+          234.0
+        ],
+        [
+          417.0,
+          260.0
+        ],
+        [
+          377.0,
+          260.0
+        ]
+      ],
+      "group_id": 9885,
+      "description": "Hỏi: chiếc xe cấp cứu mang số hiệu bao nhiêu ? || ĐA: 05",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9885,
+        "question_ids": [
+          9885
+        ],
+        "question": "chiếc xe cấp cứu mang số hiệu bao nhiêu ?",
+        "gt_answer": "05"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          3.0,
+          270.0
+        ],
+        [
+          121.0,
+          270.0
+        ],
+        [
+          121.0,
+          301.0
+        ],
+        [
+          3.0,
+          301.0
+        ]
+      ],
+      "group_id": 9886,
+      "description": "Hỏi: ở đây là khu vực tiếp nhận gì ? || ĐA: tiếp nhận cung ứng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 9886,
+        "question_ids": [
+          9886
+        ],
+        "question": "ở đây là khu vực tiếp nhận gì ?",
+        "gt_answer": "tiếp nhận cung ứng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          0.0,
+          295.0
+        ],
+        [
+          112.0,
+          295.0
+        ],
+        [
+          112.0,
+          316.0
+        ],
+        [
+          0.0,
+          316.0
+        ]
+      ],
+      "group_id": 9887,
+      "description": "Hỏi: xe cấp cứu đang đi qua khu vực gì ? || ĐA: cách ly",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 9887,
+        "question_ids": [
+          9887
+        ],
+        "question": "xe cấp cứu đang đi qua khu vực gì ?",
+        "gt_answer": "cách ly"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          67.0
+        ],
+        [
+          235.0,
+          67.0
+        ],
+        [
+          235.0,
+          111.0
+        ],
+        [
+          15.0,
+          111.0
+        ]
+      ],
+      "group_id": 9888,
+      "description": "Hỏi: nhãn hiệu ở trên cây dù là gì ? || ĐA: cocacola",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 9888,
+        "question_ids": [
+          9888
+        ],
+        "question": "nhãn hiệu ở trên cây dù là gì ?",
+        "gt_answer": "cocacola"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3321.jpg",
+  "imageData": null,
+  "imageHeight": 425,
+  "imageWidth": 684,
+  "description": "Ảnh: 3321.jpg (ID=3321) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: chiếc xe màu trắng là xe gì ? || ĐA: cấp cứu 115 hà hội\n• Q2_gt: Hỏi: chiếc xe cấp cứu mang biển số gì ? || ĐA: 31a - 8011\n• Q3_gt: Hỏi: chiếc xe cấp cứu mang số hiệu bao nhiêu ? || ĐA: 05\n• Q4_gt: Hỏi: ở đây là khu vực tiếp nhận gì ? || ĐA: tiếp nhận cung ứng\n• Q5_gt: Hỏi: xe cấp cứu đang đi qua khu vực gì ? || ĐA: cách ly\n• Q6_gt: Hỏi: nhãn hiệu ở trên cây dù là gì ? || ĐA: cocacola"
+}

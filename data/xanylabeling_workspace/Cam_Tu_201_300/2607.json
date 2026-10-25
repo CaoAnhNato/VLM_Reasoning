@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          31.0,
+          40.0
+        ],
+        [
+          736.0,
+          40.0
+        ],
+        [
+          736.0,
+          347.0
+        ],
+        [
+          31.0,
+          347.0
+        ]
+      ],
+      "group_id": 7591,
+      "description": "Hỏi: tấm bảng này là của tiệm sửa xe nào ? || ĐA: phúc lộc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7591,
+        "question_ids": [
+          7591
+        ],
+        "question": "tấm bảng này là của tiệm sửa xe nào ?",
+        "gt_answer": "phúc lộc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.86,
+      "points": [
+        [
+          66.0,
+          376.0
+        ],
+        [
+          691.0,
+          376.0
+        ],
+        [
+          691.0,
+          562.0
+        ],
+        [
+          66.0,
+          562.0
+        ]
+      ],
+      "group_id": 7592,
+      "description": "Hỏi: tiệm phúc lộc có dịch vụ gì ? || ĐA: sửa xe honda tay ga rửa xe thay nhớt nhận tân trang xe các loại",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7592,
+        "question_ids": [
+          7592
+        ],
+        "question": "tiệm phúc lộc có dịch vụ gì ?",
+        "gt_answer": "sửa xe honda tay ga rửa xe thay nhớt nhận tân trang xe các loại"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          113.0,
+          299.0
+        ],
+        [
+          645.0,
+          299.0
+        ],
+        [
+          645.0,
+          395.0
+        ],
+        [
+          113.0,
+          395.0
+        ]
+      ],
+      "group_id": 7593,
+      "description": "Hỏi: tiệm phúc lộc nhận sửa xe loại nào ? || ĐA: honda tay ga",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7593,
+        "question_ids": [
+          7593
+        ],
+        "question": "tiệm phúc lộc nhận sửa xe loại nào ?",
+        "gt_answer": "honda tay ga"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2607.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 800,
+  "description": "Ảnh: 2607.jpg (ID=2607) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tấm bảng này là của tiệm sửa xe nào ? || ĐA: phúc lộc\n• Q2_gt: Hỏi: tiệm phúc lộc có dịch vụ gì ? || ĐA: sửa xe honda tay ga rửa xe thay nhớt nhận tân trang xe các loại\n• Q3_gt: Hỏi: tiệm phúc lộc nhận sửa xe loại nào ? || ĐA: honda tay ga"
+}

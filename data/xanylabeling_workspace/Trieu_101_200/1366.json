@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          334.0,
+          766.0
+        ],
+        [
+          1233.0,
+          766.0
+        ],
+        [
+          1233.0,
+          837.0
+        ],
+        [
+          334.0,
+          837.0
+        ]
+      ],
+      "group_id": 3765,
+      "description": "Hỏi: quán bảng hiệu màu trắng trong ảnh tên là gì ? || ĐA: đình phong quán",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3765,
+        "question_ids": [
+          3765
+        ],
+        "question": "quán bảng hiệu màu trắng trong ảnh tên là gì ?",
+        "gt_answer": "đình phong quán"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          337.0,
+          769.0
+        ],
+        [
+          1236.0,
+          769.0
+        ],
+        [
+          1236.0,
+          840.0
+        ],
+        [
+          337.0,
+          840.0
+        ]
+      ],
+      "group_id": 3766,
+      "description": "Hỏi: đình phong quán chuyên bán những thứ gì ? || ĐA: ốc - nướng - lẩu - bbq",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3766,
+        "question_ids": [
+          3766
+        ],
+        "question": "đình phong quán chuyên bán những thứ gì ?",
+        "gt_answer": "ốc - nướng - lẩu - bbq"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          0.0,
+          517.0
+        ],
+        [
+          302.0,
+          517.0
+        ],
+        [
+          302.0,
+          572.0
+        ],
+        [
+          0.0,
+          572.0
+        ]
+      ],
+      "group_id": 3767,
+      "description": "Hỏi: đình phong quán có đặt tiệc như thế nào ? || ĐA: liên hoan - sinh nhật",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 3767,
+        "question_ids": [
+          3767
+        ],
+        "question": "đình phong quán có đặt tiệc như thế nào ?",
+        "gt_answer": "liên hoan - sinh nhật"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.6889,
+      "points": [
+        [
+          10.0,
+          463.0
+        ],
+        [
+          114.0,
+          463.0
+        ],
+        [
+          114.0,
+          570.0
+        ],
+        [
+          10.0,
+          570.0
+        ]
+      ],
+      "group_id": 3768,
+      "description": "Hỏi: đình phong quán có địa chỉ ở đâu ? || ĐA: 95 phạm văn đồng , p . 13 , q . bình thạnh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 3768,
+        "question_ids": [
+          3768
+        ],
+        "question": "đình phong quán có địa chỉ ở đâu ?",
+        "gt_answer": "95 phạm văn đồng , p . 13 , q . bình thạnh"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1366.jpg",
+  "imageData": null,
+  "imageHeight": 1440,
+  "imageWidth": 1920,
+  "description": "Ảnh: 1366.jpg (ID=1366) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: quán bảng hiệu màu trắng trong ảnh tên là gì ? || ĐA: đình phong quán\n• Q2_gt: Hỏi: đình phong quán chuyên bán những thứ gì ? || ĐA: ốc - nướng - lẩu - bbq\n• Q3_gt: Hỏi: đình phong quán có đặt tiệc như thế nào ? || ĐA: liên hoan - sinh nhật\n• Q4_gt: Hỏi: đình phong quán có địa chỉ ở đâu ? || ĐA: 95 phạm văn đồng , p . 13 , q . bình thạnh"
+}

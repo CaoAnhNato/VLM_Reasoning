@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          140.0,
+          290.0
+        ],
+        [
+          650.0,
+          290.0
+        ],
+        [
+          650.0,
+          500.0
+        ],
+        [
+          140.0,
+          500.0
+        ]
+      ],
+      "group_id": 7367,
+      "description": "Hỏi: cửa hàng trong hình là ở đâu ? || ĐA: burger king",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7367,
+        "question_ids": [
+          7367
+        ],
+        "question": "cửa hàng trong hình là ở đâu ?",
+        "gt_answer": "burger king"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          214.0,
+          282.0
+        ],
+        [
+          440.0,
+          282.0
+        ],
+        [
+          440.0,
+          308.0
+        ],
+        [
+          214.0,
+          308.0
+        ]
+      ],
+      "group_id": 7368,
+      "description": "Hỏi: nội dung của dòng chữ thứ nhất từ trên xuống trong vùng màu đỏ chèn vào hình là gì ? || ĐA: làm bảng quảng cáo giá rẻ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7368,
+        "question_ids": [
+          7368
+        ],
+        "question": "nội dung của dòng chữ thứ nhất từ trên xuống trong vùng màu đỏ chèn vào hình là gì ?",
+        "gt_answer": "làm bảng quảng cáo giá rẻ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          242.0,
+          313.0
+        ],
+        [
+          355.0,
+          313.0
+        ],
+        [
+          355.0,
+          335.0
+        ],
+        [
+          242.0,
+          335.0
+        ]
+      ],
+      "group_id": 7369,
+      "description": "Hỏi: 0935 248 949 là gì ? || ĐA: hotline",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7369,
+        "question_ids": [
+          7369
+        ],
+        "question": "0935 248 949 là gì ?",
+        "gt_answer": "hotline"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2532.jpg",
+  "imageData": null,
+  "imageHeight": 870,
+  "imageWidth": 650,
+  "description": "Ảnh: 2532.jpg (ID=2532) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: cửa hàng trong hình là ở đâu ? || ĐA: burger king\n• Q2_gt: Hỏi: nội dung của dòng chữ thứ nhất từ trên xuống trong vùng màu đỏ chèn vào hình là gì ? || ĐA: làm bảng quảng cáo giá rẻ\n• Q3_gt: Hỏi: 0935 248 949 là gì ? || ĐA: hotline"
+}

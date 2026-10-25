@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.95,
+      "points": [
+        [
+          33.0,
+          84.0
+        ],
+        [
+          459.0,
+          84.0
+        ],
+        [
+          459.0,
+          265.0
+        ],
+        [
+          33.0,
+          265.0
+        ]
+      ],
+      "group_id": 6131,
+      "description": "Hỏi: đây là bảng hiệu của ai ? || ĐA: phó bí thư thường trực huyện ủy",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6131,
+        "question_ids": [
+          6131
+        ],
+        "question": "đây là bảng hiệu của ai ?",
+        "gt_answer": "phó bí thư thường trực huyện ủy"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2130.jpg",
+  "imageData": null,
+  "imageHeight": 291,
+  "imageWidth": 561,
+  "description": "Ảnh: 2130.jpg (ID=2130) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: đây là bảng hiệu của ai ? || ĐA: phó bí thư thường trực huyện ủy"
+}

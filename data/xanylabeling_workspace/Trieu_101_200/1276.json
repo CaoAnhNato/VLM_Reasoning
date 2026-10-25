@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.6625,
+      "points": [
+        [
+          146.0,
+          157.0
+        ],
+        [
+          205.0,
+          157.0
+        ],
+        [
+          205.0,
+          182.0
+        ],
+        [
+          146.0,
+          182.0
+        ]
+      ],
+      "group_id": 3493,
+      "description": "Hỏi: cuốn sách trong ảnh tên là gì ? || ĐA: cẩm nang mua sắm vinmart scan & go",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3493,
+        "question_ids": [
+          3493
+        ],
+        "question": "cuốn sách trong ảnh tên là gì ?",
+        "gt_answer": "cẩm nang mua sắm vinmart scan & go"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7287,
+      "points": [
+        [
+          149.0,
+          160.0
+        ],
+        [
+          208.0,
+          160.0
+        ],
+        [
+          208.0,
+          185.0
+        ],
+        [
+          149.0,
+          185.0
+        ]
+      ],
+      "group_id": 3494,
+      "description": "Hỏi: cuốn sách trong ảnh mang chức năng gì ? || ĐA: cẩm nang mua sắm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3494,
+        "question_ids": [
+          3494
+        ],
+        "question": "cuốn sách trong ảnh mang chức năng gì ?",
+        "gt_answer": "cẩm nang mua sắm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          87.0,
+          373.0
+        ],
+        [
+          343.0,
+          373.0
+        ],
+        [
+          343.0,
+          481.0
+        ],
+        [
+          87.0,
+          481.0
+        ]
+      ],
+      "group_id": 3495,
+      "description": "Hỏi: câu khẩu hiệu ở trên cuốn sách là gì ? || ĐA: làm điều cũ theo cách mới",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 3495,
+        "question_ids": [
+          3495
+        ],
+        "question": "câu khẩu hiệu ở trên cuốn sách là gì ?",
+        "gt_answer": "làm điều cũ theo cách mới"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1276.jpg",
+  "imageData": null,
+  "imageHeight": 533,
+  "imageWidth": 800,
+  "description": "Ảnh: 1276.jpg (ID=1276) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: cuốn sách trong ảnh tên là gì ? || ĐA: cẩm nang mua sắm vinmart scan & go\n• Q2_gt: Hỏi: cuốn sách trong ảnh mang chức năng gì ? || ĐA: cẩm nang mua sắm\n• Q3_gt: Hỏi: câu khẩu hiệu ở trên cuốn sách là gì ? || ĐA: làm điều cũ theo cách mới"
+}

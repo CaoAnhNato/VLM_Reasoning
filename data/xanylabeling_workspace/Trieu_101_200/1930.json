@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          264.0,
+          148.0
+        ],
+        [
+          580.0,
+          148.0
+        ],
+        [
+          580.0,
+          366.0
+        ],
+        [
+          264.0,
+          366.0
+        ]
+      ],
+      "group_id": 5554,
+      "description": "Hỏi: công ty được ghi trên bảng kính tên là gì ? || ĐA: nesa",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5554,
+        "question_ids": [
+          5554
+        ],
+        "question": "công ty được ghi trên bảng kính tên là gì ?",
+        "gt_answer": "nesa"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9045,
+      "points": [
+        [
+          233.0,
+          83.0
+        ],
+        [
+          583.0,
+          83.0
+        ],
+        [
+          583.0,
+          238.0
+        ],
+        [
+          233.0,
+          238.0
+        ]
+      ],
+      "group_id": 5555,
+      "description": "Hỏi: công ty nesa là công ty dạng gì ? || ĐA: tnhh tư vấn thiết kế xây dựng kiến trúc nội thất",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5555,
+        "question_ids": [
+          5555
+        ],
+        "question": "công ty nesa là công ty dạng gì ?",
+        "gt_answer": "tnhh tư vấn thiết kế xây dựng kiến trúc nội thất"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8147,
+      "points": [
+        [
+          257.0,
+          307.0
+        ],
+        [
+          573.0,
+          307.0
+        ],
+        [
+          573.0,
+          398.0
+        ],
+        [
+          257.0,
+          398.0
+        ]
+      ],
+      "group_id": 5556,
+      "description": "Hỏi: địa chỉ của công ty nesa là ở đâu ? || ĐA: số 5c ngách 23 , ngõ 279 hoàng mai , p . hoàng văn thụ , q . hoàng mai , hà nội",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5556,
+        "question_ids": [
+          5556
+        ],
+        "question": "địa chỉ của công ty nesa là ở đâu ?",
+        "gt_answer": "số 5c ngách 23 , ngõ 279 hoàng mai , p . hoàng văn thụ , q . hoàng mai , hà nội"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          262.0,
+          345.0
+        ],
+        [
+          574.0,
+          345.0
+        ],
+        [
+          574.0,
+          419.0
+        ],
+        [
+          262.0,
+          419.0
+        ]
+      ],
+      "group_id": 5557,
+      "description": "Hỏi: công ty nesa nằm ở phường nào ? || ĐA: hoàng văn thụ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 5557,
+        "question_ids": [
+          5557
+        ],
+        "question": "công ty nesa nằm ở phường nào ?",
+        "gt_answer": "hoàng văn thụ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          258.0,
+          308.0
+        ],
+        [
+          572.0,
+          308.0
+        ],
+        [
+          572.0,
+          397.0
+        ],
+        [
+          258.0,
+          397.0
+        ]
+      ],
+      "group_id": 5558,
+      "description": "Hỏi: công ty nesa nằm ở trong ngõ nào ? || ĐA: 279 hoàng mai",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 5558,
+        "question_ids": [
+          5558
+        ],
+        "question": "công ty nesa nằm ở trong ngõ nào ?",
+        "gt_answer": "279 hoàng mai"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1930.jpg",
+  "imageData": null,
+  "imageHeight": 511,
+  "imageWidth": 676,
+  "description": "Ảnh: 1930.jpg (ID=1930) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: công ty được ghi trên bảng kính tên là gì ? || ĐA: nesa\n• Q2_gt: Hỏi: công ty nesa là công ty dạng gì ? || ĐA: tnhh tư vấn thiết kế xây dựng kiến trúc nội thất\n• Q3_gt: Hỏi: địa chỉ của công ty nesa là ở đâu ? || ĐA: số 5c ngách 23 , ngõ 279 hoàng mai , p . hoàng văn thụ , q . hoàng mai , hà nội\n• Q4_gt: Hỏi: công ty nesa nằm ở phường nào ? || ĐA: hoàng văn thụ\n• Q5_gt: Hỏi: công ty nesa nằm ở trong ngõ nào ? || ĐA: 279 hoàng mai"
+}

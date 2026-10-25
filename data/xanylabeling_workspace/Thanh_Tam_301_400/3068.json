@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9788,
+      "points": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1080.0,
+          0.0
+        ],
+        [
+          1080.0,
+          82.0
+        ],
+        [
+          0.0,
+          82.0
+        ]
+      ],
+      "group_id": 9050,
+      "description": "Hỏi: trên tấm băng rôn đỏ là khẩu hiệu gì ? || ĐA: hực bảo vệ tính mạng và tài sản của chính mìn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9050,
+        "question_ids": [
+          9050
+        ],
+        "question": "trên tấm băng rôn đỏ là khẩu hiệu gì ?",
+        "gt_answer": "hực bảo vệ tính mạng và tài sản của chính mìn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          431.0,
+          158.0
+        ],
+        [
+          553.0,
+          158.0
+        ],
+        [
+          553.0,
+          213.0
+        ],
+        [
+          431.0,
+          213.0
+        ]
+      ],
+      "group_id": 9051,
+      "description": "Hỏi: tấm bảng màu xanh lá có chữ gì ? || ĐA: exit",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9051,
+        "question_ids": [
+          9051
+        ],
+        "question": "tấm bảng màu xanh lá có chữ gì ?",
+        "gt_answer": "exit"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          367.0,
+          217.0
+        ],
+        [
+          582.0,
+          217.0
+        ],
+        [
+          582.0,
+          317.0
+        ],
+        [
+          367.0,
+          317.0
+        ]
+      ],
+      "group_id": 9052,
+      "description": "Hỏi: nội dung của bảng màu trắng dưới chữ exit là gì ? || ĐA: không hút thuốc trong chợ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9052,
+        "question_ids": [
+          9052
+        ],
+        "question": "nội dung của bảng màu trắng dưới chữ exit là gì ?",
+        "gt_answer": "không hút thuốc trong chợ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          367.0,
+          217.0
+        ],
+        [
+          582.0,
+          217.0
+        ],
+        [
+          582.0,
+          269.0
+        ],
+        [
+          367.0,
+          269.0
+        ]
+      ],
+      "group_id": 9053,
+      "description": "Hỏi: trong chợ không được làm gì ? || ĐA: không hút thuốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 9053,
+        "question_ids": [
+          9053
+        ],
+        "question": "trong chợ không được làm gì ?",
+        "gt_answer": "không hút thuốc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          378.0,
+          306.0
+        ],
+        [
+          582.0,
+          306.0
+        ],
+        [
+          582.0,
+          357.0
+        ],
+        [
+          378.0,
+          357.0
+        ]
+      ],
+      "group_id": 9054,
+      "description": "Hỏi: yêu cầu trên bảng màu trắng dịch sàng tiếng anh là gì ? || ĐA: no smoking",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 9054,
+        "question_ids": [
+          9054
+        ],
+        "question": "yêu cầu trên bảng màu trắng dịch sàng tiếng anh là gì ?",
+        "gt_answer": "no smoking"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3068.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1080,
+  "description": "Ảnh: 3068.jpg (ID=3068) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: trên tấm băng rôn đỏ là khẩu hiệu gì ? || ĐA: hực bảo vệ tính mạng và tài sản của chính mìn\n• Q2_gt: Hỏi: tấm bảng màu xanh lá có chữ gì ? || ĐA: exit\n• Q3_gt: Hỏi: nội dung của bảng màu trắng dưới chữ exit là gì ? || ĐA: không hút thuốc trong chợ\n• Q4_gt: Hỏi: trong chợ không được làm gì ? || ĐA: không hút thuốc\n• Q5_gt: Hỏi: yêu cầu trên bảng màu trắng dịch sàng tiếng anh là gì ? || ĐA: no smoking"
+}

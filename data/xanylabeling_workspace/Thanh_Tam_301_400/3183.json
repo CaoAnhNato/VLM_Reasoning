@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          1732.0,
+          217.0
+        ],
+        [
+          1943.0,
+          217.0
+        ],
+        [
+          1943.0,
+          329.0
+        ],
+        [
+          1732.0,
+          329.0
+        ]
+      ],
+      "group_id": 9456,
+      "description": "Hỏi: nước rửa tay lifebuoy chăm sóc da 500g có giá bao nhiêu ? || ĐA: 61 . 200 vnd / chai",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9456,
+        "question_ids": [
+          9456
+        ],
+        "question": "nước rửa tay lifebuoy chăm sóc da 500g có giá bao nhiêu ?",
+        "gt_answer": "61 . 200 vnd / chai"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6909,
+      "points": [
+        [
+          670.0,
+          608.0
+        ],
+        [
+          856.0,
+          608.0
+        ],
+        [
+          856.0,
+          679.0
+        ],
+        [
+          670.0,
+          679.0
+        ]
+      ],
+      "group_id": 9457,
+      "description": "Hỏi: gian hàng này đang có ưu đĩa gì ? || ĐA: khuyến mãi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9457,
+        "question_ids": [
+          9457
+        ],
+        "question": "gian hàng này đang có ưu đĩa gì ?",
+        "gt_answer": "khuyến mãi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          1079.0,
+          635.0
+        ],
+        [
+          1223.0,
+          635.0
+        ],
+        [
+          1223.0,
+          742.0
+        ],
+        [
+          1079.0,
+          742.0
+        ]
+      ],
+      "group_id": 9458,
+      "description": "Hỏi: gel rửa tay khô giảm giá còn bao nhiêu tiền ? || ĐA: 59 . 000 vnđ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9458,
+        "question_ids": [
+          9458
+        ],
+        "question": "gel rửa tay khô giảm giá còn bao nhiêu tiền ?",
+        "gt_answer": "59 . 000 vnđ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          791.0,
+          694.0
+        ],
+        [
+          852.0,
+          694.0
+        ],
+        [
+          852.0,
+          744.0
+        ],
+        [
+          791.0,
+          744.0
+        ]
+      ],
+      "group_id": 9459,
+      "description": "Hỏi: gel rửa tay khô có giá gốc bao nhiêu tiền ? || ĐA: 79 . 900 đ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 9459,
+        "question_ids": [
+          9459
+        ],
+        "question": "gel rửa tay khô có giá gốc bao nhiêu tiền ?",
+        "gt_answer": "79 . 900 đ"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3183.jpg",
+  "imageData": null,
+  "imageHeight": 1459,
+  "imageWidth": 2000,
+  "description": "Ảnh: 3183.jpg (ID=3183) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: nước rửa tay lifebuoy chăm sóc da 500g có giá bao nhiêu ? || ĐA: 61 . 200 vnd / chai\n• Q2_gt: Hỏi: gian hàng này đang có ưu đĩa gì ? || ĐA: khuyến mãi\n• Q3_gt: Hỏi: gel rửa tay khô giảm giá còn bao nhiêu tiền ? || ĐA: 59 . 000 vnđ\n• Q4_gt: Hỏi: gel rửa tay khô có giá gốc bao nhiêu tiền ? || ĐA: 79 . 900 đ"
+}

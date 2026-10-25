@@ -1,0 +1,327 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          854.0,
+          171.0
+        ],
+        [
+          1021.0,
+          171.0
+        ],
+        [
+          1021.0,
+          211.0
+        ],
+        [
+          854.0,
+          211.0
+        ]
+      ],
+      "group_id": 2098,
+      "description": "Hỏi: quầy hàng sau người phụ nữ áo cam bán gì ? || ĐA: cá thu cắt khúc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2098,
+        "question_ids": [
+          2098
+        ],
+        "question": "quầy hàng sau người phụ nữ áo cam bán gì ?",
+        "gt_answer": "cá thu cắt khúc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.975,
+      "points": [
+        [
+          771.0,
+          232.0
+        ],
+        [
+          983.0,
+          232.0
+        ],
+        [
+          983.0,
+          297.0
+        ],
+        [
+          771.0,
+          297.0
+        ]
+      ],
+      "group_id": 2099,
+      "description": "Hỏi: giá cá thu cắt khúc ở đây là bao nhiêu ? || ĐA: 215 . 000 đ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2099,
+        "question_ids": [
+          2099
+        ],
+        "question": "giá cá thu cắt khúc ở đây là bao nhiêu ?",
+        "gt_answer": "215 . 000 đ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.975,
+      "points": [
+        [
+          774.0,
+          235.0
+        ],
+        [
+          986.0,
+          235.0
+        ],
+        [
+          986.0,
+          300.0
+        ],
+        [
+          774.0,
+          300.0
+        ]
+      ],
+      "group_id": 2100,
+      "description": "Hỏi: giá cá thu cắt khúc thị trường là bao nhiêu ? || ĐA: 299 . 000 đ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 2100,
+        "question_ids": [
+          2100
+        ],
+        "question": "giá cá thu cắt khúc thị trường là bao nhiêu ?",
+        "gt_answer": "299 . 000 đ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1252.0,
+          189.0
+        ],
+        [
+          1501.0,
+          189.0
+        ],
+        [
+          1501.0,
+          219.0
+        ],
+        [
+          1252.0,
+          219.0
+        ]
+      ],
+      "group_id": 2101,
+      "description": "Hỏi: quầy hàng hàng kế bên quầy cá bán gì ? || ĐA: đùi ếch tươi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 2101,
+        "question_ids": [
+          2101
+        ],
+        "question": "quầy hàng hàng kế bên quầy cá bán gì ?",
+        "gt_answer": "đùi ếch tươi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.8392,
+      "points": [
+        [
+          1434.0,
+          241.0
+        ],
+        [
+          1500.0,
+          241.0
+        ],
+        [
+          1500.0,
+          260.0
+        ],
+        [
+          1434.0,
+          260.0
+        ]
+      ],
+      "group_id": 2102,
+      "description": "Hỏi: có bao nhiêu đùi ếch tươi trên 1 kg ? || ĐA: 20 - 25 đùi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 2102,
+        "question_ids": [
+          2102
+        ],
+        "question": "có bao nhiêu đùi ếch tươi trên 1 kg ?",
+        "gt_answer": "20 - 25 đùi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.975,
+      "points": [
+        [
+          777.0,
+          238.0
+        ],
+        [
+          989.0,
+          238.0
+        ],
+        [
+          989.0,
+          303.0
+        ],
+        [
+          777.0,
+          303.0
+        ]
+      ],
+      "group_id": 2103,
+      "description": "Hỏi: siêu thị bán đùi ếch tươi giá bao nhiêu ? || ĐA: 118 . 000 đ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 2103,
+        "question_ids": [
+          2103
+        ],
+        "question": "siêu thị bán đùi ếch tươi giá bao nhiêu ?",
+        "gt_answer": "118 . 000 đ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q7_gt",
+      "score": 0.8167,
+      "points": [
+        [
+          780.0,
+          241.0
+        ],
+        [
+          992.0,
+          241.0
+        ],
+        [
+          992.0,
+          306.0
+        ],
+        [
+          780.0,
+          306.0
+        ]
+      ],
+      "group_id": 2104,
+      "description": "Hỏi: thị trường bán đùi ếch tươi giá bao nhiêu ? || ĐA: 125 . 600 đ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 7,
+        "question_id": 2104,
+        "question_ids": [
+          2104
+        ],
+        "question": "thị trường bán đùi ếch tươi giá bao nhiêu ?",
+        "gt_answer": "125 . 600 đ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q8_gt",
+      "score": 0.813,
+      "points": [
+        [
+          88.0,
+          206.0
+        ],
+        [
+          296.0,
+          206.0
+        ],
+        [
+          296.0,
+          233.0
+        ],
+        [
+          88.0,
+          233.0
+        ]
+      ],
+      "group_id": 2105,
+      "description": "Hỏi: trong siêu thị này yêu cầu khách hàng điều gì ? || ĐA: xin giữ khoảng cách cần thiết",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 8,
+        "question_id": 2105,
+        "question_ids": [
+          2105
+        ],
+        "question": "trong siêu thị này yêu cầu khách hàng điều gì ?",
+        "gt_answer": "xin giữ khoảng cách cần thiết"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "811.jpg",
+  "imageData": null,
+  "imageHeight": 1200,
+  "imageWidth": 1600,
+  "description": "Ảnh: 811.jpg (ID=811) | Tổng số câu hỏi: 8\n• Q1_gt: Hỏi: quầy hàng sau người phụ nữ áo cam bán gì ? || ĐA: cá thu cắt khúc\n• Q2_gt: Hỏi: giá cá thu cắt khúc ở đây là bao nhiêu ? || ĐA: 215 . 000 đ\n• Q3_gt: Hỏi: giá cá thu cắt khúc thị trường là bao nhiêu ? || ĐA: 299 . 000 đ\n• Q4_gt: Hỏi: quầy hàng hàng kế bên quầy cá bán gì ? || ĐA: đùi ếch tươi\n• Q5_gt: Hỏi: có bao nhiêu đùi ếch tươi trên 1 kg ? || ĐA: 20 - 25 đùi\n• Q6_gt: Hỏi: siêu thị bán đùi ếch tươi giá bao nhiêu ? || ĐA: 118 . 000 đ\n• Q7_gt: Hỏi: thị trường bán đùi ếch tươi giá bao nhiêu ? || ĐA: 125 . 600 đ\n• Q8_gt: Hỏi: trong siêu thị này yêu cầu khách hàng điều gì ? || ĐA: xin giữ khoảng cách cần thiết"
+}

@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          163.0,
+          37.0
+        ],
+        [
+          460.0,
+          37.0
+        ],
+        [
+          460.0,
+          155.0
+        ],
+        [
+          163.0,
+          155.0
+        ]
+      ],
+      "group_id": 8228,
+      "description": "Hỏi: chỗ người đàn ông giơ tấm bảng có bán những món gì ? || ĐA: cơm phở trứng vịt lộn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8228,
+        "question_ids": [
+          8228
+        ],
+        "question": "chỗ người đàn ông giơ tấm bảng có bán những món gì ?",
+        "gt_answer": "cơm phở trứng vịt lộn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          176.0,
+          2.0
+        ],
+        [
+          460.0,
+          2.0
+        ],
+        [
+          460.0,
+          67.0
+        ],
+        [
+          176.0,
+          67.0
+        ]
+      ],
+      "group_id": 8229,
+      "description": "Hỏi: khu bày bán ở trong ảnh thuộc quản lý của nơi nào ? || ĐA: trung tâm dịch vụ - du lịch đền hùng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8229,
+        "question_ids": [
+          8229
+        ],
+        "question": "khu bày bán ở trong ảnh thuộc quản lý của nơi nào ?",
+        "gt_answer": "trung tâm dịch vụ - du lịch đền hùng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8977,
+      "points": [
+        [
+          156.0,
+          31.0
+        ],
+        [
+          460.0,
+          31.0
+        ],
+        [
+          460.0,
+          135.0
+        ],
+        [
+          156.0,
+          135.0
+        ]
+      ],
+      "group_id": 8230,
+      "description": "Hỏi: khu bày bán ở trong ảnh bán những món gì ? || ĐA: lưu niệm - hàng đặc sản đấ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8230,
+        "question_ids": [
+          8230
+        ],
+        "question": "khu bày bán ở trong ảnh bán những món gì ?",
+        "gt_answer": "lưu niệm - hàng đặc sản đấ"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2798.jpg",
+  "imageData": null,
+  "imageHeight": 306,
+  "imageWidth": 460,
+  "description": "Ảnh: 2798.jpg (ID=2798) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: chỗ người đàn ông giơ tấm bảng có bán những món gì ? || ĐA: cơm phở trứng vịt lộn\n• Q2_gt: Hỏi: khu bày bán ở trong ảnh thuộc quản lý của nơi nào ? || ĐA: trung tâm dịch vụ - du lịch đền hùng\n• Q3_gt: Hỏi: khu bày bán ở trong ảnh bán những món gì ? || ĐA: lưu niệm - hàng đặc sản đấ"
+}

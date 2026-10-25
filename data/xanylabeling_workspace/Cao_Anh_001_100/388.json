@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          24.0,
+          431.0
+        ],
+        [
+          554.0,
+          431.0
+        ],
+        [
+          554.0,
+          485.0
+        ],
+        [
+          24.0,
+          485.0
+        ]
+      ],
+      "group_id": 1116,
+      "description": "Hỏi: tiền có quan trọng không ? || ĐA: tiền không quan trọng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1116,
+        "question_ids": [
+          1116
+        ],
+        "question": "tiền có quan trọng không ?",
+        "gt_answer": "tiền không quan trọng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9,
+      "points": [
+        [
+          24.0,
+          469.0
+        ],
+        [
+          518.0,
+          469.0
+        ],
+        [
+          518.0,
+          523.0
+        ],
+        [
+          24.0,
+          523.0
+        ]
+      ],
+      "group_id": 1117,
+      "description": "Hỏi: tiền nào không quan trọng ? || ĐA: đang nói về tiền của người khác !",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1117,
+        "question_ids": [
+          1117
+        ],
+        "question": "tiền nào không quan trọng ?",
+        "gt_answer": "đang nói về tiền của người khác !"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "388.jpg",
+  "imageData": null,
+  "imageHeight": 561,
+  "imageWidth": 600,
+  "description": "Ảnh: 388.jpg (ID=388) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: tiền có quan trọng không ? || ĐA: tiền không quan trọng\n• Q2_gt: Hỏi: tiền nào không quan trọng ? || ĐA: đang nói về tiền của người khác !"
+}

@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          506.0,
+          0.0
+        ],
+        [
+          1059.0,
+          0.0
+        ],
+        [
+          1059.0,
+          79.0
+        ],
+        [
+          506.0,
+          79.0
+        ]
+      ],
+      "group_id": 4599,
+      "description": "Hỏi: bức hình chụp cửa hàng gì ? || ĐA: mỹ nghệ công giáo",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4599,
+        "question_ids": [
+          4599
+        ],
+        "question": "bức hình chụp cửa hàng gì ?",
+        "gt_answer": "mỹ nghệ công giáo"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          277.0,
+          104.0
+        ],
+        [
+          1310.0,
+          104.0
+        ],
+        [
+          1310.0,
+          344.0
+        ],
+        [
+          277.0,
+          344.0
+        ]
+      ],
+      "group_id": 4600,
+      "description": "Hỏi: cửa hàng mỹ nghệ công giáo này tên gì ? || ĐA: thiên phúc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4600,
+        "question_ids": [
+          4600
+        ],
+        "question": "cửa hàng mỹ nghệ công giáo này tên gì ?",
+        "gt_answer": "thiên phúc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9596,
+      "points": [
+        [
+          158.0,
+          433.0
+        ],
+        [
+          662.0,
+          433.0
+        ],
+        [
+          662.0,
+          470.0
+        ],
+        [
+          158.0,
+          470.0
+        ]
+      ],
+      "group_id": 4601,
+      "description": "Hỏi: địa chỉ cửa hàng ở đâu ? || ĐA: 4 / 4a - khu 2 - ấp thanh hóa - xã phó nai 3 - trảng bom - đn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4601,
+        "question_ids": [
+          4601
+        ],
+        "question": "địa chỉ cửa hàng ở đâu ?",
+        "gt_answer": "4 / 4a - khu 2 - ấp thanh hóa - xã phó nai 3 - trảng bom - đn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.55,
+      "points": [
+        [
+          161.0,
+          436.0
+        ],
+        [
+          665.0,
+          436.0
+        ],
+        [
+          665.0,
+          473.0
+        ],
+        [
+          161.0,
+          473.0
+        ]
+      ],
+      "group_id": 4602,
+      "description": "Hỏi: website của cửa hàng là gì ? || ĐA: mynghethienphuc . com",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 4602,
+        "question_ids": [
+          4602
+        ],
+        "question": "website của cửa hàng là gì ?",
+        "gt_answer": "mynghethienphuc . com"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 4603,
+      "description": "Hỏi: số điện thoại của cửa hàng thiên phúc là gì ? || ĐA: 0988 . 678 . 779 - 0988 . 401 . 401",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 4603,
+        "question_ids": [
+          4603
+        ],
+        "question": "số điện thoại của cửa hàng thiên phúc là gì ?",
+        "gt_answer": "0988 . 678 . 779 - 0988 . 401 . 401"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1631.jpg",
+  "imageData": null,
+  "imageHeight": 946,
+  "imageWidth": 1536,
+  "description": "Ảnh: 1631.jpg (ID=1631) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: bức hình chụp cửa hàng gì ? || ĐA: mỹ nghệ công giáo\n• Q2_gt: Hỏi: cửa hàng mỹ nghệ công giáo này tên gì ? || ĐA: thiên phúc\n• Q3_gt: Hỏi: địa chỉ cửa hàng ở đâu ? || ĐA: 4 / 4a - khu 2 - ấp thanh hóa - xã phó nai 3 - trảng bom - đn\n• Q4_gt: Hỏi: website của cửa hàng là gì ? || ĐA: mynghethienphuc . com\n• Q5_gt: Hỏi: số điện thoại của cửa hàng thiên phúc là gì ? || ĐA: 0988 . 678 . 779 - 0988 . 401 . 401"
+}

@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.6187,
+      "points": [
+        [
+          579.0,
+          568.0
+        ],
+        [
+          811.0,
+          568.0
+        ],
+        [
+          811.0,
+          602.0
+        ],
+        [
+          579.0,
+          602.0
+        ]
+      ],
+      "group_id": 10008,
+      "description": "Hỏi: tại đây có treo băng rôn gì ? || ĐA: chúc mừng năm mới",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10008,
+        "question_ids": [
+          10008
+        ],
+        "question": "tại đây có treo băng rôn gì ?",
+        "gt_answer": "chúc mừng năm mới"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.75,
+      "points": [
+        [
+          840.0,
+          571.0
+        ],
+        [
+          1042.0,
+          571.0
+        ],
+        [
+          1042.0,
+          606.0
+        ],
+        [
+          840.0,
+          606.0
+        ]
+      ],
+      "group_id": 10009,
+      "description": "Hỏi: năm mới ở đây là năm nào ? || ĐA: 2019",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10009,
+        "question_ids": [
+          10009
+        ],
+        "question": "năm mới ở đây là năm nào ?",
+        "gt_answer": "2019"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3355.jpg",
+  "imageData": null,
+  "imageHeight": 1155,
+  "imageWidth": 1500,
+  "description": "Ảnh: 3355.jpg (ID=3355) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: tại đây có treo băng rôn gì ? || ĐA: chúc mừng năm mới\n• Q2_gt: Hỏi: năm mới ở đây là năm nào ? || ĐA: 2019"
+}

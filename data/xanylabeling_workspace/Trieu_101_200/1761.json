@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          381.0,
+          650.0
+        ],
+        [
+          555.0,
+          650.0
+        ],
+        [
+          555.0,
+          682.0
+        ],
+        [
+          381.0,
+          682.0
+        ]
+      ],
+      "group_id": 5005,
+      "description": "Hỏi: các gian thùng hàng trong siêu thị đang có chương trình gì ? || ĐA: khuyến mại",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5005,
+        "question_ids": [
+          5005
+        ],
+        "question": "các gian thùng hàng trong siêu thị đang có chương trình gì ?",
+        "gt_answer": "khuyến mại"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          630.0,
+          113.0
+        ],
+        [
+          744.0,
+          113.0
+        ],
+        [
+          744.0,
+          154.0
+        ],
+        [
+          630.0,
+          154.0
+        ]
+      ],
+      "group_id": 5006,
+      "description": "Hỏi: trên tấm bảng treo ở siêu thị là tên của siêu thị nào ? || ĐA: vinmart",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5006,
+        "question_ids": [
+          5006
+        ],
+        "question": "trên tấm bảng treo ở siêu thị là tên của siêu thị nào ?",
+        "gt_answer": "vinmart"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          456.0,
+          80.0
+        ],
+        [
+          585.0,
+          80.0
+        ],
+        [
+          585.0,
+          148.0
+        ],
+        [
+          456.0,
+          148.0
+        ]
+      ],
+      "group_id": 5007,
+      "description": "Hỏi: slogan của vinmart là gì ? || ĐA: tươi ngon thượng hạng !",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5007,
+        "question_ids": [
+          5007
+        ],
+        "question": "slogan của vinmart là gì ?",
+        "gt_answer": "tươi ngon thượng hạng !"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          624.0,
+          176.0
+        ],
+        [
+          670.0,
+          176.0
+        ],
+        [
+          670.0,
+          198.0
+        ],
+        [
+          624.0,
+          198.0
+        ]
+      ],
+      "group_id": 5008,
+      "description": "Hỏi: vinmart trân trọng cảm ơn những ai ? || ĐA: các nhà tài trợ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 5008,
+        "question_ids": [
+          5008
+        ],
+        "question": "vinmart trân trọng cảm ơn những ai ?",
+        "gt_answer": "các nhà tài trợ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.6363,
+      "points": [
+        [
+          627.0,
+          193.0
+        ],
+        [
+          690.0,
+          193.0
+        ],
+        [
+          690.0,
+          208.0
+        ],
+        [
+          627.0,
+          208.0
+        ]
+      ],
+      "group_id": 5009,
+      "description": "Hỏi: vinmart cảm ơn các nhà tài trợ vì lí do gì ? || ĐA: đã đồng hành cùng chương trình",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 5009,
+        "question_ids": [
+          5009
+        ],
+        "question": "vinmart cảm ơn các nhà tài trợ vì lí do gì ?",
+        "gt_answer": "đã đồng hành cùng chương trình"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          492.0,
+          322.0
+        ],
+        [
+          543.0,
+          322.0
+        ],
+        [
+          543.0,
+          341.0
+        ],
+        [
+          492.0,
+          341.0
+        ]
+      ],
+      "group_id": 5010,
+      "description": "Hỏi: khi mua 1 thì sẽ được như thế nào ? || ĐA: tặng 1",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 5010,
+        "question_ids": [
+          5010
+        ],
+        "question": "khi mua 1 thì sẽ được như thế nào ?",
+        "gt_answer": "tặng 1"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1761.jpg",
+  "imageData": null,
+  "imageHeight": 750,
+  "imageWidth": 1000,
+  "description": "Ảnh: 1761.jpg (ID=1761) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: các gian thùng hàng trong siêu thị đang có chương trình gì ? || ĐA: khuyến mại\n• Q2_gt: Hỏi: trên tấm bảng treo ở siêu thị là tên của siêu thị nào ? || ĐA: vinmart\n• Q3_gt: Hỏi: slogan của vinmart là gì ? || ĐA: tươi ngon thượng hạng !\n• Q4_gt: Hỏi: vinmart trân trọng cảm ơn những ai ? || ĐA: các nhà tài trợ\n• Q5_gt: Hỏi: vinmart cảm ơn các nhà tài trợ vì lí do gì ? || ĐA: đã đồng hành cùng chương trình\n• Q6_gt: Hỏi: khi mua 1 thì sẽ được như thế nào ? || ĐA: tặng 1"
+}

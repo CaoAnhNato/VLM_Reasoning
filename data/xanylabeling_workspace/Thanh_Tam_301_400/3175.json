@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.79,
+      "points": [
+        [
+          908.0,
+          370.0
+        ],
+        [
+          1042.0,
+          370.0
+        ],
+        [
+          1042.0,
+          408.0
+        ],
+        [
+          908.0,
+          408.0
+        ]
+      ],
+      "group_id": 9432,
+      "description": "Hỏi: lăng này thờ ai ? || ĐA: chủ tịch hồ chí minh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9432,
+        "question_ids": [
+          9432
+        ],
+        "question": "lăng này thờ ai ?",
+        "gt_answer": "chủ tịch hồ chí minh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          911.0,
+          373.0
+        ],
+        [
+          1045.0,
+          373.0
+        ],
+        [
+          1045.0,
+          411.0
+        ],
+        [
+          911.0,
+          411.0
+        ]
+      ],
+      "group_id": 9433,
+      "description": "Hỏi: hồ chí minh từng giữ chức vụ nào ở nước ta ? || ĐA: chủ tịch",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9433,
+        "question_ids": [
+          9433
+        ],
+        "question": "hồ chí minh từng giữ chức vụ nào ở nước ta ?",
+        "gt_answer": "chủ tịch"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3175.jpg",
+  "imageData": null,
+  "imageHeight": 865,
+  "imageWidth": 1200,
+  "description": "Ảnh: 3175.jpg (ID=3175) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: lăng này thờ ai ? || ĐA: chủ tịch hồ chí minh\n• Q2_gt: Hỏi: hồ chí minh từng giữ chức vụ nào ở nước ta ? || ĐA: chủ tịch"
+}

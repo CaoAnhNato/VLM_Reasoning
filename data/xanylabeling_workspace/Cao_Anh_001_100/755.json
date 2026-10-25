@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.915,
+      "points": [
+        [
+          70.0,
+          0.0
+        ],
+        [
+          393.0,
+          0.0
+        ],
+        [
+          393.0,
+          53.0
+        ],
+        [
+          70.0,
+          53.0
+        ]
+      ],
+      "group_id": 1967,
+      "description": "Hỏi: hình ảnh hai người ở trên là khi nào ? || ĐA: trước khi họ cưới",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1967,
+        "question_ids": [
+          1967
+        ],
+        "question": "hình ảnh hai người ở trên là khi nào ?",
+        "gt_answer": "trước khi họ cưới"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.915,
+      "points": [
+        [
+          105.0,
+          310.0
+        ],
+        [
+          388.0,
+          310.0
+        ],
+        [
+          388.0,
+          365.0
+        ],
+        [
+          105.0,
+          365.0
+        ]
+      ],
+      "group_id": 1968,
+      "description": "Hỏi: hình ảnh hai người ở dưới là khi nào ? || ĐA: sau khi họ cưới",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1968,
+        "question_ids": [
+          1968
+        ],
+        "question": "hình ảnh hai người ở dưới là khi nào ?",
+        "gt_answer": "sau khi họ cưới"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          369.0,
+          464.0
+        ],
+        [
+          474.0,
+          464.0
+        ],
+        [
+          474.0,
+          531.0
+        ],
+        [
+          369.0,
+          531.0
+        ]
+      ],
+      "group_id": 1969,
+      "description": "Hỏi: người vợ nói gì trong hình ảnh sau khi cưới ? || ĐA: bà thách cả họ nhà mày",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1969,
+        "question_ids": [
+          1969
+        ],
+        "question": "người vợ nói gì trong hình ảnh sau khi cưới ?",
+        "gt_answer": "bà thách cả họ nhà mày"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "755.jpg",
+  "imageData": null,
+  "imageHeight": 612,
+  "imageWidth": 496,
+  "description": "Ảnh: 755.jpg (ID=755) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: hình ảnh hai người ở trên là khi nào ? || ĐA: trước khi họ cưới\n• Q2_gt: Hỏi: hình ảnh hai người ở dưới là khi nào ? || ĐA: sau khi họ cưới\n• Q3_gt: Hỏi: người vợ nói gì trong hình ảnh sau khi cưới ? || ĐA: bà thách cả họ nhà mày"
+}

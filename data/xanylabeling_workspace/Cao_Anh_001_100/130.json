@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          1075.0,
+          702.0
+        ],
+        [
+          1192.0,
+          702.0
+        ],
+        [
+          1192.0,
+          766.0
+        ],
+        [
+          1075.0,
+          766.0
+        ]
+      ],
+      "group_id": 386,
+      "description": "Hỏi: ở đây có bán bánh gì ? || ĐA: coffee joy",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 386,
+        "question_ids": [
+          386
+        ],
+        "question": "ở đây có bán bánh gì ?",
+        "gt_answer": "coffee joy"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q1_gt",
+      "score": 0.75,
+      "points": [
+        [
+          846.0,
+          508.0
+        ],
+        [
+          881.0,
+          508.0
+        ],
+        [
+          881.0,
+          529.0
+        ],
+        [
+          846.0,
+          529.0
+        ]
+      ],
+      "group_id": 387,
+      "description": "Hỏi: ở đây có bán bánh gì ? || ĐA: cosy",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 387,
+        "question_ids": [
+          387
+        ],
+        "question": "ở đây có bán bánh gì ?",
+        "gt_answer": "cosy"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          973.0,
+          695.0
+        ],
+        [
+          1020.0,
+          695.0
+        ],
+        [
+          1020.0,
+          738.0
+        ],
+        [
+          973.0,
+          738.0
+        ]
+      ],
+      "group_id": 388,
+      "description": "Hỏi: ở đây có bán bánh gì ? || ĐA: phaner pie",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 388,
+        "question_ids": [
+          388
+        ],
+        "question": "ở đây có bán bánh gì ?",
+        "gt_answer": "phaner pie"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "130.jpg",
+  "imageData": null,
+  "imageHeight": 1075,
+  "imageWidth": 1600,
+  "description": "Ảnh: 130.jpg (ID=130) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: ở đây có bán bánh gì ? || ĐA: coffee joy / cosy / phaner pie"
+}

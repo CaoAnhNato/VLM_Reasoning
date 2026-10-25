@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.6,
+      "points": [
+        [
+          247.0,
+          470.0
+        ],
+        [
+          463.0,
+          470.0
+        ],
+        [
+          463.0,
+          541.0
+        ],
+        [
+          247.0,
+          541.0
+        ]
+      ],
+      "group_id": 3641,
+      "description": "Hỏi: roi đỏ an phước bán giá bao nhiêu một cân ? || ĐA: 51900",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3641,
+        "question_ids": [
+          3641
+        ],
+        "question": "roi đỏ an phước bán giá bao nhiêu một cân ?",
+        "gt_answer": "51900"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6,
+      "points": [
+        [
+          250.0,
+          473.0
+        ],
+        [
+          466.0,
+          473.0
+        ],
+        [
+          466.0,
+          544.0
+        ],
+        [
+          250.0,
+          544.0
+        ]
+      ],
+      "group_id": 3642,
+      "description": "Hỏi: hồng xiêm bán giá bao nhiêu một cân ? || ĐA: 38900",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3642,
+        "question_ids": [
+          3642
+        ],
+        "question": "hồng xiêm bán giá bao nhiêu một cân ?",
+        "gt_answer": "38900"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1224.0,
+          550.0
+        ],
+        [
+          1414.0,
+          550.0
+        ],
+        [
+          1414.0,
+          623.0
+        ],
+        [
+          1224.0,
+          623.0
+        ]
+      ],
+      "group_id": 3643,
+      "description": "Hỏi: cam canh bán giá bao nhiêu một cân ? || ĐA: 64900",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 3643,
+        "question_ids": [
+          3643
+        ],
+        "question": "cam canh bán giá bao nhiêu một cân ?",
+        "gt_answer": "64900"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          253.0,
+          476.0
+        ],
+        [
+          469.0,
+          476.0
+        ],
+        [
+          469.0,
+          547.0
+        ],
+        [
+          253.0,
+          547.0
+        ]
+      ],
+      "group_id": 3644,
+      "description": "Hỏi: xoài cát bò bán giá bao nhiêu một cân ? || ĐA: 46900",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 3644,
+        "question_ids": [
+          3644
+        ],
+        "question": "xoài cát bò bán giá bao nhiêu một cân ?",
+        "gt_answer": "46900"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          256.0,
+          479.0
+        ],
+        [
+          472.0,
+          479.0
+        ],
+        [
+          472.0,
+          550.0
+        ],
+        [
+          256.0,
+          550.0
+        ]
+      ],
+      "group_id": 3645,
+      "description": "Hỏi: xoài cát chu bán giá bao nhiêu một cân ? || ĐA: 46900",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 3645,
+        "question_ids": [
+          3645
+        ],
+        "question": "xoài cát chu bán giá bao nhiêu một cân ?",
+        "gt_answer": "46900"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1320.jpg",
+  "imageData": null,
+  "imageHeight": 1536,
+  "imageWidth": 2304,
+  "description": "Ảnh: 1320.jpg (ID=1320) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: roi đỏ an phước bán giá bao nhiêu một cân ? || ĐA: 51900\n• Q2_gt: Hỏi: hồng xiêm bán giá bao nhiêu một cân ? || ĐA: 38900\n• Q3_gt: Hỏi: cam canh bán giá bao nhiêu một cân ? || ĐA: 64900\n• Q4_gt: Hỏi: xoài cát bò bán giá bao nhiêu một cân ? || ĐA: 46900\n• Q5_gt: Hỏi: xoài cát chu bán giá bao nhiêu một cân ? || ĐA: 46900"
+}

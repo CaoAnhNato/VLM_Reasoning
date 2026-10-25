@@ -1,0 +1,405 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1323.0,
+          271.0
+        ],
+        [
+          2061.0,
+          271.0
+        ],
+        [
+          2061.0,
+          610.0
+        ],
+        [
+          1323.0,
+          610.0
+        ]
+      ],
+      "group_id": 8938,
+      "description": "Hỏi: đây là địa điểm nào ? || ĐA: nhà thuốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8938,
+        "question_ids": [
+          8938
+        ],
+        "question": "đây là địa điểm nào ?",
+        "gt_answer": "nhà thuốc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1325.0,
+          192.0
+        ],
+        [
+          3142.0,
+          192.0
+        ],
+        [
+          3142.0,
+          609.0
+        ],
+        [
+          1325.0,
+          609.0
+        ]
+      ],
+      "group_id": 8939,
+      "description": "Hỏi: tên nhà thuốc này là gì ? || ĐA: minh châu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8939,
+        "question_ids": [
+          8939
+        ],
+        "question": "tên nhà thuốc này là gì ?",
+        "gt_answer": "minh châu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1706.0,
+          532.0
+        ],
+        [
+          2724.0,
+          532.0
+        ],
+        [
+          2724.0,
+          708.0
+        ],
+        [
+          1706.0,
+          708.0
+        ]
+      ],
+      "group_id": 8940,
+      "description": "Hỏi: đây là nhà thuốc đạt chuẩn gì vậy ? || ĐA: nhà thuốc đạt chuẩn gpp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8940,
+        "question_ids": [
+          8940
+        ],
+        "question": "đây là nhà thuốc đạt chuẩn gì vậy ?",
+        "gt_answer": "nhà thuốc đạt chuẩn gpp"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1478.0,
+          626.0
+        ],
+        [
+          2999.0,
+          626.0
+        ],
+        [
+          2999.0,
+          872.0
+        ],
+        [
+          1478.0,
+          872.0
+        ]
+      ],
+      "group_id": 8941,
+      "description": "Hỏi: ở nhà thuốc minh châu chuyên bán gì ? || ĐA: chuyên bán lẻ thuốc thành phẩm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 8941,
+        "question_ids": [
+          8941
+        ],
+        "question": "ở nhà thuốc minh châu chuyên bán gì ?",
+        "gt_answer": "chuyên bán lẻ thuốc thành phẩm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.95,
+      "points": [
+        [
+          2753.0,
+          952.0
+        ],
+        [
+          3115.0,
+          952.0
+        ],
+        [
+          3115.0,
+          1965.0
+        ],
+        [
+          2753.0,
+          1965.0
+        ]
+      ],
+      "group_id": 8942,
+      "description": "Hỏi: khẩu hiệu bán thuốc ở đây như thế nào ? || ĐA: thuốc đúng giá đúng tư vấn đúng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 8942,
+        "question_ids": [
+          8942
+        ],
+        "question": "khẩu hiệu bán thuốc ở đây như thế nào ?",
+        "gt_answer": "thuốc đúng giá đúng tư vấn đúng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1545.0,
+          1978.0
+        ],
+        [
+          1742.0,
+          1978.0
+        ],
+        [
+          1742.0,
+          2113.0
+        ],
+        [
+          1545.0,
+          2113.0
+        ]
+      ],
+      "group_id": 8943,
+      "description": "Hỏi: địa chỉ nhà thuốc ở đâu ? || ĐA: 64 lương yên",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 8943,
+        "question_ids": [
+          8943
+        ],
+        "question": "địa chỉ nhà thuốc ở đâu ?",
+        "gt_answer": "64 lương yên"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q7_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1399.0,
+          849.0
+        ],
+        [
+          2116.0,
+          849.0
+        ],
+        [
+          2116.0,
+          940.0
+        ],
+        [
+          1399.0,
+          940.0
+        ]
+      ],
+      "group_id": 8944,
+      "description": "Hỏi: nhà thuốc này của dược sĩ nào ? || ĐA: đoàn thị thảo",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 7,
+        "question_id": 8944,
+        "question_ids": [
+          8944
+        ],
+        "question": "nhà thuốc này của dược sĩ nào ?",
+        "gt_answer": "đoàn thị thảo"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q8_gt",
+      "score": 1.0,
+      "points": [
+        [
+          2312.0,
+          818.0
+        ],
+        [
+          2671.0,
+          818.0
+        ],
+        [
+          2671.0,
+          882.0
+        ],
+        [
+          2312.0,
+          882.0
+        ]
+      ],
+      "group_id": 8945,
+      "description": "Hỏi: nhà thuốc này mở của trong khoảng thời gian nào ? || ĐA: 7h - 22h",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 8,
+        "question_id": 8945,
+        "question_ids": [
+          8945
+        ],
+        "question": "nhà thuốc này mở của trong khoảng thời gian nào ?",
+        "gt_answer": "7h - 22h"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q9_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          2751.0,
+          787.0
+        ],
+        [
+          3097.0,
+          787.0
+        ],
+        [
+          3097.0,
+          864.0
+        ],
+        [
+          2751.0,
+          864.0
+        ]
+      ],
+      "group_id": 8946,
+      "description": "Hỏi: liên hệ nhà thuốc minh châu qua số điện thoại nào ? || ĐA: 0936 26 06 39",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 9,
+        "question_id": 8946,
+        "question_ids": [
+          8946
+        ],
+        "question": "liên hệ nhà thuốc minh châu qua số điện thoại nào ?",
+        "gt_answer": "0936 26 06 39"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q10_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1326.0,
+          274.0
+        ],
+        [
+          2064.0,
+          274.0
+        ],
+        [
+          2064.0,
+          613.0
+        ],
+        [
+          1326.0,
+          613.0
+        ]
+      ],
+      "group_id": 8947,
+      "description": "Hỏi: minh châu là cửa hàng kinh doanh gì ? || ĐA: nhà thuốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 10,
+        "question_id": 8947,
+        "question_ids": [
+          8947
+        ],
+        "question": "minh châu là cửa hàng kinh doanh gì ?",
+        "gt_answer": "nhà thuốc"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3037.jpg",
+  "imageData": null,
+  "imageHeight": 2397,
+  "imageWidth": 3196,
+  "description": "Ảnh: 3037.jpg (ID=3037) | Tổng số câu hỏi: 10\n• Q1_gt: Hỏi: đây là địa điểm nào ? || ĐA: nhà thuốc\n• Q2_gt: Hỏi: tên nhà thuốc này là gì ? || ĐA: minh châu\n• Q3_gt: Hỏi: đây là nhà thuốc đạt chuẩn gì vậy ? || ĐA: nhà thuốc đạt chuẩn gpp\n• Q4_gt: Hỏi: ở nhà thuốc minh châu chuyên bán gì ? || ĐA: chuyên bán lẻ thuốc thành phẩm\n• Q5_gt: Hỏi: khẩu hiệu bán thuốc ở đây như thế nào ? || ĐA: thuốc đúng giá đúng tư vấn đúng\n• Q6_gt: Hỏi: địa chỉ nhà thuốc ở đâu ? || ĐA: 64 lương yên\n• Q7_gt: Hỏi: nhà thuốc này của dược sĩ nào ? || ĐA: đoàn thị thảo\n• Q8_gt: Hỏi: nhà thuốc này mở của trong khoảng thời gian nào ? || ĐA: 7h - 22h\n• Q9_gt: Hỏi: liên hệ nhà thuốc minh châu qua số điện thoại nào ? || ĐA: 0936 26 06 39\n• Q10_gt: Hỏi: minh châu là cửa hàng kinh doanh gì ? || ĐA: nhà thuốc"
+}

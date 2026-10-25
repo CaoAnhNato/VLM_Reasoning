@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8583,
+      "points": [
+        [
+          36.0,
+          168.0
+        ],
+        [
+          287.0,
+          168.0
+        ],
+        [
+          287.0,
+          194.0
+        ],
+        [
+          36.0,
+          194.0
+        ]
+      ],
+      "group_id": 11169,
+      "description": "Hỏi: tên của công ty trong ảnh là gì ? || ĐA: đồng xuân lộc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11169,
+        "question_ids": [
+          11169
+        ],
+        "question": "tên của công ty trong ảnh là gì ?",
+        "gt_answer": "đồng xuân lộc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          111.0,
+          129.0
+        ],
+        [
+          253.0,
+          129.0
+        ],
+        [
+          253.0,
+          155.0
+        ],
+        [
+          111.0,
+          155.0
+        ]
+      ],
+      "group_id": 11170,
+      "description": "Hỏi: công ty đồng xuân lộc thuộc về tập đoàn nào ? || ĐA: donagamex",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11170,
+        "question_ids": [
+          11170
+        ],
+        "question": "công ty đồng xuân lộc thuộc về tập đoàn nào ?",
+        "gt_answer": "donagamex"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3758.jpg",
+  "imageData": null,
+  "imageHeight": 351,
+  "imageWidth": 512,
+  "description": "Ảnh: 3758.jpg (ID=3758) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: tên của công ty trong ảnh là gì ? || ĐA: đồng xuân lộc\n• Q2_gt: Hỏi: công ty đồng xuân lộc thuộc về tập đoàn nào ? || ĐA: donagamex"
+}

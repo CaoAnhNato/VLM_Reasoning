@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          178.0,
+          708.0
+        ],
+        [
+          425.0,
+          708.0
+        ],
+        [
+          425.0,
+          988.0
+        ],
+        [
+          178.0,
+          988.0
+        ]
+      ],
+      "group_id": 5664,
+      "description": "Hỏi: cuốn sach trong ảnh có tên là gì ? || ĐA: tiếng người trong văn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5664,
+        "question_ids": [
+          5664
+        ],
+        "question": "cuốn sach trong ảnh có tên là gì ?",
+        "gt_answer": "tiếng người trong văn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          371.0,
+          54.0
+        ],
+        [
+          846.0,
+          54.0
+        ],
+        [
+          846.0,
+          377.0
+        ],
+        [
+          371.0,
+          377.0
+        ]
+      ],
+      "group_id": 5665,
+      "description": "Hỏi: tác giả của cuốn sách này là ai ? || ĐA: nguyễn xuân khánh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5665,
+        "question_ids": [
+          5665
+        ],
+        "question": "tác giả của cuốn sách này là ai ?",
+        "gt_answer": "nguyễn xuân khánh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7,
+      "points": [
+        [
+          815.0,
+          973.0
+        ],
+        [
+          851.0,
+          973.0
+        ],
+        [
+          851.0,
+          1020.0
+        ],
+        [
+          815.0,
+          1020.0
+        ]
+      ],
+      "group_id": 5666,
+      "description": "Hỏi: nhà xuất bản cuốn sách này là ai ? || ĐA: nhà xuất bản phụ nữ việt nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5666,
+        "question_ids": [
+          5666
+        ],
+        "question": "nhà xuất bản cuốn sách này là ai ?",
+        "gt_answer": "nhà xuất bản phụ nữ việt nam"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1962.jpg",
+  "imageData": null,
+  "imageHeight": 1280,
+  "imageWidth": 961,
+  "description": "Ảnh: 1962.jpg (ID=1962) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: cuốn sach trong ảnh có tên là gì ? || ĐA: tiếng người trong văn\n• Q2_gt: Hỏi: tác giả của cuốn sách này là ai ? || ĐA: nguyễn xuân khánh\n• Q3_gt: Hỏi: nhà xuất bản cuốn sách này là ai ? || ĐA: nhà xuất bản phụ nữ việt nam"
+}

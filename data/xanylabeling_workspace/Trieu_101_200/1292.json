@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.875,
+      "points": [
+        [
+          517.0,
+          123.0
+        ],
+        [
+          692.0,
+          123.0
+        ],
+        [
+          692.0,
+          181.0
+        ],
+        [
+          517.0,
+          181.0
+        ]
+      ],
+      "group_id": 3545,
+      "description": "Hỏi: ở đây là đâu ? || ĐA: aeon mall",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3545,
+        "question_ids": [
+          3545
+        ],
+        "question": "ở đây là đâu ?",
+        "gt_answer": "aeon mall"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1292.jpg",
+  "imageData": null,
+  "imageHeight": 500,
+  "imageWidth": 700,
+  "description": "Ảnh: 1292.jpg (ID=1292) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: ở đây là đâu ? || ĐA: aeon mall"
+}

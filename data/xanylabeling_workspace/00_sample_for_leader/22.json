@@ -1,0 +1,171 @@
+{
+  "version": "4.2.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": true,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          292.4812030075188,
+          655.1729323308269
+        ],
+        [
+          451.8796992481203,
+          655.1729323308269
+        ],
+        [
+          451.8796992481203,
+          702.9172932330827
+        ],
+        [
+          292.4812030075188,
+          702.9172932330827
+        ]
+      ],
+      "group_id": 74,
+      "description": "Hỏi: cửa tiệm màu xanh là gì ? || ĐA: nhà thuốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 74,
+        "question_ids": [
+          74
+        ],
+        "question": "cửa tiệm màu xanh là gì ?",
+        "gt_answer": "nhà thuốc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          246.31901840490795,
+          704.2515337423313
+        ],
+        [
+          500.920245398773,
+          704.2515337423313
+        ],
+        [
+          500.920245398773,
+          766.8282208588956
+        ],
+        [
+          246.31901840490795,
+          766.8282208588956
+        ]
+      ],
+      "group_id": 75,
+      "description": "Hỏi: nhà thuốc trong ảnh tên gì ? || ĐA: bảo tâm an",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 75,
+        "question_ids": [
+          75
+        ],
+        "question": "nhà thuốc trong ảnh tên gì ?",
+        "gt_answer": "bảo tâm an"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          556.6433566433567,
+          791.944055944056
+        ],
+        [
+          783.2167832167833,
+          791.944055944056
+        ],
+        [
+          783.2167832167833,
+          823.7622377622378
+        ],
+        [
+          556.6433566433567,
+          823.7622377622378
+        ]
+      ],
+      "group_id": 76,
+      "description": "Hỏi: cửa tiệm bên phải nhà thuốc chuyên gì ? || ĐA: bán sỉ và lẻ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 76,
+        "question_ids": [
+          76
+        ],
+        "question": "cửa tiệm bên phải nhà thuốc chuyên gì ?",
+        "gt_answer": "bán sỉ và lẻ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.0,
+      "points": [
+        [
+          9.504132231404952,
+          1322.1570247933885
+        ],
+        [
+          140.9090909090909,
+          1322.1570247933885
+        ],
+        [
+          140.9090909090909,
+          1363.4793388429753
+        ],
+        [
+          9.504132231404952,
+          1363.4793388429753
+        ]
+      ],
+      "group_id": 77,
+      "description": "Hỏi: ảnh này lấy nguồn từ đâu ? || ĐA: wutacam",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 77,
+        "question_ids": [
+          77
+        ],
+        "question": "ảnh này lấy nguồn từ đâu ?",
+        "gt_answer": "wutacam"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "22.jpg",
+  "imageData": null,
+  "imageHeight": 1422,
+  "imageWidth": 800,
+  "description": "Ảnh: 22.jpg (ID=22) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: cửa tiệm màu xanh là gì ? || ĐA: nhà thuốc\n• Q2_gt: Hỏi: nhà thuốc trong ảnh tên gì ? || ĐA: bảo tâm an\n• Q3_gt: Hỏi: cửa tiệm bên phải nhà thuốc chuyên gì ? || ĐA: bán sỉ và lẻ\n• Q4_gt: Hỏi: ảnh này lấy nguồn từ đâu ? || ĐA: wutacam"
+}

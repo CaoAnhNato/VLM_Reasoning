@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          88.0,
+          88.0
+        ],
+        [
+          503.0,
+          88.0
+        ],
+        [
+          503.0,
+          172.0
+        ],
+        [
+          88.0,
+          172.0
+        ]
+      ],
+      "group_id": 7274,
+      "description": "Hỏi: tấm bảng xanh dương nói đên khu gì ? || ĐA: đô thị du lịch biển phan thiết",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7274,
+        "question_ids": [
+          7274
+        ],
+        "question": "tấm bảng xanh dương nói đên khu gì ?",
+        "gt_answer": "đô thị du lịch biển phan thiết"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          91.0,
+          91.0
+        ],
+        [
+          506.0,
+          91.0
+        ],
+        [
+          506.0,
+          175.0
+        ],
+        [
+          91.0,
+          175.0
+        ]
+      ],
+      "group_id": 7275,
+      "description": "Hỏi: nội dung của tấm bảnh xanh dương là gì ? || ĐA: khu đô thị du lịch biển phan thiết",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7275,
+        "question_ids": [
+          7275
+        ],
+        "question": "nội dung của tấm bảnh xanh dương là gì ?",
+        "gt_answer": "khu đô thị du lịch biển phan thiết"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          86.0,
+          87.0
+        ],
+        [
+          505.0,
+          87.0
+        ],
+        [
+          505.0,
+          173.0
+        ],
+        [
+          86.0,
+          173.0
+        ]
+      ],
+      "group_id": 7276,
+      "description": "Hỏi: khu đô thị du lịch biển mà tấm bảng xanh dương nói tới tên gì ? || ĐA: phan thiết",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7276,
+        "question_ids": [
+          7276
+        ],
+        "question": "khu đô thị du lịch biển mà tấm bảng xanh dương nói tới tên gì ?",
+        "gt_answer": "phan thiết"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2511.jpg",
+  "imageData": null,
+  "imageHeight": 384,
+  "imageWidth": 631,
+  "description": "Ảnh: 2511.jpg (ID=2511) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tấm bảng xanh dương nói đên khu gì ? || ĐA: đô thị du lịch biển phan thiết\n• Q2_gt: Hỏi: nội dung của tấm bảnh xanh dương là gì ? || ĐA: khu đô thị du lịch biển phan thiết\n• Q3_gt: Hỏi: khu đô thị du lịch biển mà tấm bảng xanh dương nói tới tên gì ? || ĐA: phan thiết"
+}

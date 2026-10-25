@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9139,
+      "points": [
+        [
+          210.0,
+          46.0
+        ],
+        [
+          393.0,
+          46.0
+        ],
+        [
+          393.0,
+          82.0
+        ],
+        [
+          210.0,
+          82.0
+        ]
+      ],
+      "group_id": 8704,
+      "description": "Hỏi: đây là chương trình gì ? || ĐA: chương trình \" 50 . 00 phần quà nghĩa tình quân - dân \"",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8704,
+        "question_ids": [
+          8704
+        ],
+        "question": "đây là chương trình gì ?",
+        "gt_answer": "chương trình \" 50 . 00 phần quà nghĩa tình quân - dân \""
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.675,
+      "points": [
+        [
+          210.0,
+          61.0
+        ],
+        [
+          393.0,
+          61.0
+        ],
+        [
+          393.0,
+          82.0
+        ],
+        [
+          210.0,
+          82.0
+        ]
+      ],
+      "group_id": 8705,
+      "description": "Hỏi: chương trình này do ai tổ chức ? || ĐA: bộ tư lệnh quân khu 7 - hiệp hội dioanh nghiệp tp . hồ chi minh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8705,
+        "question_ids": [
+          8705
+        ],
+        "question": "chương trình này do ai tổ chức ?",
+        "gt_answer": "bộ tư lệnh quân khu 7 - hiệp hội dioanh nghiệp tp . hồ chi minh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.95,
+      "points": [
+        [
+          349.0,
+          96.0
+        ],
+        [
+          395.0,
+          96.0
+        ],
+        [
+          395.0,
+          111.0
+        ],
+        [
+          349.0,
+          111.0
+        ]
+      ],
+      "group_id": 8706,
+      "description": "Hỏi: chương trì diễn ra năm bao nhiêu ? || ĐA: 2021",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8706,
+        "question_ids": [
+          8706
+        ],
+        "question": "chương trì diễn ra năm bao nhiêu ?",
+        "gt_answer": "2021"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2965.jpg",
+  "imageData": null,
+  "imageHeight": 281,
+  "imageWidth": 500,
+  "description": "Ảnh: 2965.jpg (ID=2965) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: đây là chương trình gì ? || ĐA: chương trình \" 50 . 00 phần quà nghĩa tình quân - dân \"\n• Q2_gt: Hỏi: chương trình này do ai tổ chức ? || ĐA: bộ tư lệnh quân khu 7 - hiệp hội dioanh nghiệp tp . hồ chi minh\n• Q3_gt: Hỏi: chương trì diễn ra năm bao nhiêu ? || ĐA: 2021"
+}

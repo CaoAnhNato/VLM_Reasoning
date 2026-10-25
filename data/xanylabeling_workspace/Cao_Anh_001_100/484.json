@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          620.0,
+          53.0
+        ],
+        [
+          869.0,
+          53.0
+        ],
+        [
+          869.0,
+          411.0
+        ],
+        [
+          620.0,
+          411.0
+        ]
+      ],
+      "group_id": 1392,
+      "description": "Hỏi: nhân vật trong hình hâm dọa điều gì ? || ĐA: tao báo công an",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1392,
+        "question_ids": [
+          1392
+        ],
+        "question": "nhân vật trong hình hâm dọa điều gì ?",
+        "gt_answer": "tao báo công an"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.93,
+      "points": [
+        [
+          627.0,
+          402.0
+        ],
+        [
+          900.0,
+          402.0
+        ],
+        [
+          900.0,
+          513.0
+        ],
+        [
+          627.0,
+          513.0
+        ]
+      ],
+      "group_id": 1393,
+      "description": "Hỏi: vì sao nhân vật trong hình dọa báo công an ? || ĐA: mày ăn nói ba trợn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1393,
+        "question_ids": [
+          1393
+        ],
+        "question": "vì sao nhân vật trong hình dọa báo công an ?",
+        "gt_answer": "mày ăn nói ba trợn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.825,
+      "points": [
+        [
+          696.0,
+          469.0
+        ],
+        [
+          767.0,
+          469.0
+        ],
+        [
+          767.0,
+          511.0
+        ],
+        [
+          696.0,
+          511.0
+        ]
+      ],
+      "group_id": 1394,
+      "description": "Hỏi: mày ăn nói như thế nào ? || ĐA: ba trợn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1394,
+        "question_ids": [
+          1394
+        ],
+        "question": "mày ăn nói như thế nào ?",
+        "gt_answer": "ba trợn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "484.jpg",
+  "imageData": null,
+  "imageHeight": 603,
+  "imageWidth": 900,
+  "description": "Ảnh: 484.jpg (ID=484) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: nhân vật trong hình hâm dọa điều gì ? || ĐA: tao báo công an\n• Q2_gt: Hỏi: vì sao nhân vật trong hình dọa báo công an ? || ĐA: mày ăn nói ba trợn\n• Q3_gt: Hỏi: mày ăn nói như thế nào ? || ĐA: ba trợn"
+}

@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.6889,
+      "points": [
+        [
+          465.0,
+          460.0
+        ],
+        [
+          501.0,
+          460.0
+        ],
+        [
+          501.0,
+          473.0
+        ],
+        [
+          465.0,
+          473.0
+        ]
+      ],
+      "group_id": 4604,
+      "description": "Hỏi: đám đông này đang đứng ở đâu ? || ĐA: trung tâm biểu diễn nghệ thuật lune hội an",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4604,
+        "question_ids": [
+          4604
+        ],
+        "question": "đám đông này đang đứng ở đâu ?",
+        "gt_answer": "trung tâm biểu diễn nghệ thuật lune hội an"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          505.0,
+          460.0
+        ],
+        [
+          584.0,
+          460.0
+        ],
+        [
+          584.0,
+          483.0
+        ],
+        [
+          505.0,
+          483.0
+        ]
+      ],
+      "group_id": 4605,
+      "description": "Hỏi: trung tâm biểu diễn nghệ thuật trong bức hình tên gì ? || ĐA: lune hội an",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4605,
+        "question_ids": [
+          4605
+        ],
+        "question": "trung tâm biểu diễn nghệ thuật trong bức hình tên gì ?",
+        "gt_answer": "lune hội an"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7083,
+      "points": [
+        [
+          468.0,
+          463.0
+        ],
+        [
+          504.0,
+          463.0
+        ],
+        [
+          504.0,
+          476.0
+        ],
+        [
+          468.0,
+          476.0
+        ]
+      ],
+      "group_id": 4606,
+      "description": "Hỏi: lune hội an là gì ? || ĐA: trung tâm biểu diễn nghệ thuật",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4606,
+        "question_ids": [
+          4606
+        ],
+        "question": "lune hội an là gì ?",
+        "gt_answer": "trung tâm biểu diễn nghệ thuật"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1632.jpg",
+  "imageData": null,
+  "imageHeight": 829,
+  "imageWidth": 1024,
+  "description": "Ảnh: 1632.jpg (ID=1632) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: đám đông này đang đứng ở đâu ? || ĐA: trung tâm biểu diễn nghệ thuật lune hội an\n• Q2_gt: Hỏi: trung tâm biểu diễn nghệ thuật trong bức hình tên gì ? || ĐA: lune hội an\n• Q3_gt: Hỏi: lune hội an là gì ? || ĐA: trung tâm biểu diễn nghệ thuật"
+}

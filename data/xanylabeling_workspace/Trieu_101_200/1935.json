@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.6806,
+      "points": [
+        [
+          536.0,
+          5.0
+        ],
+        [
+          751.0,
+          5.0
+        ],
+        [
+          751.0,
+          52.0
+        ],
+        [
+          536.0,
+          52.0
+        ]
+      ],
+      "group_id": 5574,
+      "description": "Hỏi: nguồn của tấm ảnh này là gì ? || ĐA: kiến thức",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5574,
+        "question_ids": [
+          5574
+        ],
+        "question": "nguồn của tấm ảnh này là gì ?",
+        "gt_answer": "kiến thức"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1935.jpg",
+  "imageData": null,
+  "imageHeight": 500,
+  "imageWidth": 751,
+  "description": "Ảnh: 1935.jpg (ID=1935) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: nguồn của tấm ảnh này là gì ? || ĐA: kiến thức"
+}

@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          34.0,
+          246.0
+        ],
+        [
+          775.0,
+          246.0
+        ],
+        [
+          775.0,
+          399.0
+        ],
+        [
+          34.0,
+          399.0
+        ]
+      ],
+      "group_id": 10361,
+      "description": "Hỏi: quán 79 chuyên phục vụ gì ? || ĐA: hải sản tươi sống và các món bình dân khác",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10361,
+        "question_ids": [
+          10361
+        ],
+        "question": "quán 79 chuyên phục vụ gì ?",
+        "gt_answer": "hải sản tươi sống và các món bình dân khác"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          19.0,
+          252.0
+        ],
+        [
+          790.0,
+          252.0
+        ],
+        [
+          790.0,
+          412.0
+        ],
+        [
+          19.0,
+          412.0
+        ]
+      ],
+      "group_id": 10362,
+      "description": "Hỏi: quán trong hình tên gì ? || ĐA: 79",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10362,
+        "question_ids": [
+          10362
+        ],
+        "question": "quán trong hình tên gì ?",
+        "gt_answer": "79"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          30.0,
+          392.0
+        ],
+        [
+          513.0,
+          392.0
+        ],
+        [
+          513.0,
+          426.0
+        ],
+        [
+          30.0,
+          426.0
+        ]
+      ],
+      "group_id": 10363,
+      "description": "Hỏi: địa chỉ của quán 79 ở đâu ? || ĐA: số 20 - ấp thanh mỹ 1 - thanh đức - lh - vl",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10363,
+        "question_ids": [
+          10363
+        ],
+        "question": "địa chỉ của quán 79 ở đâu ?",
+        "gt_answer": "số 20 - ấp thanh mỹ 1 - thanh đức - lh - vl"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8392,
+      "points": [
+        [
+          613.0,
+          397.0
+        ],
+        [
+          735.0,
+          397.0
+        ],
+        [
+          735.0,
+          422.0
+        ],
+        [
+          613.0,
+          422.0
+        ]
+      ],
+      "group_id": 10364,
+      "description": "Hỏi: muốn liên hệ tới quán trong hình thì gọi số nào ? || ĐA: 0924 . 557 545",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 10364,
+        "question_ids": [
+          10364
+        ],
+        "question": "muốn liên hệ tới quán trong hình thì gọi số nào ?",
+        "gt_answer": "0924 . 557 545"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3466.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 800,
+  "description": "Ảnh: 3466.jpg (ID=3466) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: quán 79 chuyên phục vụ gì ? || ĐA: hải sản tươi sống và các món bình dân khác\n• Q2_gt: Hỏi: quán trong hình tên gì ? || ĐA: 79\n• Q3_gt: Hỏi: địa chỉ của quán 79 ở đâu ? || ĐA: số 20 - ấp thanh mỹ 1 - thanh đức - lh - vl\n• Q4_gt: Hỏi: muốn liên hệ tới quán trong hình thì gọi số nào ? || ĐA: 0924 . 557 545"
+}

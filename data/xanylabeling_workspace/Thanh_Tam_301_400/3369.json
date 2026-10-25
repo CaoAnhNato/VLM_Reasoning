@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.86,
+      "points": [
+        [
+          502.0,
+          136.0
+        ],
+        [
+          714.0,
+          136.0
+        ],
+        [
+          714.0,
+          200.0
+        ],
+        [
+          502.0,
+          200.0
+        ]
+      ],
+      "group_id": 10045,
+      "description": "Hỏi: cố gái áo hồng đang mua hàng ở siêu thị nào ? || ĐA: an phú",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10045,
+        "question_ids": [
+          10045
+        ],
+        "question": "cố gái áo hồng đang mua hàng ở siêu thị nào ?",
+        "gt_answer": "an phú"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          423.0,
+          153.0
+        ],
+        [
+          615.0,
+          153.0
+        ],
+        [
+          615.0,
+          211.0
+        ],
+        [
+          423.0,
+          211.0
+        ]
+      ],
+      "group_id": 10046,
+      "description": "Hỏi: siêu thị an phú có lời chào gì ? || ĐA: kính chào quý khách",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10046,
+        "question_ids": [
+          10046
+        ],
+        "question": "siêu thị an phú có lời chào gì ?",
+        "gt_answer": "kính chào quý khách"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          650.0,
+          136.0
+        ],
+        [
+          714.0,
+          136.0
+        ],
+        [
+          714.0,
+          186.0
+        ],
+        [
+          650.0,
+          186.0
+        ]
+      ],
+      "group_id": 10047,
+      "description": "Hỏi: khu vực có bảng màu vàng bán gì ? || ĐA: sữa",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10047,
+        "question_ids": [
+          10047
+        ],
+        "question": "khu vực có bảng màu vàng bán gì ?",
+        "gt_answer": "sữa"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          39.0,
+          190.0
+        ],
+        [
+          72.0,
+          190.0
+        ],
+        [
+          72.0,
+          212.0
+        ],
+        [
+          39.0,
+          212.0
+        ]
+      ],
+      "group_id": 10048,
+      "description": "Hỏi: phí sau cô gái áo hồng là quầy số mấy ? || ĐA: 32",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 10048,
+        "question_ids": [
+          10048
+        ],
+        "question": "phí sau cô gái áo hồng là quầy số mấy ?",
+        "gt_answer": "32"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3369.jpg",
+  "imageData": null,
+  "imageHeight": 675,
+  "imageWidth": 900,
+  "description": "Ảnh: 3369.jpg (ID=3369) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: cố gái áo hồng đang mua hàng ở siêu thị nào ? || ĐA: an phú\n• Q2_gt: Hỏi: siêu thị an phú có lời chào gì ? || ĐA: kính chào quý khách\n• Q3_gt: Hỏi: khu vực có bảng màu vàng bán gì ? || ĐA: sữa\n• Q4_gt: Hỏi: phí sau cô gái áo hồng là quầy số mấy ? || ĐA: 32"
+}

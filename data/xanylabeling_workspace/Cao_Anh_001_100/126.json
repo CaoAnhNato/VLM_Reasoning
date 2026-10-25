@@ -1,0 +1,258 @@
+{
+  "version": "4.2.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.6806,
+      "points": [
+        [
+          576.6766,
+          5.3234
+        ],
+        [
+          794.9102,
+          5.3234
+        ],
+        [
+          794.9102,
+          63.3054
+        ],
+        [
+          576.6766,
+          63.3054
+        ]
+      ],
+      "group_id": 374,
+      "description": "Hỏi: bức hình được lấy từ báo nào ? || ĐA: kiến thức",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 374,
+        "question_ids": [
+          374
+        ],
+        "question": "bức hình được lấy từ báo nào ?",
+        "gt_answer": "kiến thức"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          565.6064257028113,
+          253.01606425702812
+        ],
+        [
+          639.3574297188754,
+          253.01606425702812
+        ],
+        [
+          639.3574297188754,
+          303.14859437751005
+        ],
+        [
+          565.6064257028113,
+          303.14859437751005
+        ]
+      ],
+      "group_id": 375,
+      "description": "Hỏi: ở đây có những cửa hàng gì ? || ĐA: giầy đồ hiệu EU",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 375,
+        "question_ids": [
+          375
+        ],
+        "question": "ở đây có những cửa hàng gì ?",
+        "gt_answer": "giầy đồ hiệu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          86.0,
+          242.0
+        ],
+        [
+          188.0,
+          242.0
+        ],
+        [
+          188.0,
+          266.0
+        ],
+        [
+          86.0,
+          266.0
+        ]
+      ],
+      "group_id": 376,
+      "description": "Hỏi: ở đây có những cửa hàng gì ? || ĐA: anta sports",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 376,
+        "question_ids": [
+          376
+        ],
+        "question": "ở đây có những cửa hàng gì ?",
+        "gt_answer": "anta sports"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          382.50950570342206,
+          271.0
+        ],
+        [
+          449.80988593155894,
+          271.0
+        ],
+        [
+          449.80988593155894,
+          288.212927756654
+        ],
+        [
+          382.50950570342206,
+          288.212927756654
+        ]
+      ],
+      "group_id": 377,
+      "description": "Hỏi: ở đây có những cửa hàng gì ? || ĐA: in thêu may cờ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 377,
+        "question_ids": [
+          377
+        ],
+        "question": "ở đây có những cửa hàng gì ?",
+        "gt_answer": "in thêu may cờ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": null,
+      "points": [
+        [
+          287.0722433460076,
+          225.09505703422053
+        ],
+        [
+          344.106463878327,
+          225.09505703422053
+        ],
+        [
+          344.106463878327,
+          282.12927756653994
+        ],
+        [
+          287.0722433460076,
+          282.12927756653994
+        ]
+      ],
+      "group_id": null,
+      "description": "Like Kid'a",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": null,
+      "points": [
+        [
+          460.2409638554216,
+          254.95582329317267
+        ],
+        [
+          555.8232931726907,
+          254.95582329317267
+        ],
+        [
+          555.8232931726907,
+          285.87951807228916
+        ],
+        [
+          460.2409638554216,
+          285.87951807228916
+        ]
+      ],
+      "group_id": null,
+      "description": "smartshoes",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": null,
+      "points": [
+        [
+          651.8072289156626,
+          256.56224899598396
+        ],
+        [
+          718.8755020080321,
+          256.56224899598396
+        ],
+        [
+          718.8755020080321,
+          296.72289156626505
+        ],
+        [
+          651.8072289156626,
+          296.72289156626505
+        ]
+      ],
+      "group_id": null,
+      "description": "xèng kids",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "126.jpg",
+  "imageData": null,
+  "imageHeight": 532,
+  "imageWidth": 800,
+  "description": "Ảnh: 126.jpg (ID=126) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: bức hình được lấy từ báo nào ? || ĐA: kiến thức\n• Q2_gt: Hỏi: ở đây có những cửa hàng gì ? || ĐA: giầy đồ hiệu / anta sports / in thêu may cờ"
+}

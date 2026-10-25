@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 7661,
+      "description": "Hỏi: bức hình lấy nguồn từ đâu ? || ĐA: vov",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7661,
+        "question_ids": [
+          7661
+        ],
+        "question": "bức hình lấy nguồn từ đâu ?",
+        "gt_answer": "vov"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2632.jpg",
+  "imageData": null,
+  "imageHeight": 533,
+  "imageWidth": 800,
+  "description": "Ảnh: 2632.jpg (ID=2632) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: bức hình lấy nguồn từ đâu ? || ĐA: vov"
+}

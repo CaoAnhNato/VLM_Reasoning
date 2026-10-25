@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9563,
+      "points": [
+        [
+          131.0,
+          99.0
+        ],
+        [
+          234.0,
+          99.0
+        ],
+        [
+          234.0,
+          124.0
+        ],
+        [
+          131.0,
+          124.0
+        ]
+      ],
+      "group_id": 7827,
+      "description": "Hỏi: những người đang ngồi ở trong ảnh đang tham gia sự kiện gì ? || ĐA: hội nghị tổng kết",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7827,
+        "question_ids": [
+          7827
+        ],
+        "question": "những người đang ngồi ở trong ảnh đang tham gia sự kiện gì ?",
+        "gt_answer": "hội nghị tổng kết"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7592,
+      "points": [
+        [
+          59.0,
+          118.0
+        ],
+        [
+          283.0,
+          118.0
+        ],
+        [
+          283.0,
+          146.0
+        ],
+        [
+          59.0,
+          146.0
+        ]
+      ],
+      "group_id": 7828,
+      "description": "Hỏi: buổi hội nghị đang diễn ra đang nói về chủ đề gì ? || ĐA: tình hình thực hiện đề án phát triển thị trường trong nước gắn với cuộc vận động \" người việt nam ưu tiên dùng hàng việt nam \"",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7828,
+        "question_ids": [
+          7828
+        ],
+        "question": "buổi hội nghị đang diễn ra đang nói về chủ đề gì ?",
+        "gt_answer": "tình hình thực hiện đề án phát triển thị trường trong nước gắn với cuộc vận động \" người việt nam ưu tiên dùng hàng việt nam \""
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.825,
+      "points": [
+        [
+          62.0,
+          121.0
+        ],
+        [
+          286.0,
+          121.0
+        ],
+        [
+          286.0,
+          149.0
+        ],
+        [
+          62.0,
+          149.0
+        ]
+      ],
+      "group_id": 7829,
+      "description": "Hỏi: dựa trên tiêu tề của buổi hội nghị đang diễn ra , người việt phải ưu tiên cái gì ? || ĐA: dùng hàng việt nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7829,
+        "question_ids": [
+          7829
+        ],
+        "question": "dựa trên tiêu tề của buổi hội nghị đang diễn ra , người việt phải ưu tiên cái gì ?",
+        "gt_answer": "dùng hàng việt nam"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9333,
+      "points": [
+        [
+          65.0,
+          124.0
+        ],
+        [
+          289.0,
+          124.0
+        ],
+        [
+          289.0,
+          152.0
+        ],
+        [
+          65.0,
+          152.0
+        ]
+      ],
+      "group_id": 7830,
+      "description": "Hỏi: buổi hội nghị này yêu cầu ai phải ưu tiên dùng hàng việt nam ? || ĐA: người việt nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7830,
+        "question_ids": [
+          7830
+        ],
+        "question": "buổi hội nghị này yêu cầu ai phải ưu tiên dùng hàng việt nam ?",
+        "gt_answer": "người việt nam"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.825,
+      "points": [
+        [
+          149.0,
+          136.0
+        ],
+        [
+          217.0,
+          136.0
+        ],
+        [
+          217.0,
+          152.0
+        ],
+        [
+          149.0,
+          152.0
+        ]
+      ],
+      "group_id": 7831,
+      "description": "Hỏi: giai đoạn mà đề án phát triển thị trường này diễn ra là giai đoạn nào ? || ĐA: 2014 - 2020",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 7831,
+        "question_ids": [
+          7831
+        ],
+        "question": "giai đoạn mà đề án phát triển thị trường này diễn ra là giai đoạn nào ?",
+        "gt_answer": "2014 - 2020"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2685.jpg",
+  "imageData": null,
+  "imageHeight": 439,
+  "imageWidth": 660,
+  "description": "Ảnh: 2685.jpg (ID=2685) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: những người đang ngồi ở trong ảnh đang tham gia sự kiện gì ? || ĐA: hội nghị tổng kết\n• Q2_gt: Hỏi: buổi hội nghị đang diễn ra đang nói về chủ đề gì ? || ĐA: tình hình thực hiện đề án phát triển thị trường trong nước gắn với cuộc vận động \" người việt nam ưu tiên dùng hàng việt nam \"\n• Q3_gt: Hỏi: dựa trên tiêu tề của buổi hội nghị đang diễn ra , người việt phải ưu tiên cái gì ? || ĐA: dùng hàng việt nam\n• Q4_gt: Hỏi: buổi hội nghị này yêu cầu ai phải ưu tiên dùng hàng việt nam ? || ĐA: người việt nam\n• Q5_gt: Hỏi: giai đoạn mà đề án phát triển thị trường này diễn ra là giai đoạn nào ? || ĐA: 2014 - 2020"
+}

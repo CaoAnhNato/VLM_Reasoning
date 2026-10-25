@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.55,
+      "points": [
+        [
+          151.0,
+          156.0
+        ],
+        [
+          321.0,
+          156.0
+        ],
+        [
+          321.0,
+          231.0
+        ],
+        [
+          151.0,
+          231.0
+        ]
+      ],
+      "group_id": 5724,
+      "description": "Hỏi: cửa hàng này tên gì ? || ĐA: homies coffe",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5724,
+        "question_ids": [
+          5724
+        ],
+        "question": "cửa hàng này tên gì ?",
+        "gt_answer": "homies coffe"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.95,
+      "points": [
+        [
+          81.0,
+          248.0
+        ],
+        [
+          334.0,
+          248.0
+        ],
+        [
+          334.0,
+          273.0
+        ],
+        [
+          81.0,
+          273.0
+        ]
+      ],
+      "group_id": 5725,
+      "description": "Hỏi: đỉa chỉ quán này ở đâu ? || ĐA: 269 trích sài , tây hồ , hà nội",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5725,
+        "question_ids": [
+          5725
+        ],
+        "question": "đỉa chỉ quán này ở đâu ?",
+        "gt_answer": "269 trích sài , tây hồ , hà nội"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 5726,
+      "description": "Hỏi: hotline của cửa hàng là bao nhiêu ? || ĐA: 0988 . 668 . 6",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5726,
+        "question_ids": [
+          5726
+        ],
+        "question": "hotline của cửa hàng là bao nhiêu ?",
+        "gt_answer": "0988 . 668 . 6"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1977.jpg",
+  "imageData": null,
+  "imageHeight": 384,
+  "imageWidth": 512,
+  "description": "Ảnh: 1977.jpg (ID=1977) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: cửa hàng này tên gì ? || ĐA: homies coffe\n• Q2_gt: Hỏi: đỉa chỉ quán này ở đâu ? || ĐA: 269 trích sài , tây hồ , hà nội\n• Q3_gt: Hỏi: hotline của cửa hàng là bao nhiêu ? || ĐA: 0988 . 668 . 6"
+}

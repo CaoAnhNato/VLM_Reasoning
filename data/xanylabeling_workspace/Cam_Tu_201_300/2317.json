@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.5333,
+      "points": [
+        [
+          347.0,
+          228.0
+        ],
+        [
+          1505.0,
+          228.0
+        ],
+        [
+          1505.0,
+          519.0
+        ],
+        [
+          347.0,
+          519.0
+        ]
+      ],
+      "group_id": 6690,
+      "description": "Hỏi: tỉnh thành được nhắc đến trong ảnh là gì ? || ĐA: huế",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6690,
+        "question_ids": [
+          6690
+        ],
+        "question": "tỉnh thành được nhắc đến trong ảnh là gì ?",
+        "gt_answer": "huế"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2317.jpg",
+  "imageData": null,
+  "imageHeight": 1536,
+  "imageWidth": 2048,
+  "description": "Ảnh: 2317.jpg (ID=2317) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: tỉnh thành được nhắc đến trong ảnh là gì ? || ĐA: huế"
+}

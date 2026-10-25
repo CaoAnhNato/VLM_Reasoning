@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9731,
+      "points": [
+        [
+          690.0,
+          13.0
+        ],
+        [
+          1022.0,
+          13.0
+        ],
+        [
+          1022.0,
+          301.0
+        ],
+        [
+          690.0,
+          301.0
+        ]
+      ],
+      "group_id": 7843,
+      "description": "Hỏi: tấm bảng màu đỏ yêu cầu những đối tượng nào ? || ĐA: - các hộ kinh doanh - khách ra vào chợ - người lao động tại chợ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7843,
+        "question_ids": [
+          7843
+        ],
+        "question": "tấm bảng màu đỏ yêu cầu những đối tượng nào ?",
+        "gt_answer": "- các hộ kinh doanh - khách ra vào chợ - người lao động tại chợ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.925,
+      "points": [
+        [
+          686.0,
+          279.0
+        ],
+        [
+          988.0,
+          279.0
+        ],
+        [
+          988.0,
+          610.0
+        ],
+        [
+          686.0,
+          610.0
+        ]
+      ],
+      "group_id": 7844,
+      "description": "Hỏi: các đối tượng ở trên bảng màu đỏ phải thực hiện điều gì ? || ĐA: đeo khẩu trang và thực hiện tốt các biện pháp phòng dịch covid - 19",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7844,
+        "question_ids": [
+          7844
+        ],
+        "question": "các đối tượng ở trên bảng màu đỏ phải thực hiện điều gì ?",
+        "gt_answer": "đeo khẩu trang và thực hiện tốt các biện pháp phòng dịch covid - 19"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.895,
+      "points": [
+        [
+          686.0,
+          366.0
+        ],
+        [
+          952.0,
+          366.0
+        ],
+        [
+          952.0,
+          610.0
+        ],
+        [
+          686.0,
+          610.0
+        ]
+      ],
+      "group_id": 7845,
+      "description": "Hỏi: các khách ra vào chợ ngoài đeo khẩu trang còn phải thực hiện điều gì ? || ĐA: thực hiện tốt các biện pháp phòng dịch covid - 19",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7845,
+        "question_ids": [
+          7845
+        ],
+        "question": "các khách ra vào chợ ngoài đeo khẩu trang còn phải thực hiện điều gì ?",
+        "gt_answer": "thực hiện tốt các biện pháp phòng dịch covid - 19"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          690.0,
+          195.0
+        ],
+        [
+          1022.0,
+          195.0
+        ],
+        [
+          1022.0,
+          301.0
+        ],
+        [
+          690.0,
+          301.0
+        ]
+      ],
+      "group_id": 7846,
+      "description": "Hỏi: những người lao động ở đâu phải đeo khẩu trang và thực hiện các biện pháp covid - 19 ? || ĐA: tại chợ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7846,
+        "question_ids": [
+          7846
+        ],
+        "question": "những người lao động ở đâu phải đeo khẩu trang và thực hiện các biện pháp covid - 19 ?",
+        "gt_answer": "tại chợ"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2689.jpg",
+  "imageData": null,
+  "imageHeight": 663,
+  "imageWidth": 1024,
+  "description": "Ảnh: 2689.jpg (ID=2689) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: tấm bảng màu đỏ yêu cầu những đối tượng nào ? || ĐA: - các hộ kinh doanh - khách ra vào chợ - người lao động tại chợ\n• Q2_gt: Hỏi: các đối tượng ở trên bảng màu đỏ phải thực hiện điều gì ? || ĐA: đeo khẩu trang và thực hiện tốt các biện pháp phòng dịch covid - 19\n• Q3_gt: Hỏi: các khách ra vào chợ ngoài đeo khẩu trang còn phải thực hiện điều gì ? || ĐA: thực hiện tốt các biện pháp phòng dịch covid - 19\n• Q4_gt: Hỏi: những người lao động ở đâu phải đeo khẩu trang và thực hiện các biện pháp covid - 19 ? || ĐA: tại chợ"
+}

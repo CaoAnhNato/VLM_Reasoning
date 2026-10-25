@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9475,
+      "points": [
+        [
+          21.0,
+          61.0
+        ],
+        [
+          248.0,
+          61.0
+        ],
+        [
+          248.0,
+          86.0
+        ],
+        [
+          21.0,
+          86.0
+        ]
+      ],
+      "group_id": 2729,
+      "description": "Hỏi: bức hình này được chèn nội dung gì ? || ĐA: làm bảng quảng cáo giá rẻ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2729,
+        "question_ids": [
+          2729
+        ],
+        "question": "bức hình này được chèn nội dung gì ?",
+        "gt_answer": "làm bảng quảng cáo giá rẻ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8633,
+      "points": [
+        [
+          217.0,
+          101.0
+        ],
+        [
+          534.0,
+          101.0
+        ],
+        [
+          534.0,
+          277.0
+        ],
+        [
+          217.0,
+          277.0
+        ]
+      ],
+      "group_id": 2730,
+      "description": "Hỏi: quán này tên gì ? || ĐA: shabux",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2730,
+        "question_ids": [
+          2730
+        ],
+        "question": "quán này tên gì ?",
+        "gt_answer": "shabux"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          319.0,
+          249.0
+        ],
+        [
+          493.0,
+          249.0
+        ],
+        [
+          493.0,
+          306.0
+        ],
+        [
+          319.0,
+          306.0
+        ]
+      ],
+      "group_id": 2731,
+      "description": "Hỏi: quán shabux bán gì ? || ĐA: lẩu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 2731,
+        "question_ids": [
+          2731
+        ],
+        "question": "quán shabux bán gì ?",
+        "gt_answer": "lẩu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          320.0,
+          250.0
+        ],
+        [
+          492.0,
+          250.0
+        ],
+        [
+          492.0,
+          305.0
+        ],
+        [
+          320.0,
+          305.0
+        ]
+      ],
+      "group_id": 2732,
+      "description": "Hỏi: quán shabu x bán lẩu như thế nào ? || ĐA: lẩu nhanh giá mềm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 2732,
+        "question_ids": [
+          2732
+        ],
+        "question": "quán shabu x bán lẩu như thế nào ?",
+        "gt_answer": "lẩu nhanh giá mềm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.925,
+      "points": [
+        [
+          159.0,
+          247.0
+        ],
+        [
+          293.0,
+          247.0
+        ],
+        [
+          293.0,
+          284.0
+        ],
+        [
+          159.0,
+          284.0
+        ]
+      ],
+      "group_id": 2733,
+      "description": "Hỏi: địa chỉ của quán là gì ? || ĐA: 153 trần đại nghĩa",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 2733,
+        "question_ids": [
+          2733
+        ],
+        "question": "địa chỉ của quán là gì ?",
+        "gt_answer": "153 trần đại nghĩa"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1014.jpg",
+  "imageData": null,
+  "imageHeight": 433,
+  "imageWidth": 650,
+  "description": "Ảnh: 1014.jpg (ID=1014) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: bức hình này được chèn nội dung gì ? || ĐA: làm bảng quảng cáo giá rẻ\n• Q2_gt: Hỏi: quán này tên gì ? || ĐA: shabux\n• Q3_gt: Hỏi: quán shabux bán gì ? || ĐA: lẩu\n• Q4_gt: Hỏi: quán shabu x bán lẩu như thế nào ? || ĐA: lẩu nhanh giá mềm\n• Q5_gt: Hỏi: địa chỉ của quán là gì ? || ĐA: 153 trần đại nghĩa"
+}

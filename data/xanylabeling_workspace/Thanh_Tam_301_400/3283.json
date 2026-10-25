@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          7.0,
+          224.0
+        ],
+        [
+          372.0,
+          224.0
+        ],
+        [
+          372.0,
+          301.0
+        ],
+        [
+          7.0,
+          301.0
+        ]
+      ],
+      "group_id": 9749,
+      "description": "Hỏi: của hàng này có tên là gì ? || ĐA: kymdan",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9749,
+        "question_ids": [
+          9749
+        ],
+        "question": "của hàng này có tên là gì ?",
+        "gt_answer": "kymdan"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8437,
+      "points": [
+        [
+          17.0,
+          319.0
+        ],
+        [
+          236.0,
+          319.0
+        ],
+        [
+          236.0,
+          338.0
+        ],
+        [
+          17.0,
+          338.0
+        ]
+      ],
+      "group_id": 9750,
+      "description": "Hỏi: địa chỉ của cửa hàng này là gì ? || ĐA: 74 d hai bà trưng , bến nghé , q . 1 , tp . hcm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9750,
+        "question_ids": [
+          9750
+        ],
+        "question": "địa chỉ của cửa hàng này là gì ?",
+        "gt_answer": "74 d hai bà trưng , bến nghé , q . 1 , tp . hcm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8385,
+      "points": [
+        [
+          16.0,
+          334.0
+        ],
+        [
+          150.0,
+          334.0
+        ],
+        [
+          150.0,
+          355.0
+        ],
+        [
+          16.0,
+          355.0
+        ]
+      ],
+      "group_id": 9751,
+      "description": "Hỏi: số điện thoại liên hệ của cửa hàng này là gì ? || ĐA: ( +84 . 8 ) 38 299 101",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9751,
+        "question_ids": [
+          9751
+        ],
+        "question": "số điện thoại liên hệ của cửa hàng này là gì ?",
+        "gt_answer": "( +84 . 8 ) 38 299 101"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          10.0,
+          227.0
+        ],
+        [
+          375.0,
+          227.0
+        ],
+        [
+          375.0,
+          304.0
+        ],
+        [
+          10.0,
+          304.0
+        ]
+      ],
+      "group_id": 9752,
+      "description": "Hỏi: website của cửa hàng này là gì ? || ĐA: www . kymdan . com",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 9752,
+        "question_ids": [
+          9752
+        ],
+        "question": "website của cửa hàng này là gì ?",
+        "gt_answer": "www . kymdan . com"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3283.jpg",
+  "imageData": null,
+  "imageHeight": 596,
+  "imageWidth": 384,
+  "description": "Ảnh: 3283.jpg (ID=3283) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: của hàng này có tên là gì ? || ĐA: kymdan\n• Q2_gt: Hỏi: địa chỉ của cửa hàng này là gì ? || ĐA: 74 d hai bà trưng , bến nghé , q . 1 , tp . hcm\n• Q3_gt: Hỏi: số điện thoại liên hệ của cửa hàng này là gì ? || ĐA: ( +84 . 8 ) 38 299 101\n• Q4_gt: Hỏi: website của cửa hàng này là gì ? || ĐA: www . kymdan . com"
+}

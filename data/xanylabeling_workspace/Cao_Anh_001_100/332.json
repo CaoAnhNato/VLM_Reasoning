@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.965,
+      "points": [
+        [
+          0.0,
+          29.0
+        ],
+        [
+          612.0,
+          29.0
+        ],
+        [
+          612.0,
+          68.0
+        ],
+        [
+          0.0,
+          68.0
+        ]
+      ],
+      "group_id": 979,
+      "description": "Hỏi: tôi tặng cậu 1 câu gì ? || ĐA: sống trên đời , đừng bao giờ coi thường người khác ! !",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 979,
+        "question_ids": [
+          979
+        ],
+        "question": "tôi tặng cậu 1 câu gì ?",
+        "gt_answer": "sống trên đời , đừng bao giờ coi thường người khác ! !"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          0.0,
+          344.0
+        ],
+        [
+          123.0,
+          344.0
+        ],
+        [
+          123.0,
+          407.0
+        ],
+        [
+          0.0,
+          407.0
+        ]
+      ],
+      "group_id": 980,
+      "description": "Hỏi: người trong hình là ai ? || ĐA: * đội trưởng đội chủ tịch vn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 980,
+        "question_ids": [
+          980
+        ],
+        "question": "người trong hình là ai ?",
+        "gt_answer": "* đội trưởng đội chủ tịch vn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "332.jpg",
+  "imageData": null,
+  "imageHeight": 466,
+  "imageWidth": 615,
+  "description": "Ảnh: 332.jpg (ID=332) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: tôi tặng cậu 1 câu gì ? || ĐA: sống trên đời , đừng bao giờ coi thường người khác ! !\n• Q2_gt: Hỏi: người trong hình là ai ? || ĐA: * đội trưởng đội chủ tịch vn"
+}

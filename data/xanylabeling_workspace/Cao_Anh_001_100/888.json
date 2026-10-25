@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7833,
+      "points": [
+        [
+          899.0,
+          473.0
+        ],
+        [
+          1134.0,
+          473.0
+        ],
+        [
+          1134.0,
+          539.0
+        ],
+        [
+          899.0,
+          539.0
+        ]
+      ],
+      "group_id": 2363,
+      "description": "Hỏi: bức hình chụp nơi nào ? || ĐA: bảo tàng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2363,
+        "question_ids": [
+          2363
+        ],
+        "question": "bức hình chụp nơi nào ?",
+        "gt_answer": "bảo tàng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6133,
+      "points": [
+        [
+          899.0,
+          507.0
+        ],
+        [
+          1134.0,
+          507.0
+        ],
+        [
+          1134.0,
+          538.0
+        ],
+        [
+          899.0,
+          538.0
+        ]
+      ],
+      "group_id": 2364,
+      "description": "Hỏi: bảo tàng trong bức hình là của chiến thắng lịch sử nào ? || ĐA: điện biên phủ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2364,
+        "question_ids": [
+          2364
+        ],
+        "question": "bảo tàng trong bức hình là của chiến thắng lịch sử nào ?",
+        "gt_answer": "điện biên phủ"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "888.jpg",
+  "imageData": null,
+  "imageHeight": 808,
+  "imageWidth": 1200,
+  "description": "Ảnh: 888.jpg (ID=888) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: bức hình chụp nơi nào ? || ĐA: bảo tàng\n• Q2_gt: Hỏi: bảo tàng trong bức hình là của chiến thắng lịch sử nào ? || ĐA: điện biên phủ"
+}

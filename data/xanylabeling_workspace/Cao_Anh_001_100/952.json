@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          223.0,
+          179.0
+        ],
+        [
+          405.0,
+          179.0
+        ],
+        [
+          405.0,
+          230.0
+        ],
+        [
+          223.0,
+          230.0
+        ]
+      ],
+      "group_id": 2545,
+      "description": "Hỏi: mọi người đang mua gì ? || ĐA: thịt bò mỹ black angus",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2545,
+        "question_ids": [
+          2545
+        ],
+        "question": "mọi người đang mua gì ?",
+        "gt_answer": "thịt bò mỹ black angus"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.875,
+      "points": [
+        [
+          710.0,
+          28.0
+        ],
+        [
+          788.0,
+          28.0
+        ],
+        [
+          788.0,
+          55.0
+        ],
+        [
+          710.0,
+          55.0
+        ]
+      ],
+      "group_id": 2546,
+      "description": "Hỏi: cửa hàng này tên gì ? || ĐA: gofoodvn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2546,
+        "question_ids": [
+          2546
+        ],
+        "question": "cửa hàng này tên gì ?",
+        "gt_answer": "gofoodvn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8383,
+      "points": [
+        [
+          510.0,
+          202.0
+        ],
+        [
+          728.0,
+          202.0
+        ],
+        [
+          728.0,
+          247.0
+        ],
+        [
+          510.0,
+          247.0
+        ]
+      ],
+      "group_id": 2547,
+      "description": "Hỏi: gofoodvn là gì ? || ĐA: hệ thống cửa hàng thực phẩm cao cấp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 2547,
+        "question_ids": [
+          2547
+        ],
+        "question": "gofoodvn là gì ?",
+        "gt_answer": "hệ thống cửa hàng thực phẩm cao cấp"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8238,
+      "points": [
+        [
+          7.0,
+          180.0
+        ],
+        [
+          415.0,
+          180.0
+        ],
+        [
+          415.0,
+          254.0
+        ],
+        [
+          7.0,
+          254.0
+        ]
+      ],
+      "group_id": 2548,
+      "description": "Hỏi: thịt bò mỹ black agus nổi tiếng với điều gì ? || ĐA: vân mỡ đều , thịt mềm mọng , thơm ngậy",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 2548,
+        "question_ids": [
+          2548
+        ],
+        "question": "thịt bò mỹ black agus nổi tiếng với điều gì ?",
+        "gt_answer": "vân mỡ đều , thịt mềm mọng , thơm ngậy"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "952.jpg",
+  "imageData": null,
+  "imageHeight": 533,
+  "imageWidth": 800,
+  "description": "Ảnh: 952.jpg (ID=952) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: mọi người đang mua gì ? || ĐA: thịt bò mỹ black angus\n• Q2_gt: Hỏi: cửa hàng này tên gì ? || ĐA: gofoodvn\n• Q3_gt: Hỏi: gofoodvn là gì ? || ĐA: hệ thống cửa hàng thực phẩm cao cấp\n• Q4_gt: Hỏi: thịt bò mỹ black agus nổi tiếng với điều gì ? || ĐA: vân mỡ đều , thịt mềm mọng , thơm ngậy"
+}

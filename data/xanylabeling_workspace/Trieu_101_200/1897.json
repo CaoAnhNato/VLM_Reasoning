@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8208,
+      "points": [
+        [
+          29.0,
+          29.0
+        ],
+        [
+          160.0,
+          29.0
+        ],
+        [
+          160.0,
+          74.0
+        ],
+        [
+          29.0,
+          74.0
+        ]
+      ],
+      "group_id": 5432,
+      "description": "Hỏi: châm ngôn của nguồn tấm ảnh này là gì ? || ĐA: tin cậy tận tâm thân thiện",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5432,
+        "question_ids": [
+          5432
+        ],
+        "question": "châm ngôn của nguồn tấm ảnh này là gì ?",
+        "gt_answer": "tin cậy tận tâm thân thiện"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          32.0,
+          358.0
+        ],
+        [
+          195.0,
+          358.0
+        ],
+        [
+          195.0,
+          409.0
+        ],
+        [
+          32.0,
+          409.0
+        ]
+      ],
+      "group_id": 5433,
+      "description": "Hỏi: cửa tiệm ở trong ảnh làm công việc gì ? || ĐA: cầm đồ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5433,
+        "question_ids": [
+          5433
+        ],
+        "question": "cửa tiệm ở trong ảnh làm công việc gì ?",
+        "gt_answer": "cầm đồ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          94.0,
+          416.0
+        ],
+        [
+          164.0,
+          416.0
+        ],
+        [
+          164.0,
+          484.0
+        ],
+        [
+          94.0,
+          484.0
+        ]
+      ],
+      "group_id": 5434,
+      "description": "Hỏi: cửa tiệm cầm đồ trong ảnh nhận cầm những gì ? || ĐA: kim cương ipad laptop",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5434,
+        "question_ids": [
+          5434
+        ],
+        "question": "cửa tiệm cầm đồ trong ảnh nhận cầm những gì ?",
+        "gt_answer": "kim cương ipad laptop"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          342.0,
+          554.0
+        ],
+        [
+          409.0,
+          554.0
+        ],
+        [
+          409.0,
+          590.0
+        ],
+        [
+          342.0,
+          590.0
+        ]
+      ],
+      "group_id": 5435,
+      "description": "Hỏi: cửa tiệm cầm đồ trong ảnh nhận cầm xe như thế nào ? || ĐA: trả góp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 5435,
+        "question_ids": [
+          5435
+        ],
+        "question": "cửa tiệm cầm đồ trong ảnh nhận cầm xe như thế nào ?",
+        "gt_answer": "trả góp"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1897.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 600,
+  "description": "Ảnh: 1897.jpg (ID=1897) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: châm ngôn của nguồn tấm ảnh này là gì ? || ĐA: tin cậy tận tâm thân thiện\n• Q2_gt: Hỏi: cửa tiệm ở trong ảnh làm công việc gì ? || ĐA: cầm đồ\n• Q3_gt: Hỏi: cửa tiệm cầm đồ trong ảnh nhận cầm những gì ? || ĐA: kim cương ipad laptop\n• Q4_gt: Hỏi: cửa tiệm cầm đồ trong ảnh nhận cầm xe như thế nào ? || ĐA: trả góp"
+}

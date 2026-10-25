@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 10235,
+      "description": "Hỏi: bức hình lấy từ nguồn nào ? || ĐA: bnews",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10235,
+        "question_ids": [
+          10235
+        ],
+        "question": "bức hình lấy từ nguồn nào ?",
+        "gt_answer": "bnews"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          237.0,
+          621.0
+        ],
+        [
+          300.0,
+          621.0
+        ],
+        [
+          300.0,
+          654.0
+        ],
+        [
+          237.0,
+          654.0
+        ]
+      ],
+      "group_id": 10236,
+      "description": "Hỏi: nếu rẽ vào bên trái thì đi vào phố nào ? || ĐA: mai hắc đế",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10236,
+        "question_ids": [
+          10236
+        ],
+        "question": "nếu rẽ vào bên trái thì đi vào phố nào ?",
+        "gt_answer": "mai hắc đế"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          239.0,
+          669.0
+        ],
+        [
+          304.0,
+          669.0
+        ],
+        [
+          304.0,
+          698.0
+        ],
+        [
+          239.0,
+          698.0
+        ]
+      ],
+      "group_id": 10237,
+      "description": "Hỏi: phố mai hắc đế có thể rẽ vào phố nào ? || ĐA: thái phiên",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10237,
+        "question_ids": [
+          10237
+        ],
+        "question": "phố mai hắc đế có thể rẽ vào phố nào ?",
+        "gt_answer": "thái phiên"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8149,
+      "points": [
+        [
+          422.0,
+          709.0
+        ],
+        [
+          620.0,
+          709.0
+        ],
+        [
+          620.0,
+          737.0
+        ],
+        [
+          422.0,
+          737.0
+        ]
+      ],
+      "group_id": 10238,
+      "description": "Hỏi: bên trái chỗ biển cấm là cửa hàng bán gì ? || ĐA: bánh bao long thành - sữa ngô , sữa đậu nành",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 10238,
+        "question_ids": [
+          10238
+        ],
+        "question": "bên trái chỗ biển cấm là cửa hàng bán gì ?",
+        "gt_answer": "bánh bao long thành - sữa ngô , sữa đậu nành"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.8104,
+      "points": [
+        [
+          747.0,
+          641.0
+        ],
+        [
+          880.0,
+          641.0
+        ],
+        [
+          880.0,
+          671.0
+        ],
+        [
+          747.0,
+          671.0
+        ]
+      ],
+      "group_id": 10239,
+      "description": "Hỏi: bên phải biển báo cẩm là đại lý gì ? || ĐA: xổ số miền bắc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 10239,
+        "question_ids": [
+          10239
+        ],
+        "question": "bên phải biển báo cẩm là đại lý gì ?",
+        "gt_answer": "xổ số miền bắc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 1.0,
+      "points": [
+        [
+          941.0,
+          608.0
+        ],
+        [
+          1016.0,
+          608.0
+        ],
+        [
+          1016.0,
+          649.0
+        ],
+        [
+          941.0,
+          649.0
+        ]
+      ],
+      "group_id": 10240,
+      "description": "Hỏi: tên của cửa tiệm bên phải đại lý xổ số miền bắc là gì ? || ĐA: cún",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 10240,
+        "question_ids": [
+          10240
+        ],
+        "question": "tên của cửa tiệm bên phải đại lý xổ số miền bắc là gì ?",
+        "gt_answer": "cún"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3426.jpg",
+  "imageData": null,
+  "imageHeight": 996,
+  "imageWidth": 1024,
+  "description": "Ảnh: 3426.jpg (ID=3426) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: bức hình lấy từ nguồn nào ? || ĐA: bnews\n• Q2_gt: Hỏi: nếu rẽ vào bên trái thì đi vào phố nào ? || ĐA: mai hắc đế\n• Q3_gt: Hỏi: phố mai hắc đế có thể rẽ vào phố nào ? || ĐA: thái phiên\n• Q4_gt: Hỏi: bên trái chỗ biển cấm là cửa hàng bán gì ? || ĐA: bánh bao long thành - sữa ngô , sữa đậu nành\n• Q5_gt: Hỏi: bên phải biển báo cẩm là đại lý gì ? || ĐA: xổ số miền bắc\n• Q6_gt: Hỏi: tên của cửa tiệm bên phải đại lý xổ số miền bắc là gì ? || ĐA: cún"
+}

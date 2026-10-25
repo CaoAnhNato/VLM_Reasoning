@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          143.0,
+          92.0
+        ],
+        [
+          1182.0,
+          92.0
+        ],
+        [
+          1182.0,
+          536.0
+        ],
+        [
+          143.0,
+          536.0
+        ]
+      ],
+      "group_id": 5033,
+      "description": "Hỏi: cửa hàng được ghi trên tấm bảng tên là gì ? || ĐA: kim oanh fashion",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5033,
+        "question_ids": [
+          5033
+        ],
+        "question": "cửa hàng được ghi trên tấm bảng tên là gì ?",
+        "gt_answer": "kim oanh fashion"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          215.0,
+          381.0
+        ],
+        [
+          1131.0,
+          381.0
+        ],
+        [
+          1131.0,
+          796.0
+        ],
+        [
+          215.0,
+          796.0
+        ]
+      ],
+      "group_id": 5034,
+      "description": "Hỏi: kinh oanh fashion chuyên về lĩnh vực gì ? || ĐA: thời trang công sở",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5034,
+        "question_ids": [
+          5034
+        ],
+        "question": "kinh oanh fashion chuyên về lĩnh vực gì ?",
+        "gt_answer": "thời trang công sở"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          225.0,
+          533.0
+        ],
+        [
+          878.0,
+          533.0
+        ],
+        [
+          878.0,
+          834.0
+        ],
+        [
+          225.0,
+          834.0
+        ]
+      ],
+      "group_id": 5035,
+      "description": "Hỏi: địa chỉ của cửa hàng ghi trên bảng hiệu là gì ? || ĐA: 108 linh đông , thủ đức",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5035,
+        "question_ids": [
+          5035
+        ],
+        "question": "địa chỉ của cửa hàng ghi trên bảng hiệu là gì ?",
+        "gt_answer": "108 linh đông , thủ đức"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1771.jpg",
+  "imageData": null,
+  "imageHeight": 900,
+  "imageWidth": 1200,
+  "description": "Ảnh: 1771.jpg (ID=1771) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: cửa hàng được ghi trên tấm bảng tên là gì ? || ĐA: kim oanh fashion\n• Q2_gt: Hỏi: kinh oanh fashion chuyên về lĩnh vực gì ? || ĐA: thời trang công sở\n• Q3_gt: Hỏi: địa chỉ của cửa hàng ghi trên bảng hiệu là gì ? || ĐA: 108 linh đông , thủ đức"
+}

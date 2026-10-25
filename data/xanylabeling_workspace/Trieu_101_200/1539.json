@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          12.0,
+          131.0
+        ],
+        [
+          243.0,
+          131.0
+        ],
+        [
+          243.0,
+          223.0
+        ],
+        [
+          12.0,
+          223.0
+        ]
+      ],
+      "group_id": 4302,
+      "description": "Hỏi: khu vực này cấm điều gì ? || ĐA: hái hoa , hái lá",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4302,
+        "question_ids": [
+          4302
+        ],
+        "question": "khu vực này cấm điều gì ?",
+        "gt_answer": "hái hoa , hái lá"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8897,
+      "points": [
+        [
+          127.0,
+          180.0
+        ],
+        [
+          239.0,
+          180.0
+        ],
+        [
+          239.0,
+          216.0
+        ],
+        [
+          127.0,
+          216.0
+        ]
+      ],
+      "group_id": 4303,
+      "description": "Hỏi: vị phạm điều cấm sẽ bị gì ? || ĐA: phạt 200 . 000 đ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4303,
+        "question_ids": [
+          4303
+        ],
+        "question": "vị phạm điều cấm sẽ bị gì ?",
+        "gt_answer": "phạt 200 . 000 đ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7698,
+      "points": [
+        [
+          103.0,
+          290.0
+        ],
+        [
+          211.0,
+          290.0
+        ],
+        [
+          211.0,
+          328.0
+        ],
+        [
+          103.0,
+          328.0
+        ]
+      ],
+      "group_id": 4304,
+      "description": "Hỏi: ở khu vực này cần chú ý điều gì ? || ĐA: mực nước trong hồ 40 - 80 cm trẻ em phải có người lớn đi cùng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4304,
+        "question_ids": [
+          4304
+        ],
+        "question": "ở khu vực này cần chú ý điều gì ?",
+        "gt_answer": "mực nước trong hồ 40 - 80 cm trẻ em phải có người lớn đi cùng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9503,
+      "points": [
+        [
+          35.0,
+          238.0
+        ],
+        [
+          211.0,
+          238.0
+        ],
+        [
+          211.0,
+          281.0
+        ],
+        [
+          35.0,
+          281.0
+        ]
+      ],
+      "group_id": 4305,
+      "description": "Hỏi: khi cần hoa , lá chụp ảnh quý khách cần làm gì ? || ĐA: liên hệ : 01639366648",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 4305,
+        "question_ids": [
+          4305
+        ],
+        "question": "khi cần hoa , lá chụp ảnh quý khách cần làm gì ?",
+        "gt_answer": "liên hệ : 01639366648"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1539.jpg",
+  "imageData": null,
+  "imageHeight": 402,
+  "imageWidth": 597,
+  "description": "Ảnh: 1539.jpg (ID=1539) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: khu vực này cấm điều gì ? || ĐA: hái hoa , hái lá\n• Q2_gt: Hỏi: vị phạm điều cấm sẽ bị gì ? || ĐA: phạt 200 . 000 đ\n• Q3_gt: Hỏi: ở khu vực này cần chú ý điều gì ? || ĐA: mực nước trong hồ 40 - 80 cm trẻ em phải có người lớn đi cùng\n• Q4_gt: Hỏi: khi cần hoa , lá chụp ảnh quý khách cần làm gì ? || ĐA: liên hệ : 01639366648"
+}

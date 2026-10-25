@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1.0,
+          65.0
+        ],
+        [
+          196.0,
+          65.0
+        ],
+        [
+          196.0,
+          104.0
+        ],
+        [
+          1.0,
+          104.0
+        ]
+      ],
+      "group_id": 6667,
+      "description": "Hỏi: gian hàng này có mặt ở siêu thị nào ? || ĐA: lotte mart",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6667,
+        "question_ids": [
+          6667
+        ],
+        "question": "gian hàng này có mặt ở siêu thị nào ?",
+        "gt_answer": "lotte mart"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          4.0,
+          68.0
+        ],
+        [
+          199.0,
+          68.0
+        ],
+        [
+          199.0,
+          107.0
+        ],
+        [
+          4.0,
+          107.0
+        ]
+      ],
+      "group_id": 6668,
+      "description": "Hỏi: thương hiệu tại trợ cho sản phẩm này là gì ? || ĐA: aneco",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 6668,
+        "question_ids": [
+          6668
+        ],
+        "question": "thương hiệu tại trợ cho sản phẩm này là gì ?",
+        "gt_answer": "aneco"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.825,
+      "points": [
+        [
+          3.0,
+          52.0
+        ],
+        [
+          70.0,
+          52.0
+        ],
+        [
+          70.0,
+          75.0
+        ],
+        [
+          3.0,
+          75.0
+        ]
+      ],
+      "group_id": 6669,
+      "description": "Hỏi: các sản phẩm này thuộc lĩnh vực nào ? || ĐA: sản phẩm vi sinh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 6669,
+        "question_ids": [
+          6669
+        ],
+        "question": "các sản phẩm này thuộc lĩnh vực nào ?",
+        "gt_answer": "sản phẩm vi sinh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.85,
+      "points": [
+        [
+          190.0,
+          0.0
+        ],
+        [
+          391.0,
+          0.0
+        ],
+        [
+          391.0,
+          82.0
+        ],
+        [
+          190.0,
+          82.0
+        ]
+      ],
+      "group_id": 6670,
+      "description": "Hỏi: ưu điểm của các loại sản phẩm này là gì ? || ĐA: sản phẩm thân thiện với môi trường",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 6670,
+        "question_ids": [
+          6670
+        ],
+        "question": "ưu điểm của các loại sản phẩm này là gì ?",
+        "gt_answer": "sản phẩm thân thiện với môi trường"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2309.jpg",
+  "imageData": null,
+  "imageHeight": 425,
+  "imageWidth": 600,
+  "description": "Ảnh: 2309.jpg (ID=2309) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: gian hàng này có mặt ở siêu thị nào ? || ĐA: lotte mart\n• Q2_gt: Hỏi: thương hiệu tại trợ cho sản phẩm này là gì ? || ĐA: aneco\n• Q3_gt: Hỏi: các sản phẩm này thuộc lĩnh vực nào ? || ĐA: sản phẩm vi sinh\n• Q4_gt: Hỏi: ưu điểm của các loại sản phẩm này là gì ? || ĐA: sản phẩm thân thiện với môi trường"
+}

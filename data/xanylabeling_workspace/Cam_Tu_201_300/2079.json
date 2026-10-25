@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          86.0,
+          6.0
+        ],
+        [
+          149.0,
+          6.0
+        ],
+        [
+          149.0,
+          146.0
+        ],
+        [
+          86.0,
+          146.0
+        ]
+      ],
+      "group_id": 6001,
+      "description": "Hỏi: ở đây cho thuê cái gì ? || ĐA: cho thuê xe",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6001,
+        "question_ids": [
+          6001
+        ],
+        "question": "ở đây cho thuê cái gì ?",
+        "gt_answer": "cho thuê xe"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2079.jpg",
+  "imageData": null,
+  "imageHeight": 146,
+  "imageWidth": 149,
+  "description": "Ảnh: 2079.jpg (ID=2079) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: ở đây cho thuê cái gì ? || ĐA: cho thuê xe"
+}

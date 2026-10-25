@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          475.0,
+          338.0
+        ],
+        [
+          567.0,
+          338.0
+        ],
+        [
+          567.0,
+          374.0
+        ],
+        [
+          475.0,
+          374.0
+        ]
+      ],
+      "group_id": 10413,
+      "description": "Hỏi: tấm bảng màu hồng thứ nhất chỉ tới đâu ? || ĐA: lối vào",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10413,
+        "question_ids": [
+          10413
+        ],
+        "question": "tấm bảng màu hồng thứ nhất chỉ tới đâu ?",
+        "gt_answer": "lối vào"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          346.0,
+          327.0
+        ],
+        [
+          416.0,
+          327.0
+        ],
+        [
+          416.0,
+          357.0
+        ],
+        [
+          346.0,
+          357.0
+        ]
+      ],
+      "group_id": 10414,
+      "description": "Hỏi: sau tấm bảng lối vào chỉ tới đâu ? || ĐA: lối ra",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10414,
+        "question_ids": [
+          10414
+        ],
+        "question": "sau tấm bảng lối vào chỉ tới đâu ?",
+        "gt_answer": "lối ra"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.75,
+      "points": [
+        [
+          220.0,
+          263.0
+        ],
+        [
+          260.0,
+          263.0
+        ],
+        [
+          260.0,
+          281.0
+        ],
+        [
+          220.0,
+          281.0
+        ]
+      ],
+      "group_id": 10415,
+      "description": "Hỏi: những người này đang mua sắm ở siêu thị nào ? || ĐA: aeon",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10415,
+        "question_ids": [
+          10415
+        ],
+        "question": "những người này đang mua sắm ở siêu thị nào ?",
+        "gt_answer": "aeon"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3484.jpg",
+  "imageData": null,
+  "imageHeight": 514,
+  "imageWidth": 770,
+  "description": "Ảnh: 3484.jpg (ID=3484) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tấm bảng màu hồng thứ nhất chỉ tới đâu ? || ĐA: lối vào\n• Q2_gt: Hỏi: sau tấm bảng lối vào chỉ tới đâu ? || ĐA: lối ra\n• Q3_gt: Hỏi: những người này đang mua sắm ở siêu thị nào ? || ĐA: aeon"
+}

@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          64.0,
+          63.0
+        ],
+        [
+          306.0,
+          63.0
+        ],
+        [
+          306.0,
+          163.0
+        ],
+        [
+          64.0,
+          163.0
+        ]
+      ],
+      "group_id": 2393,
+      "description": "Hỏi: tiệm này bán gì ? || ĐA: cháo nóng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2393,
+        "question_ids": [
+          2393
+        ],
+        "question": "tiệm này bán gì ?",
+        "gt_answer": "cháo nóng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          75.0,
+          349.0
+        ],
+        [
+          141.0,
+          349.0
+        ],
+        [
+          141.0,
+          370.0
+        ],
+        [
+          75.0,
+          370.0
+        ]
+      ],
+      "group_id": 2394,
+      "description": "Hỏi: tiệm cháo này tên gì ? || ĐA: việt soup",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2394,
+        "question_ids": [
+          2394
+        ],
+        "question": "tiệm cháo này tên gì ?",
+        "gt_answer": "việt soup"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          435.0,
+          237.0
+        ],
+        [
+          663.0,
+          237.0
+        ],
+        [
+          663.0,
+          304.0
+        ],
+        [
+          435.0,
+          304.0
+        ]
+      ],
+      "group_id": 2395,
+      "description": "Hỏi: ăn cháo tiệm này thì thế nào ? || ĐA: không lo biếng ăn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 2395,
+        "question_ids": [
+          2395
+        ],
+        "question": "ăn cháo tiệm này thì thế nào ?",
+        "gt_answer": "không lo biếng ăn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          171.0,
+          324.0
+        ],
+        [
+          665.0,
+          324.0
+        ],
+        [
+          665.0,
+          365.0
+        ],
+        [
+          171.0,
+          365.0
+        ]
+      ],
+      "group_id": 2396,
+      "description": "Hỏi: tiệm cháo này đang có sự kiện gì ? || ĐA: khai trương",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 2396,
+        "question_ids": [
+          2396
+        ],
+        "question": "tiệm cháo này đang có sự kiện gì ?",
+        "gt_answer": "khai trương"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          361.0,
+          354.0
+        ],
+        [
+          596.0,
+          354.0
+        ],
+        [
+          596.0,
+          391.0
+        ],
+        [
+          361.0,
+          391.0
+        ]
+      ],
+      "group_id": 2397,
+      "description": "Hỏi: tiệm cháo khai chương có chương trình gì từ 6h - 9h ngày 03 / 12 / 2019 ? || ĐA: miễn phí 100 %",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 2397,
+        "question_ids": [
+          2397
+        ],
+        "question": "tiệm cháo khai chương có chương trình gì từ 6h - 9h ngày 03 / 12 / 2019 ?",
+        "gt_answer": "miễn phí 100 %"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          389.0,
+          762.0
+        ],
+        [
+          551.0,
+          762.0
+        ],
+        [
+          551.0,
+          791.0
+        ],
+        [
+          389.0,
+          791.0
+        ]
+      ],
+      "group_id": 2398,
+      "description": "Hỏi: tiệm cháo việt soup nói không với thứ gì ? || ĐA: chất bảo quản",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 2398,
+        "question_ids": [
+          2398
+        ],
+        "question": "tiệm cháo việt soup nói không với thứ gì ?",
+        "gt_answer": "chất bảo quản"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "898.jpg",
+  "imageData": null,
+  "imageHeight": 960,
+  "imageWidth": 720,
+  "description": "Ảnh: 898.jpg (ID=898) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: tiệm này bán gì ? || ĐA: cháo nóng\n• Q2_gt: Hỏi: tiệm cháo này tên gì ? || ĐA: việt soup\n• Q3_gt: Hỏi: ăn cháo tiệm này thì thế nào ? || ĐA: không lo biếng ăn\n• Q4_gt: Hỏi: tiệm cháo này đang có sự kiện gì ? || ĐA: khai trương\n• Q5_gt: Hỏi: tiệm cháo khai chương có chương trình gì từ 6h - 9h ngày 03 / 12 / 2019 ? || ĐA: miễn phí 100 %\n• Q6_gt: Hỏi: tiệm cháo việt soup nói không với thứ gì ? || ĐA: chất bảo quản"
+}

@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9583,
+      "points": [
+        [
+          165.0,
+          115.0
+        ],
+        [
+          605.0,
+          115.0
+        ],
+        [
+          605.0,
+          273.0
+        ],
+        [
+          165.0,
+          273.0
+        ]
+      ],
+      "group_id": 11005,
+      "description": "Hỏi: nội dung chính của tấm áp phích này là gì ? || ĐA: order taobao trên shopee",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11005,
+        "question_ids": [
+          11005
+        ],
+        "question": "nội dung chính của tấm áp phích này là gì ?",
+        "gt_answer": "order taobao trên shopee"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8392,
+      "points": [
+        [
+          93.0,
+          462.0
+        ],
+        [
+          225.0,
+          462.0
+        ],
+        [
+          225.0,
+          486.0
+        ],
+        [
+          93.0,
+          486.0
+        ]
+      ],
+      "group_id": 11006,
+      "description": "Hỏi: địa chỉ trang web xuất hiện trong ảnh là địa chỉ gì ? || ĐA: tenlua . com . vn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11006,
+        "question_ids": [
+          11006
+        ],
+        "question": "địa chỉ trang web xuất hiện trong ảnh là địa chỉ gì ?",
+        "gt_answer": "tenlua . com . vn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3691.jpg",
+  "imageData": null,
+  "imageHeight": 585,
+  "imageWidth": 1024,
+  "description": "Ảnh: 3691.jpg (ID=3691) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: nội dung chính của tấm áp phích này là gì ? || ĐA: order taobao trên shopee\n• Q2_gt: Hỏi: địa chỉ trang web xuất hiện trong ảnh là địa chỉ gì ? || ĐA: tenlua . com . vn"
+}

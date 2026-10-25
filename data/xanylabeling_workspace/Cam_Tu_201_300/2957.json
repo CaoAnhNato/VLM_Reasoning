@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          36.0,
+          14.0
+        ],
+        [
+          88.0,
+          14.0
+        ],
+        [
+          88.0,
+          49.0
+        ],
+        [
+          36.0,
+          49.0
+        ]
+      ],
+      "group_id": 8686,
+      "description": "Hỏi: quầy đầu tiên bên trái là quầy gì ? || ĐA: bánh kẹo",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8686,
+        "question_ids": [
+          8686
+        ],
+        "question": "quầy đầu tiên bên trái là quầy gì ?",
+        "gt_answer": "bánh kẹo"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7583,
+      "points": [
+        [
+          38.0,
+          38.0
+        ],
+        [
+          135.0,
+          38.0
+        ],
+        [
+          135.0,
+          88.0
+        ],
+        [
+          38.0,
+          88.0
+        ]
+      ],
+      "group_id": 8687,
+      "description": "Hỏi: đây vào dịp nào của năm ? || ĐA: năm mới",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8687,
+        "question_ids": [
+          8687
+        ],
+        "question": "đây vào dịp nào của năm ?",
+        "gt_answer": "năm mới"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          38.0,
+          37.0
+        ],
+        [
+          135.0,
+          37.0
+        ],
+        [
+          135.0,
+          74.0
+        ],
+        [
+          38.0,
+          74.0
+        ]
+      ],
+      "group_id": 8688,
+      "description": "Hỏi: quầy cuối cùng bên phải là quầy gì ? || ĐA: quầy thạch tết",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8688,
+        "question_ids": [
+          8688
+        ],
+        "question": "quầy cuối cùng bên phải là quầy gì ?",
+        "gt_answer": "quầy thạch tết"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2957.jpg",
+  "imageData": null,
+  "imageHeight": 168,
+  "imageWidth": 299,
+  "description": "Ảnh: 2957.jpg (ID=2957) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: quầy đầu tiên bên trái là quầy gì ? || ĐA: bánh kẹo\n• Q2_gt: Hỏi: đây vào dịp nào của năm ? || ĐA: năm mới\n• Q3_gt: Hỏi: quầy cuối cùng bên phải là quầy gì ? || ĐA: quầy thạch tết"
+}

@@ -1,0 +1,327 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          876.0,
+          289.0
+        ],
+        [
+          956.0,
+          289.0
+        ],
+        [
+          956.0,
+          313.0
+        ],
+        [
+          876.0,
+          313.0
+        ]
+      ],
+      "group_id": 10723,
+      "description": "Hỏi: chỗ trưng bày ở trong ảnh là của tập đoàn nào ? || ĐA: long van group",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10723,
+        "question_ids": [
+          10723
+        ],
+        "question": "chỗ trưng bày ở trong ảnh là của tập đoàn nào ?",
+        "gt_answer": "long van group"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          448.0,
+          186.0
+        ],
+        [
+          878.0,
+          186.0
+        ],
+        [
+          878.0,
+          215.0
+        ],
+        [
+          448.0,
+          215.0
+        ]
+      ],
+      "group_id": 10724,
+      "description": "Hỏi: long van group chuyên phân phối cái gì ? || ĐA: thanh nhôm định hình hondalex & sapa",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10724,
+        "question_ids": [
+          10724
+        ],
+        "question": "long van group chuyên phân phối cái gì ?",
+        "gt_answer": "thanh nhôm định hình hondalex & sapa"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          216.0,
+          328.0
+        ],
+        [
+          324.0,
+          328.0
+        ],
+        [
+          324.0,
+          363.0
+        ],
+        [
+          216.0,
+          363.0
+        ]
+      ],
+      "group_id": 10725,
+      "description": "Hỏi: quầy trưng bày màu xanh dương bên trái tên là gì ? || ĐA: austdoor",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10725,
+        "question_ids": [
+          10725
+        ],
+        "question": "quầy trưng bày màu xanh dương bên trái tên là gì ?",
+        "gt_answer": "austdoor"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.825,
+      "points": [
+        [
+          451.0,
+          189.0
+        ],
+        [
+          881.0,
+          189.0
+        ],
+        [
+          881.0,
+          218.0
+        ],
+        [
+          451.0,
+          218.0
+        ]
+      ],
+      "group_id": 10726,
+      "description": "Hỏi: dàn hoa chúc mừng cho long van group là do ai tặng ? || ĐA: sapa btg",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 10726,
+        "question_ids": [
+          10726
+        ],
+        "question": "dàn hoa chúc mừng cho long van group là do ai tặng ?",
+        "gt_answer": "sapa btg"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.6486,
+      "points": [
+        [
+          153.0,
+          206.0
+        ],
+        [
+          310.0,
+          206.0
+        ],
+        [
+          310.0,
+          244.0
+        ],
+        [
+          153.0,
+          244.0
+        ]
+      ],
+      "group_id": 10727,
+      "description": "Hỏi: nguồn của tấm ảnh này là gì ? || ĐA: gialong",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 10727,
+        "question_ids": [
+          10727
+        ],
+        "question": "nguồn của tấm ảnh này là gì ?",
+        "gt_answer": "gialong"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.8,
+      "points": [
+        [
+          377.0,
+          740.0
+        ],
+        [
+          624.0,
+          740.0
+        ],
+        [
+          624.0,
+          777.0
+        ],
+        [
+          377.0,
+          777.0
+        ]
+      ],
+      "group_id": 10728,
+      "description": "Hỏi: đơn vị gialong chuyên làm cái gì ? || ĐA: thi công gian hàng hội chợ vietbuild",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 10728,
+        "question_ids": [
+          10728
+        ],
+        "question": "đơn vị gialong chuyên làm cái gì ?",
+        "gt_answer": "thi công gian hàng hội chợ vietbuild"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q7_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 10729,
+      "description": "Hỏi: địa chỉ web của gialong là gì ? || ĐA: www . gialongadv . com",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 7,
+        "question_id": 10729,
+        "question_ids": [
+          10729
+        ],
+        "question": "địa chỉ web của gialong là gì ?",
+        "gt_answer": "www . gialongadv . com"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q8_gt",
+      "score": 0.6133,
+      "points": [
+        [
+          655.0,
+          776.0
+        ],
+        [
+          750.0,
+          776.0
+        ],
+        [
+          750.0,
+          809.0
+        ],
+        [
+          655.0,
+          809.0
+        ]
+      ],
+      "group_id": 10730,
+      "description": "Hỏi: địa chỉ email của gialong là gì ? || ĐA: gialongadv@gmail . com",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 8,
+        "question_id": 10730,
+        "question_ids": [
+          10730
+        ],
+        "question": "địa chỉ email của gialong là gì ?",
+        "gt_answer": "gialongadv@gmail . com"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3591.jpg",
+  "imageData": null,
+  "imageHeight": 810,
+  "imageWidth": 1080,
+  "description": "Ảnh: 3591.jpg (ID=3591) | Tổng số câu hỏi: 8\n• Q1_gt: Hỏi: chỗ trưng bày ở trong ảnh là của tập đoàn nào ? || ĐA: long van group\n• Q2_gt: Hỏi: long van group chuyên phân phối cái gì ? || ĐA: thanh nhôm định hình hondalex & sapa\n• Q3_gt: Hỏi: quầy trưng bày màu xanh dương bên trái tên là gì ? || ĐA: austdoor\n• Q4_gt: Hỏi: dàn hoa chúc mừng cho long van group là do ai tặng ? || ĐA: sapa btg\n• Q5_gt: Hỏi: nguồn của tấm ảnh này là gì ? || ĐA: gialong\n• Q6_gt: Hỏi: đơn vị gialong chuyên làm cái gì ? || ĐA: thi công gian hàng hội chợ vietbuild\n• Q7_gt: Hỏi: địa chỉ web của gialong là gì ? || ĐA: www . gialongadv . com\n• Q8_gt: Hỏi: địa chỉ email của gialong là gì ? || ĐA: gialongadv@gmail . com"
+}

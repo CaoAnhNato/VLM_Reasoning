@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.965,
+      "points": [
+        [
+          28.0,
+          230.0
+        ],
+        [
+          198.0,
+          230.0
+        ],
+        [
+          198.0,
+          315.0
+        ],
+        [
+          28.0,
+          315.0
+        ]
+      ],
+      "group_id": 7147,
+      "description": "Hỏi: lãng hoa màu vàng góc trái bức hình do công ty nào tặng quán nhân dịp khai trương ? || ĐA: ngói màu nhật bản isora",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7147,
+        "question_ids": [
+          7147
+        ],
+        "question": "lãng hoa màu vàng góc trái bức hình do công ty nào tặng quán nhân dịp khai trương ?",
+        "gt_answer": "ngói màu nhật bản isora"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8365,
+      "points": [
+        [
+          27.0,
+          241.0
+        ],
+        [
+          204.0,
+          241.0
+        ],
+        [
+          204.0,
+          339.0
+        ],
+        [
+          27.0,
+          339.0
+        ]
+      ],
+      "group_id": 7148,
+      "description": "Hỏi: ở đây đang điện ra sự kiện gì ? || ĐA: tưng bừng khai trương",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7148,
+        "question_ids": [
+          7148
+        ],
+        "question": "ở đây đang điện ra sự kiện gì ?",
+        "gt_answer": "tưng bừng khai trương"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          459.0,
+          26.0
+        ],
+        [
+          510.0,
+          26.0
+        ],
+        [
+          510.0,
+          70.0
+        ],
+        [
+          459.0,
+          70.0
+        ]
+      ],
+      "group_id": 7149,
+      "description": "Hỏi: cửa hàng nào đang có tưng bừng khai trương ở đâu ? || ĐA: nội thất đà nẵng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7149,
+        "question_ids": [
+          7149
+        ],
+        "question": "cửa hàng nào đang có tưng bừng khai trương ở đâu ?",
+        "gt_answer": "nội thất đà nẵng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8473,
+      "points": [
+        [
+          411.0,
+          55.0
+        ],
+        [
+          739.0,
+          55.0
+        ],
+        [
+          739.0,
+          131.0
+        ],
+        [
+          411.0,
+          131.0
+        ]
+      ],
+      "group_id": 7150,
+      "description": "Hỏi: cửa hàng nội thất đà nẵng có địa chỉ ở đâu ? || ĐA: 696 tôn đức thắng - tp . đà nẵng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7150,
+        "question_ids": [
+          7150
+        ],
+        "question": "cửa hàng nội thất đà nẵng có địa chỉ ở đâu ?",
+        "gt_answer": "696 tôn đức thắng - tp . đà nẵng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.7287,
+      "points": [
+        [
+          208.0,
+          348.0
+        ],
+        [
+          291.0,
+          348.0
+        ],
+        [
+          291.0,
+          377.0
+        ],
+        [
+          208.0,
+          377.0
+        ]
+      ],
+      "group_id": 7151,
+      "description": "Hỏi: lãng hoa thứ hai từ trái qua là của công ty nào ? || ĐA: kéo thép vn truss",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 7151,
+        "question_ids": [
+          7151
+        ],
+        "question": "lãng hoa thứ hai từ trái qua là của công ty nào ?",
+        "gt_answer": "kéo thép vn truss"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 1.0,
+      "points": [
+        [
+          490.0,
+          103.0
+        ],
+        [
+          681.0,
+          103.0
+        ],
+        [
+          681.0,
+          154.0
+        ],
+        [
+          490.0,
+          154.0
+        ]
+      ],
+      "group_id": 7152,
+      "description": "Hỏi: 1800 80 40 là gì của cửa hàng này ? || ĐA: hotline",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 7152,
+        "question_ids": [
+          7152
+        ],
+        "question": "1800 80 40 là gì của cửa hàng này ?",
+        "gt_answer": "hotline"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2471.jpg",
+  "imageData": null,
+  "imageHeight": 768,
+  "imageWidth": 1024,
+  "description": "Ảnh: 2471.jpg (ID=2471) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: lãng hoa màu vàng góc trái bức hình do công ty nào tặng quán nhân dịp khai trương ? || ĐA: ngói màu nhật bản isora\n• Q2_gt: Hỏi: ở đây đang điện ra sự kiện gì ? || ĐA: tưng bừng khai trương\n• Q3_gt: Hỏi: cửa hàng nào đang có tưng bừng khai trương ở đâu ? || ĐA: nội thất đà nẵng\n• Q4_gt: Hỏi: cửa hàng nội thất đà nẵng có địa chỉ ở đâu ? || ĐA: 696 tôn đức thắng - tp . đà nẵng\n• Q5_gt: Hỏi: lãng hoa thứ hai từ trái qua là của công ty nào ? || ĐA: kéo thép vn truss\n• Q6_gt: Hỏi: 1800 80 40 là gì của cửa hàng này ? || ĐA: hotline"
+}

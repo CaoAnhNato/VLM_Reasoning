@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.72,
+      "points": [
+        [
+          36.0,
+          143.0
+        ],
+        [
+          311.0,
+          143.0
+        ],
+        [
+          311.0,
+          233.0
+        ],
+        [
+          36.0,
+          233.0
+        ]
+      ],
+      "group_id": 6761,
+      "description": "Hỏi: trường này là trường gì ? || ĐA: trường t . h . p . t",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6761,
+        "question_ids": [
+          6761
+        ],
+        "question": "trường này là trường gì ?",
+        "gt_answer": "trường t . h . p . t"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9222,
+      "points": [
+        [
+          498.0,
+          149.0
+        ],
+        [
+          939.0,
+          149.0
+        ],
+        [
+          939.0,
+          245.0
+        ],
+        [
+          498.0,
+          245.0
+        ]
+      ],
+      "group_id": 6762,
+      "description": "Hỏi: trường này có tên là gì ? || ĐA: lưu tấn phát",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 6762,
+        "question_ids": [
+          6762
+        ],
+        "question": "trường này có tên là gì ?",
+        "gt_answer": "lưu tấn phát"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9781,
+      "points": [
+        [
+          13.0,
+          131.0
+        ],
+        [
+          407.0,
+          131.0
+        ],
+        [
+          407.0,
+          165.0
+        ],
+        [
+          13.0,
+          165.0
+        ]
+      ],
+      "group_id": 6763,
+      "description": "Hỏi: trường này thuộc sở giáo dục và đào tạo nào ? || ĐA: sở giáo dục và đào tạo tiền giang",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 6763,
+        "question_ids": [
+          6763
+        ],
+        "question": "trường này thuộc sở giáo dục và đào tạo nào ?",
+        "gt_answer": "sở giáo dục và đào tạo tiền giang"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          720.0,
+          224.0
+        ],
+        [
+          811.0,
+          224.0
+        ],
+        [
+          811.0,
+          251.0
+        ],
+        [
+          720.0,
+          251.0
+        ]
+      ],
+      "group_id": 6764,
+      "description": "Hỏi: địa chỉ của trường này là gì ? || ĐA: xã tam bình h . cai lậy",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 6764,
+        "question_ids": [
+          6764
+        ],
+        "question": "địa chỉ của trường này là gì ?",
+        "gt_answer": "xã tam bình h . cai lậy"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.8654,
+      "points": [
+        [
+          398.0,
+          437.0
+        ],
+        [
+          588.0,
+          437.0
+        ],
+        [
+          588.0,
+          460.0
+        ],
+        [
+          398.0,
+          460.0
+        ]
+      ],
+      "group_id": 6765,
+      "description": "Hỏi: khẩu hiệu của trường này là gì ? || ĐA: trường học thân thiện , học sinh tích cực",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 6765,
+        "question_ids": [
+          6765
+        ],
+        "question": "khẩu hiệu của trường này là gì ?",
+        "gt_answer": "trường học thân thiện , học sinh tích cực"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2340.jpg",
+  "imageData": null,
+  "imageHeight": 726,
+  "imageWidth": 968,
+  "description": "Ảnh: 2340.jpg (ID=2340) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: trường này là trường gì ? || ĐA: trường t . h . p . t\n• Q2_gt: Hỏi: trường này có tên là gì ? || ĐA: lưu tấn phát\n• Q3_gt: Hỏi: trường này thuộc sở giáo dục và đào tạo nào ? || ĐA: sở giáo dục và đào tạo tiền giang\n• Q4_gt: Hỏi: địa chỉ của trường này là gì ? || ĐA: xã tam bình h . cai lậy\n• Q5_gt: Hỏi: khẩu hiệu của trường này là gì ? || ĐA: trường học thân thiện , học sinh tích cực"
+}

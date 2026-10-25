@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": true,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          9.929906542056074,
+          149.7710280373832
+        ],
+        [
+          106.0,
+          149.7710280373832
+        ],
+        [
+          106.0,
+          167.0
+        ],
+        [
+          9.929906542056074,
+          167.0
+        ]
+      ],
+      "group_id": 348,
+      "description": "Hỏi: bản tin thời sự này diễn ra vào ngày nào ? || ĐA: 19 - 12 - 2021",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 348,
+        "question_ids": [
+          348
+        ],
+        "question": "bản tin thời sự này diễn ra vào ngày nào ?",
+        "gt_answer": "19 - 12 - 2021"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6,
+      "points": [
+        [
+          3.0245746691871456,
+          92.03402646502836
+        ],
+        [
+          49.338374291115315,
+          92.03402646502836
+        ],
+        [
+          49.338374291115315,
+          108.10207939508507
+        ],
+        [
+          3.0245746691871456,
+          108.10207939508507
+        ]
+      ],
+      "group_id": 349,
+      "description": "Hỏi: bản tin thời sự này được phát sóng ở kênh nào ? || ĐA: ttv11",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 349,
+        "question_ids": [
+          349
+        ],
+        "question": "bản tin thời sự này được phát sóng ở kênh nào ?",
+        "gt_answer": "ttv11"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "111.jpg",
+  "imageData": null,
+  "imageHeight": 168,
+  "imageWidth": 300,
+  "description": "Ảnh: 111.jpg (ID=111) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: bản tin thời sự này diễn ra vào ngày nào ? || ĐA: 19 - 12 - 2021\n• Q2_gt: Hỏi: bản tin thời sự này được phát sóng ở kênh nào ? || ĐA: ttv11"
+}

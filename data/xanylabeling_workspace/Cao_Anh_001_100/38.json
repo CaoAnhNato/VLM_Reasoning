@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": true,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          917.3333333333334,
+          266.55555555555554
+        ],
+        [
+          1400.0,
+          266.55555555555554
+        ],
+        [
+          1400.0,
+          425.55555555555554
+        ],
+        [
+          917.3333333333334,
+          425.55555555555554
+        ]
+      ],
+      "group_id": 138,
+      "description": "Hỏi: nơi này tên là gì ? || ĐA: cbam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 138,
+        "question_ids": [
+          138
+        ],
+        "question": "nơi này tên là gì ?",
+        "gt_answer": "cbam"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          536.6666666666666,
+          406.5555555555555
+        ],
+        [
+          1722.2222222222222,
+          406.5555555555555
+        ],
+        [
+          1722.2222222222222,
+          534.3333333333334
+        ],
+        [
+          536.6666666666666,
+          534.3333333333334
+        ]
+      ],
+      "group_id": 139,
+      "description": "Hỏi: trường này làm về gì ? || ĐA: đào tạo quản lý doanh nghiệp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 139,
+        "question_ids": [
+          139
+        ],
+        "question": "trường này làm về gì ?",
+        "gt_answer": "đào tạo quản lý doanh nghiệp"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          634.0,
+          136.0
+        ],
+        [
+          1649.0,
+          136.0
+        ],
+        [
+          1649.0,
+          246.0
+        ],
+        [
+          634.0,
+          246.0
+        ]
+      ],
+      "group_id": 140,
+      "description": "Hỏi: nơi này thuộc về phòng nào ? || ĐA: thương mại và công nghiệp việt nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 140,
+        "question_ids": [
+          140
+        ],
+        "question": "nơi này thuộc về phòng nào ?",
+        "gt_answer": "thương mại và công nghiệp việt nam"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.825,
+      "points": [
+        [
+          507.77777777777777,
+          534.3333333333334
+        ],
+        [
+          862.2222222222222,
+          534.3333333333334
+        ],
+        [
+          862.2222222222222,
+          588.7777777777778
+        ],
+        [
+          507.77777777777777,
+          588.7777777777778
+        ]
+      ],
+      "group_id": 141,
+      "description": "Hỏi: số điện thoại nơi này là gì ? || ĐA: ( 08 ) 39 142 168",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 141,
+        "question_ids": [
+          141
+        ],
+        "question": "số điện thoại nơi này là gì ?",
+        "gt_answer": "( 08 ) 39 142 168"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          882.3333333333335,
+          541.6666666666667
+        ],
+        [
+          1252.2222222222222,
+          541.6666666666667
+        ],
+        [
+          1252.2222222222222,
+          605.4444444444445
+        ],
+        [
+          882.3333333333335,
+          605.4444444444445
+        ]
+      ],
+      "group_id": 142,
+      "description": "Hỏi: số fax nơi này là gì ? || ĐA: 08 ) 39 142 116",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 142,
+        "question_ids": [
+          142
+        ],
+        "question": "số fax nơi này là gì ?",
+        "gt_answer": "08 ) 39 142 116"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          1258.8888888888887,
+          550.8888888888889
+        ],
+        [
+          1757.7777777777778,
+          550.8888888888889
+        ],
+        [
+          1757.7777777777778,
+          623.2222222222223
+        ],
+        [
+          1258.8888888888887,
+          623.2222222222223
+        ]
+      ],
+      "group_id": 143,
+      "description": "Hỏi: địa chỉ website nơi này là gì ? || ĐA: www . cbam . edu . v1",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 143,
+        "question_ids": [
+          143
+        ],
+        "question": "địa chỉ website nơi này là gì ?",
+        "gt_answer": "www . cbam . edu . v1"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "38.jpg",
+  "imageData": null,
+  "imageHeight": 1152,
+  "imageWidth": 2048,
+  "description": "Ảnh: 38.jpg (ID=38) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: nơi này tên là gì ? || ĐA: cbam\n• Q2_gt: Hỏi: trường này làm về gì ? || ĐA: đào tạo quản lý doanh nghiệp\n• Q3_gt: Hỏi: nơi này thuộc về phòng nào ? || ĐA: thương mại và công nghiệp việt nam\n• Q4_gt: Hỏi: số điện thoại nơi này là gì ? || ĐA: ( 08 ) 39 142 168\n• Q5_gt: Hỏi: số fax nơi này là gì ? || ĐA: 08 ) 39 142 116\n• Q6_gt: Hỏi: địa chỉ website nơi này là gì ? || ĐA: www . cbam . edu . v1"
+}

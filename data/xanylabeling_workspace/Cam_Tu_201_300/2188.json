@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          228.0,
+          222.0
+        ],
+        [
+          858.0,
+          222.0
+        ],
+        [
+          858.0,
+          409.0
+        ],
+        [
+          228.0,
+          409.0
+        ]
+      ],
+      "group_id": 6320,
+      "description": "Hỏi: cuốn sách này tên gì ? || ĐA: búp sen xanh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6320,
+        "question_ids": [
+          6320
+        ],
+        "question": "cuốn sách này tên gì ?",
+        "gt_answer": "búp sen xanh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          424.0,
+          178.0
+        ],
+        [
+          683.0,
+          178.0
+        ],
+        [
+          683.0,
+          265.0
+        ],
+        [
+          424.0,
+          265.0
+        ]
+      ],
+      "group_id": 6321,
+      "description": "Hỏi: cuốn sách này của ai viết ? || ĐA: sơn tùng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 6321,
+        "question_ids": [
+          6321
+        ],
+        "question": "cuốn sách này của ai viết ?",
+        "gt_answer": "sơn tùng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9682,
+      "points": [
+        [
+          295.0,
+          82.0
+        ],
+        [
+          868.0,
+          82.0
+        ],
+        [
+          868.0,
+          181.0
+        ],
+        [
+          295.0,
+          181.0
+        ]
+      ],
+      "group_id": 6322,
+      "description": "Hỏi: cuốn sách này viết về dịp nào ? || ĐA: kỉ niệm 130 năm ngày sinh chủ tịch hồ chí minh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 6322,
+        "question_ids": [
+          6322
+        ],
+        "question": "cuốn sách này viết về dịp nào ?",
+        "gt_answer": "kỉ niệm 130 năm ngày sinh chủ tịch hồ chí minh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7931,
+      "points": [
+        [
+          269.0,
+          1079.0
+        ],
+        [
+          404.0,
+          1079.0
+        ],
+        [
+          404.0,
+          1138.0
+        ],
+        [
+          269.0,
+          1138.0
+        ]
+      ],
+      "group_id": 6323,
+      "description": "Hỏi: cuốn sách này do nhà xuất bản nào phát hành ? || ĐA: nhà xuất bản kim đồng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 6323,
+        "question_ids": [
+          6323
+        ],
+        "question": "cuốn sách này do nhà xuất bản nào phát hành ?",
+        "gt_answer": "nhà xuất bản kim đồng"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2188.jpg",
+  "imageData": null,
+  "imageHeight": 1280,
+  "imageWidth": 960,
+  "description": "Ảnh: 2188.jpg (ID=2188) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: cuốn sách này tên gì ? || ĐA: búp sen xanh\n• Q2_gt: Hỏi: cuốn sách này của ai viết ? || ĐA: sơn tùng\n• Q3_gt: Hỏi: cuốn sách này viết về dịp nào ? || ĐA: kỉ niệm 130 năm ngày sinh chủ tịch hồ chí minh\n• Q4_gt: Hỏi: cuốn sách này do nhà xuất bản nào phát hành ? || ĐA: nhà xuất bản kim đồng"
+}

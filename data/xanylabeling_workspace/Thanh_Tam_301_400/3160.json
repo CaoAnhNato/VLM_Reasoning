@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          30.0,
+          74.0
+        ],
+        [
+          334.0,
+          74.0
+        ],
+        [
+          334.0,
+          170.0
+        ],
+        [
+          30.0,
+          170.0
+        ]
+      ],
+      "group_id": 9376,
+      "description": "Hỏi: cửa hàng này kinh doanh dịch vụ gì ? || ĐA: nhà thuốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9376,
+        "question_ids": [
+          9376
+        ],
+        "question": "cửa hàng này kinh doanh dịch vụ gì ?",
+        "gt_answer": "nhà thuốc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 9377,
+      "description": "Hỏi: nhà thuốc này có tên là gì ? || ĐA: vinpharma",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9377,
+        "question_ids": [
+          9377
+        ],
+        "question": "nhà thuốc này có tên là gì ?",
+        "gt_answer": "vinpharma"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          151.0,
+          173.0
+        ],
+        [
+          419.0,
+          173.0
+        ],
+        [
+          419.0,
+          239.0
+        ],
+        [
+          151.0,
+          239.0
+        ]
+      ],
+      "group_id": 9378,
+      "description": "Hỏi: nhà thuốc này được đánh giá như thế nào ? || ĐA: nhà thuốc đạt chuẩn gpp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9378,
+        "question_ids": [
+          9378
+        ],
+        "question": "nhà thuốc này được đánh giá như thế nào ?",
+        "gt_answer": "nhà thuốc đạt chuẩn gpp"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          13.0,
+          258.0
+        ],
+        [
+          138.0,
+          258.0
+        ],
+        [
+          138.0,
+          288.0
+        ],
+        [
+          13.0,
+          288.0
+        ]
+      ],
+      "group_id": 9379,
+      "description": "Hỏi: tên của dược sỹ quản lý nhà thuốc này là gì ? || ĐA: lê minh huệ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 9379,
+        "question_ids": [
+          9379
+        ],
+        "question": "tên của dược sỹ quản lý nhà thuốc này là gì ?",
+        "gt_answer": "lê minh huệ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.825,
+      "points": [
+        [
+          350.0,
+          284.0
+        ],
+        [
+          421.0,
+          284.0
+        ],
+        [
+          421.0,
+          308.0
+        ],
+        [
+          350.0,
+          308.0
+        ]
+      ],
+      "group_id": 9380,
+      "description": "Hỏi: giờ mở cửa của hàng thuốc này là gì ? || ĐA: 7h - 22h",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 9380,
+        "question_ids": [
+          9380
+        ],
+        "question": "giờ mở cửa của hàng thuốc này là gì ?",
+        "gt_answer": "7h - 22h"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.825,
+      "points": [
+        [
+          436.0,
+          291.0
+        ],
+        [
+          463.0,
+          291.0
+        ],
+        [
+          463.0,
+          311.0
+        ],
+        [
+          436.0,
+          311.0
+        ]
+      ],
+      "group_id": 9381,
+      "description": "Hỏi: số điện thoại liên hệ của nhà thuốc này là gì ? || ĐA: đt : 091898255",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 9381,
+        "question_ids": [
+          9381
+        ],
+        "question": "số điện thoại liên hệ của nhà thuốc này là gì ?",
+        "gt_answer": "đt : 091898255"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3160.jpg",
+  "imageData": null,
+  "imageHeight": 350,
+  "imageWidth": 500,
+  "description": "Ảnh: 3160.jpg (ID=3160) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: cửa hàng này kinh doanh dịch vụ gì ? || ĐA: nhà thuốc\n• Q2_gt: Hỏi: nhà thuốc này có tên là gì ? || ĐA: vinpharma\n• Q3_gt: Hỏi: nhà thuốc này được đánh giá như thế nào ? || ĐA: nhà thuốc đạt chuẩn gpp\n• Q4_gt: Hỏi: tên của dược sỹ quản lý nhà thuốc này là gì ? || ĐA: lê minh huệ\n• Q5_gt: Hỏi: giờ mở cửa của hàng thuốc này là gì ? || ĐA: 7h - 22h\n• Q6_gt: Hỏi: số điện thoại liên hệ của nhà thuốc này là gì ? || ĐA: đt : 091898255"
+}

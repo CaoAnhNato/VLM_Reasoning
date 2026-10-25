@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9708,
+      "points": [
+        [
+          70.0,
+          271.0
+        ],
+        [
+          1020.0,
+          271.0
+        ],
+        [
+          1020.0,
+          348.0
+        ],
+        [
+          70.0,
+          348.0
+        ]
+      ],
+      "group_id": 1008,
+      "description": "Hỏi: chiếc thuyền đã làm điều gì ? || ĐA: chiếc thuyền đã đưa hàng triệu thí sinh 2k4 đi xa bờ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1008,
+        "question_ids": [
+          1008
+        ],
+        "question": "chiếc thuyền đã làm điều gì ?",
+        "gt_answer": "chiếc thuyền đã đưa hàng triệu thí sinh 2k4 đi xa bờ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9589,
+      "points": [
+        [
+          34.0,
+          642.0
+        ],
+        [
+          1017.0,
+          642.0
+        ],
+        [
+          1017.0,
+          719.0
+        ],
+        [
+          34.0,
+          719.0
+        ]
+      ],
+      "group_id": 1009,
+      "description": "Hỏi: chiếc xe bò đã làm điều gì ? || ĐA: chiếc xe bò đã ship hàng triệu sĩ tử 2k5 ra chuồng gà",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1009,
+        "question_ids": [
+          1009
+        ],
+        "question": "chiếc xe bò đã làm điều gì ?",
+        "gt_answer": "chiếc xe bò đã ship hàng triệu sĩ tử 2k5 ra chuồng gà"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "341.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1080,
+  "description": "Ảnh: 341.jpg (ID=341) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: chiếc thuyền đã làm điều gì ? || ĐA: chiếc thuyền đã đưa hàng triệu thí sinh 2k4 đi xa bờ\n• Q2_gt: Hỏi: chiếc xe bò đã làm điều gì ? || ĐA: chiếc xe bò đã ship hàng triệu sĩ tử 2k5 ra chuồng gà"
+}

@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          1633.0,
+          3362.0
+        ],
+        [
+          3018.0,
+          3362.0
+        ],
+        [
+          3018.0,
+          3560.0
+        ],
+        [
+          1633.0,
+          3560.0
+        ]
+      ],
+      "group_id": 4053,
+      "description": "Hỏi: cuốn sách này tên là gì ? || ĐA: khỏe để lãnh đạo",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4053,
+        "question_ids": [
+          4053
+        ],
+        "question": "cuốn sách này tên là gì ?",
+        "gt_answer": "khỏe để lãnh đạo"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9731,
+      "points": [
+        [
+          304.0,
+          3209.0
+        ],
+        [
+          3019.0,
+          3209.0
+        ],
+        [
+          3019.0,
+          4005.0
+        ],
+        [
+          304.0,
+          4005.0
+        ]
+      ],
+      "group_id": 4054,
+      "description": "Hỏi: cuốn sách này được viết nhằm mục đích gì ? || ĐA: biến đổi khả năng lãnh đạo thông qua 5 trụ cột hiệu suất",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4054,
+        "question_ids": [
+          4054
+        ],
+        "question": "cuốn sách này được viết nhằm mục đích gì ?",
+        "gt_answer": "biến đổi khả năng lãnh đạo thông qua 5 trụ cột hiệu suất"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.86,
+      "points": [
+        [
+          2007.0,
+          4321.0
+        ],
+        [
+          2554.0,
+          4321.0
+        ],
+        [
+          2554.0,
+          4468.0
+        ],
+        [
+          2007.0,
+          4468.0
+        ]
+      ],
+      "group_id": 4055,
+      "description": "Hỏi: nhà xuất bản cuốn sách này là ai ? || ĐA: nhà xuất bản thanh niên",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4055,
+        "question_ids": [
+          4055
+        ],
+        "question": "nhà xuất bản cuốn sách này là ai ?",
+        "gt_answer": "nhà xuất bản thanh niên"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          444.0,
+          513.0
+        ],
+        [
+          1241.0,
+          513.0
+        ],
+        [
+          1241.0,
+          645.0
+        ],
+        [
+          444.0,
+          645.0
+        ]
+      ],
+      "group_id": 4056,
+      "description": "Hỏi: người phiên dịch cuốn sách này là ai ? || ĐA: nguyễn ngọc ưu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 4056,
+        "question_ids": [
+          4056
+        ],
+        "question": "người phiên dịch cuốn sách này là ai ?",
+        "gt_answer": "nguyễn ngọc ưu"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1458.jpg",
+  "imageData": null,
+  "imageHeight": 4608,
+  "imageWidth": 3456,
+  "description": "Ảnh: 1458.jpg (ID=1458) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: cuốn sách này tên là gì ? || ĐA: khỏe để lãnh đạo\n• Q2_gt: Hỏi: cuốn sách này được viết nhằm mục đích gì ? || ĐA: biến đổi khả năng lãnh đạo thông qua 5 trụ cột hiệu suất\n• Q3_gt: Hỏi: nhà xuất bản cuốn sách này là ai ? || ĐA: nhà xuất bản thanh niên\n• Q4_gt: Hỏi: người phiên dịch cuốn sách này là ai ? || ĐA: nguyễn ngọc ưu"
+}

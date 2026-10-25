@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          326.0,
+          145.0
+        ],
+        [
+          460.0,
+          145.0
+        ],
+        [
+          460.0,
+          179.0
+        ],
+        [
+          326.0,
+          179.0
+        ]
+      ],
+      "group_id": 5077,
+      "description": "Hỏi: những người trong ảnh đang tổ chức cái gì ? || ĐA: lễ khởi công",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5077,
+        "question_ids": [
+          5077
+        ],
+        "question": "những người trong ảnh đang tổ chức cái gì ?",
+        "gt_answer": "lễ khởi công"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8181,
+      "points": [
+        [
+          260.0,
+          145.0
+        ],
+        [
+          520.0,
+          145.0
+        ],
+        [
+          520.0,
+          215.0
+        ],
+        [
+          260.0,
+          215.0
+        ]
+      ],
+      "group_id": 5078,
+      "description": "Hỏi: buổi lễ khởi công mà những người này tham dự là khởi công cho việc gì ? || ĐA: dự án đầu tư xây dựng công trình đền thờ liệt sỹ tại chiến trường điện biên phủ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5078,
+        "question_ids": [
+          5078
+        ],
+        "question": "buổi lễ khởi công mà những người này tham dự là khởi công cho việc gì ?",
+        "gt_answer": "dự án đầu tư xây dựng công trình đền thờ liệt sỹ tại chiến trường điện biên phủ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          260.0,
+          187.0
+        ],
+        [
+          520.0,
+          187.0
+        ],
+        [
+          520.0,
+          215.0
+        ],
+        [
+          260.0,
+          215.0
+        ]
+      ],
+      "group_id": 5079,
+      "description": "Hỏi: lễ khởi công được tổ chức ở tỉnh nào ? || ĐA: điện biên",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5079,
+        "question_ids": [
+          5079
+        ],
+        "question": "lễ khởi công được tổ chức ở tỉnh nào ?",
+        "gt_answer": "điện biên"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 5080,
+      "description": "Hỏi: buổi lễ khởi công này được tổ chức vào ngày nào ? || ĐA: ngày 23 tháng 3 năm 2021",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 5080,
+        "question_ids": [
+          5080
+        ],
+        "question": "buổi lễ khởi công này được tổ chức vào ngày nào ?",
+        "gt_answer": "ngày 23 tháng 3 năm 2021"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1788.jpg",
+  "imageData": null,
+  "imageHeight": 500,
+  "imageWidth": 800,
+  "description": "Ảnh: 1788.jpg (ID=1788) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: những người trong ảnh đang tổ chức cái gì ? || ĐA: lễ khởi công\n• Q2_gt: Hỏi: buổi lễ khởi công mà những người này tham dự là khởi công cho việc gì ? || ĐA: dự án đầu tư xây dựng công trình đền thờ liệt sỹ tại chiến trường điện biên phủ\n• Q3_gt: Hỏi: lễ khởi công được tổ chức ở tỉnh nào ? || ĐA: điện biên\n• Q4_gt: Hỏi: buổi lễ khởi công này được tổ chức vào ngày nào ? || ĐA: ngày 23 tháng 3 năm 2021"
+}

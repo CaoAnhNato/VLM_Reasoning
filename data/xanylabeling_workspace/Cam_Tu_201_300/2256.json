@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.965,
+      "points": [
+        [
+          174.0,
+          117.0
+        ],
+        [
+          328.0,
+          117.0
+        ],
+        [
+          328.0,
+          169.0
+        ],
+        [
+          174.0,
+          169.0
+        ]
+      ],
+      "group_id": 6523,
+      "description": "Hỏi: các biện pháp đối phó với dịch bệnh covid 19 là gì ? || ĐA: ngăn chặn , phát hiện cách ly , khoanh vùng dập dịch",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6523,
+        "question_ids": [
+          6523
+        ],
+        "question": "các biện pháp đối phó với dịch bệnh covid 19 là gì ?",
+        "gt_answer": "ngăn chặn , phát hiện cách ly , khoanh vùng dập dịch"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          6.0,
+          10.0
+        ],
+        [
+          109.0,
+          10.0
+        ],
+        [
+          109.0,
+          52.0
+        ],
+        [
+          6.0,
+          52.0
+        ]
+      ],
+      "group_id": 6524,
+      "description": "Hỏi: các bức tranh này được vẽ ở đâu ? || ĐA: vov",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 6524,
+        "question_ids": [
+          6524
+        ],
+        "question": "các bức tranh này được vẽ ở đâu ?",
+        "gt_answer": "vov"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.825,
+      "points": [
+        [
+          204.0,
+          149.0
+        ],
+        [
+          302.0,
+          149.0
+        ],
+        [
+          302.0,
+          169.0
+        ],
+        [
+          204.0,
+          169.0
+        ]
+      ],
+      "group_id": 6525,
+      "description": "Hỏi: các bức tranh được vẽ trong dịch bệnh nào ? || ĐA: covid - 19",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 6525,
+        "question_ids": [
+          6525
+        ],
+        "question": "các bức tranh được vẽ trong dịch bệnh nào ?",
+        "gt_answer": "covid - 19"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2256.jpg",
+  "imageData": null,
+  "imageHeight": 333,
+  "imageWidth": 500,
+  "description": "Ảnh: 2256.jpg (ID=2256) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: các biện pháp đối phó với dịch bệnh covid 19 là gì ? || ĐA: ngăn chặn , phát hiện cách ly , khoanh vùng dập dịch\n• Q2_gt: Hỏi: các bức tranh này được vẽ ở đâu ? || ĐA: vov\n• Q3_gt: Hỏi: các bức tranh được vẽ trong dịch bệnh nào ? || ĐA: covid - 19"
+}

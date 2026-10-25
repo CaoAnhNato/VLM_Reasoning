@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          938.0,
+          1360.0
+        ],
+        [
+          3872.0,
+          1360.0
+        ],
+        [
+          3872.0,
+          2291.0
+        ],
+        [
+          938.0,
+          2291.0
+        ]
+      ],
+      "group_id": 9206,
+      "description": "Hỏi: tên của cửa hàng là gì ? || ĐA: minh tâm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9206,
+        "question_ids": [
+          9206
+        ],
+        "question": "tên của cửa hàng là gì ?",
+        "gt_answer": "minh tâm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1162.0,
+          1332.0
+        ],
+        [
+          1946.0,
+          1332.0
+        ],
+        [
+          1946.0,
+          1585.0
+        ],
+        [
+          1162.0,
+          1585.0
+        ]
+      ],
+      "group_id": 9207,
+      "description": "Hỏi: minh tâm là gì ? || ĐA: cửa hàng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9207,
+        "question_ids": [
+          9207
+        ],
+        "question": "minh tâm là gì ?",
+        "gt_answer": "cửa hàng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8821,
+      "points": [
+        [
+          1033.0,
+          1982.0
+        ],
+        [
+          3625.0,
+          1982.0
+        ],
+        [
+          3625.0,
+          2492.0
+        ],
+        [
+          1033.0,
+          2492.0
+        ]
+      ],
+      "group_id": 9208,
+      "description": "Hỏi: cửa hàng minh tâm chuyên làm gì ? || ĐA: chuyên kinh doanh sữa - bánh kẹo - rượu bia",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9208,
+        "question_ids": [
+          9208
+        ],
+        "question": "cửa hàng minh tâm chuyên làm gì ?",
+        "gt_answer": "chuyên kinh doanh sữa - bánh kẹo - rượu bia"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          1027.0,
+          1977.0
+        ],
+        [
+          3631.0,
+          1977.0
+        ],
+        [
+          3631.0,
+          2497.0
+        ],
+        [
+          1027.0,
+          2497.0
+        ]
+      ],
+      "group_id": 9209,
+      "description": "Hỏi: của hàng ngoài chuyên doanh sữa thì còn bán gì nữa ? || ĐA: bánh kẹo rượu bia",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 9209,
+        "question_ids": [
+          9209
+        ],
+        "question": "của hàng ngoài chuyên doanh sữa thì còn bán gì nữa ?",
+        "gt_answer": "bánh kẹo rượu bia"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.8027,
+      "points": [
+        [
+          1039.0,
+          1987.0
+        ],
+        [
+          3619.0,
+          1987.0
+        ],
+        [
+          3619.0,
+          2487.0
+        ],
+        [
+          1039.0,
+          2487.0
+        ]
+      ],
+      "group_id": 9210,
+      "description": "Hỏi: ở cửa hàng ngoài bán bánh kẹo thì còn bán gì nữa ? || ĐA: chuyên doanh sữa rượu bia",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 9210,
+        "question_ids": [
+          9210
+        ],
+        "question": "ở cửa hàng ngoài bán bánh kẹo thì còn bán gì nữa ?",
+        "gt_answer": "chuyên doanh sữa rượu bia"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.96,
+      "points": [
+        [
+          1042.0,
+          1990.0
+        ],
+        [
+          3622.0,
+          1990.0
+        ],
+        [
+          3622.0,
+          2490.0
+        ],
+        [
+          1042.0,
+          2490.0
+        ]
+      ],
+      "group_id": 9211,
+      "description": "Hỏi: cửa hàng minh tâm bán rượu bia và gì nữa ? || ĐA: chuyên doanh sữa - bánh kẹo",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 9211,
+        "question_ids": [
+          9211
+        ],
+        "question": "cửa hàng minh tâm bán rượu bia và gì nữa ?",
+        "gt_answer": "chuyên doanh sữa - bánh kẹo"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3108.jpg",
+  "imageData": null,
+  "imageHeight": 3240,
+  "imageWidth": 4320,
+  "description": "Ảnh: 3108.jpg (ID=3108) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: tên của cửa hàng là gì ? || ĐA: minh tâm\n• Q2_gt: Hỏi: minh tâm là gì ? || ĐA: cửa hàng\n• Q3_gt: Hỏi: cửa hàng minh tâm chuyên làm gì ? || ĐA: chuyên kinh doanh sữa - bánh kẹo - rượu bia\n• Q4_gt: Hỏi: của hàng ngoài chuyên doanh sữa thì còn bán gì nữa ? || ĐA: bánh kẹo rượu bia\n• Q5_gt: Hỏi: ở cửa hàng ngoài bán bánh kẹo thì còn bán gì nữa ? || ĐA: chuyên doanh sữa rượu bia\n• Q6_gt: Hỏi: cửa hàng minh tâm bán rượu bia và gì nữa ? || ĐA: chuyên doanh sữa - bánh kẹo"
+}

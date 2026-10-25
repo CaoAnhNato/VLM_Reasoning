@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.975,
+      "points": [
+        [
+          1503.0,
+          2250.0
+        ],
+        [
+          1956.0,
+          2250.0
+        ],
+        [
+          1956.0,
+          2643.0
+        ],
+        [
+          1503.0,
+          2643.0
+        ]
+      ],
+      "group_id": 6936,
+      "description": "Hỏi: biển số xe là gì ? || ĐA: 60a 755 . 28",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6936,
+        "question_ids": [
+          6936
+        ],
+        "question": "biển số xe là gì ?",
+        "gt_answer": "60a 755 . 28"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2402.jpg",
+  "imageData": null,
+  "imageHeight": 4032,
+  "imageWidth": 3024,
+  "description": "Ảnh: 2402.jpg (ID=2402) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: biển số xe là gì ? || ĐA: 60a 755 . 28"
+}

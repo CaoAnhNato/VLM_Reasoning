@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          991.0,
+          488.0
+        ],
+        [
+          1701.0,
+          488.0
+        ],
+        [
+          1701.0,
+          610.0
+        ],
+        [
+          991.0,
+          610.0
+        ]
+      ],
+      "group_id": 4818,
+      "description": "Hỏi: người phụ nữ áo xanh đang mua thuốc ở nhà thuốc nào ? || ĐA: long châu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4818,
+        "question_ids": [
+          4818
+        ],
+        "question": "người phụ nữ áo xanh đang mua thuốc ở nhà thuốc nào ?",
+        "gt_answer": "long châu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8688,
+      "points": [
+        [
+          0.0,
+          143.0
+        ],
+        [
+          1439.0,
+          143.0
+        ],
+        [
+          1439.0,
+          485.0
+        ],
+        [
+          0.0,
+          485.0
+        ]
+      ],
+      "group_id": 4819,
+      "description": "Hỏi: long châu là tên của chuỗi gì ? || ĐA: nhà thuốc lớn sài gòn trên 20 năm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4819,
+        "question_ids": [
+          4819
+        ],
+        "question": "long châu là tên của chuỗi gì ?",
+        "gt_answer": "nhà thuốc lớn sài gòn trên 20 năm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8699,
+      "points": [
+        [
+          398.0,
+          0.0
+        ],
+        [
+          2000.0,
+          0.0
+        ],
+        [
+          2000.0,
+          353.0
+        ],
+        [
+          398.0,
+          353.0
+        ]
+      ],
+      "group_id": 4820,
+      "description": "Hỏi: bên phải nhà thuốc long châu là gì ? || ĐA: nhà thuốc cẩm trang",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4820,
+        "question_ids": [
+          4820
+        ],
+        "question": "bên phải nhà thuốc long châu là gì ?",
+        "gt_answer": "nhà thuốc cẩm trang"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          470.0,
+          571.0
+        ],
+        [
+          586.0,
+          571.0
+        ],
+        [
+          586.0,
+          745.0
+        ],
+        [
+          470.0,
+          745.0
+        ]
+      ],
+      "group_id": 4821,
+      "description": "Hỏi: nhà thuốc long châu bán thuốc giá như thế nào ? || ĐA: giá tốt",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 4821,
+        "question_ids": [
+          4821
+        ],
+        "question": "nhà thuốc long châu bán thuốc giá như thế nào ?",
+        "gt_answer": "giá tốt"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          991.0,
+          489.0
+        ],
+        [
+          1701.0,
+          489.0
+        ],
+        [
+          1701.0,
+          609.0
+        ],
+        [
+          991.0,
+          609.0
+        ]
+      ],
+      "group_id": 4822,
+      "description": "Hỏi: số điện thoại của nhà thuốc long châu là gì ? || ĐA: 1800 6928",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 4822,
+        "question_ids": [
+          4822
+        ],
+        "question": "số điện thoại của nhà thuốc long châu là gì ?",
+        "gt_answer": "1800 6928"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.7,
+      "points": [
+        [
+          238.0,
+          112.0
+        ],
+        [
+          277.0,
+          112.0
+        ],
+        [
+          277.0,
+          139.0
+        ],
+        [
+          238.0,
+          139.0
+        ]
+      ],
+      "group_id": 4823,
+      "description": "Hỏi: địa chỉ nhà thuốc long châu trong bức hình ở đâu ? || ĐA: p . trảng dài , biên hòa , đồng nai",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 4823,
+        "question_ids": [
+          4823
+        ],
+        "question": "địa chỉ nhà thuốc long châu trong bức hình ở đâu ?",
+        "gt_answer": "p . trảng dài , biên hòa , đồng nai"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1695.jpg",
+  "imageData": null,
+  "imageHeight": 1125,
+  "imageWidth": 2000,
+  "description": "Ảnh: 1695.jpg (ID=1695) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: người phụ nữ áo xanh đang mua thuốc ở nhà thuốc nào ? || ĐA: long châu\n• Q2_gt: Hỏi: long châu là tên của chuỗi gì ? || ĐA: nhà thuốc lớn sài gòn trên 20 năm\n• Q3_gt: Hỏi: bên phải nhà thuốc long châu là gì ? || ĐA: nhà thuốc cẩm trang\n• Q4_gt: Hỏi: nhà thuốc long châu bán thuốc giá như thế nào ? || ĐA: giá tốt\n• Q5_gt: Hỏi: số điện thoại của nhà thuốc long châu là gì ? || ĐA: 1800 6928\n• Q6_gt: Hỏi: địa chỉ nhà thuốc long châu trong bức hình ở đâu ? || ĐA: p . trảng dài , biên hòa , đồng nai"
+}

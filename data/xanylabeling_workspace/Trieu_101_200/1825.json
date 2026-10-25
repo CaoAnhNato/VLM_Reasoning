@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          617.0,
+          70.0
+        ],
+        [
+          1193.0,
+          70.0
+        ],
+        [
+          1193.0,
+          425.0
+        ],
+        [
+          617.0,
+          425.0
+        ]
+      ],
+      "group_id": 5194,
+      "description": "Hỏi: dàn sản phẩm trong ảnh là thuộc về mục đích gì ? || ĐA: personal care",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5194,
+        "question_ids": [
+          5194
+        ],
+        "question": "dàn sản phẩm trong ảnh là thuộc về mục đích gì ?",
+        "gt_answer": "personal care"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          37.0,
+          1440.0
+        ],
+        [
+          306.0,
+          1440.0
+        ],
+        [
+          306.0,
+          1603.0
+        ],
+        [
+          37.0,
+          1603.0
+        ]
+      ],
+      "group_id": 5195,
+      "description": "Hỏi: tấm ảnh này được lấy từ nguồn nào ? || ĐA: hsv group",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5195,
+        "question_ids": [
+          5195
+        ],
+        "question": "tấm ảnh này được lấy từ nguồn nào ?",
+        "gt_answer": "hsv group"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1825.jpg",
+  "imageData": null,
+  "imageHeight": 1620,
+  "imageWidth": 1620,
+  "description": "Ảnh: 1825.jpg (ID=1825) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: dàn sản phẩm trong ảnh là thuộc về mục đích gì ? || ĐA: personal care\n• Q2_gt: Hỏi: tấm ảnh này được lấy từ nguồn nào ? || ĐA: hsv group"
+}

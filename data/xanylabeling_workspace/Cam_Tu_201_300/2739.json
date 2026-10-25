@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          812.0,
+          735.0
+        ],
+        [
+          900.0,
+          735.0
+        ],
+        [
+          900.0,
+          764.0
+        ],
+        [
+          812.0,
+          764.0
+        ]
+      ],
+      "group_id": 8010,
+      "description": "Hỏi: buổi lễ trong ảnh là buổi lễ gì ? || ĐA: khánh thành",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8010,
+        "question_ids": [
+          8010
+        ],
+        "question": "buổi lễ trong ảnh là buổi lễ gì ?",
+        "gt_answer": "khánh thành"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          429.0,
+          430.0
+        ],
+        [
+          1236.0,
+          430.0
+        ],
+        [
+          1236.0,
+          495.0
+        ],
+        [
+          429.0,
+          495.0
+        ]
+      ],
+      "group_id": 8011,
+      "description": "Hỏi: buổi lễ trong ảnh đang khánh thành cái gì ? || ĐA: quốc môn cửa khẩu quốc tế lệ thanh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8011,
+        "question_ids": [
+          8011
+        ],
+        "question": "buổi lễ trong ảnh đang khánh thành cái gì ?",
+        "gt_answer": "quốc môn cửa khẩu quốc tế lệ thanh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          671.0,
+          497.0
+        ],
+        [
+          844.0,
+          497.0
+        ],
+        [
+          844.0,
+          528.0
+        ],
+        [
+          671.0,
+          528.0
+        ]
+      ],
+      "group_id": 8012,
+      "description": "Hỏi: buổi lễ này được tổ chức ở tỉnh nào ? || ĐA: gia lai",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8012,
+        "question_ids": [
+          8012
+        ],
+        "question": "buổi lễ này được tổ chức ở tỉnh nào ?",
+        "gt_answer": "gia lai"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          907.0,
+          497.0
+        ],
+        [
+          962.0,
+          497.0
+        ],
+        [
+          962.0,
+          520.0
+        ],
+        [
+          907.0,
+          520.0
+        ]
+      ],
+      "group_id": 8013,
+      "description": "Hỏi: buổi lễ này được tổ chức vào năm nào ? || ĐA: 2019",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 8013,
+        "question_ids": [
+          8013
+        ],
+        "question": "buổi lễ này được tổ chức vào năm nào ?",
+        "gt_answer": "2019"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2739.jpg",
+  "imageData": null,
+  "imageHeight": 930,
+  "imageWidth": 1770,
+  "description": "Ảnh: 2739.jpg (ID=2739) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: buổi lễ trong ảnh là buổi lễ gì ? || ĐA: khánh thành\n• Q2_gt: Hỏi: buổi lễ trong ảnh đang khánh thành cái gì ? || ĐA: quốc môn cửa khẩu quốc tế lệ thanh\n• Q3_gt: Hỏi: buổi lễ này được tổ chức ở tỉnh nào ? || ĐA: gia lai\n• Q4_gt: Hỏi: buổi lễ này được tổ chức vào năm nào ? || ĐA: 2019"
+}

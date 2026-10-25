@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.6187,
+      "points": [
+        [
+          712.0,
+          464.0
+        ],
+        [
+          1237.0,
+          464.0
+        ],
+        [
+          1237.0,
+          628.0
+        ],
+        [
+          712.0,
+          628.0
+        ]
+      ],
+      "group_id": 677,
+      "description": "Hỏi: bức hình nói đến ở đâu ? || ĐA: mega market",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 677,
+        "question_ids": [
+          677
+        ],
+        "question": "bức hình nói đến ở đâu ?",
+        "gt_answer": "mega market"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6187,
+      "points": [
+        [
+          715.0,
+          467.0
+        ],
+        [
+          1240.0,
+          467.0
+        ],
+        [
+          1240.0,
+          631.0
+        ],
+        [
+          715.0,
+          631.0
+        ]
+      ],
+      "group_id": 678,
+      "description": "Hỏi: những chiếc xe hơi đang đậu ở đâu ? || ĐA: mega market",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 678,
+        "question_ids": [
+          678
+        ],
+        "question": "những chiếc xe hơi đang đậu ở đâu ?",
+        "gt_answer": "mega market"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "229.jpg",
+  "imageData": null,
+  "imageHeight": 1045,
+  "imageWidth": 1920,
+  "description": "Ảnh: 229.jpg (ID=229) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: bức hình nói đến ở đâu ? || ĐA: mega market\n• Q2_gt: Hỏi: những chiếc xe hơi đang đậu ở đâu ? || ĐA: mega market"
+}

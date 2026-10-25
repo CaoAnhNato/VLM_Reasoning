@@ -1,0 +1,366 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          108.0,
+          464.0
+        ],
+        [
+          291.0,
+          464.0
+        ],
+        [
+          291.0,
+          494.0
+        ],
+        [
+          108.0,
+          494.0
+        ]
+      ],
+      "group_id": 4721,
+      "description": "Hỏi: khu phố bên trái cửa hàng thú cưng như thế nào ? || ĐA: văn hóa",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4721,
+        "question_ids": [
+          4721
+        ],
+        "question": "khu phố bên trái cửa hàng thú cưng như thế nào ?",
+        "gt_answer": "văn hóa"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          23.0,
+          565.0
+        ],
+        [
+          113.0,
+          565.0
+        ],
+        [
+          113.0,
+          619.0
+        ],
+        [
+          23.0,
+          619.0
+        ]
+      ],
+      "group_id": 4722,
+      "description": "Hỏi: đi vào 20m hẻm khu phố sẽ sẽ tới đâu ? || ĐA: nhà thuốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4722,
+        "question_ids": [
+          4722
+        ],
+        "question": "đi vào 20m hẻm khu phố sẽ sẽ tới đâu ?",
+        "gt_answer": "nhà thuốc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          250.0,
+          277.0
+        ],
+        [
+          922.0,
+          277.0
+        ],
+        [
+          922.0,
+          446.0
+        ],
+        [
+          250.0,
+          446.0
+        ]
+      ],
+      "group_id": 4723,
+      "description": "Hỏi: cửa hàng thú cưng tên gì ? || ĐA: petmart",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4723,
+        "question_ids": [
+          4723
+        ],
+        "question": "cửa hàng thú cưng tên gì ?",
+        "gt_answer": "petmart"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          316.0,
+          226.0
+        ],
+        [
+          1119.0,
+          226.0
+        ],
+        [
+          1119.0,
+          311.0
+        ],
+        [
+          316.0,
+          311.0
+        ]
+      ],
+      "group_id": 4724,
+      "description": "Hỏi: petmart trong hình là cửa hàng gì ? || ĐA: thú cưng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 4724,
+        "question_ids": [
+          4724
+        ],
+        "question": "petmart trong hình là cửa hàng gì ?",
+        "gt_answer": "thú cưng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 4725,
+      "description": "Hỏi: petmart có dịch vụ gì ? || ĐA: spa - tắm cắt tỉa lông cho chó & mèo",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 4725,
+        "question_ids": [
+          4725
+        ],
+        "question": "petmart có dịch vụ gì ?",
+        "gt_answer": "spa - tắm cắt tỉa lông cho chó & mèo"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          67.0
+        ],
+        [
+          235.0,
+          67.0
+        ],
+        [
+          235.0,
+          111.0
+        ],
+        [
+          15.0,
+          111.0
+        ]
+      ],
+      "group_id": 4726,
+      "description": "Hỏi: nội dung của tấm bảng treo bên phả cửa hàng thú cưng có nội dung gì ? || ĐA: khách sạn chó mèo",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 4726,
+        "question_ids": [
+          4726
+        ],
+        "question": "nội dung của tấm bảng treo bên phả cửa hàng thú cưng có nội dung gì ?",
+        "gt_answer": "khách sạn chó mèo"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q7_gt",
+      "score": 0.72,
+      "points": [
+        [
+          995.0,
+          734.0
+        ],
+        [
+          1034.0,
+          734.0
+        ],
+        [
+          1034.0,
+          761.0
+        ],
+        [
+          995.0,
+          761.0
+        ]
+      ],
+      "group_id": 4727,
+      "description": "Hỏi: cửa hàng bên phải cửa hàng thú cưng có khuyến mãi gì ? || ĐA: sale off to - 70 % - 50 %",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 7,
+        "question_id": 4727,
+        "question_ids": [
+          4727
+        ],
+        "question": "cửa hàng bên phải cửa hàng thú cưng có khuyến mãi gì ?",
+        "gt_answer": "sale off to - 70 % - 50 %"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q8_gt",
+      "score": 1.0,
+      "points": [
+        [
+          833.0,
+          604.0
+        ],
+        [
+          871.0,
+          604.0
+        ],
+        [
+          871.0,
+          624.0
+        ],
+        [
+          833.0,
+          624.0
+        ]
+      ],
+      "group_id": 4728,
+      "description": "Hỏi: cửa hàng thú cưng petmart có số nhà bao nhiêu ? || ĐA: 312",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 8,
+        "question_id": 4728,
+        "question_ids": [
+          4728
+        ],
+        "question": "cửa hàng thú cưng petmart có số nhà bao nhiêu ?",
+        "gt_answer": "312"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q9_gt",
+      "score": 0.7837,
+      "points": [
+        [
+          370.0,
+          845.0
+        ],
+        [
+          412.0,
+          845.0
+        ],
+        [
+          412.0,
+          880.0
+        ],
+        [
+          370.0,
+          880.0
+        ]
+      ],
+      "group_id": 4729,
+      "description": "Hỏi: chiếc xe treo nón bảng có biển số như thế nào ? || ĐA: 49 - h1 066 . 57",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 9,
+        "question_id": 4729,
+        "question_ids": [
+          4729
+        ],
+        "question": "chiếc xe treo nón bảng có biển số như thế nào ?",
+        "gt_answer": "49 - h1 066 . 57"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1671.jpg",
+  "imageData": null,
+  "imageHeight": 900,
+  "imageWidth": 1200,
+  "description": "Ảnh: 1671.jpg (ID=1671) | Tổng số câu hỏi: 9\n• Q1_gt: Hỏi: khu phố bên trái cửa hàng thú cưng như thế nào ? || ĐA: văn hóa\n• Q2_gt: Hỏi: đi vào 20m hẻm khu phố sẽ sẽ tới đâu ? || ĐA: nhà thuốc\n• Q3_gt: Hỏi: cửa hàng thú cưng tên gì ? || ĐA: petmart\n• Q4_gt: Hỏi: petmart trong hình là cửa hàng gì ? || ĐA: thú cưng\n• Q5_gt: Hỏi: petmart có dịch vụ gì ? || ĐA: spa - tắm cắt tỉa lông cho chó & mèo\n• Q6_gt: Hỏi: nội dung của tấm bảng treo bên phả cửa hàng thú cưng có nội dung gì ? || ĐA: khách sạn chó mèo\n• Q7_gt: Hỏi: cửa hàng bên phải cửa hàng thú cưng có khuyến mãi gì ? || ĐA: sale off to - 70 % - 50 %\n• Q8_gt: Hỏi: cửa hàng thú cưng petmart có số nhà bao nhiêu ? || ĐA: 312\n• Q9_gt: Hỏi: chiếc xe treo nón bảng có biển số như thế nào ? || ĐA: 49 - h1 066 . 57"
+}

@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.4744,
+      "points": [
+        [
+          171.0,
+          0.0
+        ],
+        [
+          386.0,
+          0.0
+        ],
+        [
+          386.0,
+          75.0
+        ],
+        [
+          171.0,
+          75.0
+        ]
+      ],
+      "group_id": 866,
+      "description": "Hỏi: quán ăn này bán món gì ? || ĐA: bún quậy",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 866,
+        "question_ids": [
+          866
+        ],
+        "question": "quán ăn này bán món gì ?",
+        "gt_answer": "bún quậy"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          99.0,
+          194.0
+        ],
+        [
+          380.0,
+          194.0
+        ],
+        [
+          380.0,
+          272.0
+        ],
+        [
+          99.0,
+          272.0
+        ]
+      ],
+      "group_id": 867,
+      "description": "Hỏi: món bún quậy là đặc sản ở đâu ? || ĐA: phú quốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 867,
+        "question_ids": [
+          867
+        ],
+        "question": "món bún quậy là đặc sản ở đâu ?",
+        "gt_answer": "phú quốc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          81.0,
+          331.0
+        ],
+        [
+          413.0,
+          331.0
+        ],
+        [
+          413.0,
+          420.0
+        ],
+        [
+          81.0,
+          420.0
+        ]
+      ],
+      "group_id": 868,
+      "description": "Hỏi: quán ăn này đang trong dịp gì ? || ĐA: mừng khai trương",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 868,
+        "question_ids": [
+          868
+        ],
+        "question": "quán ăn này đang trong dịp gì ?",
+        "gt_answer": "mừng khai trương"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          81.0,
+          332.0
+        ],
+        [
+          413.0,
+          332.0
+        ],
+        [
+          413.0,
+          381.0
+        ],
+        [
+          81.0,
+          381.0
+        ]
+      ],
+      "group_id": 869,
+      "description": "Hỏi: trong giau đoạn khai trương khách hàng sẽ nhận ưu đãi gì ? || ĐA: giảm giá 20 %",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 869,
+        "question_ids": [
+          869
+        ],
+        "question": "trong giau đoạn khai trương khách hàng sẽ nhận ưu đãi gì ?",
+        "gt_answer": "giảm giá 20 %"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          68.0,
+          380.0
+        ],
+        [
+          110.0,
+          380.0
+        ],
+        [
+          110.0,
+          405.0
+        ],
+        [
+          68.0,
+          405.0
+        ]
+      ],
+      "group_id": 870,
+      "description": "Hỏi: số nhà của quán bún quậy này là gì ? || ĐA: 59",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 870,
+        "question_ids": [
+          870
+        ],
+        "question": "số nhà của quán bún quậy này là gì ?",
+        "gt_answer": "59"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "296.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 900,
+  "description": "Ảnh: 296.jpg (ID=296) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: quán ăn này bán món gì ? || ĐA: bún quậy\n• Q2_gt: Hỏi: món bún quậy là đặc sản ở đâu ? || ĐA: phú quốc\n• Q3_gt: Hỏi: quán ăn này đang trong dịp gì ? || ĐA: mừng khai trương\n• Q4_gt: Hỏi: trong giau đoạn khai trương khách hàng sẽ nhận ưu đãi gì ? || ĐA: giảm giá 20 %\n• Q5_gt: Hỏi: số nhà của quán bún quậy này là gì ? || ĐA: 59"
+}

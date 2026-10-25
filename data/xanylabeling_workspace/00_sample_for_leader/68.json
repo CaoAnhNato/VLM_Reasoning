@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": true,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          563.0573248407643,
+          215.28662420382165
+        ],
+        [
+          838.2165605095541,
+          215.28662420382165
+        ],
+        [
+          838.2165605095541,
+          252.86624203821654
+        ],
+        [
+          563.0573248407643,
+          252.86624203821654
+        ]
+      ],
+      "group_id": 245,
+      "description": "Hỏi: đổi máy mới trong vòng bao nhiêu ngày ? || ĐA: 30 ngày",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 245,
+        "question_ids": [
+          245
+        ],
+        "question": "đổi máy mới trong vòng bao nhiêu ngày ?",
+        "gt_answer": "30 ngày"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8649,
+      "points": [
+        [
+          629.936305732484,
+          146.0
+        ],
+        [
+          841.4012738853503,
+          146.0
+        ],
+        [
+          841.4012738853503,
+          180.89171974522293
+        ],
+        [
+          629.936305732484,
+          180.89171974522293
+        ]
+      ],
+      "group_id": 246,
+      "description": "Hỏi: thoải mái đổi trả cái gì ? || ĐA: điện thoại máy tính bảng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 246,
+        "question_ids": [
+          246
+        ],
+        "question": "thoải mái đổi trả cái gì ?",
+        "gt_answer": "điện thoại máy tính bảng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8167,
+      "points": [
+        [
+          1024.0225563909776,
+          478.87218045112786
+        ],
+        [
+          1082.6691729323309,
+          478.87218045112786
+        ],
+        [
+          1082.6691729323309,
+          511.5789473684211
+        ],
+        [
+          1024.0225563909776,
+          511.5789473684211
+        ]
+      ],
+      "group_id": 247,
+      "description": "Hỏi: ở đây có bán điện thoại nào ? || ĐA: galaxy note9",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 247,
+        "question_ids": [
+          247
+        ],
+        "question": "ở đây có bán điện thoại nào ?",
+        "gt_answer": "galaxy note9"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1100.0,
+          192.0
+        ],
+        [
+          1141.0,
+          192.0
+        ],
+        [
+          1141.0,
+          212.0
+        ],
+        [
+          1100.0,
+          212.0
+        ]
+      ],
+      "group_id": 248,
+      "description": "Hỏi: ở đây có bán điện thoại của hãng nào ? || ĐA: apple",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 248,
+        "question_ids": [
+          248
+        ],
+        "question": "ở đây có bán điện thoại của hãng nào ?",
+        "gt_answer": "apple"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "68.jpg",
+  "imageData": null,
+  "imageHeight": 960,
+  "imageWidth": 1280,
+  "description": "Ảnh: 68.jpg (ID=68) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: đổi máy mới trong vòng bao nhiêu ngày ? || ĐA: 30 ngày\n• Q2_gt: Hỏi: thoải mái đổi trả cái gì ? || ĐA: điện thoại máy tính bảng\n• Q3_gt: Hỏi: ở đây có bán điện thoại nào ? || ĐA: galaxy note9\n• Q4_gt: Hỏi: ở đây có bán điện thoại của hãng nào ? || ĐA: apple"
+}

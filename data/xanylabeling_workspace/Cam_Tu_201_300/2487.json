@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7095,
+      "points": [
+        [
+          290.0,
+          249.0
+        ],
+        [
+          353.0,
+          249.0
+        ],
+        [
+          353.0,
+          267.0
+        ],
+        [
+          290.0,
+          267.0
+        ]
+      ],
+      "group_id": 7191,
+      "description": "Hỏi: sau chiếc ô tô màu trắng là quán bán gì ? || ĐA: mì quảng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7191,
+        "question_ids": [
+          7191
+        ],
+        "question": "sau chiếc ô tô màu trắng là quán bán gì ?",
+        "gt_answer": "mì quảng"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2487.jpg",
+  "imageData": null,
+  "imageHeight": 599,
+  "imageWidth": 800,
+  "description": "Ảnh: 2487.jpg (ID=2487) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: sau chiếc ô tô màu trắng là quán bán gì ? || ĐA: mì quảng"
+}

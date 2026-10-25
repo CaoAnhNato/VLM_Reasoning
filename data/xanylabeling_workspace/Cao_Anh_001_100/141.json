@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.875,
+      "points": [
+        [
+          1538.0,
+          664.0
+        ],
+        [
+          1866.0,
+          664.0
+        ],
+        [
+          1866.0,
+          746.0
+        ],
+        [
+          1538.0,
+          746.0
+        ]
+      ],
+      "group_id": 412,
+      "description": "Hỏi: đây là buổi lễ gì ? || ĐA: chào mừng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 412,
+        "question_ids": [
+          412
+        ],
+        "question": "đây là buổi lễ gì ?",
+        "gt_answer": "chào mừng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9,
+      "points": [
+        [
+          1458.0,
+          726.0
+        ],
+        [
+          1987.0,
+          726.0
+        ],
+        [
+          1987.0,
+          790.0
+        ],
+        [
+          1458.0,
+          790.0
+        ]
+      ],
+      "group_id": 413,
+      "description": "Hỏi: tên của buổi lễ chào mừng này là gì ? || ĐA: kỷ niệm 39 năm ngày nhà giáo việt nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 413,
+        "question_ids": [
+          413
+        ],
+        "question": "tên của buổi lễ chào mừng này là gì ?",
+        "gt_answer": "kỷ niệm 39 năm ngày nhà giáo việt nam"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          733.0,
+          593.0
+        ],
+        [
+          1037.0,
+          593.0
+        ],
+        [
+          1037.0,
+          670.0
+        ],
+        [
+          733.0,
+          670.0
+        ]
+      ],
+      "group_id": 414,
+      "description": "Hỏi: buổi lễ do ai chỉ đạo ? || ĐA: phòng giáo dục và đào tạo quận cẩm lệ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 414,
+        "question_ids": [
+          414
+        ],
+        "question": "buổi lễ do ai chỉ đạo ?",
+        "gt_answer": "phòng giáo dục và đào tạo quận cẩm lệ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.85,
+      "points": [
+        [
+          736.0,
+          596.0
+        ],
+        [
+          1040.0,
+          596.0
+        ],
+        [
+          1040.0,
+          673.0
+        ],
+        [
+          736.0,
+          673.0
+        ]
+      ],
+      "group_id": 415,
+      "description": "Hỏi: buổi lễ được diễn ra ở đâu ? || ĐA: ubnd quận cẩm lệ phòng gd & dt",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 415,
+        "question_ids": [
+          415
+        ],
+        "question": "buổi lễ được diễn ra ở đâu ?",
+        "gt_answer": "ubnd quận cẩm lệ phòng gd & dt"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "141.jpg",
+  "imageData": null,
+  "imageHeight": 1920,
+  "imageWidth": 2560,
+  "description": "Ảnh: 141.jpg (ID=141) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: đây là buổi lễ gì ? || ĐA: chào mừng\n• Q2_gt: Hỏi: tên của buổi lễ chào mừng này là gì ? || ĐA: kỷ niệm 39 năm ngày nhà giáo việt nam\n• Q3_gt: Hỏi: buổi lễ do ai chỉ đạo ? || ĐA: phòng giáo dục và đào tạo quận cẩm lệ\n• Q4_gt: Hỏi: buổi lễ được diễn ra ở đâu ? || ĐA: ubnd quận cẩm lệ phòng gd & dt"
+}

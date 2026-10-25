@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          242.0,
+          157.0
+        ],
+        [
+          281.0,
+          157.0
+        ],
+        [
+          281.0,
+          176.0
+        ],
+        [
+          242.0,
+          176.0
+        ]
+      ],
+      "group_id": 3787,
+      "description": "Hỏi: mọi người đang ngồi ở phố gì ? || ĐA: tạ hiện",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3787,
+        "question_ids": [
+          3787
+        ],
+        "question": "mọi người đang ngồi ở phố gì ?",
+        "gt_answer": "tạ hiện"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          249.0,
+          148.0
+        ],
+        [
+          273.0,
+          148.0
+        ],
+        [
+          273.0,
+          164.0
+        ],
+        [
+          249.0,
+          164.0
+        ]
+      ],
+      "group_id": 3788,
+      "description": "Hỏi: quán đang mở có hai tấm bảng màu đỏ bán thứ gì ? || ĐA: bia phố cổ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3788,
+        "question_ids": [
+          3788
+        ],
+        "question": "quán đang mở có hai tấm bảng màu đỏ bán thứ gì ?",
+        "gt_answer": "bia phố cổ"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1373.jpg",
+  "imageData": null,
+  "imageHeight": 525,
+  "imageWidth": 700,
+  "description": "Ảnh: 1373.jpg (ID=1373) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: mọi người đang ngồi ở phố gì ? || ĐA: tạ hiện\n• Q2_gt: Hỏi: quán đang mở có hai tấm bảng màu đỏ bán thứ gì ? || ĐA: bia phố cổ"
+}

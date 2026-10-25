@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8757,
+      "points": [
+        [
+          26.0,
+          421.0
+        ],
+        [
+          277.0,
+          421.0
+        ],
+        [
+          277.0,
+          448.0
+        ],
+        [
+          26.0,
+          448.0
+        ]
+      ],
+      "group_id": 4189,
+      "description": "Hỏi: bức hình này được chụp ở đâu ? || ĐA: chợ hoa tươi đầm sen",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4189,
+        "question_ids": [
+          4189
+        ],
+        "question": "bức hình này được chụp ở đâu ?",
+        "gt_answer": "chợ hoa tươi đầm sen"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          155.0,
+          355.0
+        ],
+        [
+          381.0,
+          355.0
+        ],
+        [
+          381.0,
+          401.0
+        ],
+        [
+          155.0,
+          401.0
+        ]
+      ],
+      "group_id": 4190,
+      "description": "Hỏi: chợ hoa tươi tên gì ? || ĐA: đầm sen",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4190,
+        "question_ids": [
+          4190
+        ],
+        "question": "chợ hoa tươi tên gì ?",
+        "gt_answer": "đầm sen"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9533,
+      "points": [
+        [
+          29.0,
+          424.0
+        ],
+        [
+          280.0,
+          424.0
+        ],
+        [
+          280.0,
+          451.0
+        ],
+        [
+          29.0,
+          451.0
+        ]
+      ],
+      "group_id": 4191,
+      "description": "Hỏi: chợ hoa tươi đầm sen thuộc cơ quan nào ? || ĐA: hợp tác xã dịch vụ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4191,
+        "question_ids": [
+          4191
+        ],
+        "question": "chợ hoa tươi đầm sen thuộc cơ quan nào ?",
+        "gt_answer": "hợp tác xã dịch vụ"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1503.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 800,
+  "description": "Ảnh: 1503.jpg (ID=1503) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: bức hình này được chụp ở đâu ? || ĐA: chợ hoa tươi đầm sen\n• Q2_gt: Hỏi: chợ hoa tươi tên gì ? || ĐA: đầm sen\n• Q3_gt: Hỏi: chợ hoa tươi đầm sen thuộc cơ quan nào ? || ĐA: hợp tác xã dịch vụ"
+}

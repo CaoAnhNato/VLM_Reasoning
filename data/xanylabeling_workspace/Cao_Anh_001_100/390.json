@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          130.0,
+          7.0
+        ],
+        [
+          470.0,
+          7.0
+        ],
+        [
+          470.0,
+          63.0
+        ],
+        [
+          130.0,
+          63.0
+        ]
+      ],
+      "group_id": 1120,
+      "description": "Hỏi: các thánh làm gì ? || ĐA: tiếp đi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1120,
+        "question_ids": [
+          1120
+        ],
+        "question": "các thánh làm gì ?",
+        "gt_answer": "tiếp đi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          50.0,
+          349.0
+        ],
+        [
+          547.0,
+          349.0
+        ],
+        [
+          547.0,
+          398.0
+        ],
+        [
+          50.0,
+          398.0
+        ]
+      ],
+      "group_id": 1121,
+      "description": "Hỏi: gương ở đâu ? || ĐA: gương kia ngự ở trên tường",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1121,
+        "question_ids": [
+          1121
+        ],
+        "question": "gương ở đâu ?",
+        "gt_answer": "gương kia ngự ở trên tường"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          6.0,
+          386.0
+        ],
+        [
+          590.0,
+          386.0
+        ],
+        [
+          590.0,
+          439.0
+        ],
+        [
+          6.0,
+          439.0
+        ]
+      ],
+      "group_id": 1122,
+      "description": "Hỏi: tối nay ai sẽ như thế nào ? || ĐA: tối nay ai sẽ ra đường cùng ta ?",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1122,
+        "question_ids": [
+          1122
+        ],
+        "question": "tối nay ai sẽ như thế nào ?",
+        "gt_answer": "tối nay ai sẽ ra đường cùng ta ?"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "390.jpg",
+  "imageData": null,
+  "imageHeight": 450,
+  "imageWidth": 600,
+  "description": "Ảnh: 390.jpg (ID=390) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: các thánh làm gì ? || ĐA: tiếp đi\n• Q2_gt: Hỏi: gương ở đâu ? || ĐA: gương kia ngự ở trên tường\n• Q3_gt: Hỏi: tối nay ai sẽ như thế nào ? || ĐA: tối nay ai sẽ ra đường cùng ta ?"
+}

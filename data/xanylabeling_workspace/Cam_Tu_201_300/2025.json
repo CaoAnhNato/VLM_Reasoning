@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          147.0,
+          69.0
+        ],
+        [
+          337.0,
+          69.0
+        ],
+        [
+          337.0,
+          116.0
+        ],
+        [
+          147.0,
+          116.0
+        ]
+      ],
+      "group_id": 5857,
+      "description": "Hỏi: tên của cửa hàng ở giữa là gì ? || ĐA: hương mai",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5857,
+        "question_ids": [
+          5857
+        ],
+        "question": "tên của cửa hàng ở giữa là gì ?",
+        "gt_answer": "hương mai"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          149.0,
+          71.0
+        ],
+        [
+          335.0,
+          71.0
+        ],
+        [
+          335.0,
+          114.0
+        ],
+        [
+          149.0,
+          114.0
+        ]
+      ],
+      "group_id": 5858,
+      "description": "Hỏi: của hàng hương mai bán gì ? || ĐA: cafe",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5858,
+        "question_ids": [
+          5858
+        ],
+        "question": "của hàng hương mai bán gì ?",
+        "gt_answer": "cafe"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          167.0,
+          126.0
+        ],
+        [
+          275.0,
+          126.0
+        ],
+        [
+          275.0,
+          143.0
+        ],
+        [
+          167.0,
+          143.0
+        ]
+      ],
+      "group_id": 5859,
+      "description": "Hỏi: địa chỉ của hương mai ở đâu ? || ĐA: 56 hàng bè str , hoàn kiếm , hà nội",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5859,
+        "question_ids": [
+          5859
+        ],
+        "question": "địa chỉ của hương mai ở đâu ?",
+        "gt_answer": "56 hàng bè str , hoàn kiếm , hà nội"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 5860,
+      "description": "Hỏi: số điện thoại của hương mai là bao nhiêu ? || ĐA: 098 345 2858",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 5860,
+        "question_ids": [
+          5860
+        ],
+        "question": "số điện thoại của hương mai là bao nhiêu ?",
+        "gt_answer": "098 345 2858"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          455.0,
+          91.0
+        ],
+        [
+          597.0,
+          91.0
+        ],
+        [
+          597.0,
+          130.0
+        ],
+        [
+          455.0,
+          130.0
+        ]
+      ],
+      "group_id": 5861,
+      "description": "Hỏi: của hàng bên phải là của hàng gì ? || ĐA: hàng hiệu xuất khẩu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 5861,
+        "question_ids": [
+          5861
+        ],
+        "question": "của hàng bên phải là của hàng gì ?",
+        "gt_answer": "hàng hiệu xuất khẩu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 1.0,
+      "points": [
+        [
+          8.0,
+          376.0
+        ],
+        [
+          80.0,
+          376.0
+        ],
+        [
+          80.0,
+          416.0
+        ],
+        [
+          8.0,
+          416.0
+        ]
+      ],
+      "group_id": 5862,
+      "description": "Hỏi: bức hình này được lấy ở đâu ? || ĐA: zing",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 5862,
+        "question_ids": [
+          5862
+        ],
+        "question": "bức hình này được lấy ở đâu ?",
+        "gt_answer": "zing"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2025.jpg",
+  "imageData": null,
+  "imageHeight": 421,
+  "imageWidth": 660,
+  "description": "Ảnh: 2025.jpg (ID=2025) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: tên của cửa hàng ở giữa là gì ? || ĐA: hương mai\n• Q2_gt: Hỏi: của hàng hương mai bán gì ? || ĐA: cafe\n• Q3_gt: Hỏi: địa chỉ của hương mai ở đâu ? || ĐA: 56 hàng bè str , hoàn kiếm , hà nội\n• Q4_gt: Hỏi: số điện thoại của hương mai là bao nhiêu ? || ĐA: 098 345 2858\n• Q5_gt: Hỏi: của hàng bên phải là của hàng gì ? || ĐA: hàng hiệu xuất khẩu\n• Q6_gt: Hỏi: bức hình này được lấy ở đâu ? || ĐA: zing"
+}

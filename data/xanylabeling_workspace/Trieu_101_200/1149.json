@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8917,
+      "points": [
+        [
+          260.0,
+          201.0
+        ],
+        [
+          432.0,
+          201.0
+        ],
+        [
+          432.0,
+          232.0
+        ],
+        [
+          260.0,
+          232.0
+        ]
+      ],
+      "group_id": 3154,
+      "description": "Hỏi: ở đây là đâu ? || ĐA: bãi tắm phú nhuận",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3154,
+        "question_ids": [
+          3154
+        ],
+        "question": "ở đây là đâu ?",
+        "gt_answer": "bãi tắm phú nhuận"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.93,
+      "points": [
+        [
+          247.0,
+          226.0
+        ],
+        [
+          442.0,
+          226.0
+        ],
+        [
+          442.0,
+          283.0
+        ],
+        [
+          247.0,
+          283.0
+        ]
+      ],
+      "group_id": 3155,
+      "description": "Hỏi: bãi tắm phú nhuận thông báo gì ? || ĐA: tạm dừng hoạt động để phòng , chống dịch covid - 19",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3155,
+        "question_ids": [
+          3155
+        ],
+        "question": "bãi tắm phú nhuận thông báo gì ?",
+        "gt_answer": "tạm dừng hoạt động để phòng , chống dịch covid - 19"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          247.0,
+          249.0
+        ],
+        [
+          442.0,
+          249.0
+        ],
+        [
+          442.0,
+          283.0
+        ],
+        [
+          247.0,
+          283.0
+        ]
+      ],
+      "group_id": 3156,
+      "description": "Hỏi: tại sao bãi tắm phú nhuận lại dừng hoạt động ? || ĐA: phòng , chống dịch covid - 19",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 3156,
+        "question_ids": [
+          3156
+        ],
+        "question": "tại sao bãi tắm phú nhuận lại dừng hoạt động ?",
+        "gt_answer": "phòng , chống dịch covid - 19"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1149.jpg",
+  "imageData": null,
+  "imageHeight": 400,
+  "imageWidth": 600,
+  "description": "Ảnh: 1149.jpg (ID=1149) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: ở đây là đâu ? || ĐA: bãi tắm phú nhuận\n• Q2_gt: Hỏi: bãi tắm phú nhuận thông báo gì ? || ĐA: tạm dừng hoạt động để phòng , chống dịch covid - 19\n• Q3_gt: Hỏi: tại sao bãi tắm phú nhuận lại dừng hoạt động ? || ĐA: phòng , chống dịch covid - 19"
+}

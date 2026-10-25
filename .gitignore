@@ -9,8 +9,9 @@ venv/
 env/
 ENV/
 
-# Data and large binaries
-data/
+# Data and large binaries (except X-AnyLabeling 400-image collaborative workspace)
+data/*
+!data/xanylabeling_workspace/
 datasets/
 *.tar.gz
 *.zip

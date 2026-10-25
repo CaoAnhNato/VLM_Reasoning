@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7958,
+      "points": [
+        [
+          0.0,
+          23.0
+        ],
+        [
+          163.0,
+          23.0
+        ],
+        [
+          163.0,
+          50.0
+        ],
+        [
+          0.0,
+          50.0
+        ]
+      ],
+      "group_id": 11087,
+      "description": "Hỏi: người trong ảnh đã để lại lời dạy gì ? || ĐA: phải suy nghĩ cẩn thận và làm việc cẩn trọng con nhé !",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11087,
+        "question_ids": [
+          11087
+        ],
+        "question": "người trong ảnh đã để lại lời dạy gì ?",
+        "gt_answer": "phải suy nghĩ cẩn thận và làm việc cẩn trọng con nhé !"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3725.jpg",
+  "imageData": null,
+  "imageHeight": 166,
+  "imageWidth": 303,
+  "description": "Ảnh: 3725.jpg (ID=3725) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: người trong ảnh đã để lại lời dạy gì ? || ĐA: phải suy nghĩ cẩn thận và làm việc cẩn trọng con nhé !"
+}

@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          44.0,
+          26.0
+        ],
+        [
+          129.0,
+          26.0
+        ],
+        [
+          129.0,
+          50.0
+        ],
+        [
+          44.0,
+          50.0
+        ]
+      ],
+      "group_id": 7052,
+      "description": "Hỏi: bức hình lấy nguồn từ đâu ? || ĐA: đại nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7052,
+        "question_ids": [
+          7052
+        ],
+        "question": "bức hình lấy nguồn từ đâu ?",
+        "gt_answer": "đại nam"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.75,
+      "points": [
+        [
+          64.0,
+          110.0
+        ],
+        [
+          214.0,
+          110.0
+        ],
+        [
+          214.0,
+          199.0
+        ],
+        [
+          64.0,
+          199.0
+        ]
+      ],
+      "group_id": 7053,
+      "description": "Hỏi: tấm bảng góc trái bức hình nói đến ngày nào trong tuần ? || ĐA: thứ 5",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7053,
+        "question_ids": [
+          7053
+        ],
+        "question": "tấm bảng góc trái bức hình nói đến ngày nào trong tuần ?",
+        "gt_answer": "thứ 5"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8979,
+      "points": [
+        [
+          99.0,
+          168.0
+        ],
+        [
+          231.0,
+          168.0
+        ],
+        [
+          231.0,
+          243.0
+        ],
+        [
+          99.0,
+          243.0
+        ]
+      ],
+      "group_id": 7054,
+      "description": "Hỏi: thứ năm ở cửa hàng này như thế nào ? || ĐA: thỏa sức măm măm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7054,
+        "question_ids": [
+          7054
+        ],
+        "question": "thứ năm ở cửa hàng này như thế nào ?",
+        "gt_answer": "thỏa sức măm măm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 7055,
+      "description": "Hỏi: thứ năm ở cửa hàng này đồng giá bao nhiêu ? || ĐA: 35k",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7055,
+        "question_ids": [
+          7055
+        ],
+        "question": "thứ năm ở cửa hàng này đồng giá bao nhiêu ?",
+        "gt_answer": "35k"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2440.jpg",
+  "imageData": null,
+  "imageHeight": 443,
+  "imageWidth": 697,
+  "description": "Ảnh: 2440.jpg (ID=2440) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: bức hình lấy nguồn từ đâu ? || ĐA: đại nam\n• Q2_gt: Hỏi: tấm bảng góc trái bức hình nói đến ngày nào trong tuần ? || ĐA: thứ 5\n• Q3_gt: Hỏi: thứ năm ở cửa hàng này như thế nào ? || ĐA: thỏa sức măm măm\n• Q4_gt: Hỏi: thứ năm ở cửa hàng này đồng giá bao nhiêu ? || ĐA: 35k"
+}

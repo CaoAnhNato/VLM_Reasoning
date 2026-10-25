@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          40.0,
+          180.0
+        ],
+        [
+          364.0,
+          180.0
+        ],
+        [
+          364.0,
+          283.0
+        ],
+        [
+          40.0,
+          283.0
+        ]
+      ],
+      "group_id": 9437,
+      "description": "Hỏi: cửa hàng này kinh doanh dịch vụ gì ? || ĐA: tiệm trà chanh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9437,
+        "question_ids": [
+          9437
+        ],
+        "question": "cửa hàng này kinh doanh dịch vụ gì ?",
+        "gt_answer": "tiệm trà chanh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          41.0,
+          181.0
+        ],
+        [
+          363.0,
+          181.0
+        ],
+        [
+          363.0,
+          282.0
+        ],
+        [
+          41.0,
+          282.0
+        ]
+      ],
+      "group_id": 9438,
+      "description": "Hỏi: tên của cửa hàng này là gì ? || ĐA: xì trum",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9438,
+        "question_ids": [
+          9438
+        ],
+        "question": "tên của cửa hàng này là gì ?",
+        "gt_answer": "xì trum"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.86,
+      "points": [
+        [
+          44.0,
+          184.0
+        ],
+        [
+          360.0,
+          184.0
+        ],
+        [
+          360.0,
+          279.0
+        ],
+        [
+          44.0,
+          279.0
+        ]
+      ],
+      "group_id": 9439,
+      "description": "Hỏi: số điện thoại của cửa hàng này là gì ? || ĐA: đt : 0963 77 44 09",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9439,
+        "question_ids": [
+          9439
+        ],
+        "question": "số điện thoại của cửa hàng này là gì ?",
+        "gt_answer": "đt : 0963 77 44 09"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3177.jpg",
+  "imageData": null,
+  "imageHeight": 640,
+  "imageWidth": 960,
+  "description": "Ảnh: 3177.jpg (ID=3177) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: cửa hàng này kinh doanh dịch vụ gì ? || ĐA: tiệm trà chanh\n• Q2_gt: Hỏi: tên của cửa hàng này là gì ? || ĐA: xì trum\n• Q3_gt: Hỏi: số điện thoại của cửa hàng này là gì ? || ĐA: đt : 0963 77 44 09"
+}

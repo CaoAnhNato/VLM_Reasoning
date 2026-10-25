@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.93,
+      "points": [
+        [
+          38.0,
+          193.0
+        ],
+        [
+          162.0,
+          193.0
+        ],
+        [
+          162.0,
+          227.0
+        ],
+        [
+          38.0,
+          227.0
+        ]
+      ],
+      "group_id": 3234,
+      "description": "Hỏi: giới hạn một người được mua bao nhiêu kg ? || ĐA: 15kg / người",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3234,
+        "question_ids": [
+          3234
+        ],
+        "question": "giới hạn một người được mua bao nhiêu kg ?",
+        "gt_answer": "15kg / người"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          71.0,
+          104.0
+        ],
+        [
+          147.0,
+          104.0
+        ],
+        [
+          147.0,
+          155.0
+        ],
+        [
+          71.0,
+          155.0
+        ]
+      ],
+      "group_id": 3235,
+      "description": "Hỏi: ở đây có bán các loại táo nào ? || ĐA: táo mỹ táo pháp táo gala",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3235,
+        "question_ids": [
+          3235
+        ],
+        "question": "ở đây có bán các loại táo nào ?",
+        "gt_answer": "táo mỹ táo pháp táo gala"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          99.0,
+          39.0
+        ],
+        [
+          151.0,
+          39.0
+        ],
+        [
+          151.0,
+          96.0
+        ],
+        [
+          99.0,
+          96.0
+        ]
+      ],
+      "group_id": 3236,
+      "description": "Hỏi: ở đây có khuyến mãi nhân dịp lễ nào ? || ĐA: năm mới",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 3236,
+        "question_ids": [
+          3236
+        ],
+        "question": "ở đây có khuyến mãi nhân dịp lễ nào ?",
+        "gt_answer": "năm mới"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1181.jpg",
+  "imageData": null,
+  "imageHeight": 480,
+  "imageWidth": 720,
+  "description": "Ảnh: 1181.jpg (ID=1181) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: giới hạn một người được mua bao nhiêu kg ? || ĐA: 15kg / người\n• Q2_gt: Hỏi: ở đây có bán các loại táo nào ? || ĐA: táo mỹ táo pháp táo gala\n• Q3_gt: Hỏi: ở đây có khuyến mãi nhân dịp lễ nào ? || ĐA: năm mới"
+}

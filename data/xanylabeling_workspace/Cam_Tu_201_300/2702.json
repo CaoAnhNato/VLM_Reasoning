@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.72,
+      "points": [
+        [
+          726.0,
+          1103.0
+        ],
+        [
+          3006.0,
+          1103.0
+        ],
+        [
+          3006.0,
+          2073.0
+        ],
+        [
+          726.0,
+          2073.0
+        ]
+      ],
+      "group_id": 7888,
+      "description": "Hỏi: cuốn sách bìa màu xanh lá cây trong ảnh tên là gì ? || ĐA: mãi mãi tuổi hai mươi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7888,
+        "question_ids": [
+          7888
+        ],
+        "question": "cuốn sách bìa màu xanh lá cây trong ảnh tên là gì ?",
+        "gt_answer": "mãi mãi tuổi hai mươi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.806,
+      "points": [
+        [
+          1380.0,
+          801.0
+        ],
+        [
+          3020.0,
+          801.0
+        ],
+        [
+          3020.0,
+          1310.0
+        ],
+        [
+          1380.0,
+          1310.0
+        ]
+      ],
+      "group_id": 7889,
+      "description": "Hỏi: cuốn sách mãi mãi tuổi đôi mươi do ai sưu tầm - giới thiệu ? || ĐA: đặng vương hưng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7889,
+        "question_ids": [
+          7889
+        ],
+        "question": "cuốn sách mãi mãi tuổi đôi mươi do ai sưu tầm - giới thiệu ?",
+        "gt_answer": "đặng vương hưng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          729.0,
+          1106.0
+        ],
+        [
+          3009.0,
+          1106.0
+        ],
+        [
+          3009.0,
+          2076.0
+        ],
+        [
+          729.0,
+          2076.0
+        ]
+      ],
+      "group_id": 7890,
+      "description": "Hỏi: cuốn sách bìa xanh lá cây có tựa đề là mãi mãi cái gì ? || ĐA: tuổi hai mươi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7890,
+        "question_ids": [
+          7890
+        ],
+        "question": "cuốn sách bìa xanh lá cây có tựa đề là mãi mãi cái gì ?",
+        "gt_answer": "tuổi hai mươi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1676.0,
+          2593.0
+        ],
+        [
+          2163.0,
+          2593.0
+        ],
+        [
+          2163.0,
+          2900.0
+        ],
+        [
+          1676.0,
+          2900.0
+        ]
+      ],
+      "group_id": 7891,
+      "description": "Hỏi: cuốn sách mãi mãi tuổi đôi mươi là phiên bản như thế nào ? || ĐA: đặc biệt",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7891,
+        "question_ids": [
+          7891
+        ],
+        "question": "cuốn sách mãi mãi tuổi đôi mươi là phiên bản như thế nào ?",
+        "gt_answer": "đặc biệt"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1891.0,
+          2825.0
+        ],
+        [
+          1953.0,
+          2825.0
+        ],
+        [
+          1953.0,
+          2883.0
+        ],
+        [
+          1891.0,
+          2883.0
+        ]
+      ],
+      "group_id": 7892,
+      "description": "Hỏi: cuốn sách bìa màu xanh lá cây là tái bản lần thứ bao nhiêu ? || ĐA: 12",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 7892,
+        "question_ids": [
+          7892
+        ],
+        "question": "cuốn sách bìa màu xanh lá cây là tái bản lần thứ bao nhiêu ?",
+        "gt_answer": "12"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.825,
+      "points": [
+        [
+          1503.0,
+          2888.0
+        ],
+        [
+          1845.0,
+          2888.0
+        ],
+        [
+          1845.0,
+          3063.0
+        ],
+        [
+          1503.0,
+          3063.0
+        ]
+      ],
+      "group_id": 7893,
+      "description": "Hỏi: ai là nhà xuất bản của cuốn sách mãi mãi tuổi hai mươi ? || ĐA: thanh niên",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 7893,
+        "question_ids": [
+          7893
+        ],
+        "question": "ai là nhà xuất bản của cuốn sách mãi mãi tuổi hai mươi ?",
+        "gt_answer": "thanh niên"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2702.jpg",
+  "imageData": null,
+  "imageHeight": 4032,
+  "imageWidth": 3024,
+  "description": "Ảnh: 2702.jpg (ID=2702) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: cuốn sách bìa màu xanh lá cây trong ảnh tên là gì ? || ĐA: mãi mãi tuổi hai mươi\n• Q2_gt: Hỏi: cuốn sách mãi mãi tuổi đôi mươi do ai sưu tầm - giới thiệu ? || ĐA: đặng vương hưng\n• Q3_gt: Hỏi: cuốn sách bìa xanh lá cây có tựa đề là mãi mãi cái gì ? || ĐA: tuổi hai mươi\n• Q4_gt: Hỏi: cuốn sách mãi mãi tuổi đôi mươi là phiên bản như thế nào ? || ĐA: đặc biệt\n• Q5_gt: Hỏi: cuốn sách bìa màu xanh lá cây là tái bản lần thứ bao nhiêu ? || ĐA: 12\n• Q6_gt: Hỏi: ai là nhà xuất bản của cuốn sách mãi mãi tuổi hai mươi ? || ĐA: thanh niên"
+}

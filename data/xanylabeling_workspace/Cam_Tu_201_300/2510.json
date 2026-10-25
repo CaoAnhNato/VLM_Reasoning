@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          364.0,
+          126.0
+        ],
+        [
+          665.0,
+          126.0
+        ],
+        [
+          665.0,
+          195.0
+        ],
+        [
+          364.0,
+          195.0
+        ]
+      ],
+      "group_id": 7269,
+      "description": "Hỏi: bức hình chụp ở đâu ? || ĐA: chợ đêm nông sản văn quán",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7269,
+        "question_ids": [
+          7269
+        ],
+        "question": "bức hình chụp ở đâu ?",
+        "gt_answer": "chợ đêm nông sản văn quán"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          363.0,
+          125.0
+        ],
+        [
+          666.0,
+          125.0
+        ],
+        [
+          666.0,
+          196.0
+        ],
+        [
+          363.0,
+          196.0
+        ]
+      ],
+      "group_id": 7270,
+      "description": "Hỏi: khu chợ đêm nông sản trong bức hình tên gì ? || ĐA: văn quán",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7270,
+        "question_ids": [
+          7270
+        ],
+        "question": "khu chợ đêm nông sản trong bức hình tên gì ?",
+        "gt_answer": "văn quán"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          366.0,
+          128.0
+        ],
+        [
+          669.0,
+          128.0
+        ],
+        [
+          669.0,
+          199.0
+        ],
+        [
+          366.0,
+          199.0
+        ]
+      ],
+      "group_id": 7271,
+      "description": "Hỏi: khu chợ văn quán bán gì ? || ĐA: nông sản",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7271,
+        "question_ids": [
+          7271
+        ],
+        "question": "khu chợ văn quán bán gì ?",
+        "gt_answer": "nông sản"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          365.0,
+          127.0
+        ],
+        [
+          664.0,
+          127.0
+        ],
+        [
+          664.0,
+          194.0
+        ],
+        [
+          365.0,
+          194.0
+        ]
+      ],
+      "group_id": 7272,
+      "description": "Hỏi: khu chợ nông sản văn quán diễn ra vào buổi nào ? || ĐA: đêm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7272,
+        "question_ids": [
+          7272
+        ],
+        "question": "khu chợ nông sản văn quán diễn ra vào buổi nào ?",
+        "gt_answer": "đêm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.7267,
+      "points": [
+        [
+          54.0,
+          55.0
+        ],
+        [
+          226.0,
+          55.0
+        ],
+        [
+          226.0,
+          83.0
+        ],
+        [
+          54.0,
+          83.0
+        ]
+      ],
+      "group_id": 7273,
+      "description": "Hỏi: bức hình lấy nguồn từ đâu ? || ĐA: hanoitoplist",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 7273,
+        "question_ids": [
+          7273
+        ],
+        "question": "bức hình lấy nguồn từ đâu ?",
+        "gt_answer": "hanoitoplist"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2510.jpg",
+  "imageData": null,
+  "imageHeight": 701,
+  "imageWidth": 1000,
+  "description": "Ảnh: 2510.jpg (ID=2510) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: bức hình chụp ở đâu ? || ĐA: chợ đêm nông sản văn quán\n• Q2_gt: Hỏi: khu chợ đêm nông sản trong bức hình tên gì ? || ĐA: văn quán\n• Q3_gt: Hỏi: khu chợ văn quán bán gì ? || ĐA: nông sản\n• Q4_gt: Hỏi: khu chợ nông sản văn quán diễn ra vào buổi nào ? || ĐA: đêm\n• Q5_gt: Hỏi: bức hình lấy nguồn từ đâu ? || ĐA: hanoitoplist"
+}

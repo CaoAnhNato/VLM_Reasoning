@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          160.0,
+          0.0
+        ],
+        [
+          817.0,
+          0.0
+        ],
+        [
+          817.0,
+          96.0
+        ],
+        [
+          160.0,
+          96.0
+        ]
+      ],
+      "group_id": 2222,
+      "description": "Hỏi: bức hình chụp ở đâu ? || ĐA: khu du lịch sinh thái thiên đàng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2222,
+        "question_ids": [
+          2222
+        ],
+        "question": "bức hình chụp ở đâu ?",
+        "gt_answer": "khu du lịch sinh thái thiên đàng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          163.0,
+          3.0
+        ],
+        [
+          820.0,
+          3.0
+        ],
+        [
+          820.0,
+          99.0
+        ],
+        [
+          163.0,
+          99.0
+        ]
+      ],
+      "group_id": 2223,
+      "description": "Hỏi: khu du lịch sinh thái này tên gì ? || ĐA: thiên đàng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2223,
+        "question_ids": [
+          2223
+        ],
+        "question": "khu du lịch sinh thái này tên gì ?",
+        "gt_answer": "thiên đàng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          169.0,
+          82.0
+        ],
+        [
+          694.0,
+          82.0
+        ],
+        [
+          694.0,
+          122.0
+        ],
+        [
+          169.0,
+          122.0
+        ]
+      ],
+      "group_id": 2224,
+      "description": "Hỏi: địa chỉ khu du lịch này ở đâu ? || ĐA: thôn trung an , xã bình thạnh , huyện bình sơn , tỉnh quảng ngãi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 2224,
+        "question_ids": [
+          2224
+        ],
+        "question": "địa chỉ khu du lịch này ở đâu ?",
+        "gt_answer": "thôn trung an , xã bình thạnh , huyện bình sơn , tỉnh quảng ngãi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          429.0,
+          246.0
+        ],
+        [
+          564.0,
+          246.0
+        ],
+        [
+          564.0,
+          283.0
+        ],
+        [
+          429.0,
+          283.0
+        ]
+      ],
+      "group_id": 2225,
+      "description": "Hỏi: khu du lịch sinh thái này phục vụ khách như thế nào ? || ĐA: 24 / 24",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 2225,
+        "question_ids": [
+          2225
+        ],
+        "question": "khu du lịch sinh thái này phục vụ khách như thế nào ?",
+        "gt_answer": "24 / 24"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 2226,
+      "description": "Hỏi: số điện thoại của khu du lịch sinh thái thiên đàng là gì ? || ĐA: 0553 . 50 50 75",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 2226,
+        "question_ids": [
+          2226
+        ],
+        "question": "số điện thoại của khu du lịch sinh thái thiên đàng là gì ?",
+        "gt_answer": "0553 . 50 50 75"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "847.jpg",
+  "imageData": null,
+  "imageHeight": 499,
+  "imageWidth": 958,
+  "description": "Ảnh: 847.jpg (ID=847) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: bức hình chụp ở đâu ? || ĐA: khu du lịch sinh thái thiên đàng\n• Q2_gt: Hỏi: khu du lịch sinh thái này tên gì ? || ĐA: thiên đàng\n• Q3_gt: Hỏi: địa chỉ khu du lịch này ở đâu ? || ĐA: thôn trung an , xã bình thạnh , huyện bình sơn , tỉnh quảng ngãi\n• Q4_gt: Hỏi: khu du lịch sinh thái này phục vụ khách như thế nào ? || ĐA: 24 / 24\n• Q5_gt: Hỏi: số điện thoại của khu du lịch sinh thái thiên đàng là gì ? || ĐA: 0553 . 50 50 75"
+}

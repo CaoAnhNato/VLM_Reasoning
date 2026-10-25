@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.6937,
+      "points": [
+        [
+          148.0,
+          354.0
+        ],
+        [
+          236.0,
+          354.0
+        ],
+        [
+          236.0,
+          372.0
+        ],
+        [
+          148.0,
+          372.0
+        ]
+      ],
+      "group_id": 8435,
+      "description": "Hỏi: khu ở trong ảnh là khu nào ? || ĐA: trạm kiểm soát phòng , chống dịch covid - 19",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8435,
+        "question_ids": [
+          8435
+        ],
+        "question": "khu ở trong ảnh là khu nào ?",
+        "gt_answer": "trạm kiểm soát phòng , chống dịch covid - 19"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7797,
+      "points": [
+        [
+          140.0,
+          361.0
+        ],
+        [
+          212.0,
+          361.0
+        ],
+        [
+          212.0,
+          383.0
+        ],
+        [
+          140.0,
+          383.0
+        ]
+      ],
+      "group_id": 8436,
+      "description": "Hỏi: trạm kiểm soát được lập ra nhằm mục đích gì ? || ĐA: phòng , chống dịch covid - 19",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8436,
+        "question_ids": [
+          8436
+        ],
+        "question": "trạm kiểm soát được lập ra nhằm mục đích gì ?",
+        "gt_answer": "phòng , chống dịch covid - 19"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          470.0,
+          185.0
+        ],
+        [
+          638.0,
+          185.0
+        ],
+        [
+          638.0,
+          262.0
+        ],
+        [
+          470.0,
+          262.0
+        ]
+      ],
+      "group_id": 8437,
+      "description": "Hỏi: cửa hàng có bảng hiệu màu đỏ bên phải đường có tên là gì ? || ĐA: ~ nail ~ make up",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8437,
+        "question_ids": [
+          8437
+        ],
+        "question": "cửa hàng có bảng hiệu màu đỏ bên phải đường có tên là gì ?",
+        "gt_answer": "~ nail ~ make up"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 8438,
+      "description": "Hỏi: cửa hàng nail ở bên phải đường có số điện thoại liên lạc là gì ? || ĐA: 0979 650 971",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 8438,
+        "question_ids": [
+          8438
+        ],
+        "question": "cửa hàng nail ở bên phải đường có số điện thoại liên lạc là gì ?",
+        "gt_answer": "0979 650 971"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2863.jpg",
+  "imageData": null,
+  "imageHeight": 443,
+  "imageWidth": 665,
+  "description": "Ảnh: 2863.jpg (ID=2863) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: khu ở trong ảnh là khu nào ? || ĐA: trạm kiểm soát phòng , chống dịch covid - 19\n• Q2_gt: Hỏi: trạm kiểm soát được lập ra nhằm mục đích gì ? || ĐA: phòng , chống dịch covid - 19\n• Q3_gt: Hỏi: cửa hàng có bảng hiệu màu đỏ bên phải đường có tên là gì ? || ĐA: ~ nail ~ make up\n• Q4_gt: Hỏi: cửa hàng nail ở bên phải đường có số điện thoại liên lạc là gì ? || ĐA: 0979 650 971"
+}

@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          0.0,
+          80.0
+        ],
+        [
+          554.0,
+          80.0
+        ],
+        [
+          554.0,
+          209.0
+        ],
+        [
+          0.0,
+          209.0
+        ]
+      ],
+      "group_id": 5066,
+      "description": "Hỏi: cửa hàng có tấm bảng màu xanh dương tên là gì ? || ĐA: vân chính",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5066,
+        "question_ids": [
+          5066
+        ],
+        "question": "cửa hàng có tấm bảng màu xanh dương tên là gì ?",
+        "gt_answer": "vân chính"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          265.0,
+          54.0
+        ],
+        [
+          458.0,
+          54.0
+        ],
+        [
+          458.0,
+          94.0
+        ],
+        [
+          265.0,
+          94.0
+        ]
+      ],
+      "group_id": 5067,
+      "description": "Hỏi: cửa hàng vân chính là nơi như thế nào ? || ĐA: công ty xe",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5067,
+        "question_ids": [
+          5067
+        ],
+        "question": "cửa hàng vân chính là nơi như thế nào ?",
+        "gt_answer": "công ty xe"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          206.0,
+          184.0
+        ],
+        [
+          512.0,
+          184.0
+        ],
+        [
+          512.0,
+          236.0
+        ],
+        [
+          206.0,
+          236.0
+        ]
+      ],
+      "group_id": 5068,
+      "description": "Hỏi: công ty xe vân chính có nhận cái gì ? || ĐA: hợp đồng xe 7 - 16 chỗ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5068,
+        "question_ids": [
+          5068
+        ],
+        "question": "công ty xe vân chính có nhận cái gì ?",
+        "gt_answer": "hợp đồng xe 7 - 16 chỗ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.825,
+      "points": [
+        [
+          231.0,
+          253.0
+        ],
+        [
+          479.0,
+          253.0
+        ],
+        [
+          479.0,
+          286.0
+        ],
+        [
+          231.0,
+          286.0
+        ]
+      ],
+      "group_id": 5069,
+      "description": "Hỏi: các xe của công ty vân chính vận chuyển khách từ tp . hcm tới những đâu ? || ĐA: trảng bom - la ngà định quán - phương lâm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 5069,
+        "question_ids": [
+          5069
+        ],
+        "question": "các xe của công ty vân chính vận chuyển khách từ tp . hcm tới những đâu ?",
+        "gt_answer": "trảng bom - la ngà định quán - phương lâm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.7283,
+      "points": [
+        [
+          174.0,
+          284.0
+        ],
+        [
+          310.0,
+          284.0
+        ],
+        [
+          310.0,
+          311.0
+        ],
+        [
+          174.0,
+          311.0
+        ]
+      ],
+      "group_id": 5070,
+      "description": "Hỏi: số điện thoại của công ty vân chính là gì ? || ĐA: 0942 . 663344 - 0906 . 663344 - 0933 . 663344",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 5070,
+        "question_ids": [
+          5070
+        ],
+        "question": "số điện thoại của công ty vân chính là gì ?",
+        "gt_answer": "0942 . 663344 - 0906 . 663344 - 0933 . 663344"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.95,
+      "points": [
+        [
+          177.0,
+          287.0
+        ],
+        [
+          313.0,
+          287.0
+        ],
+        [
+          313.0,
+          314.0
+        ],
+        [
+          177.0,
+          314.0
+        ]
+      ],
+      "group_id": 5071,
+      "description": "Hỏi: trong ba số điện thoại , số điện thoại ở giữa là số gì ? || ĐA: 0906 . 663344",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 5071,
+        "question_ids": [
+          5071
+        ],
+        "question": "trong ba số điện thoại , số điện thoại ở giữa là số gì ?",
+        "gt_answer": "0906 . 663344"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1784.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 800,
+  "description": "Ảnh: 1784.jpg (ID=1784) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: cửa hàng có tấm bảng màu xanh dương tên là gì ? || ĐA: vân chính\n• Q2_gt: Hỏi: cửa hàng vân chính là nơi như thế nào ? || ĐA: công ty xe\n• Q3_gt: Hỏi: công ty xe vân chính có nhận cái gì ? || ĐA: hợp đồng xe 7 - 16 chỗ\n• Q4_gt: Hỏi: các xe của công ty vân chính vận chuyển khách từ tp . hcm tới những đâu ? || ĐA: trảng bom - la ngà định quán - phương lâm\n• Q5_gt: Hỏi: số điện thoại của công ty vân chính là gì ? || ĐA: 0942 . 663344 - 0906 . 663344 - 0933 . 663344\n• Q6_gt: Hỏi: trong ba số điện thoại , số điện thoại ở giữa là số gì ? || ĐA: 0906 . 663344"
+}

@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8667,
+      "points": [
+        [
+          237.0,
+          138.0
+        ],
+        [
+          1055.0,
+          138.0
+        ],
+        [
+          1055.0,
+          279.0
+        ],
+        [
+          237.0,
+          279.0
+        ]
+      ],
+      "group_id": 10213,
+      "description": "Hỏi: người đàn ông đang thi công cho gì ? || ĐA: kim huyền shop",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10213,
+        "question_ids": [
+          10213
+        ],
+        "question": "người đàn ông đang thi công cho gì ?",
+        "gt_answer": "kim huyền shop"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          53.0,
+          268.0
+        ],
+        [
+          753.0,
+          268.0
+        ],
+        [
+          753.0,
+          355.0
+        ],
+        [
+          53.0,
+          355.0
+        ]
+      ],
+      "group_id": 10214,
+      "description": "Hỏi: kim huyền shop kinh doanh gì ? || ĐA: thời trang cao cấp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10214,
+        "question_ids": [
+          10214
+        ],
+        "question": "kim huyền shop kinh doanh gì ?",
+        "gt_answer": "thời trang cao cấp"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8128,
+      "points": [
+        [
+          612.0,
+          370.0
+        ],
+        [
+          1025.0,
+          370.0
+        ],
+        [
+          1025.0,
+          401.0
+        ],
+        [
+          612.0,
+          401.0
+        ]
+      ],
+      "group_id": 10215,
+      "description": "Hỏi: ở kim huyền shop đang thi công đảm bao điều gì ? || ĐA: giá trên trời , chất lượng dưới đất",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10215,
+        "question_ids": [
+          10215
+        ],
+        "question": "ở kim huyền shop đang thi công đảm bao điều gì ?",
+        "gt_answer": "giá trên trời , chất lượng dưới đất"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7595,
+      "points": [
+        [
+          645.0,
+          318.0
+        ],
+        [
+          1189.0,
+          318.0
+        ],
+        [
+          1189.0,
+          370.0
+        ],
+        [
+          645.0,
+          370.0
+        ]
+      ],
+      "group_id": 10216,
+      "description": "Hỏi: ở đây chuyên sỉ và lẻ những mặt hàng gì ? || ĐA: vali - túi xách thời trang giầy nam - nữ cao cấp sấu đàn guitar cổ các loại",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 10216,
+        "question_ids": [
+          10216
+        ],
+        "question": "ở đây chuyên sỉ và lẻ những mặt hàng gì ?",
+        "gt_answer": "vali - túi xách thời trang giầy nam - nữ cao cấp sấu đàn guitar cổ các loại"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 10217,
+      "description": "Hỏi: muốn liên lạc để mua hàng ở shop này thì liên hệ số điện thoại nào ? || ĐA: 0903 679 522 - 0907 123 727",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 10217,
+        "question_ids": [
+          10217
+        ],
+        "question": "muốn liên lạc để mua hàng ở shop này thì liên hệ số điện thoại nào ?",
+        "gt_answer": "0903 679 522 - 0907 123 727"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 1.0,
+      "points": [
+        [
+          94.0,
+          392.0
+        ],
+        [
+          599.0,
+          392.0
+        ],
+        [
+          599.0,
+          430.0
+        ],
+        [
+          94.0,
+          430.0
+        ]
+      ],
+      "group_id": 10218,
+      "description": "Hỏi: shop này có số nhà và nằm trên đường nào ? || ĐA: 83 đường đoàn thế trung",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 10218,
+        "question_ids": [
+          10218
+        ],
+        "question": "shop này có số nhà và nằm trên đường nào ?",
+        "gt_answer": "83 đường đoàn thế trung"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3417.jpg",
+  "imageData": null,
+  "imageHeight": 960,
+  "imageWidth": 1280,
+  "description": "Ảnh: 3417.jpg (ID=3417) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: người đàn ông đang thi công cho gì ? || ĐA: kim huyền shop\n• Q2_gt: Hỏi: kim huyền shop kinh doanh gì ? || ĐA: thời trang cao cấp\n• Q3_gt: Hỏi: ở kim huyền shop đang thi công đảm bao điều gì ? || ĐA: giá trên trời , chất lượng dưới đất\n• Q4_gt: Hỏi: ở đây chuyên sỉ và lẻ những mặt hàng gì ? || ĐA: vali - túi xách thời trang giầy nam - nữ cao cấp sấu đàn guitar cổ các loại\n• Q5_gt: Hỏi: muốn liên lạc để mua hàng ở shop này thì liên hệ số điện thoại nào ? || ĐA: 0903 679 522 - 0907 123 727\n• Q6_gt: Hỏi: shop này có số nhà và nằm trên đường nào ? || ĐA: 83 đường đoàn thế trung"
+}

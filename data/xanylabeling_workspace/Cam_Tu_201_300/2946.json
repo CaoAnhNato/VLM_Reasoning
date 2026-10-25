@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          71.0,
+          121.0
+        ],
+        [
+          528.0,
+          121.0
+        ],
+        [
+          528.0,
+          212.0
+        ],
+        [
+          71.0,
+          212.0
+        ]
+      ],
+      "group_id": 8658,
+      "description": "Hỏi: tên quán là gì ? || ĐA: hido sport",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8658,
+        "question_ids": [
+          8658
+        ],
+        "question": "tên quán là gì ?",
+        "gt_answer": "hido sport"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8383,
+      "points": [
+        [
+          71.0,
+          221.0
+        ],
+        [
+          194.0,
+          221.0
+        ],
+        [
+          194.0,
+          241.0
+        ],
+        [
+          71.0,
+          241.0
+        ]
+      ],
+      "group_id": 8659,
+      "description": "Hỏi: quán nằm ở địa chỉ nào ? || ĐA: 86 đồng nai , p . 15 , q10 tp . hcm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8659,
+        "question_ids": [
+          8659
+        ],
+        "question": "quán nằm ở địa chỉ nào ?",
+        "gt_answer": "86 đồng nai , p . 15 , q10 tp . hcm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7283,
+      "points": [
+        [
+          331.0,
+          224.0
+        ],
+        [
+          452.0,
+          224.0
+        ],
+        [
+          452.0,
+          242.0
+        ],
+        [
+          331.0,
+          242.0
+        ]
+      ],
+      "group_id": 8660,
+      "description": "Hỏi: cửa hàng có số điện thoại là bao nhiêu ? || ĐA: 0982 . 595 . 523 - 0975 . 742 . 608",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8660,
+        "question_ids": [
+          8660
+        ],
+        "question": "cửa hàng có số điện thoại là bao nhiêu ?",
+        "gt_answer": "0982 . 595 . 523 - 0975 . 742 . 608"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          476.0,
+          226.0
+        ],
+        [
+          568.0,
+          226.0
+        ],
+        [
+          568.0,
+          243.0
+        ],
+        [
+          476.0,
+          243.0
+        ]
+      ],
+      "group_id": 8661,
+      "description": "Hỏi: của hàng hido sport ngoài số điện thoại 0982 . 595 . 523 còn số nào không ? || ĐA: 0975 . 742 . 608",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 8661,
+        "question_ids": [
+          8661
+        ],
+        "question": "của hàng hido sport ngoài số điện thoại 0982 . 595 . 523 còn số nào không ?",
+        "gt_answer": "0975 . 742 . 608"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2946.jpg",
+  "imageData": null,
+  "imageHeight": 361,
+  "imageWidth": 600,
+  "description": "Ảnh: 2946.jpg (ID=2946) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: tên quán là gì ? || ĐA: hido sport\n• Q2_gt: Hỏi: quán nằm ở địa chỉ nào ? || ĐA: 86 đồng nai , p . 15 , q10 tp . hcm\n• Q3_gt: Hỏi: cửa hàng có số điện thoại là bao nhiêu ? || ĐA: 0982 . 595 . 523 - 0975 . 742 . 608\n• Q4_gt: Hỏi: của hàng hido sport ngoài số điện thoại 0982 . 595 . 523 còn số nào không ? || ĐA: 0975 . 742 . 608"
+}

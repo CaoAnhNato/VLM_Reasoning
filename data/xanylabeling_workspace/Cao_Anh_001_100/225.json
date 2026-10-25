@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          143.0,
+          5.0
+        ],
+        [
+          234.0,
+          5.0
+        ],
+        [
+          234.0,
+          37.0
+        ],
+        [
+          143.0,
+          37.0
+        ]
+      ],
+      "group_id": 663,
+      "description": "Hỏi: người đàn ông áo xanh đang đứng trước tiệm gì ? || ĐA: thuốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 663,
+        "question_ids": [
+          663
+        ],
+        "question": "người đàn ông áo xanh đang đứng trước tiệm gì ?",
+        "gt_answer": "thuốc"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          147.0,
+          28.0
+        ],
+        [
+          230.0,
+          28.0
+        ],
+        [
+          230.0,
+          75.0
+        ],
+        [
+          147.0,
+          75.0
+        ]
+      ],
+      "group_id": 664,
+      "description": "Hỏi: tiệm thuốc người đàn ông áo xanh đứng trước bán thuốc như thế nào ? || ĐA: giá sỉ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 664,
+        "question_ids": [
+          664
+        ],
+        "question": "tiệm thuốc người đàn ông áo xanh đứng trước bán thuốc như thế nào ?",
+        "gt_answer": "giá sỉ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          158.0,
+          98.0
+        ],
+        [
+          256.0,
+          98.0
+        ],
+        [
+          256.0,
+          132.0
+        ],
+        [
+          158.0,
+          132.0
+        ]
+      ],
+      "group_id": 665,
+      "description": "Hỏi: tên của tiệm thuốc là gì ? || ĐA: mẫn minh sơn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 665,
+        "question_ids": [
+          665
+        ],
+        "question": "tên của tiệm thuốc là gì ?",
+        "gt_answer": "mẫn minh sơn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "225.jpg",
+  "imageData": null,
+  "imageHeight": 301,
+  "imageWidth": 546,
+  "description": "Ảnh: 225.jpg (ID=225) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: người đàn ông áo xanh đang đứng trước tiệm gì ? || ĐA: thuốc\n• Q2_gt: Hỏi: tiệm thuốc người đàn ông áo xanh đứng trước bán thuốc như thế nào ? || ĐA: giá sỉ\n• Q3_gt: Hỏi: tên của tiệm thuốc là gì ? || ĐA: mẫn minh sơn"
+}

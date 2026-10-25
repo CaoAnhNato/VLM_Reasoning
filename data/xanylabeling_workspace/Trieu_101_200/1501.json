@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          767.0,
+          331.0
+        ],
+        [
+          1265.0,
+          331.0
+        ],
+        [
+          1265.0,
+          577.0
+        ],
+        [
+          767.0,
+          577.0
+        ]
+      ],
+      "group_id": 4186,
+      "description": "Hỏi: dòng chữ màu trắng được chèn vào giữa bức hình có nội dung gì ? || ĐA: thegioibanghieu . com thế giới bảng hiệu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4186,
+        "question_ids": [
+          4186
+        ],
+        "question": "dòng chữ màu trắng được chèn vào giữa bức hình có nội dung gì ?",
+        "gt_answer": "thegioibanghieu . com thế giới bảng hiệu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7284,
+      "points": [
+        [
+          293.0,
+          193.0
+        ],
+        [
+          977.0,
+          193.0
+        ],
+        [
+          977.0,
+          445.0
+        ],
+        [
+          293.0,
+          445.0
+        ]
+      ],
+      "group_id": 4187,
+      "description": "Hỏi: tiệm café này tên gì ? || ĐA: brasili américa",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4187,
+        "question_ids": [
+          4187
+        ],
+        "question": "tiệm café này tên gì ?",
+        "gt_answer": "brasili américa"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1501.jpg",
+  "imageData": null,
+  "imageHeight": 1120,
+  "imageWidth": 1500,
+  "description": "Ảnh: 1501.jpg (ID=1501) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: dòng chữ màu trắng được chèn vào giữa bức hình có nội dung gì ? || ĐA: thegioibanghieu . com thế giới bảng hiệu\n• Q2_gt: Hỏi: tiệm café này tên gì ? || ĐA: brasili américa"
+}

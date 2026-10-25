@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          262.0,
+          205.0
+        ],
+        [
+          370.0,
+          205.0
+        ],
+        [
+          370.0,
+          279.0
+        ],
+        [
+          262.0,
+          279.0
+        ]
+      ],
+      "group_id": 3809,
+      "description": "Hỏi: quán trong ảnh là quán gì ? || ĐA: phở béo",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3809,
+        "question_ids": [
+          3809
+        ],
+        "question": "quán trong ảnh là quán gì ?",
+        "gt_answer": "phở béo"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9533,
+      "points": [
+        [
+          96.0,
+          64.0
+        ],
+        [
+          354.0,
+          64.0
+        ],
+        [
+          354.0,
+          183.0
+        ],
+        [
+          96.0,
+          183.0
+        ]
+      ],
+      "group_id": 3810,
+      "description": "Hỏi: quán trong ảnh bán những món gì ? || ĐA: tái - nạm - gầu - gân - viên",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3810,
+        "question_ids": [
+          3810
+        ],
+        "question": "quán trong ảnh bán những món gì ?",
+        "gt_answer": "tái - nạm - gầu - gân - viên"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.825,
+      "points": [
+        [
+          333.0,
+          439.0
+        ],
+        [
+          424.0,
+          439.0
+        ],
+        [
+          424.0,
+          474.0
+        ],
+        [
+          333.0,
+          474.0
+        ]
+      ],
+      "group_id": 3811,
+      "description": "Hỏi: nguồn của tấm ảnh này là gì ? || ĐA: quảng cáo thế huy",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 3811,
+        "question_ids": [
+          3811
+        ],
+        "question": "nguồn của tấm ảnh này là gì ?",
+        "gt_answer": "quảng cáo thế huy"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          293.0,
+          468.0
+        ],
+        [
+          424.0,
+          468.0
+        ],
+        [
+          424.0,
+          487.0
+        ],
+        [
+          293.0,
+          487.0
+        ]
+      ],
+      "group_id": 3812,
+      "description": "Hỏi: số điện thoại liên lạc của nguồn tấm ảnh này là gì ? || ĐA: 0906820305",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 3812,
+        "question_ids": [
+          3812
+        ],
+        "question": "số điện thoại liên lạc của nguồn tấm ảnh này là gì ?",
+        "gt_answer": "0906820305"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1379.jpg",
+  "imageData": null,
+  "imageHeight": 500,
+  "imageWidth": 424,
+  "description": "Ảnh: 1379.jpg (ID=1379) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: quán trong ảnh là quán gì ? || ĐA: phở béo\n• Q2_gt: Hỏi: quán trong ảnh bán những món gì ? || ĐA: tái - nạm - gầu - gân - viên\n• Q3_gt: Hỏi: nguồn của tấm ảnh này là gì ? || ĐA: quảng cáo thế huy\n• Q4_gt: Hỏi: số điện thoại liên lạc của nguồn tấm ảnh này là gì ? || ĐA: 0906820305"
+}

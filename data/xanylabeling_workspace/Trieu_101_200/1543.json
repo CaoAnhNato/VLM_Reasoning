@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8085,
+      "points": [
+        [
+          695.0,
+          0.0
+        ],
+        [
+          821.0,
+          0.0
+        ],
+        [
+          821.0,
+          93.0
+        ],
+        [
+          695.0,
+          93.0
+        ]
+      ],
+      "group_id": 4312,
+      "description": "Hỏi: sản phẩm mà hai người phụ nữ đang xem có khả năng gì ? || ĐA: bảo vệ làn da dưới nắng hè",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4312,
+        "question_ids": [
+          4312
+        ],
+        "question": "sản phẩm mà hai người phụ nữ đang xem có khả năng gì ?",
+        "gt_answer": "bảo vệ làn da dưới nắng hè"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1543.jpg",
+  "imageData": null,
+  "imageHeight": 547,
+  "imageWidth": 821,
+  "description": "Ảnh: 1543.jpg (ID=1543) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: sản phẩm mà hai người phụ nữ đang xem có khả năng gì ? || ĐA: bảo vệ làn da dưới nắng hè"
+}

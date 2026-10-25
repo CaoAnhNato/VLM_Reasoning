@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          272.0,
+          154.0
+        ],
+        [
+          472.0,
+          154.0
+        ],
+        [
+          472.0,
+          189.0
+        ],
+        [
+          272.0,
+          189.0
+        ]
+      ],
+      "group_id": 4008,
+      "description": "Hỏi: buổi lễ trong ảnh là lễ gì ? || ĐA: ký kết hợp tác",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4008,
+        "question_ids": [
+          4008
+        ],
+        "question": "buổi lễ trong ảnh là lễ gì ?",
+        "gt_answer": "ký kết hợp tác"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7881,
+      "points": [
+        [
+          197.0,
+          185.0
+        ],
+        [
+          544.0,
+          185.0
+        ],
+        [
+          544.0,
+          209.0
+        ],
+        [
+          197.0,
+          209.0
+        ]
+      ],
+      "group_id": 4009,
+      "description": "Hỏi: nội dung của buổi lễ ký kết này là vì mục tiêu gì ? || ĐA: xây dựng hội an là thành phố du lịch thân thiện , không tiêu thụ thịt chó , mèo và hỗ trợ loại trừ bệnh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4009,
+        "question_ids": [
+          4009
+        ],
+        "question": "nội dung của buổi lễ ký kết này là vì mục tiêu gì ?",
+        "gt_answer": "xây dựng hội an là thành phố du lịch thân thiện , không tiêu thụ thịt chó , mèo và hỗ trợ loại trừ bệnh"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1442.jpg",
+  "imageData": null,
+  "imageHeight": 500,
+  "imageWidth": 750,
+  "description": "Ảnh: 1442.jpg (ID=1442) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: buổi lễ trong ảnh là lễ gì ? || ĐA: ký kết hợp tác\n• Q2_gt: Hỏi: nội dung của buổi lễ ký kết này là vì mục tiêu gì ? || ĐA: xây dựng hội an là thành phố du lịch thân thiện , không tiêu thụ thịt chó , mèo và hỗ trợ loại trừ bệnh"
+}

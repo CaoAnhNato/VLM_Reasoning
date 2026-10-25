@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          338.0,
+          433.0
+        ],
+        [
+          983.0,
+          433.0
+        ],
+        [
+          983.0,
+          504.0
+        ],
+        [
+          338.0,
+          504.0
+        ]
+      ],
+      "group_id": 8536,
+      "description": "Hỏi: quán này có tên là gì ? || ĐA: kyodo foods - đặc sản gà ủ muối",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8536,
+        "question_ids": [
+          8536
+        ],
+        "question": "quán này có tên là gì ?",
+        "gt_answer": "kyodo foods - đặc sản gà ủ muối"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          296.0,
+          573.0
+        ],
+        [
+          638.0,
+          573.0
+        ],
+        [
+          638.0,
+          624.0
+        ],
+        [
+          296.0,
+          624.0
+        ]
+      ],
+      "group_id": 8537,
+      "description": "Hỏi: có thể cho tôi biết gà ủ muối nguyên con giá bao nhiêu ? || ĐA: 245k / con",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8537,
+        "question_ids": [
+          8537
+        ],
+        "question": "có thể cho tôi biết gà ủ muối nguyên con giá bao nhiêu ?",
+        "gt_answer": "245k / con"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          849.0,
+          589.0
+        ],
+        [
+          929.0,
+          589.0
+        ],
+        [
+          929.0,
+          632.0
+        ],
+        [
+          849.0,
+          632.0
+        ]
+      ],
+      "group_id": 8538,
+      "description": "Hỏi: giá của gà ủ muối 1 / 2 con là bao nhiêu ? || ĐA: 130k",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8538,
+        "question_ids": [
+          8538
+        ],
+        "question": "giá của gà ủ muối 1 / 2 con là bao nhiêu ?",
+        "gt_answer": "130k"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9833,
+      "points": [
+        [
+          283.0,
+          933.0
+        ],
+        [
+          639.0,
+          933.0
+        ],
+        [
+          639.0,
+          992.0
+        ],
+        [
+          283.0,
+          992.0
+        ]
+      ],
+      "group_id": 8539,
+      "description": "Hỏi: chân gà rút xương ủ muối quán này bán bao nhiêu ? || ĐA: 85k / bịch ( 15 cái )",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 8539,
+        "question_ids": [
+          8539
+        ],
+        "question": "chân gà rút xương ủ muối quán này bán bao nhiêu ?",
+        "gt_answer": "85k / bịch ( 15 cái )"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.6333,
+      "points": [
+        [
+          286.0,
+          936.0
+        ],
+        [
+          642.0,
+          936.0
+        ],
+        [
+          642.0,
+          995.0
+        ],
+        [
+          286.0,
+          995.0
+        ]
+      ],
+      "group_id": 8540,
+      "description": "Hỏi: cửa hàng bán sốt kyodo với giá bao nhiêu ? || ĐA: 55k / chai",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 8540,
+        "question_ids": [
+          8540
+        ],
+        "question": "cửa hàng bán sốt kyodo với giá bao nhiêu ?",
+        "gt_answer": "55k / chai"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          346.0,
+          1327.0
+        ],
+        [
+          957.0,
+          1327.0
+        ],
+        [
+          957.0,
+          1418.0
+        ],
+        [
+          346.0,
+          1418.0
+        ]
+      ],
+      "group_id": 8541,
+      "description": "Hỏi: liên hệ cửa hàng với số điện thoại là bao nhiêu ? || ĐA: 0919 176 747",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 8541,
+        "question_ids": [
+          8541
+        ],
+        "question": "liên hệ cửa hàng với số điện thoại là bao nhiêu ?",
+        "gt_answer": "0919 176 747"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2900.jpg",
+  "imageData": null,
+  "imageHeight": 2048,
+  "imageWidth": 1365,
+  "description": "Ảnh: 2900.jpg (ID=2900) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: quán này có tên là gì ? || ĐA: kyodo foods - đặc sản gà ủ muối\n• Q2_gt: Hỏi: có thể cho tôi biết gà ủ muối nguyên con giá bao nhiêu ? || ĐA: 245k / con\n• Q3_gt: Hỏi: giá của gà ủ muối 1 / 2 con là bao nhiêu ? || ĐA: 130k\n• Q4_gt: Hỏi: chân gà rút xương ủ muối quán này bán bao nhiêu ? || ĐA: 85k / bịch ( 15 cái )\n• Q5_gt: Hỏi: cửa hàng bán sốt kyodo với giá bao nhiêu ? || ĐA: 55k / chai\n• Q6_gt: Hỏi: liên hệ cửa hàng với số điện thoại là bao nhiêu ? || ĐA: 0919 176 747"
+}

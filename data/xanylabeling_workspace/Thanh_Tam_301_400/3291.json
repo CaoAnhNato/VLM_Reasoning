@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.5,
+      "points": [
+        [
+          515.0,
+          1079.0
+        ],
+        [
+          1054.0,
+          1079.0
+        ],
+        [
+          1054.0,
+          1271.0
+        ],
+        [
+          515.0,
+          1271.0
+        ]
+      ],
+      "group_id": 9768,
+      "description": "Hỏi: quán này có tên là gì ? || ĐA: go79",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9768,
+        "question_ids": [
+          9768
+        ],
+        "question": "quán này có tên là gì ?",
+        "gt_answer": "go79"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          526.0,
+          1089.0
+        ],
+        [
+          1043.0,
+          1089.0
+        ],
+        [
+          1043.0,
+          1261.0
+        ],
+        [
+          526.0,
+          1261.0
+        ]
+      ],
+      "group_id": 9769,
+      "description": "Hỏi: quán này ở tỉnh nào ? || ĐA: nha trang",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9769,
+        "question_ids": [
+          9769
+        ],
+        "question": "quán này ở tỉnh nào ?",
+        "gt_answer": "nha trang"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          532.0,
+          1093.0
+        ],
+        [
+          1037.0,
+          1093.0
+        ],
+        [
+          1037.0,
+          1257.0
+        ],
+        [
+          532.0,
+          1257.0
+        ]
+      ],
+      "group_id": 9770,
+      "description": "Hỏi: quán này bán món gì ? || ĐA: gỏi ốc",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9770,
+        "question_ids": [
+          9770
+        ],
+        "question": "quán này bán món gì ?",
+        "gt_answer": "gỏi ốc"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3291.jpg",
+  "imageData": null,
+  "imageHeight": 1440,
+  "imageWidth": 1440,
+  "description": "Ảnh: 3291.jpg (ID=3291) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: quán này có tên là gì ? || ĐA: go79\n• Q2_gt: Hỏi: quán này ở tỉnh nào ? || ĐA: nha trang\n• Q3_gt: Hỏi: quán này bán món gì ? || ĐA: gỏi ốc"
+}

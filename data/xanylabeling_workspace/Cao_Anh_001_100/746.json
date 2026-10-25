@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          240.0,
+          61.0
+        ],
+        [
+          376.0,
+          61.0
+        ],
+        [
+          376.0,
+          93.0
+        ],
+        [
+          240.0,
+          93.0
+        ]
+      ],
+      "group_id": 1947,
+      "description": "Hỏi: đây là hình ảnh thẻ của con gì ? || ĐA: căn cước thú cưng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1947,
+        "question_ids": [
+          1947
+        ],
+        "question": "đây là hình ảnh thẻ của con gì ?",
+        "gt_answer": "căn cước thú cưng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          240.0,
+          102.0
+        ],
+        [
+          298.0,
+          102.0
+        ],
+        [
+          298.0,
+          121.0
+        ],
+        [
+          240.0,
+          121.0
+        ]
+      ],
+      "group_id": 1948,
+      "description": "Hỏi: con chó này có tên là gì ? || ĐA: hớt văn ki",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1948,
+        "question_ids": [
+          1948
+        ],
+        "question": "con chó này có tên là gì ?",
+        "gt_answer": "hớt văn ki"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          248.0,
+          159.0
+        ],
+        [
+          313.0,
+          159.0
+        ],
+        [
+          313.0,
+          180.0
+        ],
+        [
+          248.0,
+          180.0
+        ]
+      ],
+      "group_id": 1949,
+      "description": "Hỏi: con chó trắng có nguồn gốc từ đâu ? || ĐA: alaska u . s . a",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1949,
+        "question_ids": [
+          1949
+        ],
+        "question": "con chó trắng có nguồn gốc từ đâu ?",
+        "gt_answer": "alaska u . s . a"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          321.0,
+          115.0
+        ],
+        [
+          350.0,
+          115.0
+        ],
+        [
+          350.0,
+          132.0
+        ],
+        [
+          321.0,
+          132.0
+        ]
+      ],
+      "group_id": 1950,
+      "description": "Hỏi: giới tính của hớt văn ki là gì ? || ĐA: đực",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 1950,
+        "question_ids": [
+          1950
+        ],
+        "question": "giới tính của hớt văn ki là gì ?",
+        "gt_answer": "đực"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.9067,
+      "points": [
+        [
+          246.0,
+          136.0
+        ],
+        [
+          337.0,
+          136.0
+        ],
+        [
+          337.0,
+          161.0
+        ],
+        [
+          246.0,
+          161.0
+        ]
+      ],
+      "group_id": 1951,
+      "description": "Hỏi: con chó này được phân loại vào giống gì ? || ĐA: ngáo thuần chủng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 1951,
+        "question_ids": [
+          1951
+        ],
+        "question": "con chó này được phân loại vào giống gì ?",
+        "gt_answer": "ngáo thuần chủng"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "746.jpg",
+  "imageData": null,
+  "imageHeight": 300,
+  "imageWidth": 450,
+  "description": "Ảnh: 746.jpg (ID=746) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: đây là hình ảnh thẻ của con gì ? || ĐA: căn cước thú cưng\n• Q2_gt: Hỏi: con chó này có tên là gì ? || ĐA: hớt văn ki\n• Q3_gt: Hỏi: con chó trắng có nguồn gốc từ đâu ? || ĐA: alaska u . s . a\n• Q4_gt: Hỏi: giới tính của hớt văn ki là gì ? || ĐA: đực\n• Q5_gt: Hỏi: con chó này được phân loại vào giống gì ? || ĐA: ngáo thuần chủng"
+}

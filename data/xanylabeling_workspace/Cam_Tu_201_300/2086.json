@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          238.0,
+          693.0
+        ],
+        [
+          1021.0,
+          693.0
+        ],
+        [
+          1021.0,
+          1117.0
+        ],
+        [
+          238.0,
+          1117.0
+        ]
+      ],
+      "group_id": 6016,
+      "description": "Hỏi: đây là thẻ gì ? || ĐA: thẻ giữ xe",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6016,
+        "question_ids": [
+          6016
+        ],
+        "question": "đây là thẻ gì ?",
+        "gt_answer": "thẻ giữ xe"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          251.0,
+          976.0
+        ],
+        [
+          1017.0,
+          976.0
+        ],
+        [
+          1017.0,
+          1493.0
+        ],
+        [
+          251.0,
+          1493.0
+        ]
+      ],
+      "group_id": 6017,
+      "description": "Hỏi: số thẻ này là bao nhiêu ? || ĐA: 0572",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 6017,
+        "question_ids": [
+          6017
+        ],
+        "question": "số thẻ này là bao nhiêu ?",
+        "gt_answer": "0572"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          272.0,
+          720.0
+        ],
+        [
+          992.0,
+          720.0
+        ],
+        [
+          992.0,
+          1670.0
+        ],
+        [
+          272.0,
+          1670.0
+        ]
+      ],
+      "group_id": 6018,
+      "description": "Hỏi: thẻ này thuộc ai quản lý ? || ĐA: trung tâm quản lý ký túc xá",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 6018,
+        "question_ids": [
+          6018
+        ],
+        "question": "thẻ này thuộc ai quản lý ?",
+        "gt_answer": "trung tâm quản lý ký túc xá"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.72,
+      "points": [
+        [
+          282.0,
+          1001.0
+        ],
+        [
+          986.0,
+          1001.0
+        ],
+        [
+          986.0,
+          1468.0
+        ],
+        [
+          282.0,
+          1468.0
+        ]
+      ],
+      "group_id": 6019,
+      "description": "Hỏi: đại chỉ để gửi xe ở đâu ? || ĐA: khu b - nhà xe g01",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 6019,
+        "question_ids": [
+          6019
+        ],
+        "question": "đại chỉ để gửi xe ở đâu ?",
+        "gt_answer": "khu b - nhà xe g01"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.9299,
+      "points": [
+        [
+          257.0,
+          858.0
+        ],
+        [
+          1011.0,
+          858.0
+        ],
+        [
+          1011.0,
+          1685.0
+        ],
+        [
+          257.0,
+          1685.0
+        ]
+      ],
+      "group_id": 6020,
+      "description": "Hỏi: thẻ này thuộc đại học nào ? || ĐA: đại học quốc gia tp . hcm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 6020,
+        "question_ids": [
+          6020
+        ],
+        "question": "thẻ này thuộc đại học nào ?",
+        "gt_answer": "đại học quốc gia tp . hcm"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2086.jpg",
+  "imageData": null,
+  "imageHeight": 2048,
+  "imageWidth": 1536,
+  "description": "Ảnh: 2086.jpg (ID=2086) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: đây là thẻ gì ? || ĐA: thẻ giữ xe\n• Q2_gt: Hỏi: số thẻ này là bao nhiêu ? || ĐA: 0572\n• Q3_gt: Hỏi: thẻ này thuộc ai quản lý ? || ĐA: trung tâm quản lý ký túc xá\n• Q4_gt: Hỏi: đại chỉ để gửi xe ở đâu ? || ĐA: khu b - nhà xe g01\n• Q5_gt: Hỏi: thẻ này thuộc đại học nào ? || ĐA: đại học quốc gia tp . hcm"
+}

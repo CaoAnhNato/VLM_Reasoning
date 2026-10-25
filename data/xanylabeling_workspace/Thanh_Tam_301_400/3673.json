@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          316.0,
+          95.0
+        ],
+        [
+          591.0,
+          95.0
+        ],
+        [
+          591.0,
+          181.0
+        ],
+        [
+          316.0,
+          181.0
+        ]
+      ],
+      "group_id": 10962,
+      "description": "Hỏi: tiệm vàng có bảng hiệu màu đỏ có tên là gì ? || ĐA: kim huyền",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10962,
+        "question_ids": [
+          10962
+        ],
+        "question": "tiệm vàng có bảng hiệu màu đỏ có tên là gì ?",
+        "gt_answer": "kim huyền"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          386.0,
+          159.0
+        ],
+        [
+          588.0,
+          159.0
+        ],
+        [
+          588.0,
+          198.0
+        ],
+        [
+          386.0,
+          198.0
+        ]
+      ],
+      "group_id": 10963,
+      "description": "Hỏi: cửa hàng kim huyền chuyên thứ gì ? || ĐA: mua bán , gia công vàng nhẫn 9999 - 18k - 24k , vàng nữ trang & đá quý các loại",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10963,
+        "question_ids": [
+          10963
+        ],
+        "question": "cửa hàng kim huyền chuyên thứ gì ?",
+        "gt_answer": "mua bán , gia công vàng nhẫn 9999 - 18k - 24k , vàng nữ trang & đá quý các loại"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7361,
+      "points": [
+        [
+          151.0,
+          339.0
+        ],
+        [
+          178.0,
+          339.0
+        ],
+        [
+          178.0,
+          362.0
+        ],
+        [
+          151.0,
+          362.0
+        ]
+      ],
+      "group_id": 10964,
+      "description": "Hỏi: biển số xe ô tô đậu trước tiệm vàng kim huyền là gì ? || ĐA: 51a 086 . 10",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10964,
+        "question_ids": [
+          10964
+        ],
+        "question": "biển số xe ô tô đậu trước tiệm vàng kim huyền là gì ?",
+        "gt_answer": "51a 086 . 10"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3673.jpg",
+  "imageData": null,
+  "imageHeight": 408,
+  "imageWidth": 600,
+  "description": "Ảnh: 3673.jpg (ID=3673) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tiệm vàng có bảng hiệu màu đỏ có tên là gì ? || ĐA: kim huyền\n• Q2_gt: Hỏi: cửa hàng kim huyền chuyên thứ gì ? || ĐA: mua bán , gia công vàng nhẫn 9999 - 18k - 24k , vàng nữ trang & đá quý các loại\n• Q3_gt: Hỏi: biển số xe ô tô đậu trước tiệm vàng kim huyền là gì ? || ĐA: 51a 086 . 10"
+}

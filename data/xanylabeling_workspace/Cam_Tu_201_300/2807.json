@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          761.0,
+          544.0
+        ],
+        [
+          886.0,
+          544.0
+        ],
+        [
+          886.0,
+          598.0
+        ],
+        [
+          761.0,
+          598.0
+        ]
+      ],
+      "group_id": 8259,
+      "description": "Hỏi: nội dung trong ảnh đang quảng cáo cho tiện ích gì ? || ĐA: vinmart scan & go",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8259,
+        "question_ids": [
+          8259
+        ],
+        "question": "nội dung trong ảnh đang quảng cáo cho tiện ích gì ?",
+        "gt_answer": "vinmart scan & go"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          271.0,
+          616.0
+        ],
+        [
+          514.0,
+          616.0
+        ],
+        [
+          514.0,
+          663.0
+        ],
+        [
+          271.0,
+          663.0
+        ]
+      ],
+      "group_id": 8260,
+      "description": "Hỏi: vinmart scan & go là tiện ích của đơn vị nào ? || ĐA: vinid",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8260,
+        "question_ids": [
+          8260
+        ],
+        "question": "vinmart scan & go là tiện ích của đơn vị nào ?",
+        "gt_answer": "vinid"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          269.0,
+          654.0
+        ],
+        [
+          637.0,
+          654.0
+        ],
+        [
+          637.0,
+          721.0
+        ],
+        [
+          269.0,
+          721.0
+        ]
+      ],
+      "group_id": 8261,
+      "description": "Hỏi: vinmart scan & go giúp người tiêu dùng khi nào ? || ĐA: nếu bạn cần gấp ?",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8261,
+        "question_ids": [
+          8261
+        ],
+        "question": "vinmart scan & go giúp người tiêu dùng khi nào ?",
+        "gt_answer": "nếu bạn cần gấp ?"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.75,
+      "points": [
+        [
+          230.0,
+          737.0
+        ],
+        [
+          527.0,
+          737.0
+        ],
+        [
+          527.0,
+          794.0
+        ],
+        [
+          230.0,
+          794.0
+        ]
+      ],
+      "group_id": 8262,
+      "description": "Hỏi: vinmart scan & go giúp người tiêu dùng điều gì ? || ĐA: thanh toán siêu tốc lấy hàng ngay",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 8262,
+        "question_ids": [
+          8262
+        ],
+        "question": "vinmart scan & go giúp người tiêu dùng điều gì ?",
+        "gt_answer": "thanh toán siêu tốc lấy hàng ngay"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2807.jpg",
+  "imageData": null,
+  "imageHeight": 900,
+  "imageWidth": 900,
+  "description": "Ảnh: 2807.jpg (ID=2807) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: nội dung trong ảnh đang quảng cáo cho tiện ích gì ? || ĐA: vinmart scan & go\n• Q2_gt: Hỏi: vinmart scan & go là tiện ích của đơn vị nào ? || ĐA: vinid\n• Q3_gt: Hỏi: vinmart scan & go giúp người tiêu dùng khi nào ? || ĐA: nếu bạn cần gấp ?\n• Q4_gt: Hỏi: vinmart scan & go giúp người tiêu dùng điều gì ? || ĐA: thanh toán siêu tốc lấy hàng ngay"
+}

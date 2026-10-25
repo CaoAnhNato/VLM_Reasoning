@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          1885.0,
+          1484.0
+        ],
+        [
+          2560.0,
+          1484.0
+        ],
+        [
+          2560.0,
+          1707.0
+        ],
+        [
+          1885.0,
+          1707.0
+        ]
+      ],
+      "group_id": 5360,
+      "description": "Hỏi: nguồn của tấm ảnh này là chỗ nào ? || ĐA: pháp luật",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5360,
+        "question_ids": [
+          5360
+        ],
+        "question": "nguồn của tấm ảnh này là chỗ nào ?",
+        "gt_answer": "pháp luật"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1380.0,
+          1129.0
+        ],
+        [
+          1846.0,
+          1129.0
+        ],
+        [
+          1846.0,
+          1224.0
+        ],
+        [
+          1380.0,
+          1224.0
+        ]
+      ],
+      "group_id": 5361,
+      "description": "Hỏi: cửa hàng ở ngã ba có tên là gì ? || ĐA: cự vinh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5361,
+        "question_ids": [
+          5361
+        ],
+        "question": "cửa hàng ở ngã ba có tên là gì ?",
+        "gt_answer": "cự vinh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          1383.0,
+          1132.0
+        ],
+        [
+          1849.0,
+          1132.0
+        ],
+        [
+          1849.0,
+          1227.0
+        ],
+        [
+          1383.0,
+          1227.0
+        ]
+      ],
+      "group_id": 5362,
+      "description": "Hỏi: cửa hàng vự vinh là cửa hàng như thế nào ? || ĐA: giặt là",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5362,
+        "question_ids": [
+          5362
+        ],
+        "question": "cửa hàng vự vinh là cửa hàng như thế nào ?",
+        "gt_answer": "giặt là"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9125,
+      "points": [
+        [
+          1377.0,
+          1127.0
+        ],
+        [
+          1849.0,
+          1127.0
+        ],
+        [
+          1849.0,
+          1226.0
+        ],
+        [
+          1377.0,
+          1226.0
+        ]
+      ],
+      "group_id": 5363,
+      "description": "Hỏi: cửa hàng giặt là cự vinh cam kết cái gì ? || ĐA: rẻ nhanh , sạch , đẹp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 5363,
+        "question_ids": [
+          5363
+        ],
+        "question": "cửa hàng giặt là cự vinh cam kết cái gì ?",
+        "gt_answer": "rẻ nhanh , sạch , đẹp"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1875.jpg",
+  "imageData": null,
+  "imageHeight": 1707,
+  "imageWidth": 2560,
+  "description": "Ảnh: 1875.jpg (ID=1875) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: nguồn của tấm ảnh này là chỗ nào ? || ĐA: pháp luật\n• Q2_gt: Hỏi: cửa hàng ở ngã ba có tên là gì ? || ĐA: cự vinh\n• Q3_gt: Hỏi: cửa hàng vự vinh là cửa hàng như thế nào ? || ĐA: giặt là\n• Q4_gt: Hỏi: cửa hàng giặt là cự vinh cam kết cái gì ? || ĐA: rẻ nhanh , sạch , đẹp"
+}

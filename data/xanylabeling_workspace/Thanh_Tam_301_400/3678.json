@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          947.0,
+          921.0
+        ],
+        [
+          1064.0,
+          921.0
+        ],
+        [
+          1064.0,
+          950.0
+        ],
+        [
+          947.0,
+          950.0
+        ]
+      ],
+      "group_id": 10973,
+      "description": "Hỏi: nguồn sở hữu tấm ảnh này là ai ? || ĐA: saigon advertising",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10973,
+        "question_ids": [
+          10973
+        ],
+        "question": "nguồn sở hữu tấm ảnh này là ai ?",
+        "gt_answer": "saigon advertising"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 10974,
+      "description": "Hỏi: số điện thoại liên lạc cho mr . điệp là gì ? || ĐA: 0909 42 32 45",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10974,
+        "question_ids": [
+          10974
+        ],
+        "question": "số điện thoại liên lạc cho mr . điệp là gì ?",
+        "gt_answer": "0909 42 32 45"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          502.0,
+          915.0
+        ],
+        [
+          668.0,
+          915.0
+        ],
+        [
+          668.0,
+          960.0
+        ],
+        [
+          502.0,
+          960.0
+        ]
+      ],
+      "group_id": 10975,
+      "description": "Hỏi: 0909 42 32 45 là số điện thoại của ai ? || ĐA: mr . điệp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10975,
+        "question_ids": [
+          10975
+        ],
+        "question": "0909 42 32 45 là số điện thoại của ai ?",
+        "gt_answer": "mr . điệp"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3678.jpg",
+  "imageData": null,
+  "imageHeight": 960,
+  "imageWidth": 1280,
+  "description": "Ảnh: 3678.jpg (ID=3678) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: nguồn sở hữu tấm ảnh này là ai ? || ĐA: saigon advertising\n• Q2_gt: Hỏi: số điện thoại liên lạc cho mr . điệp là gì ? || ĐA: 0909 42 32 45\n• Q3_gt: Hỏi: 0909 42 32 45 là số điện thoại của ai ? || ĐA: mr . điệp"
+}

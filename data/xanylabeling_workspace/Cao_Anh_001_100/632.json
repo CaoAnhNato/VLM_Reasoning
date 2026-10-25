@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8889,
+      "points": [
+        [
+          13.0,
+          11.0
+        ],
+        [
+          615.0,
+          11.0
+        ],
+        [
+          615.0,
+          65.0
+        ],
+        [
+          13.0,
+          65.0
+        ]
+      ],
+      "group_id": 1738,
+      "description": "Hỏi: mắc gì đòi quà vào dịp nào ? || ĐA: tết thiếu nhi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1738,
+        "question_ids": [
+          1738
+        ],
+        "question": "mắc gì đòi quà vào dịp nào ?",
+        "gt_answer": "tết thiếu nhi"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "632.jpg",
+  "imageData": null,
+  "imageHeight": 480,
+  "imageWidth": 640,
+  "description": "Ảnh: 632.jpg (ID=632) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: mắc gì đòi quà vào dịp nào ? || ĐA: tết thiếu nhi"
+}

@@ -1,0 +1,327 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          305.0,
+          838.0
+        ],
+        [
+          2838.0,
+          838.0
+        ],
+        [
+          2838.0,
+          3464.0
+        ],
+        [
+          305.0,
+          3464.0
+        ]
+      ],
+      "group_id": 11551,
+      "description": "Hỏi: cuốn sách này có tên là gì ? || ĐA: mặt dày tâm đen",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11551,
+        "question_ids": [
+          11551
+        ],
+        "question": "cuốn sách này có tên là gì ?",
+        "gt_answer": "mặt dày tâm đen"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1471.0,
+          2333.0
+        ],
+        [
+          2434.0,
+          2333.0
+        ],
+        [
+          2434.0,
+          2599.0
+        ],
+        [
+          1471.0,
+          2599.0
+        ]
+      ],
+      "group_id": 11552,
+      "description": "Hỏi: người dịch cuốn sách này là ai ? || ĐA: vũ thái hà trần lan anh trần thị thùy trang",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11552,
+        "question_ids": [
+          11552
+        ],
+        "question": "người dịch cuốn sách này là ai ?",
+        "gt_answer": "vũ thái hà trần lan anh trần thị thùy trang"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1822.0,
+          2479.0
+        ],
+        [
+          2434.0,
+          2479.0
+        ],
+        [
+          2434.0,
+          2599.0
+        ],
+        [
+          1822.0,
+          2599.0
+        ]
+      ],
+      "group_id": 11553,
+      "description": "Hỏi: người dịch gồm vũ thái hà trần lan anh và ai nữa ? || ĐA: trần thị thùy trang",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 11553,
+        "question_ids": [
+          11553
+        ],
+        "question": "người dịch gồm vũ thái hà trần lan anh và ai nữa ?",
+        "gt_answer": "trần thị thùy trang"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 11554,
+      "description": "Hỏi: cuốn sách tái bản lần thứ mấy ? || ĐA: 2",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 11554,
+        "question_ids": [
+          11554
+        ],
+        "question": "cuốn sách tái bản lần thứ mấy ?",
+        "gt_answer": "2"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.72,
+      "points": [
+        [
+          1429.0,
+          3476.0
+        ],
+        [
+          1532.0,
+          3476.0
+        ],
+        [
+          1532.0,
+          3539.0
+        ],
+        [
+          1429.0,
+          3539.0
+        ]
+      ],
+      "group_id": 11555,
+      "description": "Hỏi: ai là nhà xuất bản phát hành cuốn sách này ? || ĐA: nhà xuất bản hồng đức",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 11555,
+        "question_ids": [
+          11555
+        ],
+        "question": "ai là nhà xuất bản phát hành cuốn sách này ?",
+        "gt_answer": "nhà xuất bản hồng đức"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.975,
+      "points": [
+        [
+          881.0,
+          695.0
+        ],
+        [
+          2020.0,
+          695.0
+        ],
+        [
+          2020.0,
+          927.0
+        ],
+        [
+          881.0,
+          927.0
+        ]
+      ],
+      "group_id": 11556,
+      "description": "Hỏi: ai là tác giả cuốn sách này ? || ĐA: chin - ning chu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 11556,
+        "question_ids": [
+          11556
+        ],
+        "question": "ai là tác giả cuốn sách này ?",
+        "gt_answer": "chin - ning chu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q7_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1834.0,
+          2358.0
+        ],
+        [
+          2240.0,
+          2358.0
+        ],
+        [
+          2240.0,
+          2524.0
+        ],
+        [
+          1834.0,
+          2524.0
+        ]
+      ],
+      "group_id": 11557,
+      "description": "Hỏi: người dịch cuốn sách là vũ thái hà trần thị thùy trang và ai nữa ? || ĐA: trần lan anh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 7,
+        "question_id": 11557,
+        "question_ids": [
+          11557
+        ],
+        "question": "người dịch cuốn sách là vũ thái hà trần thị thùy trang và ai nữa ?",
+        "gt_answer": "trần lan anh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q8_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1471.0,
+          2333.0
+        ],
+        [
+          2191.0,
+          2333.0
+        ],
+        [
+          2191.0,
+          2442.0
+        ],
+        [
+          1471.0,
+          2442.0
+        ]
+      ],
+      "group_id": 11558,
+      "description": "Hỏi: người dịch cuốn sách ngoài trần lan anh trần thị thùy trang thì còn ai nữa ? || ĐA: vũ thái hà",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 8,
+        "question_id": 11558,
+        "question_ids": [
+          11558
+        ],
+        "question": "người dịch cuốn sách ngoài trần lan anh trần thị thùy trang thì còn ai nữa ?",
+        "gt_answer": "vũ thái hà"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3880.jpg",
+  "imageData": null,
+  "imageHeight": 4032,
+  "imageWidth": 3024,
+  "description": "Ảnh: 3880.jpg (ID=3880) | Tổng số câu hỏi: 8\n• Q1_gt: Hỏi: cuốn sách này có tên là gì ? || ĐA: mặt dày tâm đen\n• Q2_gt: Hỏi: người dịch cuốn sách này là ai ? || ĐA: vũ thái hà trần lan anh trần thị thùy trang\n• Q3_gt: Hỏi: người dịch gồm vũ thái hà trần lan anh và ai nữa ? || ĐA: trần thị thùy trang\n• Q4_gt: Hỏi: cuốn sách tái bản lần thứ mấy ? || ĐA: 2\n• Q5_gt: Hỏi: ai là nhà xuất bản phát hành cuốn sách này ? || ĐA: nhà xuất bản hồng đức\n• Q6_gt: Hỏi: ai là tác giả cuốn sách này ? || ĐA: chin - ning chu\n• Q7_gt: Hỏi: người dịch cuốn sách là vũ thái hà trần thị thùy trang và ai nữa ? || ĐA: trần lan anh\n• Q8_gt: Hỏi: người dịch cuốn sách ngoài trần lan anh trần thị thùy trang thì còn ai nữa ? || ĐA: vũ thái hà"
+}

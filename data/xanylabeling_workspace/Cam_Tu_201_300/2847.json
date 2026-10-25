@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1021.0,
+          185.0
+        ],
+        [
+          1668.0,
+          185.0
+        ],
+        [
+          1668.0,
+          531.0
+        ],
+        [
+          1021.0,
+          531.0
+        ]
+      ],
+      "group_id": 8383,
+      "description": "Hỏi: bảng hiệu ở góc trên bên phải để tên là gì ? || ĐA: nail gà tây",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8383,
+        "question_ids": [
+          8383
+        ],
+        "question": "bảng hiệu ở góc trên bên phải để tên là gì ?",
+        "gt_answer": "nail gà tây"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1092.0,
+          490.0
+        ],
+        [
+          1578.0,
+          490.0
+        ],
+        [
+          1578.0,
+          575.0
+        ],
+        [
+          1092.0,
+          575.0
+        ]
+      ],
+      "group_id": 8384,
+      "description": "Hỏi: số điện thoại liên lạc cho cửa tiệm nail gà tây là gì ? || ĐA: 0908 . 109 . 700",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8384,
+        "question_ids": [
+          8384
+        ],
+        "question": "số điện thoại liên lạc cho cửa tiệm nail gà tây là gì ?",
+        "gt_answer": "0908 . 109 . 700"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 8385,
+      "description": "Hỏi: nguồn nào sở hữu tấm ảnh này ? || ĐA: cheap a d v 2 4 7",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8385,
+        "question_ids": [
+          8385
+        ],
+        "question": "nguồn nào sở hữu tấm ảnh này ?",
+        "gt_answer": "cheap a d v 2 4 7"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          25.0,
+          1342.0
+        ],
+        [
+          270.0,
+          1342.0
+        ],
+        [
+          270.0,
+          1390.0
+        ],
+        [
+          25.0,
+          1390.0
+        ]
+      ],
+      "group_id": 8386,
+      "description": "Hỏi: cheap a d v 2 4 7 là đơn vị như thế nào ? || ĐA: nhà thầu thi công bảng hiệu quảng cáo - nội thất - triển lãm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 8386,
+        "question_ids": [
+          8386
+        ],
+        "question": "cheap a d v 2 4 7 là đơn vị như thế nào ?",
+        "gt_answer": "nhà thầu thi công bảng hiệu quảng cáo - nội thất - triển lãm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          799.0,
+          1376.0
+        ],
+        [
+          1194.0,
+          1376.0
+        ],
+        [
+          1194.0,
+          1420.0
+        ],
+        [
+          799.0,
+          1420.0
+        ]
+      ],
+      "group_id": 8387,
+      "description": "Hỏi: số hotline liên hệ cho chủ sở hữu tấm ảnh này là gì ? || ĐA: 0969 . 3636 . 60",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 8387,
+        "question_ids": [
+          8387
+        ],
+        "question": "số hotline liên hệ cho chủ sở hữu tấm ảnh này là gì ?",
+        "gt_answer": "0969 . 3636 . 60"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2847.jpg",
+  "imageData": null,
+  "imageHeight": 1440,
+  "imageWidth": 1920,
+  "description": "Ảnh: 2847.jpg (ID=2847) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: bảng hiệu ở góc trên bên phải để tên là gì ? || ĐA: nail gà tây\n• Q2_gt: Hỏi: số điện thoại liên lạc cho cửa tiệm nail gà tây là gì ? || ĐA: 0908 . 109 . 700\n• Q3_gt: Hỏi: nguồn nào sở hữu tấm ảnh này ? || ĐA: cheap a d v 2 4 7\n• Q4_gt: Hỏi: cheap a d v 2 4 7 là đơn vị như thế nào ? || ĐA: nhà thầu thi công bảng hiệu quảng cáo - nội thất - triển lãm\n• Q5_gt: Hỏi: số hotline liên hệ cho chủ sở hữu tấm ảnh này là gì ? || ĐA: 0969 . 3636 . 60"
+}

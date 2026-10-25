@@ -1,0 +1,288 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7425,
+      "points": [
+        [
+          866.0,
+          118.0
+        ],
+        [
+          1055.0,
+          118.0
+        ],
+        [
+          1055.0,
+          171.0
+        ],
+        [
+          866.0,
+          171.0
+        ]
+      ],
+      "group_id": 9942,
+      "description": "Hỏi: nhà quảng cáo nào đã chèn quảng cáo vào đây ? || ĐA: nhật tiên",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 9942,
+        "question_ids": [
+          9942
+        ],
+        "question": "nhà quảng cáo nào đã chèn quảng cáo vào đây ?",
+        "gt_answer": "nhật tiên"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          47.0,
+          130.0
+        ],
+        [
+          542.0,
+          130.0
+        ],
+        [
+          542.0,
+          186.0
+        ],
+        [
+          47.0,
+          186.0
+        ]
+      ],
+      "group_id": 9943,
+      "description": "Hỏi: 0909 003 178 là số điện thoại của ai ? || ĐA: trân",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 9943,
+        "question_ids": [
+          9943
+        ],
+        "question": "0909 003 178 là số điện thoại của ai ?",
+        "gt_answer": "trân"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          310.0,
+          178.0
+        ],
+        [
+          544.0,
+          178.0
+        ],
+        [
+          544.0,
+          235.0
+        ],
+        [
+          310.0,
+          235.0
+        ]
+      ],
+      "group_id": 9944,
+      "description": "Hỏi: 0909 002 307 là số điện thoại của ai ? || ĐA: thiên",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 9944,
+        "question_ids": [
+          9944
+        ],
+        "question": "0909 002 307 là số điện thoại của ai ?",
+        "gt_answer": "thiên"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          23.0,
+          3.0
+        ],
+        [
+          696.0,
+          3.0
+        ],
+        [
+          696.0,
+          114.0
+        ],
+        [
+          23.0,
+          114.0
+        ]
+      ],
+      "group_id": 9945,
+      "description": "Hỏi: nhà quảng cáo nhật thiên quảng cáo thứ gì ? || ĐA: bảng alu chữ nổi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 9945,
+        "question_ids": [
+          9945
+        ],
+        "question": "nhà quảng cáo nhật thiên quảng cáo thứ gì ?",
+        "gt_answer": "bảng alu chữ nổi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.8593,
+      "points": [
+        [
+          28.0,
+          687.0
+        ],
+        [
+          169.0,
+          687.0
+        ],
+        [
+          169.0,
+          830.0
+        ],
+        [
+          28.0,
+          830.0
+        ]
+      ],
+      "group_id": 9946,
+      "description": "Hỏi: bức hình này được chụp ở đâu ? || ĐA: biên hòa - đồng nai",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 9946,
+        "question_ids": [
+          9946
+        ],
+        "question": "bức hình này được chụp ở đâu ?",
+        "gt_answer": "biên hòa - đồng nai"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          113.0,
+          800.0
+        ],
+        [
+          164.0,
+          800.0
+        ],
+        [
+          164.0,
+          850.0
+        ],
+        [
+          113.0,
+          850.0
+        ]
+      ],
+      "group_id": 9947,
+      "description": "Hỏi: kế bên trái cửa hàng có bảng hiệu màu vàng là gì ? || ĐA: đại lý phân phối",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 9947,
+        "question_ids": [
+          9947
+        ],
+        "question": "kế bên trái cửa hàng có bảng hiệu màu vàng là gì ?",
+        "gt_answer": "đại lý phân phối"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q7_gt",
+      "score": 0.961,
+      "points": [
+        [
+          0.0,
+          1035.0
+        ],
+        [
+          904.0,
+          1035.0
+        ],
+        [
+          904.0,
+          1229.0
+        ],
+        [
+          0.0,
+          1229.0
+        ]
+      ],
+      "group_id": 9948,
+      "description": "Hỏi: cửa hàng có bảng hiệu màu vàng cùng hai nhân vật ở trên đang có sự kiện gì ? || ĐA: mừng khai trươngs",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 7,
+        "question_id": 9948,
+        "question_ids": [
+          9948
+        ],
+        "question": "cửa hàng có bảng hiệu màu vàng cùng hai nhân vật ở trên đang có sự kiện gì ?",
+        "gt_answer": "mừng khai trươngs"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3335.jpg",
+  "imageData": null,
+  "imageHeight": 1229,
+  "imageWidth": 1230,
+  "description": "Ảnh: 3335.jpg (ID=3335) | Tổng số câu hỏi: 7\n• Q1_gt: Hỏi: nhà quảng cáo nào đã chèn quảng cáo vào đây ? || ĐA: nhật tiên\n• Q2_gt: Hỏi: 0909 003 178 là số điện thoại của ai ? || ĐA: trân\n• Q3_gt: Hỏi: 0909 002 307 là số điện thoại của ai ? || ĐA: thiên\n• Q4_gt: Hỏi: nhà quảng cáo nhật thiên quảng cáo thứ gì ? || ĐA: bảng alu chữ nổi\n• Q5_gt: Hỏi: bức hình này được chụp ở đâu ? || ĐA: biên hòa - đồng nai\n• Q6_gt: Hỏi: kế bên trái cửa hàng có bảng hiệu màu vàng là gì ? || ĐA: đại lý phân phối\n• Q7_gt: Hỏi: cửa hàng có bảng hiệu màu vàng cùng hai nhân vật ở trên đang có sự kiện gì ? || ĐA: mừng khai trươngs"
+}

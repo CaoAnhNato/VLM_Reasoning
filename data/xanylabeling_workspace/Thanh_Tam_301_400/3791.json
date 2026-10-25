@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          1255.0,
+          1017.0
+        ],
+        [
+          1345.0,
+          1017.0
+        ],
+        [
+          1345.0,
+          1059.0
+        ],
+        [
+          1255.0,
+          1059.0
+        ]
+      ],
+      "group_id": 11264,
+      "description": "Hỏi: các thùng bên phải tấm ảnh là thùng gì ? || ĐA: mì xào",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11264,
+        "question_ids": [
+          11264
+        ],
+        "question": "các thùng bên phải tấm ảnh là thùng gì ?",
+        "gt_answer": "mì xào"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          1789.0,
+          716.0
+        ],
+        [
+          1847.0,
+          716.0
+        ],
+        [
+          1847.0,
+          758.0
+        ],
+        [
+          1789.0,
+          758.0
+        ]
+      ],
+      "group_id": 11265,
+      "description": "Hỏi: các thùng mì xào bên phải tấm ảnh là của thương hiệu nào ? || ĐA: hảo hảo",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11265,
+        "question_ids": [
+          11265
+        ],
+        "question": "các thùng mì xào bên phải tấm ảnh là của thương hiệu nào ?",
+        "gt_answer": "hảo hảo"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3791.jpg",
+  "imageData": null,
+  "imageHeight": 1421,
+  "imageWidth": 2000,
+  "description": "Ảnh: 3791.jpg (ID=3791) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: các thùng bên phải tấm ảnh là thùng gì ? || ĐA: mì xào\n• Q2_gt: Hỏi: các thùng mì xào bên phải tấm ảnh là của thương hiệu nào ? || ĐA: hảo hảo"
+}

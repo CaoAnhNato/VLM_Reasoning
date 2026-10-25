@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 7902,
+      "description": "Hỏi: các bông hoa ở trên đồng cỏ được cắt thành chữ gì ? || ĐA: a1",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7902,
+        "question_ids": [
+          7902
+        ],
+        "question": "các bông hoa ở trên đồng cỏ được cắt thành chữ gì ?",
+        "gt_answer": "a1"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.685,
+      "points": [
+        [
+          461.0,
+          648.0
+        ],
+        [
+          526.0,
+          648.0
+        ],
+        [
+          526.0,
+          680.0
+        ],
+        [
+          461.0,
+          680.0
+        ]
+      ],
+      "group_id": 7903,
+      "description": "Hỏi: ở đồng cỏ hoa có yêu cầu gì ? || ĐA: đề nghị quý khách không giấm lên thảm cỏ hoa",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7903,
+        "question_ids": [
+          7903
+        ],
+        "question": "ở đồng cỏ hoa có yêu cầu gì ?",
+        "gt_answer": "đề nghị quý khách không giấm lên thảm cỏ hoa"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          67.0
+        ],
+        [
+          235.0,
+          67.0
+        ],
+        [
+          235.0,
+          111.0
+        ],
+        [
+          15.0,
+          111.0
+        ]
+      ],
+      "group_id": 7904,
+      "description": "Hỏi: trên bảng xanh dương thì yêu cầu những quý khách không được làm gì ? || ĐA: giấm lên cỏ hoa",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7904,
+        "question_ids": [
+          7904
+        ],
+        "question": "trên bảng xanh dương thì yêu cầu những quý khách không được làm gì ?",
+        "gt_answer": "giấm lên cỏ hoa"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2706.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1080,
+  "description": "Ảnh: 2706.jpg (ID=2706) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: các bông hoa ở trên đồng cỏ được cắt thành chữ gì ? || ĐA: a1\n• Q2_gt: Hỏi: ở đồng cỏ hoa có yêu cầu gì ? || ĐA: đề nghị quý khách không giấm lên thảm cỏ hoa\n• Q3_gt: Hỏi: trên bảng xanh dương thì yêu cầu những quý khách không được làm gì ? || ĐA: giấm lên cỏ hoa"
+}

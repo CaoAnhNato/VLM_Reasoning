@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          0.0,
+          117.0
+        ],
+        [
+          234.0,
+          117.0
+        ],
+        [
+          234.0,
+          286.0
+        ],
+        [
+          0.0,
+          286.0
+        ]
+      ],
+      "group_id": 3215,
+      "description": "Hỏi: tên cuốn sách là gì ? || ĐA: thiên tài logic",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3215,
+        "question_ids": [
+          3215
+        ],
+        "question": "tên cuốn sách là gì ?",
+        "gt_answer": "thiên tài logic"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1173.jpg",
+  "imageData": null,
+  "imageHeight": 330,
+  "imageWidth": 269,
+  "description": "Ảnh: 1173.jpg (ID=1173) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: tên cuốn sách là gì ? || ĐA: thiên tài logic"
+}

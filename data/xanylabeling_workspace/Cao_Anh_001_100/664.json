@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.98,
+      "points": [
+        [
+          108.0,
+          102.0
+        ],
+        [
+          338.0,
+          102.0
+        ],
+        [
+          338.0,
+          129.0
+        ],
+        [
+          108.0,
+          129.0
+        ]
+      ],
+      "group_id": 1781,
+      "description": "Hỏi: đây là hình ảnh của giấy gì ? || ĐA: giấy chứng nhận đã có người yêu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1781,
+        "question_ids": [
+          1781
+        ],
+        "question": "đây là hình ảnh của giấy gì ?",
+        "gt_answer": "giấy chứng nhận đã có người yêu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          140.0,
+          135.0
+        ],
+        [
+          306.0,
+          135.0
+        ],
+        [
+          306.0,
+          156.0
+        ],
+        [
+          140.0,
+          156.0
+        ]
+      ],
+      "group_id": 1782,
+      "description": "Hỏi: họ tên của người đã có người yêu là gì ? || ĐA: hinhanhonline",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1782,
+        "question_ids": [
+          1782
+        ],
+        "question": "họ tên của người đã có người yêu là gì ?",
+        "gt_answer": "hinhanhonline"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          224.0,
+          155.0
+        ],
+        [
+          262.0,
+          155.0
+        ],
+        [
+          262.0,
+          174.0
+        ],
+        [
+          224.0,
+          174.0
+        ]
+      ],
+      "group_id": 1783,
+      "description": "Hỏi: hinhanhonline sinh năm bao nhiêu ? || ĐA: 1996",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1783,
+        "question_ids": [
+          1783
+        ],
+        "question": "hinhanhonline sinh năm bao nhiêu ?",
+        "gt_answer": "1996"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          215.0,
+          173.0
+        ],
+        [
+          271.0,
+          173.0
+        ],
+        [
+          271.0,
+          192.0
+        ],
+        [
+          215.0,
+          192.0
+        ]
+      ],
+      "group_id": 1784,
+      "description": "Hỏi: hinhanhonline có quốc tịch là gì ? || ĐA: việt nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 1784,
+        "question_ids": [
+          1784
+        ],
+        "question": "hinhanhonline có quốc tịch là gì ?",
+        "gt_answer": "việt nam"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "664.jpg",
+  "imageData": null,
+  "imageHeight": 348,
+  "imageWidth": 450,
+  "description": "Ảnh: 664.jpg (ID=664) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: đây là hình ảnh của giấy gì ? || ĐA: giấy chứng nhận đã có người yêu\n• Q2_gt: Hỏi: họ tên của người đã có người yêu là gì ? || ĐA: hinhanhonline\n• Q3_gt: Hỏi: hinhanhonline sinh năm bao nhiêu ? || ĐA: 1996\n• Q4_gt: Hỏi: hinhanhonline có quốc tịch là gì ? || ĐA: việt nam"
+}

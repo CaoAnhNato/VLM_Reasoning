@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          244.0,
+          362.0
+        ],
+        [
+          605.0,
+          362.0
+        ],
+        [
+          605.0,
+          430.0
+        ],
+        [
+          244.0,
+          430.0
+        ]
+      ],
+      "group_id": 1030,
+      "description": "Hỏi: 2019 như thế nào ? || ĐA: vô tích sự",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1030,
+        "question_ids": [
+          1030
+        ],
+        "question": "2019 như thế nào ?",
+        "gt_answer": "vô tích sự"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.95,
+      "points": [
+        [
+          137.0,
+          709.0
+        ],
+        [
+          610.0,
+          709.0
+        ],
+        [
+          610.0,
+          842.0
+        ],
+        [
+          137.0,
+          842.0
+        ]
+      ],
+      "group_id": 1031,
+      "description": "Hỏi: 2020 như thế nào ? || ĐA: sống có trách nhiệm với cộng đồng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1031,
+        "question_ids": [
+          1031
+        ],
+        "question": "2020 như thế nào ?",
+        "gt_answer": "sống có trách nhiệm với cộng đồng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          245.0,
+          363.0
+        ],
+        [
+          604.0,
+          363.0
+        ],
+        [
+          604.0,
+          429.0
+        ],
+        [
+          245.0,
+          429.0
+        ]
+      ],
+      "group_id": 1032,
+      "description": "Hỏi: sống vô tích sự là ở năm nào ? || ĐA: 2019",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1032,
+        "question_ids": [
+          1032
+        ],
+        "question": "sống vô tích sự là ở năm nào ?",
+        "gt_answer": "2019"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.95,
+      "points": [
+        [
+          140.0,
+          712.0
+        ],
+        [
+          594.0,
+          712.0
+        ],
+        [
+          594.0,
+          776.0
+        ],
+        [
+          140.0,
+          776.0
+        ]
+      ],
+      "group_id": 1033,
+      "description": "Hỏi: sống có trách nhiệm với cộng đồng là ở năm nào ? || ĐA: 2020",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 1033,
+        "question_ids": [
+          1033
+        ],
+        "question": "sống có trách nhiệm với cộng đồng là ở năm nào ?",
+        "gt_answer": "2020"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "352.jpg",
+  "imageData": null,
+  "imageHeight": 859,
+  "imageWidth": 828,
+  "description": "Ảnh: 352.jpg (ID=352) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: 2019 như thế nào ? || ĐA: vô tích sự\n• Q2_gt: Hỏi: 2020 như thế nào ? || ĐA: sống có trách nhiệm với cộng đồng\n• Q3_gt: Hỏi: sống vô tích sự là ở năm nào ? || ĐA: 2019\n• Q4_gt: Hỏi: sống có trách nhiệm với cộng đồng là ở năm nào ? || ĐA: 2020"
+}

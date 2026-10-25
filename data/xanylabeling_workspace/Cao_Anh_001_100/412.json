@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 1182,
+      "description": "Hỏi: bức ảnh có nguồn từ đâu ? || ĐA: chanhtuoi",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1182,
+        "question_ids": [
+          1182
+        ],
+        "question": "bức ảnh có nguồn từ đâu ?",
+        "gt_answer": "chanhtuoi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.95,
+      "points": [
+        [
+          172.0,
+          407.0
+        ],
+        [
+          441.0,
+          407.0
+        ],
+        [
+          441.0,
+          499.0
+        ],
+        [
+          172.0,
+          499.0
+        ]
+      ],
+      "group_id": 1183,
+      "description": "Hỏi: người đàn ông trong hình đang nói điều gì ? || ĐA: ai bán ma túy cho mày chơi . . .",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1183,
+        "question_ids": [
+          1183
+        ],
+        "question": "người đàn ông trong hình đang nói điều gì ?",
+        "gt_answer": "ai bán ma túy cho mày chơi . . ."
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "412.jpg",
+  "imageData": null,
+  "imageHeight": 501,
+  "imageWidth": 600,
+  "description": "Ảnh: 412.jpg (ID=412) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: bức ảnh có nguồn từ đâu ? || ĐA: chanhtuoi\n• Q2_gt: Hỏi: người đàn ông trong hình đang nói điều gì ? || ĐA: ai bán ma túy cho mày chơi . . ."
+}

@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          394.0,
+          239.0
+        ],
+        [
+          618.0,
+          239.0
+        ],
+        [
+          618.0,
+          310.0
+        ],
+        [
+          394.0,
+          310.0
+        ]
+      ],
+      "group_id": 6828,
+      "description": "Hỏi: cửa hàng này kinh doang dịch vụ gì ? || ĐA: thế giới xe",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6828,
+        "question_ids": [
+          6828
+        ],
+        "question": "cửa hàng này kinh doang dịch vụ gì ?",
+        "gt_answer": "thế giới xe"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          156.0,
+          299.0
+        ],
+        [
+          809.0,
+          299.0
+        ],
+        [
+          809.0,
+          453.0
+        ],
+        [
+          156.0,
+          453.0
+        ]
+      ],
+      "group_id": 6829,
+      "description": "Hỏi: tên của cửa hàng xe nè là gì ? || ĐA: venus motorbike",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 6829,
+        "question_ids": [
+          6829
+        ],
+        "question": "tên của cửa hàng xe nè là gì ?",
+        "gt_answer": "venus motorbike"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8098,
+      "points": [
+        [
+          635.0,
+          473.0
+        ],
+        [
+          907.0,
+          473.0
+        ],
+        [
+          907.0,
+          517.0
+        ],
+        [
+          635.0,
+          517.0
+        ]
+      ],
+      "group_id": 6830,
+      "description": "Hỏi: cửa hàng kinh doanh các loại xe gì ? || ĐA: honda yamaha xe nhập khẩu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 6830,
+        "question_ids": [
+          6830
+        ],
+        "question": "cửa hàng kinh doanh các loại xe gì ?",
+        "gt_answer": "honda yamaha xe nhập khẩu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          38.0,
+          516.0
+        ],
+        [
+          818.0,
+          516.0
+        ],
+        [
+          818.0,
+          571.0
+        ],
+        [
+          38.0,
+          571.0
+        ]
+      ],
+      "group_id": 6831,
+      "description": "Hỏi: địa chỉ showroom của cửa hàng là gì ? || ĐA: 08 nguyễn thái học , phường xuân an , tp . long khánh , đồng nai",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 6831,
+        "question_ids": [
+          6831
+        ],
+        "question": "địa chỉ showroom của cửa hàng là gì ?",
+        "gt_answer": "08 nguyễn thái học , phường xuân an , tp . long khánh , đồng nai"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2362.jpg",
+  "imageData": null,
+  "imageHeight": 1024,
+  "imageWidth": 1024,
+  "description": "Ảnh: 2362.jpg (ID=2362) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: cửa hàng này kinh doang dịch vụ gì ? || ĐA: thế giới xe\n• Q2_gt: Hỏi: tên của cửa hàng xe nè là gì ? || ĐA: venus motorbike\n• Q3_gt: Hỏi: cửa hàng kinh doanh các loại xe gì ? || ĐA: honda yamaha xe nhập khẩu\n• Q4_gt: Hỏi: địa chỉ showroom của cửa hàng là gì ? || ĐA: 08 nguyễn thái học , phường xuân an , tp . long khánh , đồng nai"
+}

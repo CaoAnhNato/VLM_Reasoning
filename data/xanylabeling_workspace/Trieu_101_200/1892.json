@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          43.0,
+          342.0
+        ],
+        [
+          105.0,
+          342.0
+        ],
+        [
+          105.0,
+          363.0
+        ],
+        [
+          43.0,
+          363.0
+        ]
+      ],
+      "group_id": 5414,
+      "description": "Hỏi: quán trong ảnh tên là gì ? || ĐA: xiu café",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5414,
+        "question_ids": [
+          5414
+        ],
+        "question": "quán trong ảnh tên là gì ?",
+        "gt_answer": "xiu café"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 5415,
+      "description": "Hỏi: quán xiu bán chủ đạo món gì ? || ĐA: café",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5415,
+        "question_ids": [
+          5415
+        ],
+        "question": "quán xiu bán chủ đạo món gì ?",
+        "gt_answer": "café"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9542,
+      "points": [
+        [
+          308.0,
+          85.0
+        ],
+        [
+          496.0,
+          85.0
+        ],
+        [
+          496.0,
+          106.0
+        ],
+        [
+          308.0,
+          106.0
+        ]
+      ],
+      "group_id": 5416,
+      "description": "Hỏi: địa chỉ của quán xiu là ở đâu ? || ĐA: 128 - 130 nguyễn thị minh khai - tp đà nẵng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5416,
+        "question_ids": [
+          5416
+        ],
+        "question": "địa chỉ của quán xiu là ở đâu ?",
+        "gt_answer": "128 - 130 nguyễn thị minh khai - tp đà nẵng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          342.0,
+          85.0
+        ],
+        [
+          496.0,
+          85.0
+        ],
+        [
+          496.0,
+          106.0
+        ],
+        [
+          342.0,
+          106.0
+        ]
+      ],
+      "group_id": 5417,
+      "description": "Hỏi: quán xiu nằm ở thành phố nào ? || ĐA: đà nẵng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 5417,
+        "question_ids": [
+          5417
+        ],
+        "question": "quán xiu nằm ở thành phố nào ?",
+        "gt_answer": "đà nẵng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          19.0,
+          360.0
+        ],
+        [
+          124.0,
+          360.0
+        ],
+        [
+          124.0,
+          394.0
+        ],
+        [
+          19.0,
+          394.0
+        ]
+      ],
+      "group_id": 5418,
+      "description": "Hỏi: quán cà phê xiu trong dịp tết sẽ phục vụ như thế nào ? || ĐA: xuyên tết",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 5418,
+        "question_ids": [
+          5418
+        ],
+        "question": "quán cà phê xiu trong dịp tết sẽ phục vụ như thế nào ?",
+        "gt_answer": "xuyên tết"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1892.jpg",
+  "imageData": null,
+  "imageHeight": 506,
+  "imageWidth": 759,
+  "description": "Ảnh: 1892.jpg (ID=1892) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: quán trong ảnh tên là gì ? || ĐA: xiu café\n• Q2_gt: Hỏi: quán xiu bán chủ đạo món gì ? || ĐA: café\n• Q3_gt: Hỏi: địa chỉ của quán xiu là ở đâu ? || ĐA: 128 - 130 nguyễn thị minh khai - tp đà nẵng\n• Q4_gt: Hỏi: quán xiu nằm ở thành phố nào ? || ĐA: đà nẵng\n• Q5_gt: Hỏi: quán cà phê xiu trong dịp tết sẽ phục vụ như thế nào ? || ĐA: xuyên tết"
+}

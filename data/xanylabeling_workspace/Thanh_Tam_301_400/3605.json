@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.93,
+      "points": [
+        [
+          261.0,
+          346.0
+        ],
+        [
+          358.0,
+          346.0
+        ],
+        [
+          358.0,
+          384.0
+        ],
+        [
+          261.0,
+          384.0
+        ]
+      ],
+      "group_id": 10768,
+      "description": "Hỏi: quán phương nam bán mì gì ? || ĐA: quảng gà",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 10768,
+        "question_ids": [
+          10768
+        ],
+        "question": "quán phương nam bán mì gì ?",
+        "gt_answer": "quảng gà"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          262.0,
+          376.0
+        ],
+        [
+          359.0,
+          376.0
+        ],
+        [
+          359.0,
+          409.0
+        ],
+        [
+          262.0,
+          409.0
+        ]
+      ],
+      "group_id": 10769,
+      "description": "Hỏi: quán phương nam bán bún gì ? || ĐA: bò huế",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 10769,
+        "question_ids": [
+          10769
+        ],
+        "question": "quán phương nam bán bún gì ?",
+        "gt_answer": "bò huế"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 10770,
+      "description": "Hỏi: biển số của xe tải màu vàng là gì ? || ĐA: 60c - 181 . 36",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 10770,
+        "question_ids": [
+          10770
+        ],
+        "question": "biển số của xe tải màu vàng là gì ?",
+        "gt_answer": "60c - 181 . 36"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3605.jpg",
+  "imageData": null,
+  "imageHeight": 754,
+  "imageWidth": 1199,
+  "description": "Ảnh: 3605.jpg (ID=3605) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: quán phương nam bán mì gì ? || ĐA: quảng gà\n• Q2_gt: Hỏi: quán phương nam bán bún gì ? || ĐA: bò huế\n• Q3_gt: Hỏi: biển số của xe tải màu vàng là gì ? || ĐA: 60c - 181 . 36"
+}

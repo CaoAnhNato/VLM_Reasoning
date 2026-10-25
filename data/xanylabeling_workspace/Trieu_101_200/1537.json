@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.806,
+      "points": [
+        [
+          349.0,
+          281.0
+        ],
+        [
+          472.0,
+          281.0
+        ],
+        [
+          472.0,
+          315.0
+        ],
+        [
+          349.0,
+          315.0
+        ]
+      ],
+      "group_id": 4292,
+      "description": "Hỏi: các anh thanh tra thị trường đang kiểm tra ở đâu ? || ĐA: bách hóa xanh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4292,
+        "question_ids": [
+          4292
+        ],
+        "question": "các anh thanh tra thị trường đang kiểm tra ở đâu ?",
+        "gt_answer": "bách hóa xanh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6937,
+      "points": [
+        [
+          370.0,
+          328.0
+        ],
+        [
+          591.0,
+          328.0
+        ],
+        [
+          591.0,
+          393.0
+        ],
+        [
+          370.0,
+          393.0
+        ]
+      ],
+      "group_id": 4293,
+      "description": "Hỏi: slogan của bách hóa xanh là gì ? || ĐA: đến bách hóa xanh giá tốt mỗi ngày",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4293,
+        "question_ids": [
+          4293
+        ],
+        "question": "slogan của bách hóa xanh là gì ?",
+        "gt_answer": "đến bách hóa xanh giá tốt mỗi ngày"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.825,
+      "points": [
+        [
+          578.0,
+          557.0
+        ],
+        [
+          679.0,
+          557.0
+        ],
+        [
+          679.0,
+          585.0
+        ],
+        [
+          578.0,
+          585.0
+        ]
+      ],
+      "group_id": 4294,
+      "description": "Hỏi: quầy phía sau mọi người bán hàng gì ? || ĐA: đông lạnh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4294,
+        "question_ids": [
+          4294
+        ],
+        "question": "quầy phía sau mọi người bán hàng gì ?",
+        "gt_answer": "đông lạnh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          589.0,
+          576.0
+        ],
+        [
+          695.0,
+          576.0
+        ],
+        [
+          695.0,
+          601.0
+        ],
+        [
+          589.0,
+          601.0
+        ]
+      ],
+      "group_id": 4295,
+      "description": "Hỏi: hàng đông lạnh ở đây bán như thế nào ? || ĐA: nhanh & tiện",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 4295,
+        "question_ids": [
+          4295
+        ],
+        "question": "hàng đông lạnh ở đây bán như thế nào ?",
+        "gt_answer": "nhanh & tiện"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          877.0,
+          457.0
+        ],
+        [
+          917.0,
+          457.0
+        ],
+        [
+          917.0,
+          481.0
+        ],
+        [
+          877.0,
+          481.0
+        ]
+      ],
+      "group_id": 4296,
+      "description": "Hỏi: bên phải quầy hàng đông lạnh là gì ? || ĐA: nấm tươi các loại",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 4296,
+        "question_ids": [
+          4296
+        ],
+        "question": "bên phải quầy hàng đông lạnh là gì ?",
+        "gt_answer": "nấm tươi các loại"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1537.jpg",
+  "imageData": null,
+  "imageHeight": 1280,
+  "imageWidth": 960,
+  "description": "Ảnh: 1537.jpg (ID=1537) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: các anh thanh tra thị trường đang kiểm tra ở đâu ? || ĐA: bách hóa xanh\n• Q2_gt: Hỏi: slogan của bách hóa xanh là gì ? || ĐA: đến bách hóa xanh giá tốt mỗi ngày\n• Q3_gt: Hỏi: quầy phía sau mọi người bán hàng gì ? || ĐA: đông lạnh\n• Q4_gt: Hỏi: hàng đông lạnh ở đây bán như thế nào ? || ĐA: nhanh & tiện\n• Q5_gt: Hỏi: bên phải quầy hàng đông lạnh là gì ? || ĐA: nấm tươi các loại"
+}

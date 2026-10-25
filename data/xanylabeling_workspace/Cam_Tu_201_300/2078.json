@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          42.0,
+          14.0
+        ],
+        [
+          666.0,
+          14.0
+        ],
+        [
+          666.0,
+          262.0
+        ],
+        [
+          42.0,
+          262.0
+        ]
+      ],
+      "group_id": 6000,
+      "description": "Hỏi: ở đây bán cái gì ? || ĐA: bóp da",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6000,
+        "question_ids": [
+          6000
+        ],
+        "question": "ở đây bán cái gì ?",
+        "gt_answer": "bóp da"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2078.jpg",
+  "imageData": null,
+  "imageHeight": 262,
+  "imageWidth": 691,
+  "description": "Ảnh: 2078.jpg (ID=2078) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: ở đây bán cái gì ? || ĐA: bóp da"
+}

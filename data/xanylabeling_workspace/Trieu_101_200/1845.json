@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          265.0,
+          0.0
+        ],
+        [
+          436.0,
+          0.0
+        ],
+        [
+          436.0,
+          75.0
+        ],
+        [
+          265.0,
+          75.0
+        ]
+      ],
+      "group_id": 5261,
+      "description": "Hỏi: nơi trong ảnh là nơi nào ? || ĐA: chợ bã chiếu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 5261,
+        "question_ids": [
+          5261
+        ],
+        "question": "nơi trong ảnh là nơi nào ?",
+        "gt_answer": "chợ bã chiếu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          263.0,
+          0.0
+        ],
+        [
+          438.0,
+          0.0
+        ],
+        [
+          438.0,
+          77.0
+        ],
+        [
+          263.0,
+          77.0
+        ]
+      ],
+      "group_id": 5262,
+      "description": "Hỏi: chợ ở trong ảnh tên là gì ? || ĐA: bã chiếu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 5262,
+        "question_ids": [
+          5262
+        ],
+        "question": "chợ ở trong ảnh tên là gì ?",
+        "gt_answer": "bã chiếu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          268.0,
+          3.0
+        ],
+        [
+          439.0,
+          3.0
+        ],
+        [
+          439.0,
+          78.0
+        ],
+        [
+          268.0,
+          78.0
+        ]
+      ],
+      "group_id": 5263,
+      "description": "Hỏi: bã chiếu là tên của chỗ nào ? || ĐA: chợ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 5263,
+        "question_ids": [
+          5263
+        ],
+        "question": "bã chiếu là tên của chỗ nào ?",
+        "gt_answer": "chợ"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1845.jpg",
+  "imageData": null,
+  "imageHeight": 411,
+  "imageWidth": 640,
+  "description": "Ảnh: 1845.jpg (ID=1845) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: nơi trong ảnh là nơi nào ? || ĐA: chợ bã chiếu\n• Q2_gt: Hỏi: chợ ở trong ảnh tên là gì ? || ĐA: bã chiếu\n• Q3_gt: Hỏi: bã chiếu là tên của chỗ nào ? || ĐA: chợ"
+}

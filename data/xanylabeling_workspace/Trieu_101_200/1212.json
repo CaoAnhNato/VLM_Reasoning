@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.93,
+      "points": [
+        [
+          27.0,
+          213.0
+        ],
+        [
+          178.0,
+          213.0
+        ],
+        [
+          178.0,
+          337.0
+        ],
+        [
+          27.0,
+          337.0
+        ]
+      ],
+      "group_id": 3314,
+      "description": "Hỏi: tên bức hình là gì ? || ĐA: tôi không muốn cô đơn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3314,
+        "question_ids": [
+          3314
+        ],
+        "question": "tên bức hình là gì ?",
+        "gt_answer": "tôi không muốn cô đơn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1212.jpg",
+  "imageData": null,
+  "imageHeight": 400,
+  "imageWidth": 600,
+  "description": "Ảnh: 1212.jpg (ID=1212) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: tên bức hình là gì ? || ĐA: tôi không muốn cô đơn"
+}

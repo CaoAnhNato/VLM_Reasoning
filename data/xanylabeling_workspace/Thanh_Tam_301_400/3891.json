@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          310.0,
+          214.0
+        ],
+        [
+          796.0,
+          214.0
+        ],
+        [
+          796.0,
+          390.0
+        ],
+        [
+          310.0,
+          390.0
+        ]
+      ],
+      "group_id": 11592,
+      "description": "Hỏi: ở đây là siêu thị nào ? || ĐA: vineco",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11592,
+        "question_ids": [
+          11592
+        ],
+        "question": "ở đây là siêu thị nào ?",
+        "gt_answer": "vineco"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9056,
+      "points": [
+        [
+          220.0,
+          33.0
+        ],
+        [
+          410.0,
+          33.0
+        ],
+        [
+          410.0,
+          90.0
+        ],
+        [
+          220.0,
+          90.0
+        ]
+      ],
+      "group_id": 11593,
+      "description": "Hỏi: slogan của siêu thị là gì ? || ĐA: rau quả sạch cho mọi nhà",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11593,
+        "question_ids": [
+          11593
+        ],
+        "question": "slogan của siêu thị là gì ?",
+        "gt_answer": "rau quả sạch cho mọi nhà"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          826.0,
+          68.0
+        ],
+        [
+          969.0,
+          68.0
+        ],
+        [
+          969.0,
+          143.0
+        ],
+        [
+          826.0,
+          143.0
+        ]
+      ],
+      "group_id": 11594,
+      "description": "Hỏi: giá của bầu sao là bao nhiêu ? || ĐA: 15 . 000",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 11594,
+        "question_ids": [
+          11594
+        ],
+        "question": "giá của bầu sao là bao nhiêu ?",
+        "gt_answer": "15 . 000"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3891.jpg",
+  "imageData": null,
+  "imageHeight": 610,
+  "imageWidth": 1110,
+  "description": "Ảnh: 3891.jpg (ID=3891) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: ở đây là siêu thị nào ? || ĐA: vineco\n• Q2_gt: Hỏi: slogan của siêu thị là gì ? || ĐA: rau quả sạch cho mọi nhà\n• Q3_gt: Hỏi: giá của bầu sao là bao nhiêu ? || ĐA: 15 . 000"
+}

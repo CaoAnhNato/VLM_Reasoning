@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          1.0,
+          200.0
+        ],
+        [
+          446.0,
+          200.0
+        ],
+        [
+          446.0,
+          486.0
+        ],
+        [
+          1.0,
+          486.0
+        ]
+      ],
+      "group_id": 11014,
+      "description": "Hỏi: công ty được ghi trên tấm bảng tên là gì ? || ĐA: đại nam",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11014,
+        "question_ids": [
+          11014
+        ],
+        "question": "công ty được ghi trên tấm bảng tên là gì ?",
+        "gt_answer": "đại nam"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          42.0,
+          114.0
+        ],
+        [
+          769.0,
+          114.0
+        ],
+        [
+          769.0,
+          272.0
+        ],
+        [
+          42.0,
+          272.0
+        ]
+      ],
+      "group_id": 11015,
+      "description": "Hỏi: công ty đại nam là công ty như thế nào ? || ĐA: tnhh mtv bột mì",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11015,
+        "question_ids": [
+          11015
+        ],
+        "question": "công ty đại nam là công ty như thế nào ?",
+        "gt_answer": "tnhh mtv bột mì"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3696.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 800,
+  "description": "Ảnh: 3696.jpg (ID=3696) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: công ty được ghi trên tấm bảng tên là gì ? || ĐA: đại nam\n• Q2_gt: Hỏi: công ty đại nam là công ty như thế nào ? || ĐA: tnhh mtv bột mì"
+}

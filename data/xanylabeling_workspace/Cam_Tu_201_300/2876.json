@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7837,
+      "points": [
+        [
+          776.0,
+          231.0
+        ],
+        [
+          979.0,
+          231.0
+        ],
+        [
+          979.0,
+          296.0
+        ],
+        [
+          776.0,
+          296.0
+        ]
+      ],
+      "group_id": 8477,
+      "description": "Hỏi: cá thu cắt khúc có giá tại đây là bao nhiêu ? || ĐA: 215 . 000 đ kg",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8477,
+        "question_ids": [
+          8477
+        ],
+        "question": "cá thu cắt khúc có giá tại đây là bao nhiêu ?",
+        "gt_answer": "215 . 000 đ kg"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7837,
+      "points": [
+        [
+          779.0,
+          234.0
+        ],
+        [
+          982.0,
+          234.0
+        ],
+        [
+          982.0,
+          299.0
+        ],
+        [
+          779.0,
+          299.0
+        ]
+      ],
+      "group_id": 8478,
+      "description": "Hỏi: giá thị trường của cá thu cắt khúc là bao nhiêu ? || ĐA: 299 . 000 đ kg",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8478,
+        "question_ids": [
+          8478
+        ],
+        "question": "giá thị trường của cá thu cắt khúc là bao nhiêu ?",
+        "gt_answer": "299 . 000 đ kg"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.825,
+      "points": [
+        [
+          1247.0,
+          232.0
+        ],
+        [
+          1401.0,
+          232.0
+        ],
+        [
+          1401.0,
+          296.0
+        ],
+        [
+          1247.0,
+          296.0
+        ]
+      ],
+      "group_id": 8479,
+      "description": "Hỏi: đùi ếch tươi 20 - 25 đùi / kg có giá tại nơi này là bao nhiêu ? || ĐA: 118 . 000 đ kg",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8479,
+        "question_ids": [
+          8479
+        ],
+        "question": "đùi ếch tươi 20 - 25 đùi / kg có giá tại nơi này là bao nhiêu ?",
+        "gt_answer": "118 . 000 đ kg"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.5912,
+      "points": [
+        [
+          1031.0,
+          240.0
+        ],
+        [
+          1078.0,
+          240.0
+        ],
+        [
+          1078.0,
+          257.0
+        ],
+        [
+          1031.0,
+          257.0
+        ]
+      ],
+      "group_id": 8480,
+      "description": "Hỏi: 125 . 600 đ kg là giá gì của đùi ếch tươi ? || ĐA: thị trường",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 8480,
+        "question_ids": [
+          8480
+        ],
+        "question": "125 . 600 đ kg là giá gì của đùi ếch tươi ?",
+        "gt_answer": "thị trường"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.8486,
+      "points": [
+        [
+          88.0,
+          205.0
+        ],
+        [
+          296.0,
+          205.0
+        ],
+        [
+          296.0,
+          233.0
+        ],
+        [
+          88.0,
+          233.0
+        ]
+      ],
+      "group_id": 8481,
+      "description": "Hỏi: để phòng ngừa covid - 19 thì mọi người phải làm gì ? || ĐA: giữ khoảng cách cần thiết",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 8481,
+        "question_ids": [
+          8481
+        ],
+        "question": "để phòng ngừa covid - 19 thì mọi người phải làm gì ?",
+        "gt_answer": "giữ khoảng cách cần thiết"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2876.jpg",
+  "imageData": null,
+  "imageHeight": 1200,
+  "imageWidth": 1600,
+  "description": "Ảnh: 2876.jpg (ID=2876) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: cá thu cắt khúc có giá tại đây là bao nhiêu ? || ĐA: 215 . 000 đ kg\n• Q2_gt: Hỏi: giá thị trường của cá thu cắt khúc là bao nhiêu ? || ĐA: 299 . 000 đ kg\n• Q3_gt: Hỏi: đùi ếch tươi 20 - 25 đùi / kg có giá tại nơi này là bao nhiêu ? || ĐA: 118 . 000 đ kg\n• Q4_gt: Hỏi: 125 . 600 đ kg là giá gì của đùi ếch tươi ? || ĐA: thị trường\n• Q5_gt: Hỏi: để phòng ngừa covid - 19 thì mọi người phải làm gì ? || ĐA: giữ khoảng cách cần thiết"
+}

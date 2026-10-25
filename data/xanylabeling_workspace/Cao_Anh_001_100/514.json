@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8091,
+      "points": [
+        [
+          16.0,
+          52.0
+        ],
+        [
+          175.0,
+          52.0
+        ],
+        [
+          175.0,
+          119.0
+        ],
+        [
+          16.0,
+          119.0
+        ]
+      ],
+      "group_id": 1485,
+      "description": "Hỏi: người phỏng vấn hỏi câu gì ở bức ảnh đầu tiên ? || ĐA: cháu nghĩ gì về việc bỏ tết âm lịch cổ truyền ?",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1485,
+        "question_ids": [
+          1485
+        ],
+        "question": "người phỏng vấn hỏi câu gì ở bức ảnh đầu tiên ?",
+        "gt_answer": "cháu nghĩ gì về việc bỏ tết âm lịch cổ truyền ?"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9222,
+      "points": [
+        [
+          343.0,
+          33.0
+        ],
+        [
+          493.0,
+          33.0
+        ],
+        [
+          493.0,
+          120.0
+        ],
+        [
+          343.0,
+          120.0
+        ]
+      ],
+      "group_id": 1486,
+      "description": "Hỏi: cháu nghĩ như thế nào về việc bỏ tết âm lịch cổ truyền ? || ĐA: cháu nghĩ ăn một cái tết là đủ rồi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1486,
+        "question_ids": [
+          1486
+        ],
+        "question": "cháu nghĩ như thế nào về việc bỏ tết âm lịch cổ truyền ?",
+        "gt_answer": "cháu nghĩ ăn một cái tết là đủ rồi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.95,
+      "points": [
+        [
+          343.0,
+          334.0
+        ],
+        [
+          493.0,
+          334.0
+        ],
+        [
+          493.0,
+          387.0
+        ],
+        [
+          343.0,
+          387.0
+        ]
+      ],
+      "group_id": 1487,
+      "description": "Hỏi: việc này cần thực hiện như thế nào ? || ĐA: gộp cmn 2 cái tết làm một",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1487,
+        "question_ids": [
+          1487
+        ],
+        "question": "việc này cần thực hiện như thế nào ?",
+        "gt_answer": "gộp cmn 2 cái tết làm một"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9222,
+      "points": [
+        [
+          339.0,
+          359.0
+        ],
+        [
+          495.0,
+          359.0
+        ],
+        [
+          495.0,
+          426.0
+        ],
+        [
+          339.0,
+          426.0
+        ]
+      ],
+      "group_id": 1488,
+      "description": "Hỏi: gộp 2 cái tết làm 1 là như thế nào ? || ĐA: nghỉ từ đầu tết dương đến hết tết âm",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 1488,
+        "question_ids": [
+          1488
+        ],
+        "question": "gộp 2 cái tết làm 1 là như thế nào ?",
+        "gt_answer": "nghỉ từ đầu tết dương đến hết tết âm"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.9456,
+      "points": [
+        [
+          5.0,
+          328.0
+        ],
+        [
+          189.0,
+          328.0
+        ],
+        [
+          189.0,
+          420.0
+        ],
+        [
+          5.0,
+          420.0
+        ]
+      ],
+      "group_id": 1489,
+      "description": "Hỏi: người phỏng vấn hỏi gì ở tấm hình thứ nhất ở phía dưới ? || ĐA: thế cháu nghĩ việc này nên thực hiện như thế nào ?",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 1489,
+        "question_ids": [
+          1489
+        ],
+        "question": "người phỏng vấn hỏi gì ở tấm hình thứ nhất ở phía dưới ?",
+        "gt_answer": "thế cháu nghĩ việc này nên thực hiện như thế nào ?"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "514.jpg",
+  "imageData": null,
+  "imageHeight": 574,
+  "imageWidth": 600,
+  "description": "Ảnh: 514.jpg (ID=514) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: người phỏng vấn hỏi câu gì ở bức ảnh đầu tiên ? || ĐA: cháu nghĩ gì về việc bỏ tết âm lịch cổ truyền ?\n• Q2_gt: Hỏi: cháu nghĩ như thế nào về việc bỏ tết âm lịch cổ truyền ? || ĐA: cháu nghĩ ăn một cái tết là đủ rồi\n• Q3_gt: Hỏi: việc này cần thực hiện như thế nào ? || ĐA: gộp cmn 2 cái tết làm một\n• Q4_gt: Hỏi: gộp 2 cái tết làm 1 là như thế nào ? || ĐA: nghỉ từ đầu tết dương đến hết tết âm\n• Q5_gt: Hỏi: người phỏng vấn hỏi gì ở tấm hình thứ nhất ở phía dưới ? || ĐA: thế cháu nghĩ việc này nên thực hiện như thế nào ?"
+}

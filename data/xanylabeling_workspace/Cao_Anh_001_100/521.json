@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9563,
+      "points": [
+        [
+          0.0,
+          203.0
+        ],
+        [
+          405.0,
+          203.0
+        ],
+        [
+          405.0,
+          264.0
+        ],
+        [
+          0.0,
+          264.0
+        ]
+      ],
+      "group_id": 1507,
+      "description": "Hỏi: anh cưỡi ngựa như thế nào ? || ĐA: a cưỡi ngựa thụt cả 2 hòn dái",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1507,
+        "question_ids": [
+          1507
+        ],
+        "question": "anh cưỡi ngựa như thế nào ?",
+        "gt_answer": "a cưỡi ngựa thụt cả 2 hòn dái"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9563,
+      "points": [
+        [
+          0.0,
+          446.0
+        ],
+        [
+          376.0,
+          446.0
+        ],
+        [
+          376.0,
+          511.0
+        ],
+        [
+          0.0,
+          511.0
+        ]
+      ],
+      "group_id": 1508,
+      "description": "Hỏi: em ở nhà như thế nào ? || ĐA: e ở nhà đạp mái với người ta",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1508,
+        "question_ids": [
+          1508
+        ],
+        "question": "em ở nhà như thế nào ?",
+        "gt_answer": "e ở nhà đạp mái với người ta"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          247.0,
+          416.0
+        ],
+        [
+          373.0,
+          416.0
+        ],
+        [
+          373.0,
+          449.0
+        ],
+        [
+          247.0,
+          449.0
+        ]
+      ],
+      "group_id": 1509,
+      "description": "Hỏi: bức ảnh có nguồn từ đâu ? || ĐA: - newton kneel -",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1509,
+        "question_ids": [
+          1509
+        ],
+        "question": "bức ảnh có nguồn từ đâu ?",
+        "gt_answer": "- newton kneel -"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "521.jpg",
+  "imageData": null,
+  "imageHeight": 720,
+  "imageWidth": 405,
+  "description": "Ảnh: 521.jpg (ID=521) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: anh cưỡi ngựa như thế nào ? || ĐA: a cưỡi ngựa thụt cả 2 hòn dái\n• Q2_gt: Hỏi: em ở nhà như thế nào ? || ĐA: e ở nhà đạp mái với người ta\n• Q3_gt: Hỏi: bức ảnh có nguồn từ đâu ? || ĐA: - newton kneel -"
+}

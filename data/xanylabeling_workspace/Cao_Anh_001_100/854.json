@@ -1,0 +1,249 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.975,
+      "points": [
+        [
+          926.0,
+          386.0
+        ],
+        [
+          1046.0,
+          386.0
+        ],
+        [
+          1046.0,
+          451.0
+        ],
+        [
+          926.0,
+          451.0
+        ]
+      ],
+      "group_id": 2253,
+      "description": "Hỏi: giá bắp cái của siêu thị là bao nhiêu ? || ĐA: 9 . 900",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2253,
+        "question_ids": [
+          2253
+        ],
+        "question": "giá bắp cái của siêu thị là bao nhiêu ?",
+        "gt_answer": "9 . 900"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          348.0,
+          295.0
+        ],
+        [
+          378.0,
+          295.0
+        ],
+        [
+          378.0,
+          316.0
+        ],
+        [
+          348.0,
+          316.0
+        ]
+      ],
+      "group_id": 2254,
+      "description": "Hỏi: cà chua đà lạt được bán với giá bao nhiêu ? || ĐA: 18 . 000",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2254,
+        "question_ids": [
+          2254
+        ],
+        "question": "cà chua đà lạt được bán với giá bao nhiêu ?",
+        "gt_answer": "18 . 000"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.975,
+      "points": [
+        [
+          929.0,
+          389.0
+        ],
+        [
+          1049.0,
+          389.0
+        ],
+        [
+          1049.0,
+          454.0
+        ],
+        [
+          929.0,
+          454.0
+        ]
+      ],
+      "group_id": 2255,
+      "description": "Hỏi: siêu thị bán bí đỏ tròn giá bao nhiêu ? || ĐA: 9 . 900",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 2255,
+        "question_ids": [
+          2255
+        ],
+        "question": "siêu thị bán bí đỏ tròn giá bao nhiêu ?",
+        "gt_answer": "9 . 900"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          719.0,
+          708.0
+        ],
+        [
+          814.0,
+          708.0
+        ],
+        [
+          814.0,
+          787.0
+        ],
+        [
+          719.0,
+          787.0
+        ]
+      ],
+      "group_id": 2256,
+      "description": "Hỏi: dưới mỗi quầy hàng có dòng chữ gì ? || ĐA: giá luôn luôn thấp",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 2256,
+        "question_ids": [
+          2256
+        ],
+        "question": "dưới mỗi quầy hàng có dòng chữ gì ?",
+        "gt_answer": "giá luôn luôn thấp"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.5786,
+      "points": [
+        [
+          838.0,
+          169.0
+        ],
+        [
+          876.0,
+          169.0
+        ],
+        [
+          876.0,
+          209.0
+        ],
+        [
+          838.0,
+          209.0
+        ]
+      ],
+      "group_id": 2257,
+      "description": "Hỏi: 9 . 900 vnd / kg là giá của sản phẩm nào ? || ĐA: bí đỏ tròn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 2257,
+        "question_ids": [
+          2257
+        ],
+        "question": "9 . 900 vnd / kg là giá của sản phẩm nào ?",
+        "gt_answer": "bí đỏ tròn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q6_gt",
+      "score": 0.825,
+      "points": [
+        [
+          842.0,
+          446.0
+        ],
+        [
+          868.0,
+          446.0
+        ],
+        [
+          868.0,
+          471.0
+        ],
+        [
+          842.0,
+          471.0
+        ]
+      ],
+      "group_id": 2258,
+      "description": "Hỏi: siêu thị bán nho mỹ giá bao nhiêu ? || ĐA: 119 . 000",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 6,
+        "question_id": 2258,
+        "question_ids": [
+          2258
+        ],
+        "question": "siêu thị bán nho mỹ giá bao nhiêu ?",
+        "gt_answer": "119 . 000"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "854.jpg",
+  "imageData": null,
+  "imageHeight": 996,
+  "imageWidth": 1378,
+  "description": "Ảnh: 854.jpg (ID=854) | Tổng số câu hỏi: 6\n• Q1_gt: Hỏi: giá bắp cái của siêu thị là bao nhiêu ? || ĐA: 9 . 900\n• Q2_gt: Hỏi: cà chua đà lạt được bán với giá bao nhiêu ? || ĐA: 18 . 000\n• Q3_gt: Hỏi: siêu thị bán bí đỏ tròn giá bao nhiêu ? || ĐA: 9 . 900\n• Q4_gt: Hỏi: dưới mỗi quầy hàng có dòng chữ gì ? || ĐA: giá luôn luôn thấp\n• Q5_gt: Hỏi: 9 . 900 vnd / kg là giá của sản phẩm nào ? || ĐA: bí đỏ tròn\n• Q6_gt: Hỏi: siêu thị bán nho mỹ giá bao nhiêu ? || ĐA: 119 . 000"
+}

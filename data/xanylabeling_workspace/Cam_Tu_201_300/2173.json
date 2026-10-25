@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          599.0,
+          165.0
+        ],
+        [
+          741.0,
+          165.0
+        ],
+        [
+          741.0,
+          202.0
+        ],
+        [
+          599.0,
+          202.0
+        ]
+      ],
+      "group_id": 6263,
+      "description": "Hỏi: đây là lễ gì ? || ĐA: đại hội",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6263,
+        "question_ids": [
+          6263
+        ],
+        "question": "đây là lễ gì ?",
+        "gt_answer": "đại hội"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.975,
+      "points": [
+        [
+          538.0,
+          196.0
+        ],
+        [
+          804.0,
+          196.0
+        ],
+        [
+          804.0,
+          223.0
+        ],
+        [
+          538.0,
+          223.0
+        ]
+      ],
+      "group_id": 6264,
+      "description": "Hỏi: tên của đại hội là gì ? || ĐA: thi đua yêu nước tỉnh điện biên",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 6264,
+        "question_ids": [
+          6264
+        ],
+        "question": "tên của đại hội là gì ?",
+        "gt_answer": "thi đua yêu nước tỉnh điện biên"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.9067,
+      "points": [
+        [
+          576.0,
+          219.0
+        ],
+        [
+          769.0,
+          219.0
+        ],
+        [
+          769.0,
+          240.0
+        ],
+        [
+          576.0,
+          240.0
+        ]
+      ],
+      "group_id": 6265,
+      "description": "Hỏi: diễn ra lần thứ mấy ? || ĐA: lần thứ v ( 2020 - 2025 )",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 6265,
+        "question_ids": [
+          6265
+        ],
+        "question": "diễn ra lần thứ mấy ?",
+        "gt_answer": "lần thứ v ( 2020 - 2025 )"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8112,
+      "points": [
+        [
+          458.0,
+          388.0
+        ],
+        [
+          833.0,
+          388.0
+        ],
+        [
+          833.0,
+          419.0
+        ],
+        [
+          458.0,
+          419.0
+        ]
+      ],
+      "group_id": 6266,
+      "description": "Hỏi: khẩu hiệu của đại hội là gì ? || ĐA: đoàn kết - kỷ cương - đỏi mới - sáng tạo thi đua xây dựng tỉnh điện biên phát triển nhanh - bền vững",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 6266,
+        "question_ids": [
+          6266
+        ],
+        "question": "khẩu hiệu của đại hội là gì ?",
+        "gt_answer": "đoàn kết - kỷ cương - đỏi mới - sáng tạo thi đua xây dựng tỉnh điện biên phát triển nhanh - bền vững"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          977.0,
+          594.0
+        ],
+        [
+          1211.0,
+          594.0
+        ],
+        [
+          1211.0,
+          670.0
+        ],
+        [
+          977.0,
+          670.0
+        ]
+      ],
+      "group_id": 6267,
+      "description": "Hỏi: bức hình được lấy ở đâu ? || ĐA: dienbientv . vn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 6267,
+        "question_ids": [
+          6267
+        ],
+        "question": "bức hình được lấy ở đâu ?",
+        "gt_answer": "dienbientv . vn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2173.jpg",
+  "imageData": null,
+  "imageHeight": 720,
+  "imageWidth": 1280,
+  "description": "Ảnh: 2173.jpg (ID=2173) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: đây là lễ gì ? || ĐA: đại hội\n• Q2_gt: Hỏi: tên của đại hội là gì ? || ĐA: thi đua yêu nước tỉnh điện biên\n• Q3_gt: Hỏi: diễn ra lần thứ mấy ? || ĐA: lần thứ v ( 2020 - 2025 )\n• Q4_gt: Hỏi: khẩu hiệu của đại hội là gì ? || ĐA: đoàn kết - kỷ cương - đỏi mới - sáng tạo thi đua xây dựng tỉnh điện biên phát triển nhanh - bền vững\n• Q5_gt: Hỏi: bức hình được lấy ở đâu ? || ĐA: dienbientv . vn"
+}

@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          439.0,
+          46.0
+        ],
+        [
+          1061.0,
+          46.0
+        ],
+        [
+          1061.0,
+          114.0
+        ],
+        [
+          439.0,
+          114.0
+        ]
+      ],
+      "group_id": 4659,
+      "description": "Hỏi: các em bé học sinh chụp hình ở đâu ? || ĐA: khu di tích lịch sử rừng kiến an",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4659,
+        "question_ids": [
+          4659
+        ],
+        "question": "các em bé học sinh chụp hình ở đâu ?",
+        "gt_answer": "khu di tích lịch sử rừng kiến an"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9741,
+      "points": [
+        [
+          523.0,
+          140.0
+        ],
+        [
+          994.0,
+          140.0
+        ],
+        [
+          994.0,
+          252.0
+        ],
+        [
+          523.0,
+          252.0
+        ]
+      ],
+      "group_id": 4660,
+      "description": "Hỏi: khu di tích lịch sử rừng kiến an ở đâu ? || ĐA: xã an lập - huyện dầu tiếng - tỉnh bình dương",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4660,
+        "question_ids": [
+          4660
+        ],
+        "question": "khu di tích lịch sử rừng kiến an ở đâu ?",
+        "gt_answer": "xã an lập - huyện dầu tiếng - tỉnh bình dương"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          440.0,
+          47.0
+        ],
+        [
+          1060.0,
+          47.0
+        ],
+        [
+          1060.0,
+          113.0
+        ],
+        [
+          440.0,
+          113.0
+        ]
+      ],
+      "group_id": 4661,
+      "description": "Hỏi: khu di tích lịch sử các bé học sinh đang thăm quan tên gì ? || ĐA: rừng kiến an",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4661,
+        "question_ids": [
+          4661
+        ],
+        "question": "khu di tích lịch sử các bé học sinh đang thăm quan tên gì ?",
+        "gt_answer": "rừng kiến an"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1651.jpg",
+  "imageData": null,
+  "imageHeight": 960,
+  "imageWidth": 1280,
+  "description": "Ảnh: 1651.jpg (ID=1651) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: các em bé học sinh chụp hình ở đâu ? || ĐA: khu di tích lịch sử rừng kiến an\n• Q2_gt: Hỏi: khu di tích lịch sử rừng kiến an ở đâu ? || ĐA: xã an lập - huyện dầu tiếng - tỉnh bình dương\n• Q3_gt: Hỏi: khu di tích lịch sử các bé học sinh đang thăm quan tên gì ? || ĐA: rừng kiến an"
+}

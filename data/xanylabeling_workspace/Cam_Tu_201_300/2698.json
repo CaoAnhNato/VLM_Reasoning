@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          353.0,
+          1776.0
+        ],
+        [
+          2016.0,
+          1776.0
+        ],
+        [
+          2016.0,
+          2055.0
+        ],
+        [
+          353.0,
+          2055.0
+        ]
+      ],
+      "group_id": 7875,
+      "description": "Hỏi: cửa tiệm có bảng hiệu màu đỏ trong ảnh có tên là gì ? || ĐA: cầm đồ quang anh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7875,
+        "question_ids": [
+          7875
+        ],
+        "question": "cửa tiệm có bảng hiệu màu đỏ trong ảnh có tên là gì ?",
+        "gt_answer": "cầm đồ quang anh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8287,
+      "points": [
+        [
+          52.0,
+          1876.0
+        ],
+        [
+          2257.0,
+          1876.0
+        ],
+        [
+          2257.0,
+          2212.0
+        ],
+        [
+          52.0,
+          2212.0
+        ]
+      ],
+      "group_id": 7876,
+      "description": "Hỏi: khẩu hiệu của cửa hàng quang anh là gì ? || ĐA: uy ín tạo nên thương hiệu",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7876,
+        "question_ids": [
+          7876
+        ],
+        "question": "khẩu hiệu của cửa hàng quang anh là gì ?",
+        "gt_answer": "uy ín tạo nên thương hiệu"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 7877,
+      "description": "Hỏi: nơi có bảng hiệu màu đen chữ vàng có tên là gì ? || ĐA: hue royal hotel",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7877,
+        "question_ids": [
+          7877
+        ],
+        "question": "nơi có bảng hiệu màu đen chữ vàng có tên là gì ?",
+        "gt_answer": "hue royal hotel"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          1804.0,
+          2431.0
+        ],
+        [
+          2088.0,
+          2431.0
+        ],
+        [
+          2088.0,
+          2647.0
+        ],
+        [
+          1804.0,
+          2647.0
+        ]
+      ],
+      "group_id": 7878,
+      "description": "Hỏi: hue royal hotel là nơi như thế nào ? || ĐA: khách sạn phố huế",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7878,
+        "question_ids": [
+          7878
+        ],
+        "question": "hue royal hotel là nơi như thế nào ?",
+        "gt_answer": "khách sạn phố huế"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2698.jpg",
+  "imageData": null,
+  "imageHeight": 4032,
+  "imageWidth": 3024,
+  "description": "Ảnh: 2698.jpg (ID=2698) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: cửa tiệm có bảng hiệu màu đỏ trong ảnh có tên là gì ? || ĐA: cầm đồ quang anh\n• Q2_gt: Hỏi: khẩu hiệu của cửa hàng quang anh là gì ? || ĐA: uy ín tạo nên thương hiệu\n• Q3_gt: Hỏi: nơi có bảng hiệu màu đen chữ vàng có tên là gì ? || ĐA: hue royal hotel\n• Q4_gt: Hỏi: hue royal hotel là nơi như thế nào ? || ĐA: khách sạn phố huế"
+}

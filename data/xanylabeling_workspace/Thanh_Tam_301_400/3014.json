@@ -1,0 +1,54 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": false
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          117.0,
+          405.0
+        ],
+        [
+          185.0,
+          405.0
+        ],
+        [
+          185.0,
+          439.0
+        ],
+        [
+          117.0,
+          439.0
+        ]
+      ],
+      "group_id": 8856,
+      "description": "Hỏi: ở đây là siêu thị nào ? || ĐA: vinmart",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8856,
+        "question_ids": [
+          8856
+        ],
+        "question": "ở đây là siêu thị nào ?",
+        "gt_answer": "vinmart"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3014.jpg",
+  "imageData": null,
+  "imageHeight": 495,
+  "imageWidth": 660,
+  "description": "Ảnh: 3014.jpg (ID=3014) | Tổng số câu hỏi: 1\n• Q1_gt: Hỏi: ở đây là siêu thị nào ? || ĐA: vinmart"
+}

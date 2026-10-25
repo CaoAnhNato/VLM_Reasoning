@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          43.0,
+          84.0
+        ],
+        [
+          80.0,
+          84.0
+        ],
+        [
+          80.0,
+          109.0
+        ],
+        [
+          43.0,
+          109.0
+        ]
+      ],
+      "group_id": 8472,
+      "description": "Hỏi: tấm áp phích này được tạo ra bởi khoa nào ? || ĐA: nhiếp ảnh",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8472,
+        "question_ids": [
+          8472
+        ],
+        "question": "tấm áp phích này được tạo ra bởi khoa nào ?",
+        "gt_answer": "nhiếp ảnh"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          270.0,
+          87.0
+        ],
+        [
+          380.0,
+          87.0
+        ],
+        [
+          380.0,
+          129.0
+        ],
+        [
+          270.0,
+          129.0
+        ]
+      ],
+      "group_id": 8473,
+      "description": "Hỏi: tên cuộc thi ở trong ảnh là gì ? || ĐA: góc nhìn trẻ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8473,
+        "question_ids": [
+          8473
+        ],
+        "question": "tên cuộc thi ở trong ảnh là gì ?",
+        "gt_answer": "góc nhìn trẻ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.6937,
+      "points": [
+        [
+          79.0,
+          99.0
+        ],
+        [
+          209.0,
+          99.0
+        ],
+        [
+          209.0,
+          123.0
+        ],
+        [
+          79.0,
+          123.0
+        ]
+      ],
+      "group_id": 8474,
+      "description": "Hỏi: trường nào quản lý cuộc thi này ? || ĐA: đại học sân khấu - điện ảnh hà nội",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 8474,
+        "question_ids": [
+          8474
+        ],
+        "question": "trường nào quản lý cuộc thi này ?",
+        "gt_answer": "đại học sân khấu - điện ảnh hà nội"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2874.jpg",
+  "imageData": null,
+  "imageHeight": 131,
+  "imageWidth": 383,
+  "description": "Ảnh: 2874.jpg (ID=2874) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tấm áp phích này được tạo ra bởi khoa nào ? || ĐA: nhiếp ảnh\n• Q2_gt: Hỏi: tên cuộc thi ở trong ảnh là gì ? || ĐA: góc nhìn trẻ\n• Q3_gt: Hỏi: trường nào quản lý cuộc thi này ? || ĐA: đại học sân khấu - điện ảnh hà nội"
+}

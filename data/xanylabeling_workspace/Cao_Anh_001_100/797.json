@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8318,
+      "points": [
+        [
+          596.0,
+          679.0
+        ],
+        [
+          2399.0,
+          679.0
+        ],
+        [
+          2399.0,
+          1884.0
+        ],
+        [
+          596.0,
+          1884.0
+        ]
+      ],
+      "group_id": 2041,
+      "description": "Hỏi: cuốn sách này viết về gì ? || ĐA: viết truyền cảm nói thông suốt",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2041,
+        "question_ids": [
+          2041
+        ],
+        "question": "cuốn sách này viết về gì ?",
+        "gt_answer": "viết truyền cảm nói thông suốt"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          257.0,
+          3629.0
+        ],
+        [
+          1254.0,
+          3629.0
+        ],
+        [
+          1254.0,
+          4032.0
+        ],
+        [
+          257.0,
+          4032.0
+        ]
+      ],
+      "group_id": 2042,
+      "description": "Hỏi: dòng chữ phía dưới biểu tường mặt người là tên ai ? || ĐA: charlie cor",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2042,
+        "question_ids": [
+          2042
+        ],
+        "question": "dòng chữ phía dưới biểu tường mặt người là tên ai ?",
+        "gt_answer": "charlie cor"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "797.jpg",
+  "imageData": null,
+  "imageHeight": 4032,
+  "imageWidth": 3024,
+  "description": "Ảnh: 797.jpg (ID=797) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: cuốn sách này viết về gì ? || ĐA: viết truyền cảm nói thông suốt\n• Q2_gt: Hỏi: dòng chữ phía dưới biểu tường mặt người là tên ai ? || ĐA: charlie cor"
+}

@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1696.0,
+          1190.0
+        ],
+        [
+          2239.0,
+          1190.0
+        ],
+        [
+          2239.0,
+          1324.0
+        ],
+        [
+          1696.0,
+          1324.0
+        ]
+      ],
+      "group_id": 4677,
+      "description": "Hỏi: ngôi trường được quảng cáo trong tấm bảng là trường gì ? || ĐA: mầm non",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4677,
+        "question_ids": [
+          4677
+        ],
+        "question": "ngôi trường được quảng cáo trong tấm bảng là trường gì ?",
+        "gt_answer": "mầm non"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          1617.0,
+          1619.0
+        ],
+        [
+          2318.0,
+          1619.0
+        ],
+        [
+          2318.0,
+          1727.0
+        ],
+        [
+          1617.0,
+          1727.0
+        ]
+      ],
+      "group_id": 4678,
+      "description": "Hỏi: địa chỉ của campus 3 ở đâu ? || ĐA: số 1 - lương yên - hà nội",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4678,
+        "question_ids": [
+          4678
+        ],
+        "question": "địa chỉ của campus 3 ở đâu ?",
+        "gt_answer": "số 1 - lương yên - hà nội"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1857.0,
+          1713.0
+        ],
+        [
+          2177.0,
+          1713.0
+        ],
+        [
+          2177.0,
+          1790.0
+        ],
+        [
+          1857.0,
+          1790.0
+        ]
+      ],
+      "group_id": 4679,
+      "description": "Hỏi: số điện thoại để liên hệ campus 3 là gì ? || ĐA: 0822 . 16 . 26 . 26",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4679,
+        "question_ids": [
+          4679
+        ],
+        "question": "số điện thoại để liên hệ campus 3 là gì ?",
+        "gt_answer": "0822 . 16 . 26 . 26"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8757,
+      "points": [
+        [
+          800.0,
+          1503.0
+        ],
+        [
+          1475.0,
+          1503.0
+        ],
+        [
+          1475.0,
+          1655.0
+        ],
+        [
+          800.0,
+          1655.0
+        ]
+      ],
+      "group_id": 4680,
+      "description": "Hỏi: tấm bảng quảng cáo chương trình gì ? || ĐA: giáo dục mầm non singapore",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 4680,
+        "question_ids": [
+          4680
+        ],
+        "question": "tấm bảng quảng cáo chương trình gì ?",
+        "gt_answer": "giáo dục mầm non singapore"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 1.0,
+      "points": [
+        [
+          775.0,
+          1572.0
+        ],
+        [
+          1481.0,
+          1572.0
+        ],
+        [
+          1481.0,
+          1755.0
+        ],
+        [
+          775.0,
+          1755.0
+        ]
+      ],
+      "group_id": 4681,
+      "description": "Hỏi: chương trình giáo dục trong tấm bảng là của nước nào ? || ĐA: singapore",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 4681,
+        "question_ids": [
+          4681
+        ],
+        "question": "chương trình giáo dục trong tấm bảng là của nước nào ?",
+        "gt_answer": "singapore"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1656.jpg",
+  "imageData": null,
+  "imageHeight": 2448,
+  "imageWidth": 3264,
+  "description": "Ảnh: 1656.jpg (ID=1656) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: ngôi trường được quảng cáo trong tấm bảng là trường gì ? || ĐA: mầm non\n• Q2_gt: Hỏi: địa chỉ của campus 3 ở đâu ? || ĐA: số 1 - lương yên - hà nội\n• Q3_gt: Hỏi: số điện thoại để liên hệ campus 3 là gì ? || ĐA: 0822 . 16 . 26 . 26\n• Q4_gt: Hỏi: tấm bảng quảng cáo chương trình gì ? || ĐA: giáo dục mầm non singapore\n• Q5_gt: Hỏi: chương trình giáo dục trong tấm bảng là của nước nào ? || ĐA: singapore"
+}

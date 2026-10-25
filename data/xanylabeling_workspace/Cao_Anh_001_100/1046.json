@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          308.0,
+          234.0
+        ],
+        [
+          360.0,
+          234.0
+        ],
+        [
+          360.0,
+          252.0
+        ],
+        [
+          308.0,
+          252.0
+        ]
+      ],
+      "group_id": 2862,
+      "description": "Hỏi: tên của chiếc tàu là gì ? || ĐA: đổi mới",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2862,
+        "question_ids": [
+          2862
+        ],
+        "question": "tên của chiếc tàu là gì ?",
+        "gt_answer": "đổi mới"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          473.0,
+          147.0
+        ],
+        [
+          574.0,
+          147.0
+        ],
+        [
+          574.0,
+          180.0
+        ],
+        [
+          473.0,
+          180.0
+        ]
+      ],
+      "group_id": 2863,
+      "description": "Hỏi: đây là đâu ? || ĐA: tổ dân phố 57",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2863,
+        "question_ids": [
+          2863
+        ],
+        "question": "đây là đâu ?",
+        "gt_answer": "tổ dân phố 57"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 2864,
+      "description": "Hỏi: đây ở phường nào ? || ĐA: phương khâm thiêm",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 2864,
+        "question_ids": [
+          2864
+        ],
+        "question": "đây ở phường nào ?",
+        "gt_answer": "phương khâm thiêm"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1046.jpg",
+  "imageData": null,
+  "imageHeight": 399,
+  "imageWidth": 600,
+  "description": "Ảnh: 1046.jpg (ID=1046) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: tên của chiếc tàu là gì ? || ĐA: đổi mới\n• Q2_gt: Hỏi: đây là đâu ? || ĐA: tổ dân phố 57\n• Q3_gt: Hỏi: đây ở phường nào ? || ĐA: phương khâm thiêm"
+}

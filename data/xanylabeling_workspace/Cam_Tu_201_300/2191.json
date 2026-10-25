@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          281.0,
+          791.0
+        ],
+        [
+          916.0,
+          791.0
+        ],
+        [
+          916.0,
+          983.0
+        ],
+        [
+          281.0,
+          983.0
+        ]
+      ],
+      "group_id": 6332,
+      "description": "Hỏi: cuốn sách này tên gì ? || ĐA: bí mật của phan thiên ân",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 6332,
+        "question_ids": [
+          6332
+        ],
+        "question": "cuốn sách này tên gì ?",
+        "gt_answer": "bí mật của phan thiên ân"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 6333,
+      "description": "Hỏi: cuốn sách này do nhà xuất bản nào phát hành ? || ĐA: nxb thế giới",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 6333,
+        "question_ids": [
+          6333
+        ],
+        "question": "cuốn sách này do nhà xuất bản nào phát hành ?",
+        "gt_answer": "nxb thế giới"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8593,
+      "points": [
+        [
+          402.0,
+          974.0
+        ],
+        [
+          715.0,
+          974.0
+        ],
+        [
+          715.0,
+          1010.0
+        ],
+        [
+          402.0,
+          1010.0
+        ]
+      ],
+      "group_id": 6334,
+      "description": "Hỏi: quà tặng từ ai ? || ĐA: tiến sĩ alan phan",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 6334,
+        "question_ids": [
+          6334
+        ],
+        "question": "quà tặng từ ai ?",
+        "gt_answer": "tiến sĩ alan phan"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.9467,
+      "points": [
+        [
+          762.0,
+          769.0
+        ],
+        [
+          877.0,
+          769.0
+        ],
+        [
+          877.0,
+          851.0
+        ],
+        [
+          762.0,
+          851.0
+        ]
+      ],
+      "group_id": 6335,
+      "description": "Hỏi: cuốn sách mang thông điệp gì ? || ĐA: thay đổi cuộc đời hàng triệu người",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 6335,
+        "question_ids": [
+          6335
+        ],
+        "question": "cuốn sách mang thông điệp gì ?",
+        "gt_answer": "thay đổi cuộc đời hàng triệu người"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2191.jpg",
+  "imageData": null,
+  "imageHeight": 1200,
+  "imageWidth": 1200,
+  "description": "Ảnh: 2191.jpg (ID=2191) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: cuốn sách này tên gì ? || ĐA: bí mật của phan thiên ân\n• Q2_gt: Hỏi: cuốn sách này do nhà xuất bản nào phát hành ? || ĐA: nxb thế giới\n• Q3_gt: Hỏi: quà tặng từ ai ? || ĐA: tiến sĩ alan phan\n• Q4_gt: Hỏi: cuốn sách mang thông điệp gì ? || ĐA: thay đổi cuộc đời hàng triệu người"
+}

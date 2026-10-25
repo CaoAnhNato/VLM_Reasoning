@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          186.0,
+          409.0
+        ],
+        [
+          712.0,
+          409.0
+        ],
+        [
+          712.0,
+          479.0
+        ],
+        [
+          186.0,
+          479.0
+        ]
+      ],
+      "group_id": 1716,
+      "description": "Hỏi: em cứ yên tâm làm gì ? || ĐA: lên đường",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1716,
+        "question_ids": [
+          1716
+        ],
+        "question": "em cứ yên tâm làm gì ?",
+        "gt_answer": "lên đường"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          58.0,
+          870.0
+        ],
+        [
+          780.0,
+          870.0
+        ],
+        [
+          780.0,
+          960.0
+        ],
+        [
+          58.0,
+          960.0
+        ]
+      ],
+      "group_id": 1717,
+      "description": "Hỏi: chị đã làm gì để em cứ yên tâm lên đường ? || ĐA: cầu siêu cho em",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1717,
+        "question_ids": [
+          1717
+        ],
+        "question": "chị đã làm gì để em cứ yên tâm lên đường ?",
+        "gt_answer": "cầu siêu cho em"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "619.jpg",
+  "imageData": null,
+  "imageHeight": 960,
+  "imageWidth": 881,
+  "description": "Ảnh: 619.jpg (ID=619) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: em cứ yên tâm làm gì ? || ĐA: lên đường\n• Q2_gt: Hỏi: chị đã làm gì để em cứ yên tâm lên đường ? || ĐA: cầu siêu cho em"
+}

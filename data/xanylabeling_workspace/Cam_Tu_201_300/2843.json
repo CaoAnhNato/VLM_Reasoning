@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          1027.0,
+          120.0
+        ],
+        [
+          2343.0,
+          120.0
+        ],
+        [
+          2343.0,
+          334.0
+        ],
+        [
+          1027.0,
+          334.0
+        ]
+      ],
+      "group_id": 8367,
+      "description": "Hỏi: phòng họp ở trong ảnh được quản lý bởi bộ phận nào ? || ĐA: ủy ban nhân dân thành phố đà nẵng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 8367,
+        "question_ids": [
+          8367
+        ],
+        "question": "phòng họp ở trong ảnh được quản lý bởi bộ phận nào ?",
+        "gt_answer": "ủy ban nhân dân thành phố đà nẵng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 8368,
+      "description": "Hỏi: buổi lễ ở trong ảnh được diễn ra vào năm nào ? || ĐA: 2021",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 8368,
+        "question_ids": [
+          8368
+        ],
+        "question": "buổi lễ ở trong ảnh được diễn ra vào năm nào ?",
+        "gt_answer": "2021"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2843.jpg",
+  "imageData": null,
+  "imageHeight": 1778,
+  "imageWidth": 2805,
+  "description": "Ảnh: 2843.jpg (ID=2843) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: phòng họp ở trong ảnh được quản lý bởi bộ phận nào ? || ĐA: ủy ban nhân dân thành phố đà nẵng\n• Q2_gt: Hỏi: buổi lễ ở trong ảnh được diễn ra vào năm nào ? || ĐA: 2021"
+}

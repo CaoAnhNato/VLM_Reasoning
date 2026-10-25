@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          561.0,
+          562.0
+        ],
+        [
+          613.0,
+          562.0
+        ],
+        [
+          613.0,
+          587.0
+        ],
+        [
+          561.0,
+          587.0
+        ]
+      ],
+      "group_id": 11601,
+      "description": "Hỏi: bức hình này lấy nguồn ở đâu ? || ĐA: xedaybanhang . com",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11601,
+        "question_ids": [
+          11601
+        ],
+        "question": "bức hình này lấy nguồn ở đâu ?",
+        "gt_answer": "xedaybanhang . com"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.7375,
+      "points": [
+        [
+          549.0,
+          34.0
+        ],
+        [
+          616.0,
+          34.0
+        ],
+        [
+          616.0,
+          62.0
+        ],
+        [
+          549.0,
+          62.0
+        ]
+      ],
+      "group_id": 11602,
+      "description": "Hỏi: liên hệ nguồn bức hình qua email nào ? || ĐA: baogia . thienphuc@gmai . com",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11602,
+        "question_ids": [
+          11602
+        ],
+        "question": "liên hệ nguồn bức hình qua email nào ?",
+        "gt_answer": "baogia . thienphuc@gmai . com"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3894.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 800,
+  "description": "Ảnh: 3894.jpg (ID=3894) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: bức hình này lấy nguồn ở đâu ? || ĐA: xedaybanhang . com\n• Q2_gt: Hỏi: liên hệ nguồn bức hình qua email nào ? || ĐA: baogia . thienphuc@gmai . com"
+}

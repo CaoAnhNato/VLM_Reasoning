@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          164.0,
+          534.0
+        ],
+        [
+          370.0,
+          534.0
+        ],
+        [
+          370.0,
+          596.0
+        ],
+        [
+          164.0,
+          596.0
+        ]
+      ],
+      "group_id": 2008,
+      "description": "Hỏi: rô nói gì với si ? || ĐA: ông không đợi tôi à si ?",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 2008,
+        "question_ids": [
+          2008
+        ],
+        "question": "rô nói gì với si ?",
+        "gt_answer": "ông không đợi tôi à si ?"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8977,
+      "points": [
+        [
+          173.0,
+          242.0
+        ],
+        [
+          465.0,
+          242.0
+        ],
+        [
+          465.0,
+          289.0
+        ],
+        [
+          173.0,
+          289.0
+        ]
+      ],
+      "group_id": 2009,
+      "description": "Hỏi: si nói gì với rô ? || ĐA: rô à , tôi về trước nhé !",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 2009,
+        "question_ids": [
+          2009
+        ],
+        "question": "si nói gì với rô ?",
+        "gt_answer": "rô à , tôi về trước nhé !"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "779.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 600,
+  "description": "Ảnh: 779.jpg (ID=779) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: rô nói gì với si ? || ĐA: ông không đợi tôi à si ?\n• Q2_gt: Hỏi: si nói gì với rô ? || ĐA: rô à , tôi về trước nhé !"
+}

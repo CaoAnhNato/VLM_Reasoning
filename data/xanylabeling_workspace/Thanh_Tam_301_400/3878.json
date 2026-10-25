@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          914.0,
+          636.0
+        ],
+        [
+          988.0,
+          636.0
+        ],
+        [
+          988.0,
+          652.0
+        ],
+        [
+          914.0,
+          652.0
+        ]
+      ],
+      "group_id": 11548,
+      "description": "Hỏi: bức hình này được chụp bởi ai ? || ĐA: trương vi",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 11548,
+        "question_ids": [
+          11548
+        ],
+        "question": "bức hình này được chụp bởi ai ?",
+        "gt_answer": "trương vi"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8,
+      "points": [
+        [
+          925.0,
+          646.0
+        ],
+        [
+          988.0,
+          646.0
+        ],
+        [
+          988.0,
+          662.0
+        ],
+        [
+          925.0,
+          662.0
+        ]
+      ],
+      "group_id": 11549,
+      "description": "Hỏi: số điện thoại của tường vi là bao nhiêu ? || ĐA: 091387763",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 11549,
+        "question_ids": [
+          11549
+        ],
+        "question": "số điện thoại của tường vi là bao nhiêu ?",
+        "gt_answer": "091387763"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "3878.jpg",
+  "imageData": null,
+  "imageHeight": 669,
+  "imageWidth": 1004,
+  "description": "Ảnh: 3878.jpg (ID=3878) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: bức hình này được chụp bởi ai ? || ĐA: trương vi\n• Q2_gt: Hỏi: số điện thoại của tường vi là bao nhiêu ? || ĐA: 091387763"
+}

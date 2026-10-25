@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          1013.0,
+          0.0
+        ],
+        [
+          1220.0,
+          0.0
+        ],
+        [
+          1220.0,
+          132.0
+        ],
+        [
+          1013.0,
+          132.0
+        ]
+      ],
+      "group_id": 3100,
+      "description": "Hỏi: bên trái bức hình là công viên nào ? || ĐA: công viên thiên đường bảo sơn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 3100,
+        "question_ids": [
+          3100
+        ],
+        "question": "bên trái bức hình là công viên nào ?",
+        "gt_answer": "công viên thiên đường bảo sơn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          754.0,
+          652.0
+        ],
+        [
+          903.0,
+          652.0
+        ],
+        [
+          903.0,
+          690.0
+        ],
+        [
+          754.0,
+          690.0
+        ]
+      ],
+      "group_id": 3101,
+      "description": "Hỏi: tên của quán ăn ở phía xa bức hình tên gì ? || ĐA: gà ngon",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 3101,
+        "question_ids": [
+          3101
+        ],
+        "question": "tên của quán ăn ở phía xa bức hình tên gì ?",
+        "gt_answer": "gà ngon"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.7667,
+      "points": [
+        [
+          757.0,
+          655.0
+        ],
+        [
+          906.0,
+          655.0
+        ],
+        [
+          906.0,
+          693.0
+        ],
+        [
+          757.0,
+          693.0
+        ]
+      ],
+      "group_id": 3102,
+      "description": "Hỏi: gà ngon ở chi nhánh nào ? || ĐA: gà ngon - chi nhánh bảo sơn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 3102,
+        "question_ids": [
+          3102
+        ],
+        "question": "gà ngon ở chi nhánh nào ?",
+        "gt_answer": "gà ngon - chi nhánh bảo sơn"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1129.jpg",
+  "imageData": null,
+  "imageHeight": 720,
+  "imageWidth": 1280,
+  "description": "Ảnh: 1129.jpg (ID=1129) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: bên trái bức hình là công viên nào ? || ĐA: công viên thiên đường bảo sơn\n• Q2_gt: Hỏi: tên của quán ăn ở phía xa bức hình tên gì ? || ĐA: gà ngon\n• Q3_gt: Hỏi: gà ngon ở chi nhánh nào ? || ĐA: gà ngon - chi nhánh bảo sơn"
+}

@@ -1,0 +1,171 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9034,
+      "points": [
+        [
+          449.0,
+          435.0
+        ],
+        [
+          779.0,
+          435.0
+        ],
+        [
+          779.0,
+          470.0
+        ],
+        [
+          449.0,
+          470.0
+        ]
+      ],
+      "group_id": 7127,
+      "description": "Hỏi: vùng màu đỏ chèn vào hình có nội dung gì ? || ĐA: nhận làm bảng hiệu 0903 . 66 . 55 . 94",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 7127,
+        "question_ids": [
+          7127
+        ],
+        "question": "vùng màu đỏ chèn vào hình có nội dung gì ?",
+        "gt_answer": "nhận làm bảng hiệu 0903 . 66 . 55 . 94"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.825,
+      "points": [
+        [
+          643.0,
+          398.0
+        ],
+        [
+          784.0,
+          398.0
+        ],
+        [
+          784.0,
+          442.0
+        ],
+        [
+          643.0,
+          442.0
+        ]
+      ],
+      "group_id": 7128,
+      "description": "Hỏi: ai đã chèn quảng cáo nhận làm bảng hiệu vào bức hình ? || ĐA: pham gia",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 7128,
+        "question_ids": [
+          7128
+        ],
+        "question": "ai đã chèn quảng cáo nhận làm bảng hiệu vào bức hình ?",
+        "gt_answer": "pham gia"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          217.0,
+          101.0
+        ],
+        [
+          686.0,
+          101.0
+        ],
+        [
+          686.0,
+          201.0
+        ],
+        [
+          217.0,
+          201.0
+        ]
+      ],
+      "group_id": 7129,
+      "description": "Hỏi: cửa hàng này tên gì ? || ĐA: ming beauty",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 7129,
+        "question_ids": [
+          7129
+        ],
+        "question": "cửa hàng này tên gì ?",
+        "gt_answer": "ming beauty"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 1.0,
+      "points": [
+        [
+          212.0,
+          436.0
+        ],
+        [
+          274.0,
+          436.0
+        ],
+        [
+          274.0,
+          464.0
+        ],
+        [
+          212.0,
+          464.0
+        ]
+      ],
+      "group_id": 7130,
+      "description": "Hỏi: tiệm ming beauty đang tuyển đụng gì ? || ĐA: 1 . quản lý",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 7130,
+        "question_ids": [
+          7130
+        ],
+        "question": "tiệm ming beauty đang tuyển đụng gì ?",
+        "gt_answer": "1 . quản lý"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "2467.jpg",
+  "imageData": null,
+  "imageHeight": 470,
+  "imageWidth": 784,
+  "description": "Ảnh: 2467.jpg (ID=2467) | Tổng số câu hỏi: 4\n• Q1_gt: Hỏi: vùng màu đỏ chèn vào hình có nội dung gì ? || ĐA: nhận làm bảng hiệu 0903 . 66 . 55 . 94\n• Q2_gt: Hỏi: ai đã chèn quảng cáo nhận làm bảng hiệu vào bức hình ? || ĐA: pham gia\n• Q3_gt: Hỏi: cửa hàng này tên gì ? || ĐA: ming beauty\n• Q4_gt: Hỏi: tiệm ming beauty đang tuyển đụng gì ? || ĐA: 1 . quản lý"
+}

@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.93,
+      "points": [
+        [
+          123.0,
+          246.0
+        ],
+        [
+          487.0,
+          246.0
+        ],
+        [
+          487.0,
+          296.0
+        ],
+        [
+          123.0,
+          296.0
+        ]
+      ],
+      "group_id": 1516,
+      "description": "Hỏi: trước trận là ai ? || ĐA: trước trận là công phượng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1516,
+        "question_ids": [
+          1516
+        ],
+        "question": "trước trận là ai ?",
+        "gt_answer": "trước trận là công phượng"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8079,
+      "points": [
+        [
+          123.0,
+          245.0
+        ],
+        [
+          487.0,
+          245.0
+        ],
+        [
+          487.0,
+          297.0
+        ],
+        [
+          123.0,
+          297.0
+        ]
+      ],
+      "group_id": 1517,
+      "description": "Hỏi: hết trận là ai ? || ĐA: hết trận là cong phượng",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1517,
+        "question_ids": [
+          1517
+        ],
+        "question": "hết trận là ai ?",
+        "gt_answer": "hết trận là cong phượng"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "524.jpg",
+  "imageData": null,
+  "imageHeight": 597,
+  "imageWidth": 600,
+  "description": "Ảnh: 524.jpg (ID=524) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: trước trận là ai ? || ĐA: trước trận là công phượng\n• Q2_gt: Hỏi: hết trận là ai ? || ĐA: hết trận là cong phượng"
+}

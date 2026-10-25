@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.9417,
+      "points": [
+        [
+          49.0,
+          287.0
+        ],
+        [
+          532.0,
+          287.0
+        ],
+        [
+          532.0,
+          337.0
+        ],
+        [
+          49.0,
+          337.0
+        ]
+      ],
+      "group_id": 1659,
+      "description": "Hỏi: đề toán năm nay như thế nào ? || ĐA: tương đối dễ và ngắn gọn",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 1659,
+        "question_ids": [
+          1659
+        ],
+        "question": "đề toán năm nay như thế nào ?",
+        "gt_answer": "tương đối dễ và ngắn gọn"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 1.0,
+      "points": [
+        [
+          192.0,
+          380.0
+        ],
+        [
+          527.0,
+          380.0
+        ],
+        [
+          527.0,
+          406.0
+        ],
+        [
+          192.0,
+          406.0
+        ]
+      ],
+      "group_id": 1660,
+      "description": "Hỏi: ai đã nhận xét đề toán năm nay tương đối dễ và ngắn gọn ? || ĐA: một nam sinh đang trên đường về quê",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 1660,
+        "question_ids": [
+          1660
+        ],
+        "question": "ai đã nhận xét đề toán năm nay tương đối dễ và ngắn gọn ?",
+        "gt_answer": "một nam sinh đang trên đường về quê"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          508.0,
+          512.0
+        ],
+        [
+          572.0,
+          512.0
+        ],
+        [
+          572.0,
+          585.0
+        ],
+        [
+          508.0,
+          585.0
+        ]
+      ],
+      "group_id": 1661,
+      "description": "Hỏi: ai là người sở hữu tấm ảnh này ? || ĐA: tôi hóa học",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 1661,
+        "question_ids": [
+          1661
+        ],
+        "question": "ai là người sở hữu tấm ảnh này ?",
+        "gt_answer": "tôi hóa học"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "589.jpg",
+  "imageData": null,
+  "imageHeight": 600,
+  "imageWidth": 600,
+  "description": "Ảnh: 589.jpg (ID=589) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: đề toán năm nay như thế nào ? || ĐA: tương đối dễ và ngắn gọn\n• Q2_gt: Hỏi: ai đã nhận xét đề toán năm nay tương đối dễ và ngắn gọn ? || ĐA: một nam sinh đang trên đường về quê\n• Q3_gt: Hỏi: ai là người sở hữu tấm ảnh này ? || ĐA: tôi hóa học"
+}

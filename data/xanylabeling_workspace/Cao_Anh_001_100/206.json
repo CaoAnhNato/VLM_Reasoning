@@ -1,0 +1,132 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": true,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          119.0,
+          37.0
+        ],
+        [
+          337.0,
+          37.0
+        ],
+        [
+          337.0,
+          81.0
+        ],
+        [
+          119.0,
+          81.0
+        ]
+      ],
+      "group_id": 611,
+      "description": "Hỏi: nhà hàng này tên gì ? || ĐA: con vịt",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 611,
+        "question_ids": [
+          611
+        ],
+        "question": "nhà hàng này tên gì ?",
+        "gt_answer": "con vịt"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          102.0,
+          95.0
+        ],
+        [
+          234.0,
+          95.0
+        ],
+        [
+          234.0,
+          118.0
+        ],
+        [
+          102.0,
+          118.0
+        ]
+      ],
+      "group_id": 612,
+      "description": "Hỏi: địa chỉ của nhà hàng ở đâu ? || ĐA: 59 nguyễn du",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 612,
+        "question_ids": [
+          612
+        ],
+        "question": "địa chỉ của nhà hàng ở đâu ?",
+        "gt_answer": "59 nguyễn du"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 0.0,
+      "points": [
+        [
+          15.0,
+          15.0
+        ],
+        [
+          235.0,
+          15.0
+        ],
+        [
+          235.0,
+          59.0
+        ],
+        [
+          15.0,
+          59.0
+        ]
+      ],
+      "group_id": 613,
+      "description": "Hỏi: số điện thoại của nhà hàng này là gì ? || ĐA: 05103919229",
+      "difficult": true,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 613,
+        "question_ids": [
+          613
+        ],
+        "question": "số điện thoại của nhà hàng này là gì ?",
+        "gt_answer": "05103919229"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "206.jpg",
+  "imageData": null,
+  "imageHeight": 377,
+  "imageWidth": 512,
+  "description": "Ảnh: 206.jpg (ID=206) | Tổng số câu hỏi: 3\n• Q1_gt: Hỏi: nhà hàng này tên gì ? || ĐA: con vịt\n• Q2_gt: Hỏi: địa chỉ của nhà hàng ở đâu ? || ĐA: 59 nguyễn du\n• Q3_gt: Hỏi: số điện thoại của nhà hàng này là gì ? || ĐA: 05103919229"
+}

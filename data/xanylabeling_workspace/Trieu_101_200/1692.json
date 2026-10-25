@@ -1,0 +1,210 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.8633,
+      "points": [
+        [
+          78.0,
+          108.0
+        ],
+        [
+          163.0,
+          108.0
+        ],
+        [
+          163.0,
+          141.0
+        ],
+        [
+          78.0,
+          141.0
+        ]
+      ],
+      "group_id": 4807,
+      "description": "Hỏi: dưa hấu ở siêu thị này có giá bao nhiêu ? || ĐA: 30 . 900 đ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 4807,
+        "question_ids": [
+          4807
+        ],
+        "question": "dưa hấu ở siêu thị này có giá bao nhiêu ?",
+        "gt_answer": "30 . 900 đ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.8392,
+      "points": [
+        [
+          81.0,
+          111.0
+        ],
+        [
+          166.0,
+          111.0
+        ],
+        [
+          166.0,
+          144.0
+        ],
+        [
+          81.0,
+          144.0
+        ]
+      ],
+      "group_id": 4808,
+      "description": "Hỏi: bưởi ở siêu thị vinmart có giá bao nhiêu ? || ĐA: 50 . 900 đ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 4808,
+        "question_ids": [
+          4808
+        ],
+        "question": "bưởi ở siêu thị vinmart có giá bao nhiêu ?",
+        "gt_answer": "50 . 900 đ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q3_gt",
+      "score": 1.0,
+      "points": [
+        [
+          91.0,
+          0.0
+        ],
+        [
+          180.0,
+          0.0
+        ],
+        [
+          180.0,
+          25.0
+        ],
+        [
+          91.0,
+          25.0
+        ]
+      ],
+      "group_id": 4809,
+      "description": "Hỏi: mọi người đang mua sắm ở đâu ? || ĐA: vinmart",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 3,
+        "question_id": 4809,
+        "question_ids": [
+          4809
+        ],
+        "question": "mọi người đang mua sắm ở đâu ?",
+        "gt_answer": "vinmart"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q4_gt",
+      "score": 0.8833,
+      "points": [
+        [
+          661.0,
+          141.0
+        ],
+        [
+          737.0,
+          141.0
+        ],
+        [
+          737.0,
+          171.0
+        ],
+        [
+          661.0,
+          171.0
+        ]
+      ],
+      "group_id": 4810,
+      "description": "Hỏi: vinmart bán thanh long với giá bao nhiêu ? || ĐA: 40 . 500 đ",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 4,
+        "question_id": 4810,
+        "question_ids": [
+          4810
+        ],
+        "question": "vinmart bán thanh long với giá bao nhiêu ?",
+        "gt_answer": "40 . 500 đ"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q5_gt",
+      "score": 0.8238,
+      "points": [
+        [
+          370.0,
+          12.0
+        ],
+        [
+          604.0,
+          12.0
+        ],
+        [
+          604.0,
+          75.0
+        ],
+        [
+          370.0,
+          75.0
+        ]
+      ],
+      "group_id": 4811,
+      "description": "Hỏi: ở vinmart đang diễn ra sự kiện gì ? || ĐA: tuần lễ nông sản , đặc sản miền tây",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 5,
+        "question_id": 4811,
+        "question_ids": [
+          4811
+        ],
+        "question": "ở vinmart đang diễn ra sự kiện gì ?",
+        "gt_answer": "tuần lễ nông sản , đặc sản miền tây"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "1692.jpg",
+  "imageData": null,
+  "imageHeight": 595,
+  "imageWidth": 960,
+  "description": "Ảnh: 1692.jpg (ID=1692) | Tổng số câu hỏi: 5\n• Q1_gt: Hỏi: dưa hấu ở siêu thị này có giá bao nhiêu ? || ĐA: 30 . 900 đ\n• Q2_gt: Hỏi: bưởi ở siêu thị vinmart có giá bao nhiêu ? || ĐA: 50 . 900 đ\n• Q3_gt: Hỏi: mọi người đang mua sắm ở đâu ? || ĐA: vinmart\n• Q4_gt: Hỏi: vinmart bán thanh long với giá bao nhiêu ? || ĐA: 40 . 500 đ\n• Q5_gt: Hỏi: ở vinmart đang diễn ra sự kiện gì ? || ĐA: tuần lễ nông sản , đặc sản miền tây"
+}

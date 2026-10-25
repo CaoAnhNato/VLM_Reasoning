@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 1.0,
+      "points": [
+        [
+          6.0,
+          90.0
+        ],
+        [
+          141.0,
+          90.0
+        ],
+        [
+          141.0,
+          127.0
+        ],
+        [
+          6.0,
+          127.0
+        ]
+      ],
+      "group_id": 734,
+      "description": "Hỏi: ảnh này được lấy nguồn t ừ đâu ? || ĐA: vietnet",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 734,
+        "question_ids": [
+          734
+        ],
+        "question": "ảnh này được lấy nguồn t ừ đâu ?",
+        "gt_answer": "vietnet"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.6806,
+      "points": [
+        [
+          94.0,
+          199.0
+        ],
+        [
+          290.0,
+          199.0
+        ],
+        [
+          290.0,
+          282.0
+        ],
+        [
+          94.0,
+          282.0
+        ]
+      ],
+      "group_id": 735,
+      "description": "Hỏi: nơi này có tên gì ? || ĐA: bach kim",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": true
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 735,
+        "question_ids": [
+          735
+        ],
+        "question": "nơi này có tên gì ?",
+        "gt_answer": "bach kim"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "251.jpg",
+  "imageData": null,
+  "imageHeight": 378,
+  "imageWidth": 512,
+  "description": "Ảnh: 251.jpg (ID=251) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: ảnh này được lấy nguồn t ừ đâu ? || ĐA: vietnet\n• Q2_gt: Hỏi: nơi này có tên gì ? || ĐA: bach kim"
+}

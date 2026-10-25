@@ -1,0 +1,93 @@
+{
+  "version": "2.4.0",
+  "flags": {
+    "has_unmatched_quest": false,
+    "multi_quest": true
+  },
+  "checked": false,
+  "shapes": [
+    {
+      "label": "Q1_gt",
+      "score": 0.825,
+      "points": [
+        [
+          356.0,
+          70.0
+        ],
+        [
+          388.0,
+          70.0
+        ],
+        [
+          388.0,
+          87.0
+        ],
+        [
+          356.0,
+          87.0
+        ]
+      ],
+      "group_id": 715,
+      "description": "Hỏi: gạo ở đây được nhập khẩu từ đâu ? || ĐA: thái lan",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 1,
+        "question_id": 715,
+        "question_ids": [
+          715
+        ],
+        "question": "gạo ở đây được nhập khẩu từ đâu ?",
+        "gt_answer": "thái lan"
+      },
+      "kie_linking": []
+    },
+    {
+      "label": "Q2_gt",
+      "score": 0.836,
+      "points": [
+        [
+          0.0,
+          61.0
+        ],
+        [
+          57.0,
+          61.0
+        ],
+        [
+          57.0,
+          82.0
+        ],
+        [
+          0.0,
+          82.0
+        ]
+      ],
+      "group_id": 716,
+      "description": "Hỏi: nơi này thuộc trung tâm thương mại nào ? || ĐA: metro",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {
+        "needs_manual_edit": false
+      },
+      "attributes": {
+        "quest_idx": 2,
+        "question_id": 716,
+        "question_ids": [
+          716
+        ],
+        "question": "nơi này thuộc trung tâm thương mại nào ?",
+        "gt_answer": "metro"
+      },
+      "kie_linking": []
+    }
+  ],
+  "imagePath": "244.jpg",
+  "imageData": null,
+  "imageHeight": 474,
+  "imageWidth": 800,
+  "description": "Ảnh: 244.jpg (ID=244) | Tổng số câu hỏi: 2\n• Q1_gt: Hỏi: gạo ở đây được nhập khẩu từ đâu ? || ĐA: thái lan\n• Q2_gt: Hỏi: nơi này thuộc trung tâm thương mại nào ? || ĐA: metro"
+}

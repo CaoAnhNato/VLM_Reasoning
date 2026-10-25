@@ -1,0 +1,303 @@
+auto_highlight_shape: true
+auto_save: true
+auto_switch_to_edit_mode: true
+auto_use_last_gid: false
+auto_use_last_label: false
+canvas:
+  attributes:
+    background_color:
+    - 33
+    - 33
+    - 33
+    - 255
+    border_color:
+    - 66
+    - 66
+    - 66
+    - 255
+    text_color:
+    - 33
+    - 150
+    - 243
+    - 255
+  brush:
+    max_undo_memory_mb: 128
+    max_undo_steps: 30
+    point_distance: 25.0
+    simplify_epsilon: 2.0
+  crosshair:
+    color: '#00FF00'
+    opacity: 0.5
+    show: true
+    width: 1.5
+  cuboid:
+    default_depth_vector:
+    - 24.0
+    - -24.0
+    min_depth: 5.0
+  double_click: close
+  double_click_edit_label: true
+  epsilon: 10.0
+  label_font_size: 10
+  magic_wand:
+    default_threshold: 15
+    drag_sensitivity: 3.0
+    luminance_weight: 0.5
+    opacity: 0.6
+    simplify_epsilon: 0.5
+  mask:
+    opacity: 80
+  num_backups: 20
+  rotation:
+    large_increment: 1.0
+    small_increment: 0.1
+  wheel_rectangle_editing:
+    adjust_step: 2.0
+    enable: true
+    scale_step: 0.05
+custom_models: []
+default_shape_color:
+- 0
+- 230
+- 90
+description_dock:
+  closable: true
+  floatable: true
+  movable: true
+  show: true
+device: null
+digit_shortcuts: null
+display_label_popup: true
+exif_scan_enabled: false
+file_dock:
+  closable: true
+  floatable: true
+  movable: true
+  show: true
+file_list_checkbox_editable: true
+file_search: null
+fit_to_content:
+  column: true
+  row: false
+flag_dock:
+  closable: true
+  floatable: true
+  movable: true
+  show: false
+flags: null
+font_family: null
+keep_prev: false
+keep_prev_brightness: false
+keep_prev_contrast: false
+keep_prev_scale: false
+label_colors:
+  Q10_gt:
+  - 140
+  - 200
+  - 255
+  Q1_gt:
+  - 0
+  - 230
+  - 90
+  Q2_gt:
+  - 0
+  - 190
+  - 255
+  Q3_gt:
+  - 255
+  - 180
+  - 0
+  Q4_gt:
+  - 255
+  - 75
+  - 145
+  Q5_gt:
+  - 165
+  - 105
+  - 255
+  Q6_gt:
+  - 255
+  - 110
+  - 50
+  Q7_gt:
+  - 50
+  - 225
+  - 200
+  Q8_gt:
+  - 220
+  - 235
+  - 50
+  Q9_gt:
+  - 255
+  - 90
+  - 90
+  aux_text:
+  - 160
+  - 160
+  - 160
+label_completion: startswith
+label_dock:
+  closable: true
+  floatable: true
+  movable: true
+  show: true
+label_flags: null
+labels:
+- Q1_gt
+- Q2_gt
+- Q3_gt
+- Q4_gt
+- Q5_gt
+- Q6_gt
+- Q7_gt
+- Q8_gt
+- Q9_gt
+- Q10_gt
+- aux_text
+language: en_US
+logger_level: info
+model_hub: github
+move_mode: auto
+qt_image_allocation_limit: 0
+remote_server_settings:
+  api_key: null
+  server_url: http://127.0.0.1:8000
+  timeout: 180
+shape:
+  fill_color:
+  - 220
+  - 220
+  - 220
+  - 70
+  hvertex_fill_color:
+  - 255
+  - 255
+  - 255
+  - 255
+  line_color:
+  - 0
+  - 255
+  - 0
+  - 200
+  line_width: 3
+  point_size: 10
+  select_fill_color:
+  - 0
+  - 255
+  - 0
+  - 120
+  select_line_color:
+  - 255
+  - 255
+  - 255
+  - 255
+  vertex_fill_color:
+  - 0
+  - 255
+  - 0
+  - 255
+shape_color: manual
+shape_dock:
+  closable: true
+  floatable: true
+  movable: true
+  show: true
+shift_auto_shape_color: 0
+shortcuts:
+  add_point_to_edge: Ctrl+Shift+P
+  auto_label: Ctrl+A
+  auto_labeling_add_point: Q
+  auto_labeling_clear: B
+  auto_labeling_finish_object: F
+  auto_labeling_remove_point: E
+  auto_labeling_run: I
+  auto_run: Ctrl+B
+  close: Ctrl+W
+  copy_polygon: Ctrl+C
+  create_brush_polygon: Ctrl+N
+  create_circle: Shift+C
+  create_cuboid: Ctrl+R
+  create_line: Shift+L
+  create_linestrip: Shift+S
+  create_magic_wand: Shift+W
+  create_point: Shift+P
+  create_polygon: P
+  create_quadrilateral: T
+  create_rectangle: R
+  create_rotation: O
+  delete_file: Ctrl+Delete
+  delete_image_file: Ctrl+Shift+Delete
+  delete_polygon: Delete
+  duplicate_polygon: Ctrl+D
+  edit_brush_mode: Shift+B
+  edit_digit_shortcut: Alt+D
+  edit_group_id: Alt+G
+  edit_label: Ctrl+E
+  edit_labels: Alt+L
+  edit_polygon: Ctrl+J
+  edit_shapes: Alt+S
+  fit_width: Ctrl+Shift+F
+  fit_window: Ctrl+F
+  group_selected_shapes: G
+  hide_selected_polygons: S
+  loop_select_labels: Ctrl+Shift+C
+  loop_thru_labels: Ctrl+Shift+N
+  open: Ctrl+I
+  open_chatbot: Ctrl+1
+  open_dir: Ctrl+U
+  open_image_classifier: Ctrl+3
+  open_next: D
+  open_next_unchecked: Ctrl+Shift+D
+  open_paddleocr: Ctrl+4
+  open_pointcloud: Ctrl+6
+  open_prev: A
+  open_prev_unchecked: Ctrl+Shift+A
+  open_settings: Ctrl+0
+  open_video: Ctrl+O
+  open_video_classifier: Ctrl+5
+  open_vqa: Ctrl+2
+  paste_polygon: Ctrl+V
+  quit: Ctrl+Q
+  remove_selected_point: Backspace
+  save: Ctrl+S
+  save_as: Ctrl+Shift+S
+  save_to: null
+  show_attributes: Ctrl+Shift+L
+  show_hidden_polygons: W
+  show_labels: Ctrl+L
+  show_linking: Ctrl+K
+  show_masks: Ctrl+M
+  show_navigator: F9
+  show_overview: Ctrl+G
+  show_texts: Ctrl+T
+  toggle_annotation_checked: Ctrl+Alt+K
+  toggle_auto_use_last_gid: Ctrl+Shift+G
+  toggle_auto_use_last_label: Ctrl+Y
+  toggle_compare_view: Ctrl+Alt+C
+  toggle_image_tags: Ctrl+Shift+T
+  toggle_keep_prev_mode: Ctrl+P
+  toggle_visibility_shapes: Ctrl+H
+  undo: Ctrl+Z
+  undo_last_point: Ctrl+Z
+  ungroup_selected_shapes: U
+  union_selected_shapes: Ctrl+Shift+M
+  zoom_in:
+  - Ctrl++
+  zoom_out: Ctrl+-
+  zoom_to_original: Ctrl+=
+show_attributes: false
+show_degrees: false
+show_groups: false
+show_label_text_field: true
+show_labels: false
+show_linking: false
+show_masks: false
+show_scores: false
+show_shapes: true
+show_texts: true
+sort_labels: false
+store_data: false
+switch_to_checked: false
+system_clipboard: false
+theme: dark
+validate_label: null
