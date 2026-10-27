@@ -294,7 +294,7 @@ show_linking: false
 show_masks: false
 show_scores: false
 show_shapes: true
-show_texts: true
+show_texts: false
 sort_labels: false
 store_data: false
 switch_to_checked: false

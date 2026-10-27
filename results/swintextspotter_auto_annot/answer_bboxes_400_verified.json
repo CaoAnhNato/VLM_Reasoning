@@ -5,12 +5,12 @@
     "num_images": 400,
     "total_quests": 1222,
     "matched_quests": 1153,
-    "quest_match_rate_pct": 99.75,
+    "quest_match_rate_pct": 100.0,
     "total_answer_region_bboxes": 1037,
     "bbox_format": "[x1, y1, x2, y2] in original pixel coordinates",
     "note": "Each image can have multiple questions (`quests`) and multiple `answer_regions`. `answer_region_bbox` generously encloses the answer + local context/noisy text on the same line/cluster.",
-    "verified_quests": 1219,
-    "still_missing_quests": 3
+    "verified_quests": 1222,
+    "still_missing_quests": 0
   },
   "images": [
     {
@@ -63739,20 +63739,20 @@
       "width": 960,
       "height": 720,
       "num_quests": 6,
-      "num_answer_regions": 5,
+      "num_answer_regions": 6,
       "answer_regions": [
         {
           "region_id": 1,
           "bbox": [
-            224,
-            328,
+            228,
+            332,
             851,
             375
           ],
           "sub_bboxes": [
             [
-              224,
-              328,
+              228,
+              332,
               851,
               375
             ]
@@ -63772,17 +63772,17 @@
         {
           "region_id": 2,
           "bbox": [
-            225,
-            373,
-            688,
-            393
+            230,
+            374,
+            683,
+            390
           ],
           "sub_bboxes": [
             [
-              225,
-              373,
-              688,
-              393
+              230,
+              374,
+              683,
+              390
             ]
           ],
           "gt_answers": [
@@ -63798,17 +63798,48 @@
           "needs_manual_edit": false
         },
         {
+          "region_id": 3,
+          "bbox": [
+            336,
+            373,
+            372,
+            390
+          ],
+          "sub_bboxes": [
+            [
+              336,
+              373,
+              372,
+              390
+            ]
+          ],
+          "gt_answers": [
+            "1",
+            "ấp 1"
+          ],
+          "added_gt_answers": [
+            "ấp 1"
+          ],
+          "question_ids": [
+            5485
+          ],
+          "questions": [
+            "trạm xăng dầu này nằm ở ấp mấy ?"
+          ],
+          "needs_manual_edit": false
+        },
+        {
           "region_id": 4,
           "bbox": [
-            467,
-            375,
+            473,
+            374,
             596,
             389
           ],
           "sub_bboxes": [
             [
-              467,
-              375,
+              473,
+              374,
               596,
               389
             ]
@@ -63856,17 +63887,17 @@
         {
           "region_id": 6,
           "bbox": [
-            59,
+            65,
             520,
-            123,
-            558
+            128,
+            556
           ],
           "sub_bboxes": [
             [
-              59,
+              65,
               520,
-              123,
-              558
+              128,
+              556
             ]
           ],
           "gt_answers": [
@@ -63891,8 +63922,8 @@
             "công ty tnhh mtv trạm xăng dầu vĩnh tân"
           ],
           "answer_region_bbox": [
-            224,
-            328,
+            228,
+            332,
             851,
             375
           ],
@@ -63914,8 +63945,8 @@
           "needs_manual_edit": false,
           "sub_bboxes": [
             [
-              224,
-              328,
+              228,
+              332,
               851,
               375
             ]
@@ -63929,10 +63960,10 @@
             "tổ 9 , ấp 1 , xã vĩnh tân , huyện vĩnh cửu , t . đồng nai"
           ],
           "answer_region_bbox": [
-            225,
-            373,
-            688,
-            393
+            230,
+            374,
+            683,
+            390
           ],
           "gt_context_line_bbox": [
             231,
@@ -63952,10 +63983,10 @@
           "needs_manual_edit": false,
           "sub_bboxes": [
             [
-              225,
-              373,
-              688,
-              393
+              230,
+              374,
+              683,
+              390
             ]
           ]
         },
@@ -63966,13 +63997,33 @@
           "gt_answers": [
             "1"
           ],
-          "answer_region_bbox": null,
+          "answer_region_bbox": [
+            336,
+            373,
+            372,
+            390
+          ],
           "gt_context_line_bbox": null,
           "gt_answer_union_bbox": null,
           "region_ocr_text": "",
           "matched_ocr_phrase": "",
           "match_score": 0.0,
-          "needs_manual_edit": true
+          "needs_manual_edit": false,
+          "sub_bboxes": [
+            [
+              336,
+              373,
+              372,
+              390
+            ]
+          ],
+          "added_gt_answers": [
+            "ấp 1"
+          ],
+          "verified_all_answers": [
+            "1",
+            "ấp 1"
+          ]
         },
         {
           "quest_idx": 4,
@@ -63982,8 +64033,8 @@
             "vĩnh cửu"
           ],
           "answer_region_bbox": [
-            467,
-            375,
+            473,
+            374,
             596,
             389
           ],
@@ -64005,8 +64056,8 @@
           "needs_manual_edit": false,
           "sub_bboxes": [
             [
-              467,
-              375,
+              473,
+              374,
               596,
               389
             ]
@@ -64058,10 +64109,10 @@
             "dàn nhạc đình việt"
           ],
           "answer_region_bbox": [
-            59,
+            65,
             520,
-            123,
-            558
+            128,
+            556
           ],
           "gt_context_line_bbox": [
             65,
@@ -64081,10 +64132,10 @@
           "needs_manual_edit": false,
           "sub_bboxes": [
             [
-              59,
+              65,
               520,
-              123,
-              558
+              128,
+              556
             ]
           ]
         }
@@ -67101,17 +67152,23 @@
         {
           "region_id": 1,
           "bbox": [
-            12,
-            210,
-            309,
-            351
+            39,
+            241,
+            283,
+            339
           ],
           "sub_bboxes": [
             [
-              12,
-              210,
-              309,
-              351
+              39,
+              241,
+              283,
+              339
+            ],
+            [
+              351,
+              205,
+              518,
+              281
             ]
           ],
           "gt_answers": [
@@ -67136,10 +67193,10 @@
             "adidas"
           ],
           "answer_region_bbox": [
-            12,
-            210,
-            309,
-            351
+            39,
+            241,
+            283,
+            339
           ],
           "gt_context_line_bbox": [
             37,
@@ -67159,10 +67216,16 @@
           "needs_manual_edit": false,
           "sub_bboxes": [
             [
-              12,
-              210,
-              309,
-              351
+              39,
+              241,
+              283,
+              339
+            ],
+            [
+              351,
+              205,
+              518,
+              281
             ]
           ]
         }
@@ -67335,9 +67398,12 @@
             ]
           ],
           "gt_answers": [
-            "phụnữ"
+            "phụnữ",
+            "phụ nữ"
           ],
-          "added_gt_answers": [],
+          "added_gt_answers": [
+            "phụ nữ"
+          ],
           "question_ids": [
             5845
           ],
@@ -67350,16 +67416,16 @@
           "region_id": 2,
           "bbox": [
             17,
-            57,
-            181,
-            119
+            59,
+            184,
+            115
           ],
           "sub_bboxes": [
             [
               17,
-              57,
-              181,
-              119
+              59,
+              184,
+              115
             ]
           ],
           "gt_answers": [
@@ -67377,17 +67443,17 @@
         {
           "region_id": 3,
           "bbox": [
-            103,
-            26,
-            135,
-            40
+            109,
+            28,
+            130,
+            38
           ],
           "sub_bboxes": [
             [
-              103,
-              26,
-              135,
-              40
+              109,
+              28,
+              130,
+              38
             ]
           ],
           "gt_answers": [
@@ -67440,6 +67506,13 @@
               168,
               45
             ]
+          ],
+          "added_gt_answers": [
+            "phụ nữ"
+          ],
+          "verified_all_answers": [
+            "phụnữ",
+            "phụ nữ"
           ]
         },
         {
@@ -67451,9 +67524,9 @@
           ],
           "answer_region_bbox": [
             17,
-            57,
-            181,
-            119
+            59,
+            184,
+            115
           ],
           "gt_context_line_bbox": [
             18,
@@ -67474,9 +67547,9 @@
           "sub_bboxes": [
             [
               17,
-              57,
-              181,
-              119
+              59,
+              184,
+              115
             ]
           ]
         },
@@ -67488,10 +67561,10 @@
             "thứ tư"
           ],
           "answer_region_bbox": [
-            103,
-            26,
-            135,
-            40
+            109,
+            28,
+            130,
+            38
           ],
           "gt_context_line_bbox": [
             109,
@@ -67511,10 +67584,10 @@
           "needs_manual_edit": false,
           "sub_bboxes": [
             [
-              103,
-              26,
-              135,
-              40
+              109,
+              28,
+              130,
+              38
             ]
           ]
         }
@@ -75528,7 +75601,7 @@
       "width": 1200,
       "height": 1200,
       "num_quests": 4,
-      "num_answer_regions": 3,
+      "num_answer_regions": 4,
       "answer_regions": [
         {
           "region_id": 1,
@@ -75555,6 +75628,34 @@
           ],
           "questions": [
             "cuốn sách này tên gì ?"
+          ],
+          "needs_manual_edit": false
+        },
+        {
+          "region_id": 2,
+          "bbox": [
+            520,
+            1052,
+            582,
+            1101
+          ],
+          "sub_bboxes": [
+            [
+              520,
+              1052,
+              582,
+              1101
+            ]
+          ],
+          "gt_answers": [
+            "nxb thế giới"
+          ],
+          "added_gt_answers": [],
+          "question_ids": [
+            6333
+          ],
+          "questions": [
+            "cuốn sách này do nhà xuất bản nào phát hành ?"
           ],
           "needs_manual_edit": false
         },
@@ -75661,13 +75762,26 @@
           "gt_answers": [
             "nxb thế giới"
           ],
-          "answer_region_bbox": null,
+          "answer_region_bbox": [
+            520,
+            1052,
+            582,
+            1101
+          ],
           "gt_context_line_bbox": null,
           "gt_answer_union_bbox": null,
           "region_ocr_text": "",
           "matched_ocr_phrase": "",
           "match_score": 0.0,
-          "needs_manual_edit": true
+          "needs_manual_edit": false,
+          "sub_bboxes": [
+            [
+              520,
+              1052,
+              582,
+              1101
+            ]
+          ]
         },
         {
           "quest_idx": 3,
@@ -84575,7 +84689,7 @@
       "width": 1172,
       "height": 1156,
       "num_quests": 4,
-      "num_answer_regions": 3,
+      "num_answer_regions": 4,
       "answer_regions": [
         {
           "region_id": 1,
@@ -84636,17 +84750,17 @@
         {
           "region_id": 3,
           "bbox": [
+            983,
             954,
-            959,
-            1116,
-            1016
+            1127,
+            1068
           ],
           "sub_bboxes": [
             [
+              983,
               954,
-              959,
-              1116,
-              1016
+              1127,
+              1068
             ]
           ],
           "gt_answers": [
@@ -84658,6 +84772,34 @@
           ],
           "questions": [
             "cuốn sách màu trắng góc phải bức hình có tên là gì ?"
+          ],
+          "needs_manual_edit": false
+        },
+        {
+          "region_id": 4,
+          "bbox": [
+            826,
+            964,
+            932,
+            1027
+          ],
+          "sub_bboxes": [
+            [
+              826,
+              964,
+              932,
+              1027
+            ]
+          ],
+          "gt_answers": [
+            "phạm xuân ẩn"
+          ],
+          "added_gt_answers": [],
+          "question_ids": [
+            7398
+          ],
+          "questions": [
+            "trên cuốn sách bên trái cuốn sách văn hóa du lịch việt nam là gì ?"
           ],
           "needs_manual_edit": false
         }
@@ -84747,10 +84889,10 @@
             "văn hóa du lịch việt nam"
           ],
           "answer_region_bbox": [
+            983,
             954,
-            959,
-            1116,
-            1016
+            1127,
+            1068
           ],
           "gt_context_line_bbox": [
             6,
@@ -84770,10 +84912,10 @@
           "needs_manual_edit": false,
           "sub_bboxes": [
             [
+              983,
               954,
-              959,
-              1116,
-              1016
+              1127,
+              1068
             ]
           ]
         },
@@ -84784,13 +84926,26 @@
           "gt_answers": [
             "phạm xuân ẩn"
           ],
-          "answer_region_bbox": null,
+          "answer_region_bbox": [
+            826,
+            964,
+            932,
+            1027
+          ],
           "gt_context_line_bbox": null,
           "gt_answer_union_bbox": null,
           "region_ocr_text": "",
           "matched_ocr_phrase": "",
           "match_score": 0.0,
-          "needs_manual_edit": true
+          "needs_manual_edit": false,
+          "sub_bboxes": [
+            [
+              826,
+              964,
+              932,
+              1027
+            ]
+          ]
         }
       ],
       "candidate_text_lines": [
