@@ -1,30 +1,30 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.5445,
       "points": [
         [
-          339.0,
-          188.0
+          342.64741641337383,
+          183.44072948328267
         ],
         [
-          466.0,
-          188.0
+          479.33130699088144,
+          183.44072948328267
         ],
         [
-          466.0,
-          219.0
+          479.33130699088144,
+          220.06079027355622
         ],
         [
-          339.0,
-          219.0
+          342.64741641337383,
+          220.06079027355622
         ]
       ],
       "group_id": 9171,
@@ -54,20 +54,20 @@
           191.0
         ],
         [
-          469.0,
+          486.0182370820669,
           191.0
         ],
         [
-          469.0,
-          222.0
+          486.0182370820669,
+          224.3161094224924
         ],
         [
           342.0,
-          222.0
+          224.3161094224924
         ]
       ],
       "group_id": 9172,
-      "description": "Hỏi: bảo tàng này có tên là gì ? || ĐA: lựu lượng vũ trang miền đông nam bộ",
+      "description": "Hỏi: bảo tàng này có tên là gì ? || ĐA: lực lượng vũ trang miền đông nam bộ",
       "difficult": false,
       "shape_type": "rectangle",
       "flags": {

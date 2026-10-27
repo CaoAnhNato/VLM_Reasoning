@@ -1,39 +1,37 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": false
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.8471,
       "points": [
         [
-          200.0,
-          33.0
+          198.0706553369805,
+          35.959492492142935
         ],
         [
-          488.0,
-          33.0
+          486.0706553369805,
+          35.959492492142935
         ],
         [
-          488.0,
-          56.0
+          486.0706553369805,
+          58.959492492142964
         ],
         [
-          200.0,
-          56.0
+          198.0706553369805,
+          58.959492492142964
         ]
       ],
       "group_id": 10206,
-      "description": "Hỏi: nội dung được ghi bên trên bức hình xưa cũ này là gì ? || ĐA: 54 - tonkin - ha noi - rue paul beri",
+      "description": "Hỏi: nội dung được ghi bên trên bức hình xưa cũ này là gì ? || ĐA: 54 - tonkin - ha noi - rue paul bert",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 1,
         "question_id": 10206,

@@ -1,17 +1,17 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.8833,
       "points": [
         [
-          767.0,
+          223.1818181818182,
           331.0
         ],
         [
@@ -20,11 +20,11 @@
         ],
         [
           1265.0,
-          577.0
+          785.6060606060605
         ],
         [
-          767.0,
-          577.0
+          223.1818181818182,
+          785.6060606060605
         ]
       ],
       "group_id": 4186,

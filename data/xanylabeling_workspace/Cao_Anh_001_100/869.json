@@ -1,39 +1,37 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": false
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.9781,
       "points": [
         [
-          0.0,
-          4.0
+          1.6265060240964075,
+          9.238955823293182
         ],
         [
-          389.0,
-          4.0
+          386.36546184738955,
+          9.238955823293182
         ],
         [
-          389.0,
-          58.0
+          386.36546184738955,
+          53.415662650602414
         ],
         [
-          0.0,
-          58.0
+          1.6265060240964075,
+          53.415662650602414
         ]
       ],
       "group_id": 2297,
       "description": "Hỏi: dòng chữ trên tấm bảng nói về đâu ? || ĐA: 05 trần cao vân - tp . buôn mê thuột",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 1,
         "question_id": 2297,

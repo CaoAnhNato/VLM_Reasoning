@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -28,7 +28,7 @@
         ]
       ],
       "group_id": 9942,
-      "description": "Hỏi: nhà quảng cáo nào đã chèn quảng cáo vào đây ? || ĐA: nhật tiên",
+      "description": "Hỏi: nhà quảng cáo nào đã chèn quảng cáo vào đây ? || ĐA: nhat thien",
       "difficult": false,
       "shape_type": "rectangle",
       "flags": {
@@ -89,7 +89,7 @@
       "score": 1.0,
       "points": [
         [
-          310.0,
+          110.20547945205479,
           178.0
         ],
         [
@@ -98,11 +98,11 @@
         ],
         [
           544.0,
-          235.0
+          236.30136986301372
         ],
         [
-          310.0,
-          235.0
+          110.20547945205479,
+          236.30136986301372
         ]
       ],
       "group_id": 9944,
@@ -167,20 +167,20 @@
       "score": 0.8593,
       "points": [
         [
-          28.0,
-          687.0
+          24.042553191489375,
+          631.6808510638298
         ],
         [
-          169.0,
-          687.0
+          209.14893617021272,
+          631.6808510638298
         ],
         [
-          169.0,
-          830.0
+          209.14893617021272,
+          754.2553191489361
         ],
         [
-          28.0,
-          830.0
+          24.042553191489375,
+          754.2553191489361
         ]
       ],
       "group_id": 9946,
@@ -206,7 +206,7 @@
       "score": 0.7375,
       "points": [
         [
-          113.0,
+          30.42553191489364,
           800.0
         ],
         [
@@ -215,20 +215,18 @@
         ],
         [
           164.0,
-          850.0
+          879.7872340425531
         ],
         [
-          113.0,
-          850.0
+          30.42553191489364,
+          879.7872340425531
         ]
       ],
       "group_id": 9947,
-      "description": "Hỏi: kế bên trái cửa hàng có bảng hiệu màu vàng là gì ? || ĐA: đại lý phân phối",
+      "description": "Hỏi: kế bên trái cửa hàng có bảng hiệu màu xanh là gì ? || ĐA: đại lý phân phối",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 6,
         "question_id": 9947,
@@ -245,24 +243,24 @@
       "score": 0.961,
       "points": [
         [
-          0.0,
-          1035.0
+          266.59574468085106,
+          1055.3191489361702
         ],
         [
           904.0,
-          1035.0
+          1055.3191489361702
         ],
         [
           904.0,
           1229.0
         ],
         [
-          0.0,
+          266.59574468085106,
           1229.0
         ]
       ],
       "group_id": 9948,
-      "description": "Hỏi: cửa hàng có bảng hiệu màu vàng cùng hai nhân vật ở trên đang có sự kiện gì ? || ĐA: mừng khai trươngs",
+      "description": "Hỏi: cửa hàng có bảng hiệu màu vàng cùng hai nhân vật ở trên đang có sự kiện gì ? || ĐA: mừng khai trương",
       "difficult": false,
       "shape_type": "rectangle",
       "flags": {

@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -28,12 +28,10 @@
         ]
       ],
       "group_id": 3765,
-      "description": "Hỏi: quán bảng hiệu màu trắng trong ảnh tên là gì ? || ĐA: đình phong quán",
+      "description": "Hỏi: quán bảng hiệu màu trắng trong ảnh tên là gì ? || ĐA: đỉnh phong quán",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 1,
         "question_id": 3765,
@@ -67,12 +65,10 @@
         ]
       ],
       "group_id": 3766,
-      "description": "Hỏi: đình phong quán chuyên bán những thứ gì ? || ĐA: ốc - nướng - lẩu - bbq",
+      "description": "Hỏi: đỉnh phong quán chuyên bán những thứ gì ? || ĐA: ốc - nướng - lẩu - bbq",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 3766,
@@ -106,12 +102,10 @@
         ]
       ],
       "group_id": 3767,
-      "description": "Hỏi: đình phong quán có đặt tiệc như thế nào ? || ĐA: liên hoan - sinh nhật",
+      "description": "Hỏi: đỉnh phong quán có đặt tiệc như thế nào ? || ĐA: liên hoan - sinh nhật",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 3,
         "question_id": 3767,
@@ -145,12 +139,10 @@
         ]
       ],
       "group_id": 3768,
-      "description": "Hỏi: đình phong quán có địa chỉ ở đâu ? || ĐA: 95 phạm văn đồng , p . 13 , q . bình thạnh",
+      "description": "Hỏi: đỉnh phong quán có địa chỉ ở đâu ? || ĐA: 95 phạm văn đồng , p . 13 , q . bình thạnh",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": true
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 4,
         "question_id": 3768,

@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -67,12 +67,10 @@
         ]
       ],
       "group_id": 3543,
-      "description": "Hỏi: người đang phát biểu thuộc bộ ngoại giao của nước nào ? || ĐA: chxncn việt nam",
+      "description": "Hỏi: người đang phát biểu thuộc bộ ngoại giao của nước nào ? || ĐA: Nước chxncn việt nam",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 3543,

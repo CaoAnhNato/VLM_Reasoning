@@ -1,17 +1,17 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 1.0,
       "points": [
         [
-          398.0,
+          330.70866141732284,
           2.0
         ],
         [
@@ -20,20 +20,18 @@
         ],
         [
           698.0,
-          47.0
+          43.30708661417323
         ],
         [
-          398.0,
-          47.0
+          330.70866141732284,
+          43.30708661417323
         ]
       ],
       "group_id": 1853,
-      "description": "Hỏi: người đàn ông đang ví von người phụ nữ xốc vác như gì ? || ĐA: neo rừng",
+      "description": "Hỏi: người đàn ông đang ví von người phụ nữ xốc vác như gì ? || ĐA: heo rừng",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 1,
         "question_id": 1853,
@@ -51,28 +49,26 @@
       "points": [
         [
           277.0,
-          38.0
+          41.732283464566926
         ],
         [
-          730.0,
-          38.0
+          749.6062992125984,
+          41.732283464566926
         ],
         [
-          730.0,
-          83.0
+          749.6062992125984,
+          81.88976377952756
         ],
         [
           277.0,
-          83.0
+          81.88976377952756
         ]
       ],
       "group_id": 1854,
       "description": "Hỏi: nhân vật nữ bị so sánh bừng bừng như thế nào ? || ĐA: như . . . heo quay",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 1854,

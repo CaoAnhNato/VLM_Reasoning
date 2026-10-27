@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": false
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -28,7 +28,7 @@
         ]
       ],
       "group_id": 11529,
-      "description": "Hỏi: chùa này có tên là gì vậy ? || ĐA: phi lai tự",
+      "description": "Hỏi: chùa này có tên là gì vậy ? || ĐA: phi lai cổ tự",
       "difficult": false,
       "shape_type": "rectangle",
       "flags": {

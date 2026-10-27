@@ -1,30 +1,30 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": true,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.0,
       "points": [
         [
-          15.0,
-          15.0
+          302.4178832116789,
+          841.7153284671531
         ],
         [
-          235.0,
-          15.0
+          752.625,
+          841.7153284671531
         ],
         [
-          235.0,
-          59.0
+          752.625,
+          949.875
         ],
         [
-          15.0,
-          59.0
+          302.4178832116789,
+          949.875
         ]
       ],
       "group_id": 10235,
@@ -184,12 +184,10 @@
         ]
       ],
       "group_id": 10239,
-      "description": "Hỏi: bên phải biển báo cẩm là đại lý gì ? || ĐA: xổ số miền bắc",
+      "description": "Hỏi: bên phải biển báo cấm là đại lý gì ? || ĐA: xổ số miền bắc",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 5,
         "question_id": 10239,

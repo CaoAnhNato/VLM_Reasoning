@@ -1,29 +1,29 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": false
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 1.0,
       "points": [
         [
-          53.0,
-          69.0
+          70.7222222222222,
+          76.44444444444446
         ],
         [
           672.0,
-          69.0
+          76.44444444444446
         ],
         [
           672.0,
           189.0
         ],
         [
-          53.0,
+          70.7222222222222,
           189.0
         ]
       ],

@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -28,12 +28,10 @@
         ]
       ],
       "group_id": 9456,
-      "description": "Hỏi: nước rửa tay lifebuoy chăm sóc da 500g có giá bao nhiêu ? || ĐA: 61 . 200 vnd / chai",
+      "description": "Hỏi: nước rửa tay lifebuoy chăm sóc da 500g có giá bao nhiêu ? || ĐA: 61.200 vnd / chai",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 1,
         "question_id": 9456,
@@ -67,12 +65,10 @@
         ]
       ],
       "group_id": 9457,
-      "description": "Hỏi: gian hàng này đang có ưu đĩa gì ? || ĐA: khuyến mãi",
+      "description": "Hỏi: gian hàng này đang có ưu đãi gì ? || ĐA: khuyến mãi",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": true
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 9457,
@@ -106,12 +102,10 @@
         ]
       ],
       "group_id": 9458,
-      "description": "Hỏi: gel rửa tay khô giảm giá còn bao nhiêu tiền ? || ĐA: 59 . 000 vnđ",
+      "description": "Hỏi: gel rửa tay khô giảm giá còn bao nhiêu tiền ? || ĐA: 59.900 vnđ",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 3,
         "question_id": 9458,
@@ -128,20 +122,20 @@
       "score": 0.7667,
       "points": [
         [
-          791.0,
-          694.0
+          732.3404255319149,
+          681.2340425531914
         ],
         [
-          852.0,
-          694.0
+          837.9574468085107,
+          681.2340425531914
         ],
         [
-          852.0,
-          744.0
+          837.9574468085107,
+          726.3085106382979
         ],
         [
-          791.0,
-          744.0
+          732.3404255319149,
+          726.3085106382979
         ]
       ],
       "group_id": 9459,

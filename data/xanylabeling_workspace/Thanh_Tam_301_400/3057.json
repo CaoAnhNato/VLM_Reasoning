@@ -1,30 +1,30 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 1.0,
       "points": [
         [
-          102.0,
-          185.0
+          115.17857142857144,
+          206.25
         ],
         [
-          555.0,
-          185.0
+          547.3214285714287,
+          206.25
         ],
         [
-          555.0,
-          407.0
+          547.3214285714287,
+          386.6071428571429
         ],
         [
-          102.0,
-          407.0
+          115.17857142857144,
+          386.6071428571429
         ]
       ],
       "group_id": 9019,
@@ -67,7 +67,7 @@
         ]
       ],
       "group_id": 9020,
-      "description": "Hỏi: thùy trang là của hàng gì ? || ĐA: áo cưới cao cấp",
+      "description": "Hỏi: thùy trang là cửa hàng gì ? || ĐA: áo cưới cao cấp",
       "difficult": false,
       "shape_type": "rectangle",
       "flags": {
@@ -128,29 +128,27 @@
       "score": 1.0,
       "points": [
         [
-          105.0,
-          188.0
+          128.21428571428578,
+          126.09523809523819
         ],
         [
-          558.0,
-          188.0
+          545.5357142857142,
+          126.09523809523819
         ],
         [
-          558.0,
-          410.0
+          545.5357142857142,
+          226.48809523809527
         ],
         [
-          105.0,
-          410.0
+          128.21428571428578,
+          226.48809523809527
         ]
       ],
       "group_id": 9022,
-      "description": "Hỏi: ở cửa hàng thùy trang cung cấp cái gì cao cấp ? || ĐA: thùy trang",
+      "description": "Hỏi: ở cửa hàng thùy trang cung cấp cái gì cao cấp ? || ĐA: Áo cưới ",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 4,
         "question_id": 9022,
@@ -184,12 +182,10 @@
         ]
       ],
       "group_id": 9023,
-      "description": "Hỏi: đại chỉ wedsite có trên bức hình là gì ? || ĐA: www . dangquangad . com",
+      "description": "Hỏi: địa chỉ wedsite có trên bức hình là gì ? || ĐA: www.dangquangad.com",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 5,
         "question_id": 9023,
@@ -206,29 +202,27 @@
       "score": 0.9,
       "points": [
         [
-          69.0,
-          414.0
+          65.42857142857144,
+          416.9761904761905
         ],
         [
-          350.0,
-          414.0
+          427.0,
+          416.9761904761905
         ],
         [
-          350.0,
-          444.0
+          427.0,
+          449.0
         ],
         [
-          69.0,
-          444.0
+          65.42857142857144,
+          449.0
         ]
       ],
       "group_id": 9024,
-      "description": "Hỏi: liên hệ số nào của www . dangquangad . com ? || ĐA: 0909 10 56 67 - 08 3511 4039",
+      "description": "Hỏi: liên hệ số nào của www . dangquangad.com ? || ĐA: 0909 10 56 67 - 08 3511 4039",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 6,
         "question_id": 9024,

@@ -1,39 +1,37 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.7375,
       "points": [
         [
-          304.0,
-          138.0
+          6.764976958525327,
+          156.4331797235023
         ],
         [
-          332.0,
-          138.0
+          691.705069124424,
+          156.4331797235023
         ],
         [
-          332.0,
-          152.0
+          691.705069124424,
+          201.20276497695852
         ],
         [
-          304.0,
-          152.0
+          6.764976958525327,
+          201.20276497695852
         ]
       ],
       "group_id": 2652,
-      "description": "Hỏi: bức hình tổng hợp những địa điểm nào tại tp hồ chí minh ? || ĐA: sử balo - vali - túi",
+      "description": "Hỏi: bức hình tổng hợp những địa điểm nào tại tp hồ chí minh ? || ĐA: sửa balo - vali - túi",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 1,
         "question_id": 2652,

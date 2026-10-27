@@ -1,30 +1,30 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.8719,
       "points": [
         [
-          153.0,
-          147.0
+          157.10094637223978,
+          149.8391167192429
         ],
         [
-          239.0,
-          147.0
+          243.10094637223978,
+          149.8391167192429
         ],
         [
-          239.0,
-          183.0
+          243.10094637223978,
+          185.8391167192429
         ],
         [
-          153.0,
-          183.0
+          157.10094637223978,
+          185.8391167192429
         ]
       ],
       "group_id": 9568,
@@ -67,12 +67,10 @@
         ]
       ],
       "group_id": 9569,
-      "description": "Hỏi: đoan tncs này thuộc huyện nào ? || ĐA: thường xuân",
+      "description": "Hỏi: đoàn tncs này thuộc huyện nào ? || ĐA: thường xuân",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 9569,
@@ -89,29 +87,27 @@
       "score": 0.8091,
       "points": [
         [
-          143.0,
-          194.0
+          137.9526813880126,
+          175.70347003154575
         ],
         [
-          244.0,
-          194.0
+          247.67823343848582,
+          175.70347003154575
         ],
         [
-          244.0,
-          227.0
+          247.67823343848582,
+          230.9148264984227
         ],
         [
-          143.0,
-          227.0
+          137.9526813880126,
+          230.9148264984227
         ]
       ],
       "group_id": 9570,
-      "description": "Hỏi: biên này nói về điều gì ? || ĐA: hãy nói không với rượu bia khi tham gia giao thông",
+      "description": "Hỏi: biển này nói về điều gì ? || ĐA: hãy nói không với rượu bia khi tham gia giao thông",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 3,
         "question_id": 9570,

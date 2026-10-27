@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -28,12 +28,10 @@
         ]
       ],
       "group_id": 9064,
-      "description": "Hỏi: bức hình này được lấy nguồn từ đâu ? || ĐA: eros",
+      "description": "Hỏi: bức hình này được lấy nguồn từ đâu ? || ĐA: www.Aeros.vn",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 1,
         "question_id": 9064,
@@ -67,12 +65,10 @@
         ]
       ],
       "group_id": 9065,
-      "description": "Hỏi: tên đại chỉ online để lấy bức hình này ? || ĐA: ww . aeros . vn",
+      "description": "Hỏi: tên đại chỉ online để lấy bức hình này ? || ĐA: www.aeros.vn",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 9065,

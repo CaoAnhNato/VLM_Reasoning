@@ -1,30 +1,30 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": false
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.7667,
       "points": [
         [
-          393.0,
-          132.0
+          4.758620689655189,
+          8.293103448275858
         ],
         [
-          465.0,
-          132.0
+          162.68965517241378,
+          8.293103448275858
         ],
         [
-          465.0,
-          155.0
+          162.68965517241378,
+          53.1206896551724
         ],
         [
-          393.0,
-          155.0
+          4.758620689655189,
+          53.1206896551724
         ]
       ],
       "group_id": 1750,
@@ -43,6 +43,35 @@
         "question": "nobita nhờ ai giải bài toán tình yêu ?",
         "gt_answer": "người giỏi toán"
       },
+      "kie_linking": []
+    },
+    {
+      "label": "Q1_gt",
+      "score": null,
+      "points": [
+        [
+          174.41379310344826,
+          16.568965517241367
+        ],
+        [
+          340.62068965517244,
+          16.568965517241367
+        ],
+        [
+          340.62068965517244,
+          135.8793103448276
+        ],
+        [
+          174.41379310344826,
+          135.8793103448276
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "difficult": false,
+      "shape_type": "rectangle",
+      "flags": {},
+      "attributes": {},
       "kie_linking": []
     }
   ],

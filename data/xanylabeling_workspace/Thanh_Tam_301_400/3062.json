@@ -1,39 +1,37 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": true,
     "multi_quest": false
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.0,
       "points": [
         [
-          15.0,
-          15.0
+          1396.3576158940398,
+          942.0529801324503
         ],
         [
-          235.0,
-          15.0
+          1500.3637694272627,
+          942.0529801324503
         ],
         [
-          235.0,
-          59.0
+          1500.3637694272627,
+          968.9412719834427
         ],
         [
-          15.0,
-          59.0
+          1396.3576158940398,
+          968.9412719834427
         ]
       ],
       "group_id": 9035,
-      "description": "Hỏi: bức hình được lấy ở đâu ? || ĐA: vietsensetravel . com",
+      "description": "Hỏi: bức hình được lấy ở đâu ? || ĐA: vietsensetravel",
       "difficult": true,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": true
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 1,
         "question_id": 9035,

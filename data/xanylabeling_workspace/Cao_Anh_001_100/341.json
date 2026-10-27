@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -54,16 +54,16 @@
           642.0
         ],
         [
-          1017.0,
+          1071.25,
           642.0
         ],
         [
-          1017.0,
-          719.0
+          1071.25,
+          724.6590909090909
         ],
         [
           34.0,
-          719.0
+          724.6590909090909
         ]
       ],
       "group_id": 1009,

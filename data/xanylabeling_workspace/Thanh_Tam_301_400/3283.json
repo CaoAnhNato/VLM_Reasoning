@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -28,7 +28,7 @@
         ]
       ],
       "group_id": 9749,
-      "description": "Hỏi: của hàng này có tên là gì ? || ĐA: kymdan",
+      "description": "Hỏi: cửa hàng này có tên là gì ? || ĐA: kymdan",
       "difficult": false,
       "shape_type": "rectangle",
       "flags": {
@@ -67,12 +67,10 @@
         ]
       ],
       "group_id": 9750,
-      "description": "Hỏi: địa chỉ của cửa hàng này là gì ? || ĐA: 74 d hai bà trưng , bến nghé , q . 1 , tp . hcm",
+      "description": "Hỏi: địa chỉ của cửa hàng này là gì ? || ĐA: 74d hai bà trưng, bến nghé , q.1, tp.hcm",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 9750,
@@ -106,12 +104,10 @@
         ]
       ],
       "group_id": 9751,
-      "description": "Hỏi: số điện thoại liên hệ của cửa hàng này là gì ? || ĐA: ( +84 . 8 ) 38 299 101",
+      "description": "Hỏi: số điện thoại liên hệ của cửa hàng này là gì ? || ĐA: ( +84.8 ) 38 299 101",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 3,
         "question_id": 9751,
@@ -128,20 +124,20 @@
       "score": 0.7667,
       "points": [
         [
-          10.0,
-          227.0
+          230.49693251533745,
+          324.8527607361963
         ],
         [
-          375.0,
-          227.0
+          376.53374233128835,
+          324.8527607361963
         ],
         [
-          375.0,
-          304.0
+          376.53374233128835,
+          364.41104294478527
         ],
         [
-          10.0,
-          304.0
+          230.49693251533745,
+          364.41104294478527
         ]
       ],
       "group_id": 9752,

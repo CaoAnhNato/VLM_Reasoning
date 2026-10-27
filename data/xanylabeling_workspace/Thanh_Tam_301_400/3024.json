@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -28,12 +28,10 @@
         ]
       ],
       "group_id": 8894,
-      "description": "Hỏi: tên quán này là gì vậy ? || ĐA: tỷ muội quái",
+      "description": "Hỏi: tên quán này là gì vậy ? || ĐA: tỷ muội quán",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 1,
         "question_id": 8894,
@@ -50,29 +48,27 @@
       "score": 1.0,
       "points": [
         [
-          44.0,
-          55.0
+          44.888888888888886,
+          56.999999999999986
         ],
         [
-          250.0,
-          55.0
+          250.88888888888897,
+          56.999999999999986
         ],
         [
-          250.0,
-          82.0
+          250.88888888888897,
+          83.99999999999999
         ],
         [
-          44.0,
-          82.0
+          44.888888888888886,
+          83.99999999999999
         ]
       ],
       "group_id": 8895,
-      "description": "Hỏi: ở đây chuyên bán cái gì ? || ĐA: chuyên hải sản tươi sốn",
+      "description": "Hỏi: ở đây chuyên bán cái gì ? || ĐA: chuyên hải sản tươi sống",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 8895,

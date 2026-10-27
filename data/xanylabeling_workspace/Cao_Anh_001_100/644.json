@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -54,25 +54,23 @@
           416.0
         ],
         [
-          352.0,
+          403.65168539325845,
           416.0
         ],
         [
-          352.0,
-          447.0
+          403.65168539325845,
+          481.3426966292135
         ],
         [
           219.0,
-          447.0
+          481.3426966292135
         ]
       ],
       "group_id": 1752,
-      "description": "Hỏi: cô gái hỏi chàng trai điều gì ? || ĐA: nhà anh có máy lạnh không ?",
+      "description": "Hỏi: cô gái hỏi chàng trai điều gì ? || ĐA: nhà anh có điều hòa không ?",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 1752,

@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -15,16 +15,16 @@
           39.0
         ],
         [
-          127.0,
+          198.75,
           39.0
         ],
         [
-          127.0,
-          57.0
+          198.75,
+          60.75
         ],
         [
           57.0,
-          57.0
+          60.75
         ]
       ],
       "group_id": 1847,
@@ -50,29 +50,27 @@
       "score": 0.8249,
       "points": [
         [
-          331.0,
-          112.0
+          334.51612903225805,
+          115.27419354838709
         ],
         [
           554.0,
-          112.0
+          115.27419354838709
         ],
         [
           554.0,
-          187.0
+          191.4032258064516
         ],
         [
-          331.0,
-          187.0
+          334.51612903225805,
+          191.4032258064516
         ]
       ],
       "group_id": 1848,
-      "description": "Hỏi: huấn luyện viên đang chỉ đạo cầu thủ làm gì ? || ĐA: tí nữa hậu vệ nó phá em chạy vào xong kê phát là nó chết ngay",
+      "description": "Hỏi: huấn luyện viên đang chỉ đạo cầu thủ làm gì ? || ĐA: tí nữa hậu vệ nó phá em chạy vào xong kê phát là nó chết ngay.",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 1848,

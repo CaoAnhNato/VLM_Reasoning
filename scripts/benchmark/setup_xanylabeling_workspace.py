@@ -682,13 +682,13 @@ def merge_workspace_annotations(
     with open(bboxes_json_path, "r", encoding="utf-8") as f:
         master_data = json.load(f)
 
-    # Scan member folders first, then allow `00_sample_for_leader` to override if edited
+    # Scan the 4 member folders as the authoritative ground-truth source
     subfolders = [
+        "00_sample_for_leader",
         "Cao_Anh_001_100",
         "Trieu_101_200",
         "Cam_Tu_201_300",
         "Thanh_Tam_301_400",
-        "00_sample_for_leader",
     ]
     stem_to_json_path: Dict[str, str] = {}
     for sub in subfolders:
@@ -699,8 +699,7 @@ def merge_workspace_annotations(
             if fname.endswith(".json") and fname != "README_MANIFEST.json":
                 stem = os.path.splitext(fname)[0]
                 cand_path = os.path.join(sub_dir, fname)
-                if stem not in stem_to_json_path or sub == "00_sample_for_leader":
-                    stem_to_json_path[stem] = cand_path
+                stem_to_json_path[stem] = cand_path
 
     total_quests = 0
     verified_quests = 0

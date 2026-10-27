@@ -1,30 +1,30 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.825,
       "points": [
         [
-          561.0,
-          562.0
+          418.6158940397352,
+          557.364238410596
         ],
         [
-          613.0,
-          562.0
+          615.5629139072847,
+          557.364238410596
         ],
         [
-          613.0,
-          587.0
+          615.5629139072847,
+          592.3841059602648
         ],
         [
-          561.0,
-          587.0
+          418.6158940397352,
+          592.3841059602648
         ]
       ],
       "group_id": 11601,
@@ -54,25 +54,23 @@
           34.0
         ],
         [
-          616.0,
+          790.6882591093117,
           34.0
         ],
         [
-          616.0,
-          62.0
+          790.6882591093117,
+          62.75303643724696
         ],
         [
           549.0,
-          62.0
+          62.75303643724696
         ]
       ],
       "group_id": 11602,
-      "description": "Hỏi: liên hệ nguồn bức hình qua email nào ? || ĐA: baogia . thienphuc@gmai . com",
+      "description": "Hỏi: liên hệ nguồn bức hình qua email nào ? || ĐA: baogia . thienphuc@gmail . com",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 11602,

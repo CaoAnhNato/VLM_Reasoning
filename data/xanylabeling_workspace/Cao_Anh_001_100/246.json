@@ -1,29 +1,29 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": true,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
       "score": 0.825,
       "points": [
         [
-          407.0,
-          99.0
+          408.4183673469388,
+          101.27551020408164
         ],
         [
           465.0,
-          99.0
+          101.27551020408164
         ],
         [
           465.0,
           130.0
         ],
         [
-          407.0,
+          408.4183673469388,
           130.0
         ]
       ],
@@ -50,29 +50,27 @@
       "score": 0.0,
       "points": [
         [
-          15.0,
-          15.0
+          408.6604429005645,
+          142.60204081632654
         ],
         [
-          235.0,
-          15.0
+          464.7959183673469,
+          142.60204081632654
         ],
         [
-          235.0,
-          59.0
+          464.7959183673469,
+          157.90816326530611
         ],
         [
-          15.0,
-          59.0
+          408.6604429005645,
+          157.90816326530611
         ]
       ],
       "group_id": 721,
-      "description": "Hỏi: giá bán của các loại sản phẩm được khuyến mãi ? || ĐA: 89 . 900 92 . 900",
+      "description": "Hỏi: giá bán của các loại sản phẩm được khuyến mãi ? || ĐA: 87.300, 92.900",
       "difficult": true,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": true
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 721,

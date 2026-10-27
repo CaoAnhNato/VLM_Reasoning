@@ -1,10 +1,10 @@
 {
-  "version": "2.4.0",
+  "version": "4.2.0",
   "flags": {
     "has_unmatched_quest": false,
     "multi_quest": true
   },
-  "checked": false,
+  "checked": true,
   "shapes": [
     {
       "label": "Q1_gt",
@@ -70,9 +70,7 @@
       "description": "Hỏi: vì sao nhân vật trong hình dọa báo công an ? || ĐA: mày ăn nói ba trợn",
       "difficult": false,
       "shape_type": "rectangle",
-      "flags": {
-        "needs_manual_edit": false
-      },
+      "flags": {},
       "attributes": {
         "quest_idx": 2,
         "question_id": 1393,
@@ -93,16 +91,16 @@
           469.0
         ],
         [
-          767.0,
+          864.8734177215189,
           469.0
         ],
         [
-          767.0,
-          511.0
+          864.8734177215189,
+          517.006329113924
         ],
         [
           696.0,
-          511.0
+          517.006329113924
         ]
       ],
       "group_id": 1394,
