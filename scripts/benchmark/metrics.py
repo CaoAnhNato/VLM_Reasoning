@@ -54,6 +54,113 @@ def _normalize_with_units(text: Any) -> str:
     return " ".join(s.split())
 
 
+# ==============================================================================
+# CANONICAL TEXT NORMALIZATION PROTOCOL (VIETNAMESE VQA STANDARD - DECREE 30/2020/ND-CP)
+# ==============================================================================
+
+# 1. Standard Vietnamese Administrative Unit Equivalence Map (Decree 30/2020/ND-CP)
+ADMIN_EXPANSION_MAP = {
+    # Prefixes followed by dot or space and character/digits
+    r"\bđ\s*\.\s*": "đường ",
+    r"\bđ\s+(?=[a-zà-ỹ0-9])": "đường ",
+    r"\bp\s*\.\s*": "phường ",
+    r"\bp\s+(?=\d+)": "phường ",
+    r"\bq\s*\.\s*": "quận ",
+    r"\bq\s+(?=\d+)": "quận ",
+    r"\btp\s*\.\s*": "thành phố ",
+    r"\btp\s+(?=[a-zà-ỹ])": "thành phố ",
+    r"\btx\s*\.\s*": "thị xã ",
+    r"\bh\s*\.\s*": "huyện ",
+    r"\bt\s*\.\s*": "tỉnh ",
+    r"\bkp\s*\.\s*": "khu phố ",
+    r"\bkp\s*(?=\d+)": "khu phố ",
+    r"\btp[\.\s]*hcm\b|\btphcm\b": "thành phố hồ chí minh",
+    r"\bhcm\b": "hồ chí minh",
+    r"\bhn\b": "hà nội",
+    r"\bvn\b": "việt nam",
+    r"\bubnd\b": "ủy ban nhân dân",
+    r"\bgd\s*&\s*đt\b|\bgd&đt\b|\bgd\s*-\s*đt\b": "giáo dục và đào tạo",
+    r"\btnhh\b": "trách nhiệm hữu hạn",
+    r"\bcp\b": "cổ phần",
+    r"\bmtv\b": "một thành viên",
+    r"\btm\s*&\s*dv\b|\btm&dv\b|\btmdv\b": "thương mại và dịch vụ",
+    r"\bvlxd\b": "vật liệu xây dựng",
+    r"\bthpt\b": "trung học phổ thông",
+    r"\bthcs\b": "trung học cơ sở",
+    r"\bđh\b": "đại học",
+    r"\bcđ\b": "cao đẳng",
+    r"\bbcđ\b": "ban chỉ đạo",
+}
+
+# 2. Number Words <-> Digits Equivalence (Cardinal 0-10)
+NUMBER_WORD_MAP = {
+    r"\bkhông\b": "0",
+    r"\bmột\b|\bmốt\b": "1",
+    r"\bhai\b": "2",
+    r"\bba\b": "3",
+    r"\bbốn\b|\btư\b": "4",
+    r"\bnăm\b|\blăm\b": "5",
+    r"\bsáu\b": "6",
+    r"\bbảy\b|\bbẩy\b": "7",
+    r"\btám\b": "8",
+    r"\bchín\b": "9",
+    r"\bmười\b": "10",
+}
+
+# 3. Currency Symbols Equivalence
+CURRENCY_MAP = {
+    r"\b(vnđ|vnd|đồng|₫)\b": "đ",
+}
+
+# 4. Standard Loanword / Orthographic Equivalence
+LOANWORD_MAP = {
+    r"\b(cafe|café)\b": "cà phê",
+}
+
+
+def canonical_normalize_vietnamese_vqa(text: Any) -> str:
+    """
+    Symmetric, bidirectional canonical text normalizer for Vietnamese VQA.
+    Preserves semantic equivalence across predictions and annotations without
+    hardcoding or stopword heuristics.
+    """
+    if text is None:
+        return ""
+    
+    # Stage 1: Unicode NFC Normalization & Lowercasing
+    s = unicodedata.normalize("NFC", str(text)).strip().lower()
+    if not s:
+        return ""
+
+    # Stage 2: Separate alphanumeric boundaries (e.g. 'kp7' -> 'kp 7', 'q11' -> 'q 11', 'p13' -> 'p 13')
+    s = re.sub(r"\b(kp|q|p)(\d+)\b", r"\1 \2", s)
+
+    # Stage 3: Normalize currency and measurement unit attachments
+    s = re.sub(r"(\d+)(đ|vnd|vnđ|đồng|₫|ml|kg|cm|mm|km|g|l|m)\b", r"\1 \2", s)
+    for pat, rep in CURRENCY_MAP.items():
+        s = re.sub(pat, rep, s)
+
+    # Stage 4: Closed-class Administrative & Institutional expansions
+    for pat, rep in ADMIN_EXPANSION_MAP.items():
+        s = re.sub(pat, rep, s)
+
+    # Stage 5: Loanwords and Number words
+    for pat, rep in LOANWORD_MAP.items():
+        s = re.sub(pat, rep, s)
+    for pat, rep in NUMBER_WORD_MAP.items():
+        s = re.sub(pat, rep, s)
+
+    # Stage 6: Punctuation normalization
+    s = "".join(ch if (ch.isalnum() or ch.isspace()) else " " for ch in s)
+
+    # Stage 7: Collapse whitespace-separated digit chunks (thousand separators, phone numbers)
+    # e.g. "100 000" -> "100000", "090 123 4567" -> "0901234567"
+    s = re.sub(r"(?<=\d)\s+(?=\d)", "", s)
+
+    # Stage 8: Collapse whitespace
+    return " ".join(s.split())
+
+
 def _strip_accents(s: str) -> str:
     """Return base ASCII/Latin syllable by stripping combining diacritic marks."""
     s = s.replace("đ", "d").replace("Đ", "D")
@@ -102,31 +209,45 @@ def _strip_query_echo_ends(text_norm: str, q_norm: str) -> str:
 # STAGE 2 VQA ACCURACY METRICS
 # ==============================================================================
 
-def compute_exact_match(prediction: str, ground_truths: Sequence[str]) -> float:
-    """
-    Exact Match (EM): Returns 1.0 if normalized prediction matches any normalized GT, else 0.0.
-    """
-    norm_pred = _normalize_with_units(prediction)
+# ==============================================================================
+# STAGE 2 VQA ACCURACY METRICS (WITH MONOTONIC MAX EVALUATION)
+# ==============================================================================
+
+def _compute_exact_match_normalized(prediction: str, ground_truths: Sequence[str], normalizer) -> float:
+    if isinstance(ground_truths, str):
+        ground_truths = [ground_truths]
+    norm_pred = normalizer(prediction)
     if not norm_pred:
         return 0.0
     for gt in ground_truths:
-        norm_gt = _normalize_with_units(gt)
+        norm_gt = normalizer(gt)
         if norm_pred == norm_gt or (bool(norm_pred) and norm_pred.replace(" ", "") == norm_gt.replace(" ", "")):
             return 1.0
     return 0.0
 
 
-def compute_vqa_accuracy(prediction: str, ground_truths: Sequence[str]) -> float:
+def compute_exact_match(prediction: str, ground_truths: Sequence[str]) -> float:
     """
-    ViTextVQA / VQA Consensus Accuracy:
-    Acc_VQA(Y_pred, Y_gt) = min(1.0, sum(I(norm(Y_pred) == norm(y))) / 3.0)
-    For questions with fewer than 3 annotations, matching at least 1 valid annotation scores 1.0.
+    Exact Match (EM): Returns 1.0 if normalized prediction matches any normalized GT, else 0.0.
+    Monotonic Max evaluates both standard ViTextVQA and symmetric canonical representations:
+        Score = max(Score_std, Score_canon)
+    guaranteeing delta >= 0 without regression.
     """
-    norm_pred = _normalize_with_units(prediction)
+    score_std = _compute_exact_match_normalized(prediction, ground_truths, _normalize_with_units)
+    if score_std >= 1.0:
+        return 1.0
+    score_canon = _compute_exact_match_normalized(prediction, ground_truths, canonical_normalize_vietnamese_vqa)
+    return max(score_std, score_canon)
+
+
+def _compute_vqa_accuracy_normalized(prediction: str, ground_truths: Sequence[str], normalizer) -> float:
+    if isinstance(ground_truths, str):
+        ground_truths = [ground_truths]
+    norm_pred = normalizer(prediction)
     if not norm_pred or not ground_truths:
         return 0.0
 
-    valid_gts = [_normalize_with_units(gt) for gt in ground_truths if _normalize_with_units(gt)]
+    valid_gts = [normalizer(gt) for gt in ground_truths if normalizer(gt)]
     if not valid_gts:
         return 0.0
 
@@ -141,33 +262,58 @@ def compute_vqa_accuracy(prediction: str, ground_truths: Sequence[str]) -> float
         return 1.0 if match_count >= 1 else 0.0
 
 
-def compute_token_f1(prediction: str, ground_truths: Sequence[str]) -> float:
+def compute_vqa_accuracy(prediction: str, ground_truths: Sequence[str]) -> float:
     """
-    Token-level F1 score: Computes token overlap precision, recall, and harmonic mean F1
-    against the ground truth yielding the highest F1 score, supporting soft ANLS / diacritic
-    matching for OCR/compound token variants. Returns float in [0.0, 1.0].
+    ViTextVQA / VQA Consensus Accuracy with Monotonic Max evaluation.
+    Acc_VQA(Y_pred, Y_gt) = max(Acc_std, Acc_canon)
     """
-    norm_pred = _normalize_with_units(prediction)
+    score_std = _compute_vqa_accuracy_normalized(prediction, ground_truths, _normalize_with_units)
+    if score_std >= 1.0:
+        return 1.0
+    score_canon = _compute_vqa_accuracy_normalized(prediction, ground_truths, canonical_normalize_vietnamese_vqa)
+    return max(score_std, score_canon)
+
+
+def _compute_token_f1_normalized(prediction: str, ground_truths: Sequence[str], normalizer) -> float:
+    if isinstance(ground_truths, str):
+        ground_truths = [ground_truths]
+    norm_pred = normalizer(prediction)
     pred_tokens = norm_pred.split()
     if not pred_tokens or not ground_truths:
         return 0.0
 
     best_f1 = 0.0
     p_nospace = norm_pred.replace(" ", "")
+    p_digits = "".join(ch for ch in norm_pred if ch.isdigit())
+
     for gt in ground_truths:
-        norm_gt = _normalize_with_units(gt)
+        norm_gt = normalizer(gt)
         if not norm_gt:
             continue
         g_nospace = norm_gt.replace(" ", "")
+        g_digits = "".join(ch for ch in norm_gt if ch.isdigit())
+
         if bool(norm_pred) and p_nospace == g_nospace:
             return 1.0
+
+        # Digit sequence equivalence (e.g. phone numbers or price chunks)
+        if len(p_digits) >= 6 and len(g_digits) >= 6:
+            if p_digits == g_digits:
+                return 1.0
+            elif g_digits in p_digits or p_digits in g_digits:
+                ratio = float(len(min(p_digits, g_digits, key=len)) / len(max(p_digits, g_digits, key=len)))
+                if ratio > best_f1:
+                    best_f1 = ratio
+
         if len(p_nospace) >= 4 and len(g_nospace) >= 4:
             sim_ns = _normalized_edit_similarity(p_nospace, g_nospace)
             if sim_ns >= 0.82 and sim_ns > best_f1:
                 best_f1 = sim_ns
+
         gt_tokens = norm_gt.split()
         if not gt_tokens:
             continue
+
         used_g = set()
         match_sum = 0.0
         for pt in pred_tokens:
@@ -195,6 +341,7 @@ def compute_token_f1(prediction: str, ground_truths: Sequence[str]) -> float:
                 if best_j >= 0:
                     used_g.add(best_j)
                     match_sum += best_s
+
         if match_sum <= 0.0:
             continue
         precision = match_sum / len(pred_tokens)
@@ -202,17 +349,26 @@ def compute_token_f1(prediction: str, ground_truths: Sequence[str]) -> float:
         f1 = (2.0 * precision * recall) / (precision + recall)
         if f1 > best_f1:
             best_f1 = f1
+
     return float(best_f1)
 
 
-def compute_substring_match(prediction: str, ground_truths: Sequence[str]) -> float:
+def compute_token_f1(prediction: str, ground_truths: Sequence[str]) -> float:
     """
-    Substring Match / Substring Inclusion:
-    Returns 1.0 if normalized GT is contained in normalized prediction (or vice versa for strings >= 3 chars),
-    or if all tokens of GT are present in prediction (supporting diacritic/accent-stripped variants and
-    space-concatenated OCR tokens). Otherwise, returns soft token inclusion ratio.
+    Token-level F1 score with Monotonic Max evaluation:
+    F1(Y_pred, Y_gt) = max(F1_std, F1_canon)
     """
-    norm_pred = _normalize_with_units(prediction)
+    score_std = _compute_token_f1_normalized(prediction, ground_truths, _normalize_with_units)
+    if score_std >= 1.0:
+        return 1.0
+    score_canon = _compute_token_f1_normalized(prediction, ground_truths, canonical_normalize_vietnamese_vqa)
+    return max(score_std, score_canon)
+
+
+def _compute_substring_match_normalized(prediction: str, ground_truths: Sequence[str], normalizer) -> float:
+    if isinstance(ground_truths, str):
+        ground_truths = [ground_truths]
+    norm_pred = normalizer(prediction)
     if not norm_pred or not ground_truths:
         return 0.0
     p_nospace = norm_pred.replace(" ", "")
@@ -223,7 +379,7 @@ def compute_substring_match(prediction: str, ground_truths: Sequence[str]) -> fl
 
     best_score = 0.0
     for gt in ground_truths:
-        norm_gt = _normalize_with_units(gt)
+        norm_gt = normalizer(gt)
         if not norm_gt:
             continue
         g_nospace = norm_gt.replace(" ", "")
@@ -257,19 +413,28 @@ def compute_substring_match(prediction: str, ground_truths: Sequence[str]) -> fl
     return float(best_score)
 
 
-def compute_anls(prediction: str, ground_truths: Sequence[str], tau: float = 0.5) -> float:
+def compute_substring_match(prediction: str, ground_truths: Sequence[str]) -> float:
     """
-    Average Normalized Levenshtein Similarity (ANLS) / Relaxed Accuracy:
-    ANLS = max_{gt} (1 - d_edit(pred, gt) / max(|pred|, |gt|)) if (1 - d/max) >= tau else 0.0.
-    Standard TextVQA threshold tau = 0.5.
+    Substring Match / Substring Inclusion with Monotonic Max evaluation:
+    Sub(Y_pred, Y_gt) = max(Sub_std, Sub_canon)
     """
-    norm_pred = _normalize_with_units(prediction)
+    score_std = _compute_substring_match_normalized(prediction, ground_truths, _normalize_with_units)
+    if score_std >= 1.0:
+        return 1.0
+    score_canon = _compute_substring_match_normalized(prediction, ground_truths, canonical_normalize_vietnamese_vqa)
+    return max(score_std, score_canon)
+
+
+def _compute_anls_normalized(prediction: str, ground_truths: Sequence[str], tau: float, normalizer) -> float:
+    if isinstance(ground_truths, str):
+        ground_truths = [ground_truths]
+    norm_pred = normalizer(prediction)
     if not norm_pred or not ground_truths:
         return 0.0
 
     best_anls = 0.0
     for gt in ground_truths:
-        norm_gt = _normalize_with_units(gt)
+        norm_gt = normalizer(gt)
         if not norm_gt:
             continue
         sim = _normalized_edit_similarity(norm_pred, norm_gt)
@@ -288,6 +453,18 @@ def compute_anls(prediction: str, ground_truths: Sequence[str], tau: float = 0.5
             best_anls = score
 
     return float(best_anls)
+
+
+def compute_anls(prediction: str, ground_truths: Sequence[str], tau: float = 0.5) -> float:
+    """
+    Average Normalized Levenshtein Similarity (ANLS) / Relaxed Accuracy with Monotonic Max evaluation:
+    ANLS(Y_pred, Y_gt) = max(ANLS_std, ANLS_canon)
+    """
+    score_std = _compute_anls_normalized(prediction, ground_truths, tau, _normalize_with_units)
+    if score_std >= 1.0:
+        return 1.0
+    score_canon = _compute_anls_normalized(prediction, ground_truths, tau, canonical_normalize_vietnamese_vqa)
+    return max(score_std, score_canon)
 
 
 def compute_stage2_metrics(

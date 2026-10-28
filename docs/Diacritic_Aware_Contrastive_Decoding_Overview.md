@@ -4,17 +4,20 @@
 
 Trong những năm gần đây, các mô hình thị giác - ngôn ngữ quy mô lớn (Vision-Language Models - VLMs) như GPT-4V, LLaVA, InternVL và Qwen-VL đã đạt được những bước tiến vượt bậc trong việc hiểu nội dung hình ảnh và trả lời câu hỏi tự nhiên. Tuy nhiên, khi triển khai vào các bài toán trả lời câu hỏi dựa trên văn bản trong ảnh (Text-based Visual Question Answering - TextVQA) thuộc các ngôn ngữ có dấu thanh điệu phức tạp như tiếng Việt, các mô hình này bộc lộ những khiếm khuyết mang tính hệ thống.
 
-### 1.1.1. Hiện Tượng "Ảo Giác Dấu Thanh Điệu" (Diacritic Hallucination) trong VLM
+### 1.1.1. Đa Điểm Nghẽn Thị Giác – Ngôn Ngữ Trên Văn Bản Tự Nhiên Tiếng Việt
 
-Ngôn ngữ tiếng Việt sở hữu hệ thống ký tự Latinh mở rộng với 5 dấu thanh (sắc, huyền, hỏi, ngã, nặng) cùng các dấu phụ nguyên âm (ă, â, ê, ô, ơ, ư, đ). Sự thay đổi của một dấu thanh điệu nhỏ sẽ làm biến đổi hoàn toàn ngữ nghĩa của từ ngữ (ví dụ: *cơm* - *cớm*, *giá* - *gia*, *bún* - *bùn*). Trong bối cảnh ảnh đời thực (biển hiệu đường phố, thực đơn quán ăn, bao bì nhãn hàng), các ký tự này thường chịu ảnh hưởng bởi phông chữ cách điệu, biến dạng góc nghiêng, khoảng cách xa hoặc độ phân giải thấp.
+Ngôn ngữ tiếng Việt sở hữu hệ thống ký tự Latinh mở rộng với 5 dấu thanh (sắc, huyền, hỏi, ngã, nặng) cùng các dấu phụ nguyên âm (ă, â, ê, ô, ơ, ư, đ). Trong bối cảnh ảnh đời thực (biển hiệu đường phố, thực đơn quán ăn, bao bì nhãn hàng), hơn 75% khối văn bản mục tiêu chiếm diện tích dưới 1% khung hình (*ViTextVQA, arXiv:2404.10652*). Khi đưa qua các mô hình thị giác - ngôn ngữ quy mô nhỏ (Small Vision-Language Models - sVLMs) như `5CD-AI/Vintern-1B-v3_5`, quá trình suy luận đối mặt với năm nhóm lỗi nhân quả cốt lõi:
+- **Nhóm 1 (Định vị đúng patch chứa đáp án nhưng đọc sai ký tự gốc hoặc dấu thanh - Case 1a & 1b):** Khung chữ cái cơ sở hoặc dấu thanh bị mất nét tần số cao sau bước thu phóng và gộp patch (`pixel_shuffle`), dẫn đến việc mô hình ngôn ngữ (LLM backbone) dùng tiên nghiệm từ vựng (Language Prior) để tự ý thay thế từ hiếm/tên riêng bằng từ quen thuộc (chiếm 38,3% lỗi ký tự gốc và 9,3% lỗi thuần dấu thanh).
+- **Nhóm 2 (Định vị sai sang patch không chứa đáp án - Case 2a & 2b):** Cơ chế chú ý (Attention) của mô hình bị đánh lạc hướng bởi các vùng chữ có kích thước lớn, độ tương phản mạnh trong cùng bức ảnh (*Salient Distractors / Blind Tokens* theo *AvisC, arXiv:2405.17820*), hoặc do vùng chữ mục tiêu bị cắt đôi qua ranh giới chia lưới cố định (`max_dynamic_patch = 4`), khiến mô hình trả lời nội dung của một biển hiệu khác trên cùng ảnh (chiếm 12,3% – 34,3% lỗi).
+- **Nhóm 3 (Đứt gãy thực thể dài & Đảo chữ số - Case 3 & 4):** Suy giảm tín hiệu điều kiện thị giác ($\gamma_t = \exp(-\lambda t)$ theo *M3ID, arXiv:2403.14003*) khi sinh các địa chỉ/biển hiệu dài (13,1% lỗi) và nhầm lẫn chuỗi chữ số điện thoại/giá tiền (5,1% lỗi).
 
-Hầu hết các VLM mã nguồn mở hiện nay được tiền huấn luyện trên các tập dữ liệu đa ngữ khổng lồ nhưng áp đảo bởi tiếng Anh và tiếng Trung. Hậu quả là phần lõi mô hình ngôn ngữ lớn (LLM backbone) sở hữu một "thiên kiến ngôn ngữ tiên nghiệm" (Language Prior) cực kỳ mạnh mẽ. Khi tiếp nhận các vùng văn bản có dấu thanh điệu nhỏ hoặc hơi mờ, LLM backbone có xu hướng lấn át tín hiệu thị giác thu nhận từ bộ mã hóa hình ảnh (Visual Encoder), dẫn đến việc sinh ra các từ không dấu hoặc nhầm lẫn dấu theo thói quen ngôn ngữ tiếng Anh/tiếng Pháp không dấu. Hiện tượng này được định nghĩa là **Ảo giác dấu thanh điệu (Diacritic Hallucination)**.
+### 1.1.2. Hạn Chế của Các Phương Pháp Hiện Tại và Định Hướng Nghiên Cứu Mới
 
-### 1.1.2. Hạn Chế của Các Phương Pháp Giải Mã Hiện Tại
+Để khắc phục các điểm nghẽn trên mà không cần huấn luyện lại mô hình (Training-Free), các phương pháp đơn lẻ như Visual Contrastive Decoding (*VCD, CVPR 2024*) hay cộng thưởng dấu tĩnh bộc lộ hạn chế lớn: làm mờ toàn ảnh không giúp khôi phục độ phân giải chữ nhỏ và thậm chí còn khuếch đại nhầm các biển hiệu lớn gây nhiễu (Case 2b), trong khi cộng thưởng tĩnh $+\beta$ cho mọi token có dấu gây ảo giác ngược trên tên riêng/tiếng Anh. Do đó, hướng nghiên cứu của đề tài được nâng cấp lên kiến trúc **Giải mã Tương phản có Định vị Không gian và Hiệu chỉnh Tiên nghiệm 2 Tầng (2-Stage Spatially-Grounded & Prior-Calibrated Contrastive Decoding - SG-VCD)** thiết kế chuyên biệt cho kiến trúc `InternVLChatModel` của `5CD-AI/Vintern-1B-v3_5`:
+1. **Tầng 1 (Can thiệp Không gian trong `pixel_values`):** Mở khóa lưới tỉ lệ thực $4:3, 3:2$ kết hợp trích xuất vùng quan tâm hướng dẫn bởi câu hỏi (*Question-Guided & Edge-Filtered ROI Tile*) và tách riêng các vùng chữ nổi bật gây nhiễu (*Salient Distractor / Blind Patches*).
+2. **Tầng 2 (Can thiệp Giải mã trong `LogitsProcessor`):** Đối chiếu phân phối xác suất giữa **Nhánh Dương** (chứa các tiles sắc nét và vùng ROI mục tiêu) với **Nhánh Âm Kép** (kết hợp ảnh làm mờ tần số cao $I_{\text{blur-thumb}}$ để khử thiên kiến từ vựng/dấu thanh và các patch gây nhiễu $I_{\text{distractor}}$ để triệt tiêu lỗi đọc nhầm vùng), đi kèm ràng buộc hợp lý thích ứng $\mathcal{V}_{\text{head}}$ (loại bỏ hoàn toàn hằng số cộng thưởng dấu tĩnh $+\beta$).
 
-Để khắc phục hiện tượng ảo giác thị giác trong VLM, các nghiên cứu gần đây thường tiếp cận theo hai hướng chính:
-- **Hướng tiếp cận huấn luyện bổ sung (Supervised Fine-Tuning / LoRA):** Đòi hỏi tài nguyên tính toán phần cứng lớn, thời gian huấn luyện kéo dài và đối mặt với rủi ro quên tri thức gốc (Catastrophic Forgetting) khi thích ứng với ngôn ngữ tài nguyên thấp.
-- **Hướng tiếp cận can thiệp lúc giải mã (Contrastive Decoding - CD):** Các phương pháp tiêu biểu như Visual Contrastive Decoding (VCD) giải quyết ảo giác bằng cách lấy hiệu số phân phối xác suất giữa ảnh gốc và ảnh bị làm mờ (blurred image). Tuy nhiên, việc làm mờ đồng nhất toàn bộ bức ảnh sẽ phá hủy cấu trúc của mọi ký tự văn bản, làm suy giảm nghiêm trọng khả năng đọc chữ (OCR fidelity) và khiến mô hình mất đi ngữ cảnh không gian tổng thể. Hơn nữa, việc áp dụng CD liên tục trên mọi token gây tăng gấp đôi độ trễ tính toán không cần thiết.
+*(Toàn bộ cơ sở toán học, phân tích 5 trường hợp lỗi nhân quả và thiết kế chi tiết của phương pháp đề xuất được tách riêng tại tài liệu độc lập: **[`docs/Proposed_Method_SG_VCD.md`](file:///c:/Users/Admin/HUIT%20-%20H%E1%BB%8Dc%20T%E1%BA%ADp/N%C4%83m%204/Computer_Vision/docs/Proposed_Method_SG_VCD.md)**).*
 
 ## 1.2. Tập Dữ Liệu Thực Nghiệm ViTextVQA
 
@@ -22,56 +25,26 @@ Nghiên cứu lựa chọn bộ dữ liệu **ViTextVQA** làm nền tảng ki�
 
 ### 1.2.1. Nguồn Gốc và Quy Mô Bộ Dữ Liệu ViTextVQA
 
-ViTextVQA là bộ dữ liệu chuẩn mực đầu tiên dành riêng cho bài toán Text-based Visual Question Answering tại Việt Nam, được công bố bởi nhóm nghiên cứu UIT-NLP tại hội nghị quốc tế ACL 2024 (*arXiv:2404.10652*). Bộ dữ liệu bao gồm:
-- **Quy mô mẫu:** Hơn **16.000 hình ảnh thực tế** được thu thập trực tiếp tại nhiều đô thị của Việt Nam.
+ViTextVQA là bộ dữ liệu chuẩn mực đầu tiên dành riêng cho bài toán Text-based Visual Question Answering tại Việt Nam, được công bố bởi nhóm nghiên cứu UIT-NLP (*arXiv:2404.10652*). Bộ dữ liệu bao gồm:
+- **Quy mô mẫu:** Hơn **16.000 hình ảnh thực tế** được thu thập trực tiếp tại nhiều đô thị của Việt Nam (tập Test chính thức gồm **10.028 mẫu câu hỏi**).
 - **Số lượng câu hỏi:** Hơn **50.000 cặp câu hỏi - câu trả lời** tự nhiên bằng tiếng Việt do con người gán nhãn và kiểm định chất lượng nghiêm ngặt.
-- **Định dạng dữ liệu:** Đi kèm tọa độ bounding box của các khối văn bản (text regions) và nội dung văn bản OCR tương ứng.
+- **Đặc trưng đa câu hỏi trên cùng ảnh:** Mỗi bức ảnh đi kèm nhiều câu hỏi truy vấn các vùng văn bản khác nhau, tạo điều kiện lý tưởng để kiểm chứng hiện tượng trượt vùng chú ý (Spatial Mis-Grounding / Wrong-ROI Fixation).
 
 ### 1.2.2. Điểm Nghẽn Thách Thức trên Văn Bản Ngữ Cảnh Đời Sống Việt Nam
 
-Khác với các tập dữ liệu tài liệu scan phẳng (DocVQA), hình ảnh trong ViTextVQA phản ánh độ phức tạp cao của môi trường đời sống: ánh sáng chói, phông chữ viết tay, bảng hiệu kim loại phản chiếu, và đặc biệt là tỷ lệ các ký tự có dấu thanh điệu chiếm mật độ rất dày đặc. Đây là môi trường thử thách khắc nghiệt nhất nhằm bóc trần sự phụ thuộc thái quá vào language prior của các mô hình VLM hiện đại, tạo cơ sở thực nghiệm vững chắc để đánh giá năng lực của thuật toán giải mã mới.
+Khác với các tập dữ liệu tài liệu scan phẳng (DocVQA), hình ảnh trong ViTextVQA phản ánh độ phức tạp cao của môi trường đời sống: ánh sáng chói, phông chữ viết tay, bảng hiệu kim loại phản chiếu, tỷ lệ khung hình đa dạng ($4:3, 3:2, 16:9$) và mật độ các biển hiệu phụ cạnh tranh sự chú ý thị giác. Đây là môi trường thử thách khắc nghiệt nhất nhằm kiểm chứng khả năng định vị vùng chữ nhỏ và giải mã tương phản của thuật toán mới.
 
 ---
 
-# 2. PHƯƠNG PHÁP ĐỀ XUẤT: DIACRITIC-AWARE CONTRASTIVE DECODING (DACD)
+# 2. TỔNG QUAN ĐỊNH HƯỚNG PHƯƠNG PHÁP ĐỀ XUẤT (METHOD OVERVIEW)
 
-Đề tài đề xuất phương pháp **Diacritic-Aware Contrastive Decoding (DACD)** – một giải thuật can thiệp quá trình sinh văn bản tại thời điểm suy luận (Inference-time / Training-free) nhằm triệt tiêu ảo giác dấu thanh điệu mà không cần thay đổi bất kỳ trọng số nào của mô hình nền tảng.
+> [!IMPORTANT]
+> **Tách biệt Tài liệu theo Cấu trúc Mô-đun:**
+> Tài liệu này đóng vai trò là **Tổng quan Đề tài, Thiết kế Benchmark và Kế hoạch Quản trị 6 Tuần**. Toàn bộ phần phân tích các trường hợp lỗi (Attention vs. OCR Reading Cases), công thức toán học và sơ đồ kiến trúc chi tiết của thuật toán đề xuất được trình bày đầy đủ tại tệp chuyên biệt: **[`docs/Proposed_Method_SG_VCD.md`](file:///c:/Users/Admin/HUIT%20-%20H%E1%BB%8Dc%20T%E1%BA%ADp/N%C4%83m%204/Computer_Vision/docs/Proposed_Method_SG_VCD.md)**.
 
-## 2.1. Cơ Sở Lý Thuyết và Kiến Trúc Giải Pháp
-
-Phương pháp DACD hoạt động trực tiếp trong vòng lặp sinh tự hồi quy (autoregressive decoding loop) của mô hình VLM, can thiệp vào lớp logits thông qua cơ chế `LogitsProcessor` trong thư viện chuẩn Hugging Face Transformers.
-
-### 2.1.1. Nguyên Lý Can Thiệp Decoding-Time
-
-Tại mỗi bước giải mã $t$, mô hình ngôn ngữ dự đoán phân phối xác suất cho token tiếp theo $y_t$ dựa trên ngữ cảnh lịch sử $y_{<t}$, câu hỏi truy vấn $Q$ và đặc trưng hình ảnh $I$. Thay vì áp dụng giải mã tham lam (Greedy Search) chọn token có xác suất cao nhất $\arg\max P(y_t \mid I, Q, y_{<t})$, DACD thiết lập một bộ lọc động dựa trên độ bất định (uncertainty) và mức độ liên quan thị giác của các ký tự có dấu.
-
-### 2.1.2. Định Dạng Toán Học và Hàm Phạt Tần Số Cao
-
-Cơ chế của DACD được cấu thành bởi hai khối xử lý liên hoàn:
-
-#### a) Bóc tách đặc trưng tần số của dấu thanh điệu
-
-Các dấu thanh điệu tiếng Việt (sắc, huyền, hỏi, ngã, nặng) có kích thước vật lý rất nhỏ và phân bố tập trung ở dải tần số không gian cao (High-Frequency Spatial Components) nằm ở nửa trên hoặc nửa dưới của ký tự nguyên âm cơ sở. Khi tạo phân phối đối chứng (negative contrastive view), thay vì làm mờ ngẫu nhiên toàn bộ ảnh như VCD, DACD áp dụng bộ lọc thông thấp cục bộ (Local Low-Pass Filter) hoặc mặt nạ tần số cao (High-Frequency Suppression Mask) chỉ riêng trên các vùng chứa văn bản nghi vấn $I_{\text{crop}}$:
-$$I_{\text{distorted}} = \mathcal{F}^{-1} \left( \mathcal{F}(I_{\text{crop}}) \odot \mathcal{M}_{\text{low}} \right)$$
-Trong đó $\mathcal{F}$ biểu diễn phép biến đổi Fourier/Wavelet 2 chiều và $\mathcal{M}_{\text{low}}$ là mặt nạ triệt tiêu các thành phần tần số cao đại diện cho nét dấu thanh điệu.
-
-#### b) Cơ chế tự động bù trừ Logits (Diacritic-Gated Re-weighting)
-
-Phân phối logits của token tiếp theo được hiệu chỉnh theo công thức đối sánh có điều kiện:
-$$\mathcal{L}_{\text{calibrated}}(y_t) = (1 + \alpha) \cdot \mathcal{L}_{\text{original}}(y_t) - \alpha \cdot \mathcal{L}_{\text{distorted}}(y_t) + \beta \cdot \mathbb{I}_{\text{diacritic}}(y_t)$$
-Trong đó:
-- $\mathcal{L}_{\text{original}}(y_t)$ là phân phối logits xuất phát từ hình ảnh sắc nét ban đầu.
-- $\mathcal{L}_{\text{distorted}}(y_t)$ là phân phối logits xuất phát từ hình ảnh đã bị triệt tiêu chi tiết dấu thanh điệu (đại diện cho thiên kiến thuần túy của language prior khi mất tín hiệu dấu).
-- $\alpha > 0$ là hệ số tương phản nhằm trừ khử ảnh hưởng của language prior.
-- $\mathbb{I}_{\text{diacritic}}(y_t)$ là hàm chỉ thị kích hoạt thưởng điểm (bonus reward) nếu token ứng viên $y_t$ chứa dấu thanh điệu trùng khớp với mật độ năng lượng tần số cao đo được trên vùng ảnh cục bộ.
-- Cơ chế cổng Entropy Gating: Bước tương phản trên chỉ được kích hoạt khi entropy của phân phối gốc vượt qua ngưỡng bất định $\tau$ ($H(P_{\text{original}}) > \tau$), giúp duy trì 100% tốc độ sinh ở các từ vựng thông thường.
-
-## 2.2. Tính Mới (Novelty) và Đóng Góp Học Thuật Chuẩn Q3–Q4
-
-Đề tài đáp ứng đầy đủ các tiêu chuẩn khắt khe của một bài báo khoa học thuộc phân khúc **Q3–Q4 Scopus / Hội nghị Quốc tế (IEEE RIVF, KSE, MAPR)** nhờ các đóng góp sau:
-1. **Phát hiện và hình thức hóa vấn đề đặc thù:** Là nghiên cứu tiên phong định nghĩa và phân tích bản chất cơ chế của hiện tượng "Ảo giác dấu thanh điệu" (Diacritic Hallucination) trong các VLM hiện đại khi xử lý ngôn ngữ Latinh có dấu.
-2. **Đóng góp thuật toán nguyên bản (Algorithmic Contribution):** Đề xuất giải thuật giải mã tương phản có chọn lọc theo tần số không gian (Frequency-Selective Contrastive Decoding), khắc phục triệt để nhược điểm làm suy giảm độ nét OCR của phương pháp VCD kinh điển.
-3. **Hiệu quả tài nguyên vượt trội:** Thuật toán hoàn toàn là **Training-Free**, không yêu cầu bất kỳ chi phí phần cứng nào để huấn luyện lại mô hình, có thể tích hợp dưới dạng một thư viện mở rộng nhẹ (plug-and-play) cho mọi VLM mã nguồn mở hiện hành.
+Kiến trúc đề xuất **SG-VCD (Spatially-Grounded & Prior-Calibrated Contrastive Decoding)** can thiệp hoàn toàn tại thời điểm suy luận (*Training-Free Inference*) trên mô hình trọng tâm `5CD-AI/Vintern-1B-v3_5` qua hai tầng:
+- **Tầng 1 — Định vị Vùng chữ & Bảo toàn Tỉ lệ trong `pixel_values`:** Khắc phục giới hạn `max_dynamic_patch = 4` và nhát cắt tâm ảnh của `InternVLChatModel`, đồng thời bổ sung tile phóng đại vùng chữ mục tiêu ($I_{\text{ROI}}$) và nhận diện vùng chữ lớn gây nhiễu ($I_{\text{distractor}}$).
+- **Tầng 2 — Giải mã Tương phản Nhánh Âm Kép với Ràng buộc $\mathcal{V}_{\text{head}}$:** Sử dụng `LogitsProcessor` đối chiếu trực tiếp giữa nhánh dương $(I_{\text{tiles+ROI}})$ và nhánh âm $(I_{\text{blur-thumb + distractor}})$, giúp đồng thời đẩy lùi lỗi đọc nhầm vùng chữ khác trên cùng ảnh (Case 2) và lỗi suy đoán từ vựng/dấu thanh khi chữ mờ (Case 1) mà không cần tham số cộng thưởng tĩnh $+\beta$.
 
 ---
 

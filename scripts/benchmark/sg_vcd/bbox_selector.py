@@ -23,7 +23,7 @@ Why J_KL(C) resolves the Discrete Green's Theorem small-window collapse:
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image
@@ -38,6 +38,25 @@ class RegionSelectionResult:
     kl_score: float                        # Optimal Bernoulli KL score J_KL(C*)
     captured_mass: float                   # p(C*) in (0, 1)
     area_fraction: float                   # a(C*) in (0, 1)
+
+
+@dataclass
+class MultiRegionSelectionResult:
+    """Structured output of the KL-divergence region selector for Top-K candidate regions (K in {1, 2})."""
+    pixel_bboxes: List[Tuple[int, int, int, int]]  # Top-K bounding boxes in image pixels
+    grid_bboxes: List[Tuple[int, int, int, int]]   # Top-K bounding boxes in patch grid
+    kl_scores: List[float]                        # Top-K Bernoulli KL scores
+    captured_masses: List[float]                  # p(C) values
+    area_fractions: List[float]                   # a(C) values
+    k: int                                        # Effective K (1 or 2)
+
+    @property
+    def bboxes(self) -> List[Tuple[int, int, int, int]]:
+        return self.pixel_bboxes
+
+    @property
+    def kl_divergences(self) -> List[float]:
+        return self.kl_scores
 
 
 def compute_bernoulli_kl_score(
@@ -171,6 +190,32 @@ class BaseRegionSelector(ABC):
         """Select optimal bounding box on phi_map and project to original image_size (W, H)."""
         raise NotImplementedError
 
+    def select_top_k(
+        self,
+        phi_map: np.ndarray,
+        image_size: Optional[Tuple[int, int]] = None,
+        image: Optional[Any] = None,
+        gradient_prior: Optional[np.ndarray] = None,
+        max_k: int = 2,
+        orig_w: Optional[int] = None,
+        orig_h: Optional[int] = None,
+    ) -> MultiRegionSelectionResult:
+        """Select Top-K optimal bounding boxes from phi_map."""
+        if image_size is None:
+            if orig_w is not None and orig_h is not None:
+                image_size = (orig_w, orig_h)
+            else:
+                image_size = (1, 1)
+        res = self.select(phi_map, image_size, image, gradient_prior)
+        return MultiRegionSelectionResult(
+            pixel_bboxes=[res.pixel_bbox],
+            grid_bboxes=[res.grid_bbox],
+            kl_scores=[res.kl_score],
+            captured_masses=[res.captured_mass],
+            area_fractions=[res.area_fraction],
+            k=1,
+        )
+
 
 def compute_otsu_threshold_1d(profile: np.ndarray) -> float:
     """
@@ -222,11 +267,19 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
         min_area_fraction: Optional[float] = None,
         max_area_fraction: float = 0.85,
         boundary_pad_patches: float = 1.25,
+        tau_iou: float = 0.20,
+        tau_iom: float = 0.35,
+        gamma_signif: float = 0.40,
+        min_prob_threshold: float = 0.10,
     ):
         self.num_quantiles = num_quantiles
         self.min_area_fraction = min_area_fraction
         self.max_area_fraction = max_area_fraction
         self.boundary_pad_patches = boundary_pad_patches
+        self.tau_iou = tau_iou
+        self.tau_iom = tau_iom
+        self.gamma_signif = gamma_signif
+        self.min_prob_threshold = min_prob_threshold
         self.last_guided_phi: Optional[np.ndarray] = None
 
     def _trim_sparse_borders(
@@ -277,6 +330,41 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
         Find C* = argmax_C J_KL(C) on the 2D lattice Omega and project to pixel coordinates.
         Optionally modulates phi_map with a high-frequency gradient prior to suppress non-text visual sinks.
         """
+        res = self.select_top_k(
+            phi_map=phi_map,
+            image_size=image_size,
+            image=image,
+            gradient_prior=gradient_prior,
+            max_k=1,
+        )
+        return RegionSelectionResult(
+            pixel_bbox=res.pixel_bboxes[0],
+            grid_bbox=res.grid_bboxes[0],
+            kl_score=res.kl_scores[0],
+            captured_mass=res.captured_masses[0],
+            area_fraction=res.area_fractions[0],
+        )
+
+    def select_top_k(
+        self,
+        phi_map: np.ndarray,
+        image_size: Optional[Tuple[int, int]] = None,
+        image: Optional[Any] = None,
+        gradient_prior: Optional[np.ndarray] = None,
+        max_k: int = 2,
+        orig_w: Optional[int] = None,
+        orig_h: Optional[int] = None,
+    ) -> MultiRegionSelectionResult:
+        """
+        Adaptive Top-K Candidate Grounding (K in {1, 2}) using Bernoulli KL Divergence,
+        Spatial NMS (IoU <= 0.20, IoM <= 0.35), and Information-Theoretic Significance Gating:
+        J_KL(C2) / J_KL(C1) >= 0.40, p(C2) >= 0.10, and p(C2)/a(C2) > 1.0.
+        """
+        if image_size is None:
+            if orig_w is not None and orig_h is not None:
+                image_size = (orig_w, orig_h)
+            else:
+                image_size = (1, 1)
         W, H = image_size
         phi = np.maximum(np.asarray(phi_map, dtype=np.float64), 0.0)
         H_g, W_g = phi.shape
@@ -294,12 +382,13 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
         # Only patches whose density exceeds uniform density (P_Phi(u) > 1 / |Omega|) carry positive Pointwise information.
         raw_sum = float(phi.sum())
         if raw_sum <= 1e-12:
-            return RegionSelectionResult(
-                pixel_bbox=(0, 0, W, H),
-                grid_bbox=(0, 0, W_g, H_g),
-                kl_score=0.0,
-                captured_mass=1.0,
-                area_fraction=1.0,
+            return MultiRegionSelectionResult(
+                pixel_bboxes=[(0, 0, W, H)],
+                grid_bboxes=[(0, 0, W_g, H_g)],
+                kl_scores=[0.0],
+                captured_masses=[1.0],
+                area_fractions=[1.0],
+                k=1,
             )
 
         p_raw = phi / raw_sum
@@ -363,12 +452,9 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
                             if nx2 > nx1 and ny2 > ny1:
                                 refined_candidates.add((nx1, ny1, nx2, ny2))
 
-        best_box = None
-        best_kl = -1.0
-        best_p = 0.0
-        best_a = 0.0
         min_area = self.min_area_fraction if self.min_area_fraction is not None else (1.0 / total_cells)
 
+        scored_candidates = []
         for (gx1, gy1, gx2, gy2) in refined_candidates:
             box_cells = float((gx2 - gx1) * (gy2 - gy1))
             a = box_cells / total_cells
@@ -376,14 +462,45 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
                 continue
             p = _rect_sum(integral, gx1, gy1, gx2, gy2)
             kl = compute_bernoulli_kl_score(p, a)
-            if kl > best_kl:
-                best_kl = kl
-                best_box = (gx1, gy1, gx2, gy2)
-                best_p = p
-                best_a = a
+            if kl > 0.0:
+                scored_candidates.append(((gx1, gy1, gx2, gy2), kl, p, a))
 
-        # Fallback if all candidates were outside [min_area_fraction, max_area_fraction]
-        if best_box is None:
+        scored_candidates.sort(key=lambda item: item[1], reverse=True)
+
+        selected_candidates = []
+        if scored_candidates:
+            # Candidate 1: Global argmax
+            c1_box, c1_kl, c1_p, c1_a = scored_candidates[0]
+            selected_candidates.append((c1_box, c1_kl, c1_p, c1_a))
+
+            # Search for disjoint Candidate 2 if max_k >= 2
+            if max_k >= 2:
+                tau_iou = getattr(self, "tau_iou", 0.20)
+                tau_iom = getattr(self, "tau_iom", 0.35)
+                gamma_signif = getattr(self, "gamma_signif", 0.40)
+                tau_mass = getattr(self, "min_prob_threshold", 0.10)
+
+                for (box_k, kl_k, p_k, a_k) in scored_candidates[1:]:
+                    inter_x1 = max(c1_box[0], box_k[0])
+                    inter_y1 = max(c1_box[1], box_k[1])
+                    inter_x2 = min(c1_box[2], box_k[2])
+                    inter_y2 = min(c1_box[3], box_k[3])
+                    inter_area = max(0, inter_x2 - inter_x1) * max(0, inter_y2 - inter_y1)
+
+                    area_1 = (c1_box[2] - c1_box[0]) * (c1_box[3] - c1_box[1])
+                    area_k = (box_k[2] - box_k[0]) * (box_k[3] - box_k[1])
+                    union_area = area_1 + area_k - inter_area
+
+                    iou = inter_area / max(1.0, float(union_area))
+                    iom = inter_area / max(1.0, float(min(area_1, area_k)))
+
+                    if iou <= tau_iou and iom <= tau_iom:
+                        # Information-Theoretic Significance Gate
+                        if kl_k >= gamma_signif * c1_kl and p_k >= tau_mass and (p_k / max(1e-9, a_k)) > 1.0:
+                            selected_candidates.append((box_k, kl_k, p_k, a_k))
+                            break
+        else:
+            # Fallback if no valid scored candidates found
             peak_idx = int(np.argmax(prob_map))
             py, px = divmod(peak_idx, W_g)
             rad_y = max(2, H_g // 8)
@@ -392,32 +509,46 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
             gy1 = max(0, py - rad_y)
             gx2 = min(W_g, px + rad_x + 1)
             gy2 = min(H_g, py + rad_y + 1)
-            best_box = (gx1, gy1, gx2, gy2)
-            best_p = _rect_sum(integral, gx1, gy1, gx2, gy2)
-            best_a = float((gx2 - gx1) * (gy2 - gy1)) / total_cells
-            best_kl = compute_bernoulli_kl_score(best_p, best_a)
+            p_fallback = _rect_sum(integral, gx1, gy1, gx2, gy2)
+            a_fallback = float((gx2 - gx1) * (gy2 - gy1)) / total_cells
+            kl_fallback = compute_bernoulli_kl_score(p_fallback, a_fallback)
+            selected_candidates.append(((gx1, gy1, gx2, gy2), kl_fallback, p_fallback, a_fallback))
 
-        gx1, gy1, gx2, gy2 = self._trim_sparse_borders(prob_map, *best_box)
+        pixel_bboxes = []
+        grid_bboxes = []
+        kl_scores = []
+        captured_masses = []
+        area_fractions = []
+
         pad = self.boundary_pad_patches
-        fx1 = max(0.0, float(gx1) - pad) / float(W_g)
-        fy1 = max(0.0, float(gy1) - pad) / float(H_g)
-        fx2 = min(float(W_g), float(gx2) + pad) / float(W_g)
-        fy2 = min(float(H_g), float(gy2) + pad) / float(H_g)
+        for (gbox, kl_val, p_val, a_val) in selected_candidates:
+            gx1, gy1, gx2, gy2 = self._trim_sparse_borders(prob_map, *gbox)
+            fx1 = max(0.0, float(gx1) - pad) / float(W_g)
+            fy1 = max(0.0, float(gy1) - pad) / float(H_g)
+            fx2 = min(float(W_g), float(gx2) + pad) / float(W_g)
+            fy2 = min(float(H_g), float(gy2) + pad) / float(H_g)
 
-        x1 = int(round(fx1 * W))
-        y1 = int(round(fy1 * H))
-        x2 = int(round(fx2 * W))
-        y2 = int(round(fy2 * H))
+            x1 = int(round(fx1 * W))
+            y1 = int(round(fy1 * H))
+            x2 = int(round(fx2 * W))
+            y2 = int(round(fy2 * H))
 
-        x1 = max(0, min(W - 2, x1))
-        y1 = max(0, min(H - 2, y1))
-        x2 = max(x1 + 2, min(W, x2))
-        y2 = max(y1 + 2, min(H, y2))
+            x1 = max(0, min(W - 2, x1))
+            y1 = max(0, min(H - 2, y1))
+            x2 = max(x1 + 2, min(W, x2))
+            y2 = max(y1 + 2, min(H, y2))
 
-        return RegionSelectionResult(
-            pixel_bbox=(x1, y1, x2, y2),
-            grid_bbox=(gx1, gy1, gx2, gy2),
-            kl_score=float(best_kl),
-            captured_mass=float(best_p),
-            area_fraction=float(best_a),
+            pixel_bboxes.append((x1, y1, x2, y2))
+            grid_bboxes.append((gx1, gy1, gx2, gy2))
+            kl_scores.append(float(kl_val))
+            captured_masses.append(float(p_val))
+            area_fractions.append(float(a_val))
+
+        return MultiRegionSelectionResult(
+            pixel_bboxes=pixel_bboxes,
+            grid_bboxes=grid_bboxes,
+            kl_scores=kl_scores,
+            captured_masses=captured_masses,
+            area_fractions=area_fractions,
+            k=len(pixel_bboxes),
         )

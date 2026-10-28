@@ -38,6 +38,7 @@ except ImportError:
 from .adaptive_propagator import (
     AdaptiveScalePropagator,
     BaseSeedPropagator,
+    verify_and_resolve_candidate_boxes,
 )
 from .attention_extractor import (
     BaseAttentionExtractor,
@@ -47,6 +48,7 @@ from .attention_extractor import (
 from .bbox_selector import (
     BaseRegionSelector,
     KLDivergenceRegionSelector,
+    MultiRegionSelectionResult,
     RegionSelectionResult,
 )
 from .dynamic_cd import (
@@ -61,6 +63,7 @@ from .roi_cropper import (
     BaseROICropper,
     CropResult,
     IsotropicROICropper,
+    apply_adaptive_laplacian_edge_reemphasis,
 )
 
 
@@ -86,6 +89,9 @@ class PipelineResult:
     pred_roi_only: str = ""
     pred_roi_plus_global: str = ""
     pred_sg_vcd: str = ""
+    stage1_bboxes: Optional[List[List[int]]] = None
+    multi_selection: Optional[MultiRegionSelectionResult] = None
+    multi_crops: Optional[List[CropResult]] = None
 
 
 def strip_conversational_preamble(text: str, question: Optional[str] = None) -> str:
@@ -170,6 +176,17 @@ def strip_conversational_preamble(text: str, question: Optional[str] = None) -> 
                     if matched_prefix in q_lower or any(w in q_lower for w in matched_prefix.split()):
                         clean = rem
                         break
+
+    # Phase-switched delimiter extraction (e.g. "Chữ: ...\nĐáp án: ...")
+    lines = clean.split("\n")
+    if len(lines) > 1:
+        for line in reversed(lines):
+            line_str = line.strip()
+            if re.match(r"^(?:đáp\s+án|câu\s+trả\s+lời|kết\s+luận|trả\s+lời)\s*[:,\-]?\s*", line_str, flags=re.IGNORECASE):
+                extracted = re.sub(r"^(?:đáp\s+án|câu\s+trả\s+lời|kết\s+luận|trả\s+lời)\s*[:,\-]?\s*", "", line_str, flags=re.IGNORECASE).strip()
+                if extracted:
+                    clean = extracted
+                    break
 
     # Strip trailing periods and whitespace (sentence terminator)
     clean = re.sub(r"[\.,;:!\?\s]+$", "", clean).strip()
@@ -292,20 +309,46 @@ class SGVCDPipeline:
         magnification: float = 1.0,
         cached_thumb_vit: Optional[torch.Tensor] = None,
         context_tile: Optional[Image.Image] = None,
+        roi_tiles: Optional[List[Image.Image]] = None,
+        magnifications: Optional[List[float]] = None,
+        char_heights: Optional[List[Optional[float]]] = None,
     ) -> Tuple[str, float, float]:
         """
         Stage 2: Dynamic Spatio-Temporal Calibrated Contrastive Decoding in torch.bfloat16.
-        Contrasts the high-resolution evidence view [global_thumb, roi_tile, ...] against the
+        Contrasts the high-resolution evidence view [global_thumb, roi_pos, ...] against the
         low-pass salient-distractor prior [global_thumb, roi_lowpass, ...].
-        
-        Reuses visual features for global_thumb to eliminate redundant ViT passes.
+        Supports Top-K dual candidate tiles E_pos = [v_thumb, v_pos_1, v_pos_2] and
+        E_neg = [v_thumb, v_neg_1, v_neg_2], Pre-RoI adaptive Laplacian edge re-emphasis,
+        and two-phase delimiter reasoning.
         """
-        # Adaptive low-pass filtered ROI suppresses fine target strokes while keeping giant header text legible
-        blur_radius = compute_adaptive_lowpass_radius(
-            magnification=magnification,
-            char_height_px=char_height_px,
-        )
-        roi_lowpass = roi_tile.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+        if roi_tiles is None or len(roi_tiles) == 0:
+            roi_tiles = [roi_tile]
+            magnifications = [magnification]
+            char_heights = [char_height_px]
+        else:
+            if magnifications is None:
+                magnifications = [magnification] * len(roi_tiles)
+            if char_heights is None:
+                char_heights = [char_height_px] * len(roi_tiles)
+
+        # For each crop:
+        # Positive view gets adaptive Pre-RoI Laplacian edge re-emphasis
+        # Negative view gets adaptive Gaussian lowpass blur
+        pos_crops = []
+        neg_crops = []
+        for i, tile in enumerate(roi_tiles):
+            mag_i = magnifications[i] if i < len(magnifications) else 1.0
+            ch_i = char_heights[i] if i < len(char_heights) else None
+            # 1. Positive enhanced crop (Group D optical blur resolution)
+            pos_tile = apply_adaptive_laplacian_edge_reemphasis(tile, magnification=mag_i)
+            pos_crops.append(pos_tile)
+            # 2. Negative lowpass crop
+            blur_radius = compute_adaptive_lowpass_radius(
+                magnification=mag_i,
+                char_height_px=ch_i,
+            )
+            neg_tile = tile.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+            neg_crops.append(neg_tile)
 
         spatial_confidence = float(math.tanh(max(0.0, float(stage1_kl_score))))
 
@@ -320,11 +363,27 @@ class SGVCDPipeline:
                 thumb_vit = self.model.extract_feature(thumb_pv)
                 del thumb_pv
 
-            # Extract roi_tile and roi_lowpass (plus optional multi-tile context)
-            if context_tile is not None:
+            # Extract roi_tiles and lowpass tiles
+            if len(roi_tiles) >= 2:
+                # Top-2 candidate dual crops:
+                # E_pos = [v_thumb, v_pos_1, v_pos_2]
+                # E_neg = [v_thumb, v_neg_1, v_neg_2]
+                roi_pv = torch.stack([
+                    self.transform(pos_crops[0]),
+                    self.transform(neg_crops[0]),
+                    self.transform(pos_crops[1]),
+                    self.transform(neg_crops[1]),
+                ]).to(device=self.device, dtype=torch.bfloat16)
+                roi_vit_all = self.model.extract_feature(roi_pv)
+                del roi_pv
+
+                pos_vit = torch.cat([thumb_vit, roi_vit_all[0:1], roi_vit_all[2:3]], dim=0)
+                neg_vit = torch.cat([thumb_vit, roi_vit_all[1:2], roi_vit_all[3:4]], dim=0)
+                del roi_vit_all
+            elif context_tile is not None:
                 roi_pair_pv = torch.stack([
-                    self.transform(roi_tile),
-                    self.transform(roi_lowpass),
+                    self.transform(pos_crops[0]),
+                    self.transform(neg_crops[0]),
                     self.transform(context_tile),
                 ]).to(device=self.device, dtype=torch.bfloat16)
                 roi_pair_vit = self.model.extract_feature(roi_pair_pv)
@@ -337,10 +396,12 @@ class SGVCDPipeline:
                 # Multi-tile visual evidence: [global_thumb, roi_tile, context_tile]
                 pos_vit = torch.cat([thumb_vit, roi_vit, ctx_vit], dim=0)
                 neg_vit = torch.cat([thumb_vit, roi_lowpass_vit, ctx_vit], dim=0)
+                del roi_pair_vit
             else:
-                roi_pair_pv = torch.stack([self.transform(roi_tile), self.transform(roi_lowpass)]).to(
-                    device=self.device, dtype=torch.bfloat16
-                )
+                roi_pair_pv = torch.stack([
+                    self.transform(pos_crops[0]),
+                    self.transform(neg_crops[0]),
+                ]).to(device=self.device, dtype=torch.bfloat16)
                 roi_pair_vit = self.model.extract_feature(roi_pair_pv)
                 del roi_pair_pv
 
@@ -350,6 +411,7 @@ class SGVCDPipeline:
                 # Dual-tile views [global_thumb, roi_tile] and [global_thumb, roi_lowpass]
                 pos_vit = torch.cat([thumb_vit, roi_vit], dim=0)
                 neg_vit = torch.cat([thumb_vit, roi_lowpass_vit], dim=0)
+                del roi_pair_vit
 
             # Calibrate question prompt for concise VQA generation
             decoding_question = format_concise_decoding_prompt(question)
@@ -407,13 +469,15 @@ class SGVCDPipeline:
             generated_ids: List[int] = []
             alpha_history: List[float] = []
             entropy_history: List[float] = []
+            phase_reasoning = False
 
             for step in range(max_new_tokens):
+                step_spatial_conf = 0.0 if phase_reasoning else spatial_confidence
                 next_token_id, alpha_t, entropy_t, _ = self.decoder.decode_step(
                     pos_logits=pos_logits,
                     neg_logits=neg_logits,
                     step=step,
-                    spatial_confidence=spatial_confidence,
+                    spatial_confidence=step_spatial_conf,
                 )
 
                 alpha_history.append(alpha_t)
@@ -422,6 +486,14 @@ class SGVCDPipeline:
                 if next_token_id == eos_id or next_token_id == self.tokenizer.eos_token_id:
                     break
                 generated_ids.append(next_token_id)
+
+                # Two-phase reasoning transition:
+                # If delimiter (e.g. newline or colon) is emitted, switch off contrastive subtraction (alpha_t -> 0)
+                # to allow unconstrained world-knowledge language reasoning for Group C resolution.
+                if not phase_reasoning and len(generated_ids) >= 1:
+                    token_str = self.tokenizer.decode([next_token_id], skip_special_tokens=True)
+                    if "\n" in token_str or ":" in token_str:
+                        phase_reasoning = True
 
                 next_token_tensor = torch.tensor([[next_token_id]], device=self.device, dtype=torch.long)
                 next_embed = embed_layer(next_token_tensor)
@@ -468,10 +540,7 @@ class SGVCDPipeline:
         alpha_mean = float(sum(alpha_history) / max(1, len(alpha_history)))
         entropy_mean = float(sum(entropy_history) / max(1, len(entropy_history)))
 
-        del (
-            roi_pair_vit, roi_vit, roi_lowpass_vit, pos_vit, neg_vit,
-            pos_prefix, neg_prefix, pos_kv, neg_kv
-        )
+        del (pos_vit, neg_vit, pos_prefix, neg_prefix, pos_kv, neg_kv)
         if cached_thumb_vit is None:
             del thumb_vit
 
@@ -516,6 +585,75 @@ class SGVCDPipeline:
         crop = self.cropper.crop(image, tuple(stage1_bbox))
         return extraction, selection, crop
 
+    def _fuse_seed_propagation(
+        self,
+        image_size: Tuple[int, int],
+        seed_bbox: Tuple[int, int, int, int],
+        prop_bbox: Tuple[int, int, int, int],
+    ) -> List[int]:
+        """
+        Information-Density Gated Fusion (Anti-Magnification Collapse M >= 1.0x).
+        Clamps horizontal and vertical expansion around the high-density KL anchor core.
+        """
+        sx1, sy1, sx2, sy2 = seed_bbox
+        px1, py1, px2, py2 = prop_bbox
+        W_img, H_img = image_size
+        max_dim = max(W_img, H_img)
+        max_allowed_side = min(448, int(round(0.50 * max_dim)))
+
+        w_seed = max(2, sx2 - sx1)
+        h_seed = max(2, sy2 - sy1)
+
+        exp_left = max(0, sx1 - px1)
+        exp_right = max(0, px2 - sx2)
+        total_exp_x = exp_left + exp_right
+        if (w_seed + total_exp_x) > max_allowed_side and total_exp_x > 0:
+            allowed_x = max(0, max_allowed_side - w_seed)
+            scale_x = allowed_x / float(total_exp_x)
+            fused_x1 = int(round(sx1 - exp_left * scale_x))
+            fused_x2 = int(round(sx2 + exp_right * scale_x))
+        else:
+            fused_x1 = min(sx1, px1)
+            fused_x2 = max(sx2, px2)
+
+        exp_top = max(0, sy1 - py1)
+        exp_bottom = max(0, py2 - sy2)
+        total_exp_y = exp_top + exp_bottom
+        if (h_seed + total_exp_y) > max_allowed_side and total_exp_y > 0:
+            allowed_y = max(0, max_allowed_side - h_seed)
+            scale_y = allowed_y / float(total_exp_y)
+            fused_y1 = int(round(sy1 - exp_top * scale_y))
+            fused_y2 = int(round(sy2 + exp_bottom * scale_y))
+        else:
+            fused_y1 = min(sy1, py1)
+            fused_y2 = max(sy2, py2)
+
+        pad_y_diacritic = max(int(round(0.15 * h_seed)), 2)
+        fused_y1 = max(0, fused_y1 - pad_y_diacritic)
+        fused_y2 = min(H_img, fused_y2 + pad_y_diacritic)
+
+        fw = fused_x2 - fused_x1
+        fh = fused_y2 - fused_y1
+        if fw > 4.5 * max(1, fh):
+            target_fw = int(round(4.5 * fh))
+            if target_fw >= w_seed:
+                diff_x = fw - target_fw
+                fused_x1 = min(sx1, fused_x1 + diff_x // 2)
+                fused_x2 = max(sx2, fused_x2 - (diff_x - diff_x // 2))
+        elif fh > 4.5 * max(1, fw):
+            target_fh = int(round(4.5 * fw))
+            if target_fh >= h_seed:
+                diff_y = fh - target_fh
+                fused_y1 = min(sy1, fused_y1 + diff_y // 2)
+                fused_y2 = max(sy2, fused_y2 - (diff_y - diff_y // 2))
+
+        fused_x1 = max(0, min(W_img - 2, fused_x1))
+        fused_y1 = max(0, min(H_img - 2, fused_y1))
+        fused_x2 = max(fused_x1 + 2, min(W_img, fused_x2))
+        fused_y2 = max(fused_y1 + 2, min(H_img, fused_y2))
+
+        return [fused_x1, fused_y1, fused_x2, fused_y2]
+
     def run(
         self,
         image: Image.Image,
@@ -525,6 +663,7 @@ class SGVCDPipeline:
     ) -> PipelineResult:
         """
         Execute full SG-VCD pipeline adhering strictly to PROJECT.md interface contract.
+        Supports Top-K Candidate Grounding (K in {1, 2}) and Pre-RoI adaptive Laplacian edge re-emphasis.
         
         Args:
             image: PIL Image input
@@ -546,107 +685,106 @@ class SGVCDPipeline:
 
         # Stage 1.2: Scale-Invariant KL Region Selection (with High-Frequency Gradient Prior Guidance)
         t_start_sel = time.time()
-        selection = self.selector.select(extraction.phi_map, image.size, image=image)
+        if hasattr(self.selector, "select_top_k"):
+            multi_selection = self.selector.select_top_k(
+                extraction.phi_map, image.size, image=image, max_k=2
+            )
+            selection = RegionSelectionResult(
+                pixel_bbox=multi_selection.pixel_bboxes[0],
+                grid_bbox=multi_selection.grid_bboxes[0],
+                kl_score=multi_selection.kl_scores[0],
+                captured_mass=multi_selection.captured_masses[0],
+                area_fraction=multi_selection.area_fractions[0],
+            )
+        else:
+            selection = self.selector.select(extraction.phi_map, image.size, image=image)
+            multi_selection = MultiRegionSelectionResult(
+                pixel_bboxes=[selection.pixel_bbox],
+                grid_bboxes=[selection.grid_bbox],
+                kl_scores=[selection.kl_score],
+                captured_masses=[selection.captured_mass],
+                area_fractions=[selection.area_fraction],
+                k=1,
+            )
         t_sel = time.time() - t_start_sel
 
         # Stage 1.3: Adaptive Scale Self-Calibration & Diacritic Belt Propagation (Refinement C)
-        stage1_bbox = list(selection.pixel_bbox)
-        char_height_px = None
+        stage1_bboxes = [list(selection.pixel_bbox)]
+        char_heights = [None]
         if self.propagator is not None:
             try:
-                gx1, gy1, gx2, gy2 = selection.grid_bbox
-                # Use gradient-guided affinity map if available so seed anchor lands on text glyphs
                 guided_phi = getattr(self.selector, "last_guided_phi", extraction.phi_map)
-                sub_phi = guided_phi[gy1:gy2, gx1:gx2] if guided_phi is not None else extraction.phi_map[gy1:gy2, gx1:gx2]
-                if sub_phi.size > 0:
-                    rel_y, rel_x = np.unravel_index(np.argmax(sub_phi), sub_phi.shape)
-                    seed_patch = (int(gx1 + rel_x), int(gy1 + rel_y))
+                phi_for_seeds = guided_phi if guided_phi is not None else extraction.phi_map
+                seed_patches = []
+                for k in range(multi_selection.k):
+                    gx1, gy1, gx2, gy2 = multi_selection.grid_bboxes[k]
+                    sub_phi = phi_for_seeds[gy1:gy2, gx1:gx2]
+                    if sub_phi.size > 0:
+                        rel_y, rel_x = np.unravel_index(np.argmax(sub_phi), sub_phi.shape)
+                        seed_patch = (int(gx1 + rel_x), int(gy1 + rel_y))
+                    else:
+                        seed_patch = (int((gx1 + gx2) // 2), int((gy1 + gy2) // 2))
+                    seed_patches.append(seed_patch)
+
+                if hasattr(self.propagator, "propagate_multi"):
+                    prop_results = self.propagator.propagate_multi(
+                        image=image,
+                        seed_patches=seed_patches,
+                        grid_ratio=extraction.grid_ratio,
+                    )
                 else:
-                    seed_patch = (int((gx1 + gx2) // 2), int((gy1 + gy2) // 2))
+                    prop_results = [
+                        self.propagator.propagate(image=image, seed_patch=sp, grid_ratio=extraction.grid_ratio)
+                        for sp in seed_patches
+                    ]
 
-                prop_res = self.propagator.propagate(
-                    image=image,
-                    seed_patch=seed_patch,
-                    grid_ratio=extraction.grid_ratio,
-                )
-                if prop_res is not None and prop_res.propagated_pixel_bbox is not None:
-                    px1, py1, px2, py2 = prop_res.propagated_pixel_bbox
-                    sx1, sy1, sx2, sy2 = selection.pixel_bbox
-                    W_img, H_img = image.size
-                    max_dim = max(W_img, H_img)
-                    max_allowed_side = min(448, int(round(0.50 * max_dim)))
-
-                    # Information-Density Gated Fusion (Anti-Magnification Collapse M >= 1.0x)
-                    w_seed = max(2, sx2 - sx1)
-                    h_seed = max(2, sy2 - sy1)
-
-                    # Clamp horizontal expansion around high-density KL anchor core
-                    exp_left = max(0, sx1 - px1)
-                    exp_right = max(0, px2 - sx2)
-                    total_exp_x = exp_left + exp_right
-                    if (w_seed + total_exp_x) > max_allowed_side and total_exp_x > 0:
-                        allowed_x = max(0, max_allowed_side - w_seed)
-                        scale_x = allowed_x / float(total_exp_x)
-                        fused_x1 = int(round(sx1 - exp_left * scale_x))
-                        fused_x2 = int(round(sx2 + exp_right * scale_x))
+                fused_candidates = []
+                fused_char_heights = []
+                for k, prop_res in enumerate(prop_results):
+                    sx1, sy1, sx2, sy2 = multi_selection.pixel_bboxes[k]
+                    if prop_res is not None and prop_res.propagated_pixel_bbox is not None:
+                        px1, py1, px2, py2 = prop_res.propagated_pixel_bbox
+                        fused_box = self._fuse_seed_propagation(image.size, (sx1, sy1, sx2, sy2), (px1, py1, px2, py2))
+                        fused_candidates.append(fused_box)
+                        ch = getattr(prop_res.prototype, "char_height_px", None) if prop_res.prototype is not None else None
+                        fused_char_heights.append(ch)
                     else:
-                        fused_x1 = min(sx1, px1)
-                        fused_x2 = max(sx2, px2)
+                        fused_candidates.append([sx1, sy1, sx2, sy2])
+                        fused_char_heights.append(None)
 
-                    # Clamp vertical expansion around high-density KL anchor core
-                    exp_top = max(0, sy1 - py1)
-                    exp_bottom = max(0, py2 - sy2)
-                    total_exp_y = exp_top + exp_bottom
-                    if (h_seed + total_exp_y) > max_allowed_side and total_exp_y > 0:
-                        allowed_y = max(0, max_allowed_side - h_seed)
-                        scale_y = allowed_y / float(total_exp_y)
-                        fused_y1 = int(round(sy1 - exp_top * scale_y))
-                        fused_y2 = int(round(sy2 + exp_bottom * scale_y))
+                # Post-propagation collision verification:
+                # If IoU(B1, B2) >= 0.45, merge into K=1 (B1 union B2); otherwise keep K=2
+                if len(fused_candidates) >= 2:
+                    resolved = verify_and_resolve_candidate_boxes(fused_candidates, iou_threshold=0.45)
+                    if len(resolved) == 1:
+                        stage1_bboxes = resolved
+                        char_heights = [fused_char_heights[0]]
                     else:
-                        fused_y1 = min(sy1, py1)
-                        fused_y2 = max(sy2, py2)
-
-                    # Vertical context padding for diacritics (protect ascenders/descenders, pad_y >= 0.15 * h_seed)
-                    pad_y_diacritic = max(int(round(0.15 * h_seed)), 2)
-                    fused_y1 = max(0, fused_y1 - pad_y_diacritic)
-                    fused_y2 = min(H_img, fused_y2 + pad_y_diacritic)
-
-                    # Aspect ratio sanity gating (preserve horizontal text spans up to 4.5 elongation)
-                    fw = fused_x2 - fused_x1
-                    fh = fused_y2 - fused_y1
-                    if fw > 4.5 * max(1, fh):
-                        target_fw = int(round(4.5 * fh))
-                        if target_fw >= w_seed:
-                            diff_x = fw - target_fw
-                            fused_x1 = min(sx1, fused_x1 + diff_x // 2)
-                            fused_x2 = max(sx2, fused_x2 - (diff_x - diff_x // 2))
-                    elif fh > 4.5 * max(1, fw):
-                        target_fh = int(round(4.5 * fw))
-                        if target_fh >= h_seed:
-                            diff_y = fh - target_fh
-                            fused_y1 = min(sy1, fused_y1 + diff_y // 2)
-                            fused_y2 = max(sy2, fused_y2 - (diff_y - diff_y // 2))
-
-                    fused_x1 = max(0, min(W_img - 2, fused_x1))
-                    fused_y1 = max(0, min(H_img - 2, fused_y1))
-                    fused_x2 = max(fused_x1 + 2, min(W_img, fused_x2))
-                    fused_y2 = max(fused_y1 + 2, min(H_img, fused_y2))
-
-                    stage1_bbox = [fused_x1, fused_y1, fused_x2, fused_y2]
-                    if prop_res.prototype is not None:
-                        char_height_px = getattr(prop_res.prototype, "char_height_px", None)
+                        stage1_bboxes = fused_candidates
+                        char_heights = fused_char_heights
+                else:
+                    stage1_bboxes = fused_candidates
+                    char_heights = fused_char_heights
             except Exception:
-                stage1_bbox = list(selection.pixel_bbox)
+                stage1_bboxes = [list(selection.pixel_bbox)]
+                char_heights = [None]
 
         # Stage 1.4: Multi-Scale Isotropic Crop (Guarded against magnification collapse M < 1.0x)
         t_start_crop = time.time()
         W_img, H_img = image.size
-        s_prop = max(stage1_bbox[2] - stage1_bbox[0], stage1_bbox[3] - stage1_bbox[1])
-        if s_prop > 448 or s_prop > 0.50 * max(W_img, H_img):
-            focal_crop_bbox = tuple(selection.pixel_bbox)
-        else:
-            focal_crop_bbox = tuple(stage1_bbox)
-        crop = self.cropper.crop(image, focal_crop_bbox)
+        crops = []
+        for b in stage1_bboxes:
+            s_prop = max(b[2] - b[0], b[3] - b[1])
+            if s_prop > 448 or s_prop > 0.50 * max(W_img, H_img):
+                focal_crop_bbox = tuple(selection.pixel_bbox)
+            else:
+                focal_crop_bbox = tuple(b)
+            c = self.cropper.crop(image, focal_crop_bbox)
+            crops.append(c)
+
+        crop = crops[0]
+        stage1_bbox = stage1_bboxes[0]
+        char_height_px = char_heights[0]
         t_crop = time.time() - t_start_crop
 
         global_thumb = image.resize((448, 448), Image.Resampling.BICUBIC)
@@ -654,9 +792,9 @@ class SGVCDPipeline:
         # Stage 2: Dynamic Spatio-Temporal Contrastive Decoding
         t_start_dec = time.time()
         context_tile = None
-        if getattr(self, "max_visual_tiles", 2) >= 3 and hasattr(self.cropper, "get_multi_tiles"):
+        if len(crops) == 1 and getattr(self, "max_visual_tiles", 2) >= 3 and hasattr(self.cropper, "get_multi_tiles"):
             try:
-                multi_tiles, _ = self.cropper.get_multi_tiles(image, focal_crop_bbox, max_tiles=self.max_visual_tiles)
+                multi_tiles, _ = self.cropper.get_multi_tiles(image, tuple(stage1_bbox), max_tiles=self.max_visual_tiles)
                 if len(multi_tiles) >= 3:
                     context_tile = multi_tiles[2]
             except Exception:
@@ -672,6 +810,9 @@ class SGVCDPipeline:
             magnification=crop.magnification,
             cached_thumb_vit=cached_visual_features,
             context_tile=context_tile,
+            roi_tiles=[c.roi_tile for c in crops],
+            magnifications=[c.magnification for c in crops],
+            char_heights=char_heights,
         )
         t_dec = time.time() - t_start_dec
 
@@ -715,4 +856,7 @@ class SGVCDPipeline:
             pred_roi_only=pred_roi_only,
             pred_roi_plus_global=pred_roi_plus_global,
             pred_sg_vcd=pred_sg_vcd,
+            stage1_bboxes=stage1_bboxes,
+            multi_selection=multi_selection,
+            multi_crops=crops,
         )

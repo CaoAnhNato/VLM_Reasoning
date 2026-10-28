@@ -16,6 +16,7 @@ import os
 import unittest
 from typing import Any, Dict, List
 
+import numpy as np
 from PIL import Image
 
 from tests.test_helpers import (
@@ -35,7 +36,23 @@ import sys
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from scripts.benchmark.metrics import compute_substring_match, compute_anls
+from scripts.benchmark.metrics import (
+    compute_substring_match,
+    compute_anls,
+    compute_token_f1,
+    compute_exact_match,
+    canonical_normalize_vietnamese_vqa,
+)
+from scripts.benchmark.sg_vcd.bbox_selector import (
+    KLDivergenceRegionSelector,
+    MultiRegionSelectionResult,
+)
+from scripts.benchmark.sg_vcd.roi_cropper import (
+    apply_adaptive_laplacian_edge_reemphasis,
+)
+from scripts.benchmark.sg_vcd.adaptive_propagator import (
+    verify_and_resolve_candidate_boxes,
+)
 
 
 class TestTier1Feature1DataLoading(unittest.TestCase):
@@ -425,6 +442,171 @@ class TestTier1Feature5PipelineResult(unittest.TestCase):
         deserialized = json.loads(serialized)
         self.assertEqual(deserialized["pred_text"], "baolangson")
         self.assertEqual(deserialized["stage1_bbox"], [292, 655, 452, 703])
+
+
+class TestTier1Round3AlgorithmicUpgrades(unittest.TestCase):
+    """
+    Round 3 SOTA Algorithmic Upgrades & Canonical Metrics Test Suite:
+    - Test 1: Stage 1 Adaptive Top-K candidate selection with disjoint bimodal distribution (K=2, IoU <= 0.20, IoM <= 0.35).
+    - Test 2: Fallback to K=1 when secondary mode is below significance gate (gamma_signif < 0.40 or p < 0.10).
+    - Test 3: Adaptive Pre-RoI Laplacian edge re-emphasis at low magnification (M <= 1.0 -> psi=0, identity).
+    - Test 4: Adaptive Pre-RoI Laplacian edge re-emphasis at high magnification (M=3.5 -> sharpening active, uint8 range).
+    - Test 5: Symmetric Canonical Text Normalizer on closed classes (admin, numbers, currency, loanwords, digit chunking).
+    - Test 6: Monotonic Max evaluation metric guarantee (Delta Metric >= 0 across all metrics).
+    - Test 7: Post-propagation candidate box collision verification (IoU >= 0.45 merges to K=1, IoU < 0.45 retains K=2).
+    """
+
+    def test_01_top2_candidate_selection_disjoint_modes(self):
+        """Verify K=2 candidate selection when two distinct, non-overlapping spatial modes exist."""
+        h, w = 64, 64
+        prob_map = np.full((h, w), 0.01, dtype=np.float32)
+        
+        # Mode 1 at (15, 15)
+        prob_map[10:20, 10:20] = 0.85
+        # Mode 2 at (45, 45)
+        prob_map[40:50, 40:50] = 0.75
+
+        selector = KLDivergenceRegionSelector(
+            tau_iou=0.20,
+            tau_iom=0.35,
+            gamma_signif=0.40,
+            min_prob_threshold=0.10,
+        )
+        result = selector.select_top_k(prob_map, orig_w=640, orig_h=640, max_k=2)
+
+        self.assertIsInstance(result, MultiRegionSelectionResult)
+        self.assertEqual(result.k, 2)
+        self.assertEqual(len(result.bboxes), 2)
+        self.assertEqual(len(result.kl_divergences), 2)
+        self.assertGreater(result.kl_divergences[0], result.kl_divergences[1])
+
+        # Verify spatial non-overlap constraints
+        box1, box2 = result.bboxes[0], result.bboxes[1]
+        iou = calculate_iou(box1, box2)
+        self.assertLessEqual(iou, 0.20)
+
+    def test_02_top2_candidate_selection_single_mode_fallback(self):
+        """Verify fallback to K=1 when secondary mode is below significance gate."""
+        h, w = 64, 64
+        prob_map = np.full((h, w), 0.01, dtype=np.float32)
+        
+        # Only one dominant peak
+        prob_map[10:20, 10:20] = 0.90
+        # Weak secondary peak with p < 0.10 or ratio p/a < 1.0
+        prob_map[40:44, 40:44] = 0.05
+
+        selector = KLDivergenceRegionSelector(
+            tau_iou=0.20,
+            tau_iom=0.35,
+            gamma_signif=0.40,
+            min_prob_threshold=0.10,
+        )
+        result = selector.select_top_k(prob_map, orig_w=640, orig_h=640, max_k=2)
+
+        self.assertEqual(result.k, 1)
+        self.assertEqual(len(result.bboxes), 1)
+        self.assertEqual(len(result.kl_divergences), 1)
+
+    def test_03_adaptive_laplacian_edge_reemphasis_low_mag(self):
+        """Verify identity transform when magnification M <= 1.0."""
+        img_arr = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
+        img = Image.fromarray(img_arr, mode="RGB")
+
+        # M = 1.0 -> psi(1.0) = tanh(0) = 0.0 -> returns original unchanged
+        out_img = apply_adaptive_laplacian_edge_reemphasis(img, magnification=1.0)
+        out_arr = np.array(out_img)
+
+        np.testing.assert_array_equal(out_arr, img_arr)
+
+        # M = 0.8 -> psi <= 0 -> returns original unchanged
+        out_img_low = apply_adaptive_laplacian_edge_reemphasis(img, magnification=0.8)
+        np.testing.assert_array_equal(np.array(out_img_low), img_arr)
+
+    def test_04_adaptive_laplacian_edge_reemphasis_high_mag(self):
+        """Verify high magnification (M=3.5) re-emphasizes edges while bounding pixels to [0, 255]."""
+        img_arr = np.zeros((100, 100, 3), dtype=np.uint8)
+        img_arr[:, :50, :] = 50
+        img_arr[:, 50:, :] = 180
+        img = Image.fromarray(img_arr, mode="RGB")
+
+        out_img = apply_adaptive_laplacian_edge_reemphasis(img, magnification=3.5, lambda_0=0.50)
+        out_arr = np.array(out_img)
+
+        self.assertEqual(out_arr.shape, img_arr.shape)
+        self.assertEqual(out_arr.dtype, np.uint8)
+        self.assertTrue(np.all(out_arr >= 0) and np.all(out_arr <= 255))
+        
+        # High-contrast edge boundary should be sharpened (non-identical to input)
+        self.assertFalse(np.array_equal(out_arr, img_arr))
+        # Uniform flat regions (far from edge) should remain untouched due to gradient gate omega_grad
+        self.assertEqual(out_arr[10, 10, 0], img_arr[10, 10, 0])
+        self.assertEqual(out_arr[10, 90, 0], img_arr[10, 90, 0])
+
+    def test_05_canonical_normalizer_administrative_and_closed_classes(self):
+        """Verify canonical normalizer correctly handles administrative abbreviations, currency, loanwords, and phone numbers."""
+        test_cases = [
+            ("q . 1", "quận 1"),
+            ("q.1", "quận 1"),
+            ("ubnd tp hcm", "ủy ban nhân dân thành phố hồ chí minh"),
+            ("gd & đt", "giáo dục và đào tạo"),
+            ("100.000 vnđ", "100000 đ"),
+            ("café", "cà phê"),
+            ("090 123 4567", "0901234567"),
+            ("098.765.4321", "0987654321"),
+        ]
+        for inp, expected in test_cases:
+            norm = canonical_normalize_vietnamese_vqa(inp)
+            self.assertEqual(norm, expected, f"Failed canonical normalize for '{inp}': got '{norm}', expected '{expected}'")
+
+    def test_06_monotonic_max_metric_guarantee(self):
+        """Verify Monotonic Max guarantees Delta Metric >= 0 against standard metrics."""
+        pred_abbr = "ubnd q . 1"
+        gt_full = "Ủy ban nhân dân quận 1"
+
+        em = compute_exact_match(pred_abbr, gt_full)
+        self.assertEqual(em, 1.0)
+
+        f1 = compute_token_f1(pred_abbr, gt_full)
+        self.assertEqual(f1, 1.0)
+
+        anls = compute_anls(pred_abbr, gt_full)
+        self.assertEqual(anls, 1.0)
+
+        sub = compute_substring_match(pred_abbr, gt_full)
+        self.assertEqual(sub, 1.0)
+
+        pairs = [
+            ("100 k", "100 nghìn"),
+            ("0901 234 567", "0901234567"),
+            ("Báo Lạng Sơn", "Báo Lạng Sơn"),
+            ("hoàn toàn khác", "không liên quan"),
+        ]
+        for p, g in pairs:
+            self.assertTrue(0.0 <= compute_exact_match(p, g) <= 1.0)
+            self.assertTrue(0.0 <= compute_token_f1(p, g) <= 1.0)
+            self.assertTrue(0.0 <= compute_anls(p, g) <= 1.0)
+            self.assertTrue(0.0 <= compute_substring_match(p, g) <= 1.0)
+
+    def test_07_post_propagation_collision_merge(self):
+        """Verify candidate box collision resolution: IoU >= 0.45 merges to K=1, IoU < 0.45 keeps K=2."""
+        box_a = [10, 10, 50, 50]
+        box_b = [15, 15, 55, 55]
+        iou_ab = calculate_iou(box_a, box_b)
+        self.assertGreaterEqual(iou_ab, 0.45)
+
+        merged = verify_and_resolve_candidate_boxes([box_a, box_b], iou_collision_threshold=0.45)
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0], [10, 10, 55, 55])
+
+        box_c = [10, 10, 30, 30]
+        box_d = [70, 70, 90, 90]
+        iou_cd = calculate_iou(box_c, box_d)
+        self.assertLess(iou_cd, 0.45)
+
+        retained = verify_and_resolve_candidate_boxes([box_c, box_d], iou_collision_threshold=0.45)
+        self.assertEqual(len(retained), 2)
+        self.assertEqual(retained[0], box_c)
+        self.assertEqual(retained[1], box_d)
 
 
 if __name__ == "__main__":

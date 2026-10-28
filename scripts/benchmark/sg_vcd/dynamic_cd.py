@@ -154,9 +154,9 @@ class DynamicContrastiveDecoder:
         # S_spatial = tanh(max(0, S_Stage1)), directly passed without redundant second tanh
         s_spatial = min(1.0, max(0.0, float(spatial_confidence)))
 
-        # M_decay(t) = 1 + gamma * (1 - exp(-lambda * t)) / (exp(-lambda * t) + eps)
+        # M_decay(t) = 1 + gamma * (1 - exp(-lambda * t)) / (exp(-lambda * t) + eps), bounded <= 1.50
         decay_exp = math.exp(-self.lambda_decay * step)
-        m_decay = 1.0 + self.gamma_decay * ((1.0 - decay_exp) / (decay_exp + 1e-6))
+        m_decay = min(1.50, 1.0 + self.gamma_decay * ((1.0 - decay_exp) / (decay_exp + 1e-6)))
 
         # D_KL and D_JS
         kl_div = (p_pos * (torch.log(p_pos.clamp(min=1e-9)) - torch.log(p_neg.clamp(min=1e-9)))).sum(dim=-1, keepdim=True)

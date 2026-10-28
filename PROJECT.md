@@ -58,6 +58,16 @@
 | R2-4 | Colab L4 Sharded Benchmark Execution | 20-sample pre-test on L4 GPU -> Full 400-image sharded run (4 workers) -> Artifact download | R2-3 | **DONE** (4-worker L4 benchmark evaluated 1,222/1,222 Qs in 1,018.07 s [16.97 min], 2.37x speedup, Substring 76.89%, F1 71.84%, ANLS 67.50%, all 7 artifacts retrieved) |
 | R2-5 | Final Metric Verification (>80%) & SOTA Documentation | Verify all Stage 2 metrics and Stage 1 recall; Update `docs/Proposed_Method_SG_VCD.md` | R2-4 | **DONE** (Documentation updated with Round 2 sharding architecture, 3-way comparative table, spatial analysis, and 4-tier error taxonomy in `docs/Proposed_Method_SG_VCD.md`; 71/71 tests verified) |
 
+### Round 3 Milestones (SG-VCD >80% Accuracy Convergence Campaign)
+| # | Name | Scope | Dependencies | Status |
+|---|------|-------|-------------|--------|
+| R3-1 | Exploration & SOTA Architecture Design | 3x parallel Explorers for Top-K spatial grounding, canonical normalization, and Laplacian/reasoning | R2-5 | **DONE** (3x Explorers delivered handoffs with zero-heuristic formulations) |
+| R3-2 | Implementation of Round 3 Upgrades | Implement Top-K grounding ($K \in \{1, 2\}$), Adaptive Pre-RoI Laplacian edge re-emphasis, Two-step Read-then-Reason, M_decay clamp, and Symmetric Canonical Normalizer in `scripts/benchmark/sg_vcd/` and `scripts/benchmark/metrics.py` | R3-1 | **DONE** (Implemented by Worker R3-2: 78/78 master tests, 17/17 adversarial tests, 5/5 workload checks pass) |
+| R3-3 | Local Verification, Stress Testing & Forensic Audit Gate | Local mock test suite, Reviewers, Challengers, and Forensic Auditor | R3-2 | **DONE** (Passed Gate: 78/78 master tests, 7/7 unit tests, 21/21 spatial adversarial, 13/13 canonical adversarial, Auditor CLEAN) |
+| R3-4 | Git Staging, Commit & Remote Push | Commit and push to `origin/main` | R3-3 | **IN_PROGRESS** (Git staging and remote synchronization) |
+| R3-5 | Colab L4 Sharded Benchmark Execution | 20-sample pre-test -> 4-worker sharded full benchmark -> Synchronize all 7 artifacts | R3-4 | **PLANNED** |
+| R3-6 | Metric Verification (>80%) & Final Documentation | Verify all Stage 2 metrics >80% and Stage 1 recall >=80%; Final SOTA release documentation | R3-5 | **PLANNED** |
+
 ---
 
 ## Interface Contracts

@@ -20,6 +20,7 @@ KL-optimal region B remains 100% sharp original pixels. This achieves:
 4. Exact centering of B inside the 448 x 448 ViT field of view.
 """
 
+import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -206,4 +207,57 @@ class IsotropicROICropper(BaseROICropper):
         """
         tiles, crop_res = self.get_multi_tiles(image, bbox, max_tiles=2)
         return tiles[0], tiles[1], crop_res
+
+
+def apply_adaptive_laplacian_edge_reemphasis(
+    roi_img: Image.Image,
+    magnification: float,
+    lambda_0: float = 0.50,
+) -> Image.Image:
+    """
+    Adaptive Pre-RoI Laplacian Edge Re-emphasis for sub-Nyquist blurred text.
+    Zero-heuristic: purely scaled by isotropic magnification M and local gradient salience.
+
+    Mathematical Formulation:
+    - Scaling factor: psi(M) = tanh(max(0.0, M - 1.0)) (0 when M <= 1.0, scaling smoothly with zoom)
+    - Gradient magnitude: G = sqrt(Gx^2 + Gy^2) on luminance channel Y
+    - Local salience gate: omega_grad(x, y) = sigmoid((G - mu_G) / max(sigma_G, 1e-4))
+    - 8-connected discrete isotropic Laplacian kernel:
+      K_L = (1/8) * [[1,  1, 1],
+                     [1, -8, 1],
+                     [1,  1, 1]]
+    - Edge boost:
+      I_ROI^(+) = clip(I_ROI - (lambda_0 * psi(M) * omega_grad) * Delta I, 0, 255)
+    """
+    if magnification <= 1.02:
+        return roi_img
+
+    arr = np.asarray(roi_img.convert("RGB"), dtype=np.float32)
+    gray = 0.2989 * arr[..., 0] + 0.5870 * arr[..., 1] + 0.1140 * arr[..., 2]
+
+    # 1. Magnification scaling
+    psi_m = math.tanh(max(0.0, float(magnification) - 1.0))
+
+    # 2. Gradient magnitude & salience gating
+    gy, gx = np.gradient(gray)
+    grad_mag = np.sqrt(gx**2 + gy**2)
+    mu_g = float(np.mean(grad_mag))
+    std_g = float(np.std(grad_mag)) + 1e-5
+    omega_grad = 1.0 / (1.0 + np.exp(-np.clip((grad_mag - mu_g) / std_g, -5.0, 5.0)))
+    omega_grad = np.expand_dims(omega_grad, axis=-1)
+
+    # 3. 8-connected isotropic discrete Laplacian
+    # Pad array reflectively for border continuity
+    padded = np.pad(arr, ((1, 1), (1, 1), (0, 0)), mode="reflect")
+    laplacian = (
+        padded[:-2, :-2] + padded[:-2, 1:-1] + padded[:-2, 2:] +
+        padded[1:-1, :-2] - 8.0 * padded[1:-1, 1:-1] + padded[1:-1, 2:] +
+        padded[2:, :-2] + padded[2:, 1:-1] + padded[2:, 2:]
+    ) / 8.0
+
+    # 4. Adaptive edge boost
+    sharpened = arr - (lambda_0 * psi_m * omega_grad) * laplacian
+    sharpened = np.clip(sharpened, 0.0, 255.0).astype(np.uint8)
+    return Image.fromarray(sharpened)
+
 

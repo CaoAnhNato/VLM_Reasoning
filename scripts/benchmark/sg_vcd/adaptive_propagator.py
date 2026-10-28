@@ -23,7 +23,7 @@ Step 2 — Decoupled Directional Propagation (Prototype Locking + Vietnamese Dia
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image
@@ -160,6 +160,20 @@ class BaseSeedPropagator(ABC):
     ) -> SeedPropagationResult:
         """Propagate from a single seed patch/pixel to cover the target text region."""
         raise NotImplementedError
+
+    def propagate_multi(
+        self,
+        image: Image.Image,
+        seed_patches: List[Tuple[int, int]],
+        grid_ratio: Tuple[int, int],
+        seed_pixels: Optional[List[Optional[Tuple[int, int]]]] = None,
+    ) -> List[SeedPropagationResult]:
+        """Propagate from multiple seed patches/pixels."""
+        results = []
+        for i, sp in enumerate(seed_patches):
+            px = seed_pixels[i] if seed_pixels is not None and i < len(seed_pixels) else None
+            results.append(self.propagate(image, sp, grid_ratio, seed_pixel=px))
+        return results
 
 
 class AdaptiveScalePropagator(BaseSeedPropagator):
@@ -508,10 +522,12 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
         grid_ratio: Tuple[int, int],
         seed_pixel: Optional[Tuple[int, int]] = None,
         feat_grid: Optional[np.ndarray] = None,
+        working_maps: Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, float, float]] = None,
     ) -> SeedPropagationResult:
         """
         Execute Step 1 (Local Scale Self-Calibration on GPU) and Step 2 (1D Band-Locked Directional
         Propagation + Stacked-Line Verification + +-0.5 * H_char Vietnamese Diacritic Belt on GPU).
+        Supports reusing precomputed GPU working maps across multiple candidate seeds.
         """
         W, H = image.size
         gx_grid, gy_grid = grid_ratio
@@ -529,7 +545,10 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
             sgx = int(np.clip(int(px0 * W_g / max(1, W)), 0, W_g - 1))
             sgy = int(np.clip(int(py0 * H_g / max(1, H)), 0, H_g - 1))
 
-        opp_t, bg_smooth_t, stroke_energy_t, horiz_mod_t, scale_x, scale_y = self._compute_working_maps(image)
+        if working_maps is not None:
+            opp_t, bg_smooth_t, stroke_energy_t, horiz_mod_t, scale_x, scale_y = working_maps
+        else:
+            opp_t, bg_smooth_t, stroke_energy_t, horiz_mod_t, scale_x, scale_y = self._compute_working_maps(image)
         H_w, W_w = stroke_energy_t.shape
 
         sx = int(np.clip(round(seed_pixel[0] * scale_x), 0, W_w - 1))
@@ -1201,7 +1220,9 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
             pad_y = max(2, int(round(0.25 * h_char_work)))
 
         compat_map = compat_t.detach().cpu().numpy().astype(np.float32)
-        del compat_t, sim_bg_t, fg_sim_gated_t, pure_fg_gated_t, stroke_gate_t, horiz_mod_t
+        if working_maps is None:
+            del horiz_mod_t
+        del compat_t, sim_bg_t, fg_sim_gated_t, pure_fg_gated_t, stroke_gate_t
 
         core_px_x1 = max(0, min(W - 2, int(round(final_x1 / scale_x))))
         core_px_y1 = max(0, min(H - 2, int(round(final_y1 / scale_y))))
@@ -1237,4 +1258,62 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
             patch_mask=patch_mask,
             compatibility_map=compat_map,
         )
+
+    @torch.inference_mode()
+    def propagate_multi(
+        self,
+        image: Image.Image,
+        seed_patches: List[Tuple[int, int]],
+        grid_ratio: Tuple[int, int],
+        seed_pixels: Optional[List[Optional[Tuple[int, int]]]] = None,
+    ) -> List[SeedPropagationResult]:
+        """
+        Execute multi-seed propagation by computing GPU working maps ONCE and reusing
+        across all seeds, calibrating local scale H_char^(k) independently for each candidate.
+        """
+        if not seed_patches:
+            return []
+        working_maps = self._compute_working_maps(image)
+        results = []
+        for i, seed_patch in enumerate(seed_patches):
+            sp_pix = seed_pixels[i] if seed_pixels is not None and i < len(seed_pixels) else None
+            res = self.propagate(
+                image=image,
+                seed_patch=seed_patch,
+                grid_ratio=grid_ratio,
+                seed_pixel=sp_pix,
+                working_maps=working_maps,
+            )
+            results.append(res)
+        del working_maps
+        return results
+
+
+def verify_and_resolve_candidate_boxes(
+    boxes: List[List[int]],
+    iou_threshold: float = 0.45,
+    iou_collision_threshold: Optional[float] = None,
+) -> List[List[int]]:
+    """
+    Post-propagation collision verification for Top-K candidate boxes.
+    If IoU(B1, B2) >= iou_threshold (0.45), merges into K=1 (B1 union B2)
+    because the components bridged during text-line propagation and are part
+    of the same continuous text entity; otherwise preserves distinct entities (K=2).
+    """
+    if iou_collision_threshold is not None:
+        iou_threshold = iou_collision_threshold
+    if len(boxes) < 2:
+        return boxes
+    b1, b2 = boxes[0], boxes[1]
+    iou, _, _ = compute_bbox_iou_and_recall(tuple(b1), tuple(b2))
+    thresh_pct = iou_threshold * 100.0 if iou_threshold <= 1.0 else iou_threshold
+    if iou >= thresh_pct:
+        merged = [
+            min(b1[0], b2[0]),
+            min(b1[1], b2[1]),
+            max(b1[2], b2[2]),
+            max(b1[3], b2[3]),
+        ]
+        return [merged]
+    return boxes
 
