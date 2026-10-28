@@ -1,26 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-EVALUATION PIPELINE: ZERO-SHOT VLM BENCHMARKING ON ViTextVQA
-Hỗ trợ 7 mô hình VLM: Qwen2.5-VL (3B/7B), Vintern (1B/3B), EraX-VL (2B/7B), Aya Vision 8B.
-Tối ưu VRAM 16GB, Unsloth Fast Inference, và giải phóng Disk Cache tuần tự.
+RESUMABLE BENCHMARK RUNNER: SG-VCD & VLM EVALUATION ON ViTextVQA 400-IMAGE DATASET
+
+Features:
+- Dual Stage Evaluation:
+  - Stage 1 Spatial Grounding (IoU, GT inclusion recall, hit rate @ IoU 0.3/0.5, multi-box text coverage)
+  - Stage 2 End-to-End VQA Accuracy (Exact Match, VQA Consensus Accuracy, Token F1)
+  - Dual Ground Truth: Original gt_answers & Human-verified verified_all_answers
+- Resumable: Saves progress incrementally to results/sg_vcd_400_benchmark/checkpoint.json
+- Memory-Safe: Strict tensor lifecycle management, torch.inference_mode(), gc.collect(), torch.cuda.empty_cache()
+- Speed-Optimized: Visual token & image caching per image (eliminating redundant forward passes)
+- Hardware-Optimized: Designed strictly for local RTX 3050 (4GB VRAM) in torch.bfloat16
+- Clean UTF-8 stdout on Windows
 """
 
 import argparse
-import atexit
-import csv
+import datetime
+import functools
 import gc
 import glob
+import inspect
+import io
 import json
 import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-import queue
-import re
+import random
 import shutil
 import string
 import sys
-import threading
+import time
+import zipfile
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+# Enforce clean UTF-8 stdout and stderr on Windows
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -28,25 +40,31 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-import time
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+
+# Windows symlink safeguard for huggingface_hub
+try:
+    import huggingface_hub.file_download as _fd
+    _fd.are_symlinks_supported = lambda *a, **kw: False
+except Exception:
+    pass
 
 from PIL import Image
-try:
-    import torch
-    # Tự động vá lỗi thiếu all_tied_weights_keys trên transformers >= 5.0 đối với các mô hình custom (InternVL, Vintern)
-    if hasattr(torch.nn.Module, "__getattr__") and not getattr(torch.nn.Module, "_all_tied_weights_patched", False):
-        _orig_nn_getattr = torch.nn.Module.__getattr__
-        def _safe_nn_getattr(self, name):
-            if name == "all_tied_weights_keys":
-                return self.__dict__.get("all_tied_weights_keys", getattr(self, "_tied_weights_keys", {}))
-            return _orig_nn_getattr(self, name)
-        torch.nn.Module.__getattr__ = _safe_nn_getattr
-        torch.nn.Module._all_tied_weights_patched = True
-except ImportError:
-    torch = None
+import torch
+import torchvision.transforms as T
+from torchvision.transforms.functional import InterpolationMode
 
-# Tự động vá lỗi KeyError: 'architectures' khi transformers gọi to_diff_dict() / __repr__() trên InternVLChatConfig (OpenGVLab)
+# Compatibility patches for InternVLChatModel / Vintern on modern transformers
+if hasattr(torch.nn.Module, "__getattr__") and not getattr(torch.nn.Module, "_all_tied_weights_patched", False):
+    _orig_nn_getattr = torch.nn.Module.__getattr__
+    def _safe_nn_getattr(self, name):
+        if name == "all_tied_weights_keys":
+            return self.__dict__.get("all_tied_weights_keys", getattr(self, "_tied_weights_keys", {}))
+        return _orig_nn_getattr(self, name)
+    torch.nn.Module.__getattr__ = _safe_nn_getattr
+    torch.nn.Module._all_tied_weights_patched = True
+
 try:
     import transformers.configuration_utils as config_utils
     config_utils.PretrainedConfig.has_no_defaults_at_init = True
@@ -61,253 +79,48 @@ try:
         config_utils.PretrainedConfig._safe_diff_dict_patched = True
 except Exception:
     pass
-from tqdm import tqdm
 
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", ".."))
+if THIS_DIR not in sys.path:
+    sys.path.insert(0, THIS_DIR)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-try:
-    import psutil
-except ImportError:
-    psutil = None
+import typing
+import builtins
+for _t_name in ["Optional", "List", "Dict", "Set", "Tuple", "Union", "Any", "Callable", "Sequence"]:
+    if not hasattr(builtins, _t_name) and hasattr(typing, _t_name):
+        setattr(builtins, _t_name, getattr(typing, _t_name))
 
+# Import metrics engine
+from scripts.benchmark.metrics import (
+    normalize_answer,
+    compute_exact_match,
+    compute_vqa_accuracy,
+    compute_token_f1,
+    compute_stage1_metrics,
+    compute_stage2_metrics,
+    MetricsAggregator,
+)
 
-# ==============================================================================
-# HÀM CHUẨN HÓA VĂN BẢN VÀ TÍNH CHỈ SỐ HỌC THUẬT (METRICS)
-# ==============================================================================
+# Import SG-VCD pipeline
+from sg_vcd import SGVCDPipeline
 
-def normalize_answer(text: str) -> str:
-    """Chuẩn hóa văn bản theo quy ước của bài báo ViTextVQA."""
-    if not text:
-        return ""
-    text = str(text).lower()
-    # Loại bỏ dấu câu tiếng Việt và tiếng Anh
-    text = "".join(ch for ch in text if ch not in set(string.punctuation))
-    # Loại bỏ khoảng trắng thừa
-    text = " ".join(text.split())
-    return text
-
-def compute_exact_match(prediction: str, ground_truths: List[str]) -> float:
-    """Tính điểm Exact Match (1.0 nếu trùng khớp chính xác 1 trong các đáp án)."""
-    norm_pred = normalize_answer(prediction)
-    if not norm_pred:
-        return 0.0
-    for gt in ground_truths:
-        if norm_pred == normalize_answer(gt):
-            return 1.0
-    return 0.0
-
-def compute_f1_score(prediction: str, ground_truths: List[str]) -> float:
-    """Tính điểm Token-level F1-score so với tập đáp án đúng (Ground Truths)."""
-    norm_pred = normalize_answer(prediction)
-    pred_tokens = norm_pred.split()
-    if not pred_tokens:
-        return 0.0
-
-    best_f1 = 0.0
-    for gt in ground_truths:
-        gt_tokens = normalize_answer(gt).split()
-        if not gt_tokens:
-            continue
-        common = set(pred_tokens) & set(gt_tokens)
-        num_same = sum(min(pred_tokens.count(w), gt_tokens.count(w)) for w in common)
-        if num_same == 0:
-            continue
-        precision = num_same / len(pred_tokens)
-        recall = num_same / len(gt_tokens)
-        f1 = (2 * precision * recall) / (precision + recall)
-        if f1 > best_f1:
-            best_f1 = f1
-    return best_f1
 
 # ==============================================================================
-# BỘ NẠP VÀ TRÍCH XUẤT DỮ LIỆU ViTextVQA
-# ==============================================================================
-
-def locate_dataset_files(data_dir: str) -> Tuple[str, str]:
-    """Tìm kiếm file test annotations và thư mục ảnh trong thư mục dataset."""
-    candidates_anno = [
-        # Ưu tiên các file có ground truth (chứa đáp án chuẩn)
-        os.path.join(data_dir, "ViTextVQA_test_gt.json"),
-        os.path.join(data_dir, "vitextvqa_test_gt.json"),
-        os.path.join(data_dir, "test_gt.json"),
-        os.path.join(data_dir, "test_annotations.json"),
-        os.path.join(data_dir, "ViTextVQA_test.json"),
-        os.path.join(data_dir, "vitextvqa_test.json"),
-        os.path.join(data_dir, "test.json"),
-        os.path.join(data_dir, "annotations", "test.json"),
-    ]
-    anno_path = None
-    for cand in candidates_anno:
-        if os.path.exists(cand):
-            anno_path = cand
-            break
-
-    if not anno_path:
-        # Tìm các file có chữ test_gt trước, sau đó mới đến test
-        matches_gt = glob.glob(os.path.join(data_dir, "**", "*test*gt*.json"), recursive=True)
-        if matches_gt:
-            anno_path = matches_gt[0]
-        else:
-            matches = glob.glob(os.path.join(data_dir, "**", "*test*.json"), recursive=True)
-            if matches:
-                anno_path = matches[0]
-
-    # Tìm thư mục ảnh (ưu tiên st_images được giải nén từ ViTextVQA_images.zip)
-    candidates_img = [
-        os.path.join(data_dir, "st_images"),
-        os.path.join(data_dir, "ViTextVQA_images"),
-        os.path.join(data_dir, "vitextvqa_images"),
-        os.path.join(data_dir, "images"),
-        os.path.join(data_dir, "test_images"),
-        os.path.join(data_dir, "train_images"),
-        data_dir,
-    ]
-    img_dir = data_dir
-    found_img_dir = False
-    for cand in candidates_img:
-        if os.path.isdir(cand) and any(f.lower().endswith(('.jpg', '.jpeg', '.png')) for f in os.listdir(cand)):
-            img_dir = cand
-            found_img_dir = True
-            break
-
-    if not found_img_dir:
-        # Quét đệ quy tìm bất kỳ thư mục con nào chứa ảnh
-        for root, dirs, files in os.walk(data_dir):
-            if any(f.lower().endswith(('.jpg', '.jpeg', '.png')) for f in files):
-                img_dir = root
-                break
-
-    return anno_path, img_dir
-
-def load_vitextvqa_test_data(anno_path: str, img_dir: str, max_samples: Optional[int] = None) -> List[Dict[str, Any]]:
-    """Đọc dữ liệu kiểm thử từ file JSON và chuẩn hóa cấu trúc mẫu."""
-    if not anno_path or not os.path.exists(anno_path):
-        raise FileNotFoundError(f"Không tìm thấy file annotations tại: {anno_path}")
-
-    with open(anno_path, "r", encoding="utf-8") as f:
-        raw_data = json.load(f)
-
-    # raw_data có thể là dict hoặc list
-    items = []
-    image_map = {}
-
-    if isinstance(raw_data, dict):
-        # Trích xuất bảng ánh xạ id -> tên file ảnh nếu có danh sách "images" (chuẩn COCO)
-        if "images" in raw_data and isinstance(raw_data["images"], list):
-            for img_info in raw_data["images"]:
-                if isinstance(img_info, dict):
-                    iid = img_info.get("id") or img_info.get("image_id")
-                    fname = img_info.get("file_name") or img_info.get("filename") or img_info.get("image_path")
-                    if iid is not None and fname:
-                        image_map[str(iid)] = fname
-                        image_map[iid] = fname
-
-        if "annotations" in raw_data:
-            items = raw_data["annotations"]
-        elif "data" in raw_data:
-            items = raw_data["data"]
-        else:
-            items = list(raw_data.values())
-    elif isinstance(raw_data, list):
-        items = raw_data
-
-    samples = []
-    data_dir = os.path.dirname(img_dir)
-
-    for item in items:
-        # Trích xuất tên file ảnh
-        img_name = item.get("image_path") or item.get("image") or item.get("filename") or item.get("file_name")
-        if not img_name and item.get("image_id") is not None:
-            img_name = image_map.get(str(item.get("image_id"))) or image_map.get(item.get("image_id")) or item.get("image_id")
-        if not img_name:
-            continue
-
-        if isinstance(img_name, int) or (isinstance(img_name, str) and not img_name.endswith(('.jpg', '.png', '.jpeg'))):
-            img_name = f"{img_name}.jpg"
-
-        full_img_path = os.path.join(img_dir, os.path.basename(str(img_name)))
-        if not os.path.exists(full_img_path):
-            # Thử các trường hợp padding số 0
-            base_no_ext = os.path.splitext(os.path.basename(str(img_name)))[0]
-            if base_no_ext.isdigit():
-                padded_cands = [
-                    f"{int(base_no_ext):012d}.jpg",
-                    f"{int(base_no_ext):06d}.jpg",
-                    f"{int(base_no_ext)}.jpg",
-                ]
-                for p in padded_cands:
-                    p_path = os.path.join(img_dir, p)
-                    if os.path.exists(p_path):
-                        full_img_path = p_path
-                        break
-
-        if not os.path.exists(full_img_path):
-            # Thử tìm đệ quy nếu tên file không nằm ngay ngoài img_dir
-            found = glob.glob(os.path.join(data_dir, "**", os.path.basename(str(img_name))), recursive=True)
-            if found:
-                full_img_path = found[0]
-
-        question = item.get("question") or item.get("question_text") or ""
-        answers = item.get("answers") or item.get("answer") or []
-        if isinstance(answers, str):
-            answers = [answers]
-        elif isinstance(answers, list) and answers and isinstance(answers[0], dict):
-            answers = [a.get("answer", "") for a in answers if "answer" in a]
-
-        samples.append({
-            "question_id": item.get("id") or item.get("question_id") or len(samples),
-            "image_path": full_img_path,
-            "image_name": os.path.basename(str(img_name)),
-            "question": question,
-            "ground_truths": [str(a) for a in answers if str(a).strip()]
-        })
-
-    if max_samples and max_samples > 0:
-        samples = samples[:max_samples]
-
-    print(f"[DATA] Đã nạp thành công {len(samples)} mẫu câu hỏi từ: {anno_path}")
-    print(f"[DATA] Thư mục ảnh đang sử dụng: {img_dir}")
-    return samples
-
-def chunk_list(lst: List[Any], chunk_size: int) -> List[List[Any]]:
-    """Chia nhỏ danh sách thành các chunks có kích thước tối đa chunk_size."""
-    if chunk_size <= 0:
-        chunk_size = 1
-    return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
-
-def group_samples_by_image(samples: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
-    """
-    Gom nhóm danh sách mẫu kiểm thử theo đường dẫn ảnh duy nhất.
-    Duy trì thứ tự xuất hiện đầu tiên của từng ảnh và bảo toàn _global_index cho từng câu hỏi.
-    """
-    grouped: Dict[str, List[Dict[str, Any]]] = {}
-    for s in samples:
-        img_p = s.get("image_path") or s.get("image_name", "")
-        if img_p not in grouped:
-            grouped[img_p] = []
-        grouped[img_p].append(s)
-    return grouped
-
-# ==============================================================================
-# HÀM TIỀN XỬ LÝ ẢNH CHUYÊN BIỆT CHO VINTERN (5CD-AI / InternVL Architecture)
+# VINTERN PREPROCESSING UTILITIES
 # ==============================================================================
 
 def build_vintern_transform(input_size: int = 448):
-    """Tạo bộ chuẩn hóa ảnh ImageNet chuyên biệt cho Vintern."""
-    try:
-        import torchvision.transforms as T
-        from torchvision.transforms.functional import InterpolationMode
-        return T.Compose([
-            T.Lambda(lambda img: img.convert("RGB") if img.mode != "RGB" else img),
-            T.Resize((input_size, input_size), interpolation=InterpolationMode.BICUBIC),
-            T.ToTensor(),
-            T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
-        ])
-    except Exception:
-        return None
+    """Build ImageNet normalization transform for Vintern."""
+    return T.Compose([
+        T.Lambda(lambda img: img.convert("RGB") if img.mode != "RGB" else img),
+        T.Resize((input_size, input_size), interpolation=InterpolationMode.BICUBIC),
+        T.ToTensor(),
+        T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+    ])
+
 
 def find_closest_aspect_ratio(aspect_ratio, target_ratios, width, height, image_size):
     best_ratio_diff = float("inf")
@@ -324,8 +137,8 @@ def find_closest_aspect_ratio(aspect_ratio, target_ratios, width, height, image_
                 best_ratio = ratio
     return best_ratio
 
+
 def dynamic_preprocess_vintern(image: Image.Image, min_num: int = 1, max_num: int = 6, image_size: int = 448, use_thumbnail: bool = True):
-    """Chia nhỏ ảnh theo tỉ lệ động (dynamic patch) theo chuẩn InternVL2.5 / Vintern-1B-v3.5."""
     orig_width, orig_height = image.size
     aspect_ratio = orig_width / orig_height
 
@@ -351,7 +164,7 @@ def dynamic_preprocess_vintern(image: Image.Image, min_num: int = 1, max_num: in
             (i % (target_width // image_size)) * image_size,
             (i // (target_width // image_size)) * image_size,
             ((i % (target_width // image_size)) + 1) * image_size,
-            ((i // (target_width // image_size)) + 1) * image_size
+            ((i // (target_width // image_size)) + 1) * image_size,
         )
         split_img = resized_img.crop(box)
         processed_images.append(split_img)
@@ -361,1472 +174,705 @@ def dynamic_preprocess_vintern(image: Image.Image, min_num: int = 1, max_num: in
         processed_images.append(thumbnail_img)
     return processed_images
 
-def load_vintern_pixel_values(image: Image.Image, input_size: int = 448, max_num: int = 6):
-    """Chuyển đổi PIL Image sang pixel_values Tensor 4D/5D chuẩn hóa cho Vintern."""
-    transform = build_vintern_transform(input_size=input_size)
-    if transform is None or torch is None:
-        return None
+
+def load_vintern_pixel_values(image: Image.Image, transform, input_size: int = 448, max_num: int = 6):
     images = dynamic_preprocess_vintern(image, min_num=1, max_num=max_num, image_size=input_size, use_thumbnail=True)
     pixel_values = [transform(img) for img in images]
     return torch.stack(pixel_values)
 
 
 # ==============================================================================
-# QUẢN LÝ MÔ HÌNH VLM VÀ INFERENCE ĐA KIẾN TRÚC
+# MODEL LOADER
 # ==============================================================================
 
-class VLMRunner:
-    def __init__(self, model_name: str, backend: str = "auto", load_in_4bit: bool = False, hf_token: Optional[str] = None):
-        self.model_name = model_name
-        self.backend = backend
-        self.load_in_4bit = load_in_4bit or ("4bit" in model_name.lower())
-        self.hf_token = hf_token or os.environ.get("HF_TOKEN") or None
-        self.device = "cuda" if (torch and torch.cuda.is_available()) else "cpu"
-        self.model = None
-        self.processor = None
-        self.tokenizer = None
-        self.actual_backend = None
-        self._load_model()
+def load_vintern_model(model_name: str = "5CD-AI/Vintern-1B-v3_5", device: str = "cuda"):
+    """
+    Load Vintern model in torch.bfloat16 with modern transformers compatibility patches.
+    """
+    from transformers import AutoConfig, AutoModel, AutoTokenizer
 
-    def _load_model(self):
-        print(f"\n=======================================================")
-        print(f" ĐANG NẠP MÔ HÌNH: {self.model_name}")
-        print(f" Yêu cầu Backend: {self.backend}")
-        if self.hf_token:
-            print("[INFO] Đang sử dụng Hugging Face Access Token để nạp mô hình.")
-        print(f"=======================================================")
+    print(f"\n[MODEL] Loading {model_name} in torch.bfloat16 on {device}...")
+    hf_token = os.environ.get("HF_TOKEN") or None
+    hf_kwargs = {"token": hf_token} if hf_token else {}
 
-        hf_kwargs = {"token": self.hf_token} if self.hf_token else {}
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, use_fast=False, **hf_kwargs)
+    except Exception:
+        tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, **hf_kwargs)
 
-        # [1] Thử nghiệm nạp qua Unsloth nếu mô hình được Unsloth hỗ trợ và yêu cầu backend phù hợp
-        is_unsloth_supported = (
-            "qwen2.5-vl" in self.model_name.lower() or
-            "aya-vision" in self.model_name.lower() or
-            "unsloth" in self.model_name.lower()
-        )
-        if is_unsloth_supported and (self.backend in ["auto", "unsloth"]):
-            try:
-                from unsloth import FastVisionModel
-                load_4bit = self.load_in_4bit or ("4bit" in self.model_name.lower())
-                print(f"[INFO] Đang nạp qua Unsloth FastVisionModel (load_in_4bit={load_4bit}, Fast Inference)...")
-                self.model, self.processor = FastVisionModel.from_pretrained(
-                    self.model_name,
-                    load_in_4bit=load_4bit,
-                    use_gradient_checkpointing="unsloth",
-                    **hf_kwargs
-                )
-                FastVisionModel.for_inference(self.model)
-                self.actual_backend = "unsloth"
-                print("[SUCCESS] Đã nạp thành công bằng Unsloth!")
-                return
-            except Exception as e:
-                print(f"[WARN] Unsloth nạp không thành công ({e}). Tự động chuyển tiếp sang Transformers Native Fallback...")
+    config = AutoConfig.from_pretrained(model_name, trust_remote_code=True, **hf_kwargs)
+    config.has_no_defaults_at_init = True
 
-        # [2] Nạp mô hình chuyên biệt tiếng Việt: Vintern (InternVL architecture)
-        if "vintern" in self.model_name.lower():
-            import transformers.configuration_utils as config_utils
-            from transformers import AutoModel, AutoTokenizer, AutoConfig
+    model = AutoModel.from_pretrained(
+        model_name,
+        config=config,
+        torch_dtype=torch.bfloat16,
+        low_cpu_mem_usage=True,
+        trust_remote_code=True,
+        **hf_kwargs,
+    ).eval().to(device)
 
-            # Khắc phục triệt để lỗi KeyError: 'architectures' trên Vintern-3B-beta / InternVLChatConfig (OpenGVLab)
-            config_utils.PretrainedConfig.has_no_defaults_at_init = True
-            if hasattr(config_utils.PretrainedConfig, "to_diff_dict"):
-                _orig_diff_dict = config_utils.PretrainedConfig.to_diff_dict
-                def _safe_diff_dict(cfg_self):
-                    try:
-                        return _orig_diff_dict(cfg_self)
-                    except Exception:
-                        return cfg_self.to_dict()
-                config_utils.PretrainedConfig.to_diff_dict = _safe_diff_dict
+    # Patch return_dict duplicate argument on transformers >= 4.45
+    if hasattr(model, "language_model") and hasattr(model.language_model, "generate"):
+        _orig_llm_gen = model.language_model.generate
+        @functools.wraps(_orig_llm_gen)
+        def _safe_llm_gen(*args, **kwargs):
+            kwargs.pop("return_dict", None)
+            return _orig_llm_gen(*args, **kwargs)
+        model.language_model.generate = _safe_llm_gen
 
-            print("[INFO] Đang nạp Vintern qua Hugging Face AutoModel (bfloat16)...")
-            try:
-                self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, use_fast=False, **hf_kwargs)
-            except Exception:
-                self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
+    if hasattr(model, "generate"):
+        _orig_model_gen = model.generate
+        @functools.wraps(_orig_model_gen)
+        def _safe_model_gen(*args, **kwargs):
+            kwargs.pop("return_dict", None)
+            return _orig_model_gen(*args, **kwargs)
+        model.generate = _safe_model_gen
 
-            # Nạp trước config an toàn
-            config = None
-            try:
-                config = AutoConfig.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
-                config.has_no_defaults_at_init = True
-            except Exception as cfg_err:
-                print(f"[WARN] AutoConfig nạp trước gặp cảnh báo: {cfg_err}. Tiếp tục nạp AutoModel...")
+    transform = build_vintern_transform(input_size=448)
 
-            extra_model_kwargs = {"config": config} if config is not None else {}
+    if torch.cuda.is_available():
+        alloc_gb = torch.cuda.memory_allocated() / (1024 ** 3)
+        res_gb = torch.cuda.memory_reserved() / (1024 ** 3)
+        print(f"[MODEL] Loaded successfully | Allocated VRAM: {alloc_gb:.2f} GB | Reserved: {res_gb:.2f} GB")
 
-            # Khởi tạo mô hình Vintern: ưu tiên nạp trực tiếp lên CUDA theo khuyến nghị của 5CD-AI
-            # Tránh hoàn toàn lỗi 'AttributeError: all_tied_weights_keys' do accelerate infer_auto_device_map
-            try:
-                print(f"[INFO] Nạp Vintern trực tiếp lên thiết bị {self.device} (chuẩn khuyến nghị 5CD-AI)...")
-                self.model = AutoModel.from_pretrained(
-                    self.model_name,
-                    torch_dtype=torch.bfloat16,
-                    low_cpu_mem_usage=True,
-                    trust_remote_code=True,
-                    **extra_model_kwargs,
-                    **hf_kwargs
-                ).eval().to(self.device)
-            except Exception as direct_err:
-                print(f"[WARN] Nạp trực tiếp lên {self.device} gặp lỗi: {direct_err}. Đang thử fallback với device_map='auto'...")
-                self.model = AutoModel.from_pretrained(
-                    self.model_name,
-                    torch_dtype=torch.bfloat16,
-                    low_cpu_mem_usage=True,
-                    trust_remote_code=True,
-                    device_map="auto",
-                    **extra_model_kwargs,
-                    **hf_kwargs
-                ).eval()
+    return model, tokenizer, transform
 
-            # [CRITICAL FIX] Khắc phục triệt để lỗi "got multiple values for keyword argument 'return_dict'"
-            # trên Vintern-3B-beta / InternVL khi chạy cùng transformers >= 4.45
-            import functools
-            if hasattr(self.model, "language_model") and hasattr(self.model.language_model, "generate"):
-                _orig_llm_gen = self.model.language_model.generate
-                @functools.wraps(_orig_llm_gen)
-                def _safe_llm_gen(*args, **kwargs):
-                    kwargs.pop("return_dict", None)
-                    return _orig_llm_gen(*args, **kwargs)
-                self.model.language_model.generate = _safe_llm_gen
 
-            if hasattr(self.model, "generate"):
-                _orig_model_gen = self.model.generate
-                @functools.wraps(_orig_model_gen)
-                def _safe_model_gen(*args, **kwargs):
-                    kwargs.pop("return_dict", None)
-                    return _orig_model_gen(*args, **kwargs)
-                self.model.generate = _safe_model_gen
+# ==============================================================================
+# DATASET LOADER & IMAGE RESOLUTION
+# ==============================================================================
 
-            self.actual_backend = "vintern_native"
-            print("[SUCCESS] Đã nạp thành công Vintern (đã tích hợp safe return_dict patch)!")
-            return
+def resolve_image_path(image_name: str, candidate_dirs: List[str]) -> Optional[str]:
+    """Search for image_name across candidate directories."""
+    for d in candidate_dirs:
+        if not d or not os.path.isdir(d):
+            continue
+        p = os.path.join(d, image_name)
+        if os.path.isfile(p) and os.path.getsize(p) > 0:
+            return p
+    return None
 
-        # [3] Nạp các dòng VLM thông thường: Qwen2.5-VL, EraX-VL, Aya Vision
-        import transformers
-        from transformers import AutoProcessor
 
-        print("[INFO] Đang nạp qua Hugging Face Transformers Native (bfloat16)...")
-        try:
-            self.processor = AutoProcessor.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
-        except Exception as e:
-            err_str = str(e).lower()
-            if ("gated" in err_str or "401" in err_str or "403" in err_str or "access" in err_str) and ("aya-vision" in self.model_name.lower()) and ("unsloth" not in self.model_name.lower()):
-                print(f"[WARN] Không có quyền truy cập repo gated '{self.model_name}': {e}")
-                print("[INFO] Tự động chuyển sang model cộng đồng công khai 100%: 'unsloth/aya-vision-8b' (Native BF16)...")
-                self.model_name = "unsloth/aya-vision-8b"
-                self._load_model()
-                return
-            # Fallback sang AutoTokenizer nếu Processor chuyên biệt chưa tải được
-            from transformers import AutoTokenizer
-            try:
-                self.processor = AutoTokenizer.from_pretrained(self.model_name, trust_remote_code=True, **hf_kwargs)
-            except Exception as tok_err:
-                # Kiểm tra lỗi gated repo đối với Aya Vision
-                tok_err_str = str(tok_err).lower()
-                if ("gated" in tok_err_str or "401" in tok_err_str or "403" in tok_err_str or "access" in tok_err_str) and ("aya-vision" in self.model_name.lower()) and ("unsloth" not in self.model_name.lower()):
-                    print(f"[WARN] Lỗi truy cập repo gated '{self.model_name}': {tok_err}")
-                    print("[INFO] Tự động chuyển sang model cộng đồng công khai 100%: 'unsloth/aya-vision-8b' (Native BF16)...")
-                    self.model_name = "unsloth/aya-vision-8b"
-                    self._load_model()
-                    return
-                raise tok_err
+def ensure_local_images(image_names: Set[str], cache_dir: str) -> Dict[str, str]:
+    """Fetch any missing images from Hugging Face remote ZIP and cache locally."""
+    os.makedirs(cache_dir, exist_ok=True)
+    paths: Dict[str, str] = {}
+    missing: Set[str] = set()
 
-        # Danh sách class loader theo thứ tự ưu tiên đa phiên bản transformers
-        candidate_classes = []
-        for cls_name in [
-            "AutoModelForMultimodalLM",
-            "AutoModelForImageTextToText",
-            "AutoModelForVision2Seq",
-            "Qwen2_5_VLForConditionalGeneration",
-            "AutoModelForCausalLM",
-            "AutoModel",
-        ]:
-            if hasattr(transformers, cls_name):
-                candidate_classes.append((cls_name, getattr(transformers, cls_name)))
-
-        model_loaded = False
-        last_error = None
-
-        # Cấu hình tối ưu hóa nhân Attention (Ưu tiên SDPA / FlashAttention-2 cho Ada Lovelace & Blackwell)
-        extra_model_load_kwargs = dict(hf_kwargs)
-        if torch is not None and torch.cuda.is_available():
-            try:
-                import flash_attn
-                extra_model_load_kwargs["attn_implementation"] = "flash_attention_2"
-            except Exception:
-                extra_model_load_kwargs["attn_implementation"] = "sdpa"
-
-        for cls_name, cls_obj in candidate_classes:
-            try:
-                attn_mode = extra_model_load_kwargs.get("attn_implementation", "default")
-                print(f"[INFO] Đang thử khởi tạo bằng class: {cls_name} (attn={attn_mode})...")
-                self.model = cls_obj.from_pretrained(
-                    self.model_name,
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True,
-                    device_map="auto",
-                    **extra_model_load_kwargs
-                ).eval()
-                model_loaded = True
-                print(f"[SUCCESS] Đã nạp thành công bằng class {cls_name}!")
-                break
-            except Exception as e:
-                # Nếu không nhận diện attn_implementation, fallback sang nạp mặc định
-                if "attn_implementation" in extra_model_load_kwargs:
-                    try:
-                        fallback_kwargs = dict(extra_model_load_kwargs)
-                        fallback_kwargs.pop("attn_implementation", None)
-                        self.model = cls_obj.from_pretrained(
-                            self.model_name,
-                            torch_dtype=torch.bfloat16,
-                            trust_remote_code=True,
-                            device_map="auto",
-                            **fallback_kwargs
-                        ).eval()
-                        model_loaded = True
-                        print(f"[SUCCESS] Đã nạp thành công bằng class {cls_name} (default attn fallback)!")
-                        break
-                    except Exception:
-                        pass
-                last_error = e
-                # Nếu gặp lỗi quyền truy cập gated repo đối với CohereLabs/aya-vision-8b
-                err_str = str(e).lower()
-                if ("gated" in err_str or "401" in err_str or "403" in err_str or "access" in err_str) and ("aya-vision" in self.model_name.lower()) and ("unsloth" not in self.model_name.lower()):
-                    print(f"[WARN] Không có quyền truy cập repo gated '{self.model_name}'.")
-                    print("[INFO] Tự động fallback sang repo công khai 'unsloth/aya-vision-8b'...")
-                    self.model_name = "unsloth/aya-vision-8b"
-                    self._load_model()
-                    return
-
-        if not model_loaded:
-            raise RuntimeError(f"Không thể nạp mô hình {self.model_name} qua bất kỳ class nào! Lỗi: {last_error}")
-
-        self.actual_backend = "transformers_native"
-        print(f"[SUCCESS] Đã nạp thành công mô hình bằng {self.actual_backend}!")
-
-    def generate(self, image_path: str, question: str) -> str:
-        """Sinh câu trả lời Zero-shot dựa trên ảnh và câu hỏi."""
-        if not os.path.exists(image_path):
-            return ""
-
-        try:
-            image = Image.open(image_path).convert("RGB")
-        except Exception as e:
-            print(f"[ERROR] Không đọc được ảnh {image_path}: {e}")
-            return ""
-
-        # Prompt chuẩn tối giản từ ViTextVQA paper
-        prompt_text = f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {question}"
-
-        # 1. Cơ chế sinh cho Unsloth
-        if self.actual_backend == "unsloth":
-            messages = [
-                {"role": "user", "content": [
-                    {"type": "image", "image": image},
-                    {"type": "text", "text": prompt_text}
-                ]}
-            ]
-            input_text = self.processor.apply_chat_template(messages, add_generation_prompt=True)
-            inputs = self.processor(
-                image,
-                input_text,
-                add_special_tokens=False,
-                return_tensors="pt",
-            ).to("cuda")
-
-            with torch.inference_mode():
-                outputs = self.model.generate(
-                    **inputs,
-                    max_new_tokens=64,
-                    use_cache=True,
-                    temperature=0.01,
-                    do_sample=False
-                )
-            generated_ids = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, outputs)]
-            response = self.processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
-            return response.strip()
-
-        # 2. Cơ chế sinh cho Vintern (InternVL architecture)
-        elif self.actual_backend == "vintern_native":
-            generation_config = dict(max_new_tokens=64, do_sample=False)
-            generation_config.pop("return_dict", None)
-            with torch.inference_mode():
-                # Tiền xử lý pixel_values chuẩn theo hướng dẫn của 5CD-AI Vintern (phù hợp max_dynamic_patch)
-                max_patch = getattr(getattr(self.model, "config", None), "max_dynamic_patch", 6)
-                pixel_values = None
-                try:
-                    pixel_values = load_vintern_pixel_values(image, max_num=max_patch)
-                    if pixel_values is not None:
-                        pixel_values = pixel_values.to(torch.bfloat16).to(self.device)
-                except Exception as pv_err:
-                    print(f"[WARN] Tiền xử lý pixel_values Vintern gặp lỗi: {pv_err}")
-                    pixel_values = None
-
-                # Đảm bảo prompt có token <image>\n theo chuẩn InternVL
-                vintern_prompt = prompt_text if "<image>" in prompt_text else f"<image>\n{prompt_text}"
-                image_input = pixel_values if pixel_values is not None else image
-
-                try:
-                    # Gọi chuẩn khuyến nghị từ tác giả (return_history=False, trả về chuỗi str)
-                    res = self.model.chat(
-                        self.tokenizer,
-                        image_input,
-                        vintern_prompt,
-                        generation_config,
-                        history=None,
-                        return_history=False
-                    )
-                    response = res[0] if isinstance(res, (tuple, list)) else res
-                    return str(response).strip()
-                except Exception as chat_err:
-                    print(f"[WARN] Vintern model.chat (return_history=False) gặp lỗi: {chat_err}. Thử fallback return_history=True...")
-                    try:
-                        # Fallback 1: Thử với return_history=True
-                        res = self.model.chat(
-                            self.tokenizer,
-                            image_input,
-                            vintern_prompt,
-                            generation_config,
-                            history=None,
-                            return_history=True
-                        )
-                        response = res[0] if isinstance(res, (tuple, list)) else res
-                        return str(response).strip()
-                    except Exception as fb1_err:
-                        print(f"[WARN] Vintern fallback 1 gặp lỗi: {fb1_err}. Thử fallback gọi 4 tham số...")
-                        try:
-                            # Fallback 2: Thử gọi tối giản 4 tham số
-                            res = self.model.chat(self.tokenizer, image_input, vintern_prompt, generation_config)
-                            response = res[0] if isinstance(res, (tuple, list)) else res
-                            return str(response).strip()
-                        except Exception as fb2_err:
-                            print(f"[ERROR] Tất cả các phương thức sinh Vintern đều thất bại: {fb2_err}")
-                            return ""
-
-        # 3. Cơ chế sinh cho Transformers Native (Qwen2.5-VL, EraX, Aya Vision)
+    for name in image_names:
+        local_p = os.path.join(cache_dir, name)
+        if os.path.exists(local_p) and os.path.getsize(local_p) > 0:
+            paths[name] = local_p
         else:
-            model_device = getattr(self.model, "device", "cuda" if torch.cuda.is_available() else "cpu")
-            if hasattr(self.processor, "apply_chat_template"):
-                messages = [
-                    {"role": "user", "content": [
-                        {"type": "image", "image": image},
-                        {"type": "text", "text": prompt_text}
-                    ]}
-                ]
+            missing.add(name)
+
+    if missing:
+        try:
+            from huggingface_hub import HfFileSystem
+            fs = HfFileSystem()
+            zip_path = "datasets/nhonhoccode/ViTextVQA/images.zip"
+            print(f"[DATA] Downloading {len(missing)} missing images from {zip_path}...")
+            with fs.open(zip_path, "rb") as f:
+                with zipfile.ZipFile(f) as zf:
+                    name_map = {os.path.basename(n): n for n in zf.namelist() if not n.endswith("/")}
+                    for target in sorted(missing):
+                        if target in name_map:
+                            data = zf.read(name_map[target])
+                            local_p = os.path.join(cache_dir, target)
+                            with open(local_p, "wb") as out_f:
+                                out_f.write(data)
+                            paths[target] = local_p
+            print(f"[DATA] Successfully cached {len(paths)} / {len(image_names)} images in {cache_dir}")
+        except Exception as e:
+            print(f"[WARN] Remote image fetch encountered exception: {e}")
+
+    return paths
+
+
+def load_benchmark_dataset(
+    dataset_path: str,
+    data_dir: str = "data/vitextvqa",
+) -> List[Dict[str, Any]]:
+    """
+    Load ViTextVQA benchmark samples from the verified 400-image dataset or legacy JSON.
+    Returns flattened list of question-level sample dictionaries.
+    """
+    if not os.path.isfile(dataset_path):
+        raise FileNotFoundError(f"Dataset file not found at: {dataset_path}")
+
+    with open(dataset_path, "r", encoding="utf-8") as f:
+        raw_data = json.load(f)
+
+    candidate_dirs = [
+        os.path.join(PROJECT_ROOT, "data", "vitextvqa", "st_images"),
+        os.path.join(PROJECT_ROOT, "data", "xanylabeling_workspace", "Cao_Anh_001_100"),
+        os.path.join(PROJECT_ROOT, "data", "xanylabeling_workspace", "Trieu_101_200"),
+        os.path.join(PROJECT_ROOT, "data", "xanylabeling_workspace", "Cam_Tu_201_300"),
+        os.path.join(PROJECT_ROOT, "data", "xanylabeling_workspace", "Thanh_Tam_301_400"),
+        os.path.join(PROJECT_ROOT, data_dir, "st_images"),
+        os.path.join(PROJECT_ROOT, data_dir),
+    ]
+
+    samples: List[Dict[str, Any]] = []
+
+    # Case 1: Standard answer_bboxes_400_verified.json format
+    if isinstance(raw_data, dict) and "images" in raw_data:
+        images_list = raw_data["images"]
+        all_img_names = {img["image_name"] for img in images_list}
+        st_cache = os.path.join(PROJECT_ROOT, "data", "vitextvqa", "st_images")
+        downloaded_paths = ensure_local_images(all_img_names, st_cache)
+
+        for img in images_list:
+            img_name = img["image_name"]
+            img_path = downloaded_paths.get(img_name) or resolve_image_path(img_name, candidate_dirs)
+            quests = img.get("quests", [])
+            for q in quests:
+                samples.append({
+                    "sample_key": f"{q['question_id']}_{img_name}",
+                    "image_name": img_name,
+                    "image_path": img_path,
+                    "image_size": [img.get("width", 0), img.get("height", 0)],
+                    "question_id": q["question_id"],
+                    "quest_idx": q.get("quest_idx", 1),
+                    "question": q["question"],
+                    "gt_answers": q.get("gt_answers", []),
+                    "verified_all_answers": q.get("verified_all_answers") or q.get("gt_answers", []),
+                    "added_gt_answers": q.get("added_gt_answers", []),
+                    "answer_region_bbox": q.get("answer_region_bbox", [0, 0, 0, 0]),
+                    "sub_bboxes": q.get("sub_bboxes", []),
+                })
+
+    # Case 2: Legacy list-based annotations
+    elif isinstance(raw_data, list):
+        for idx, item in enumerate(raw_data):
+            img_name = item.get("image_name") or item.get("image_path") or f"{item.get('image_id', idx)}.jpg"
+            img_name = os.path.basename(str(img_name))
+            img_path = resolve_image_path(img_name, candidate_dirs)
+            qid = item.get("question_id") or item.get("id") or idx
+            gts = item.get("ground_truths") or item.get("answers") or [item.get("answer", "")]
+            if isinstance(gts, str):
+                gts = [gts]
+            samples.append({
+                "sample_key": f"{qid}_{img_name}",
+                "image_name": img_name,
+                "image_path": img_path,
+                "image_size": [0, 0],
+                "question_id": qid,
+                "quest_idx": 1,
+                "question": item.get("question", ""),
+                "gt_answers": gts,
+                "verified_all_answers": gts,
+                "added_gt_answers": [],
+                "answer_region_bbox": item.get("answer_region_bbox", [0, 0, 0, 0]),
+                "sub_bboxes": item.get("sub_bboxes", []),
+            })
+
+    print(f"[DATA] Loaded {len(samples)} questions across {len({s['image_name'] for s in samples})} images.")
+    return samples
+
+
+def group_samples_by_image(samples: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+    """Group questions by image_path preserving appearance order."""
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for s in samples:
+        path = s.get("image_path") or s.get("image_name")
+        grouped.setdefault(path, []).append(s)
+    return grouped
+
+
+# ==============================================================================
+# RESUMABLE CHECKPOINT MANAGER
+# ==============================================================================
+
+class CheckpointManager:
+    """
+    Manages atomic, crash-proof checkpointing to checkpoint.json and streaming to predictions.jsonl.
+    """
+
+    def __init__(self, checkpoint_path: str, output_dir: str, overwrite: bool = False):
+        self.checkpoint_path = checkpoint_path
+        self.output_dir = output_dir
+        self.jsonl_path = os.path.join(output_dir, "predictions.jsonl")
+        self.summary_json_path = os.path.join(output_dir, "summary_results.json")
+        self.summary_metrics_path = os.path.join(output_dir, "summary_metrics.json")
+        os.makedirs(output_dir, exist_ok=True)
+
+        self.records: List[Dict[str, Any]] = []
+        self.completed_keys: Set[str] = set()
+
+        if not overwrite and os.path.isfile(checkpoint_path):
+            self._load_checkpoint()
+        elif overwrite:
+            print(f"[CHECKPOINT] Overwrite requested. Starting fresh in {output_dir}")
+            if os.path.exists(self.jsonl_path):
                 try:
-                    # Hỗ trợ chuẩn multimodal mới của AutoProcessor (Aya-Vision, Transformers 4.49+)
-                    inputs = self.processor.apply_chat_template(
-                        messages,
-                        padding=True,
-                        add_generation_prompt=True,
-                        tokenize=True,
-                        return_dict=True,
-                        return_tensors="pt"
-                    ).to(model_device)
+                    os.remove(self.jsonl_path)
                 except Exception:
-                    # Định dạng phân tách text & images (Qwen2-VL, EraX)
-                    text_input = self.processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
-                    inputs = self.processor(text=[text_input], images=[image], return_tensors="pt").to(model_device)
-            else:
-                inputs = self.processor(images=image, text=prompt_text, return_tensors="pt").to(model_device)
+                    pass
 
-            with torch.inference_mode():
-                output_ids = self.model.generate(
-                    **inputs,
-                    max_new_tokens=64,
-                    do_sample=False
-                )
-            if hasattr(inputs, "input_ids"):
-                output_ids = output_ids[:, inputs.input_ids.shape[1]:]
+    def _load_checkpoint(self):
+        try:
+            with open(self.checkpoint_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            raw_records = data.get("records", [])
+            seen = set()
+            self.records = []
+            for r in raw_records:
+                key = r.get("sample_key") or f"{r.get('question_id')}_{r.get('image_name')}"
+                if key not in seen:
+                    seen.add(key)
+                    self.records.append(r)
+                    self.completed_keys.add(key)
+            print(f"[CHECKPOINT] Loaded existing checkpoint from {self.checkpoint_path}")
+            print(f"[CHECKPOINT] Resuming with {len(self.completed_keys)} previously completed questions.")
+        except Exception as e:
+            print(f"[CHECKPOINT WARN] Could not load checkpoint ({e}). Starting fresh.")
+            self.records = []
+            self.completed_keys = set()
 
-            if hasattr(self.processor, "decode"):
-                response = self.processor.decode(output_ids[0], skip_special_tokens=True)
-            elif hasattr(self.processor, "tokenizer") and hasattr(self.processor.tokenizer, "decode"):
-                response = self.processor.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-            else:
-                response = str(output_ids[0])
+    def is_completed(self, sample_key: str) -> bool:
+        return sample_key in self.completed_keys
 
-            return response.strip()
+    def append_record(self, record: Dict[str, Any], aggregator: MetricsAggregator, method: str, model_name: str):
+        """Append record in memory, stream to predictions.jsonl, and atomically save checkpoint."""
+        sample_key = record.get("sample_key") or f"{record.get('question_id')}_{record.get('image_name')}"
+        if sample_key in self.completed_keys:
+            return
+        self.records.append(record)
+        self.completed_keys.add(sample_key)
 
-    def get_recommended_batch_size(self) -> int:
-        """Định đoạt kích thước lô (batch size) tối ưu dựa trên số lượng tham số của mô hình và dung lượng VRAM."""
-        name = self.model_name.lower()
-        has_large_vram = False
-        if torch is not None and torch.cuda.is_available():
+        # 1. Stream to jsonl
+        with open(self.jsonl_path, "a", encoding="utf-8") as jf:
+            jf.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+        # 2. Atomic save checkpoint.json
+        tmp_ckpt = self.checkpoint_path + ".tmp"
+        summary = aggregator.summary()
+        ckpt_data = {
+            "checkpoint_version": "1.0",
+            "last_updated": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "method": method,
+            "model_name": model_name,
+            "total_completed": len(self.records),
+            "completed_sample_keys": list(self.completed_keys),
+            "summary_metrics": summary,
+            "records": self.records,
+        }
+        with open(tmp_ckpt, "w", encoding="utf-8") as f:
+            json.dump(ckpt_data, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_ckpt, self.checkpoint_path)
+
+        # 3. Update summary_results.json and summary_metrics.json
+        with open(self.summary_json_path, "w", encoding="utf-8") as sf:
+            json.dump(summary, sf, ensure_ascii=False, indent=2)
+        with open(self.summary_metrics_path, "w", encoding="utf-8") as smf:
+            json.dump(summary, smf, ensure_ascii=False, indent=2)
+
+
+def _export_benchmark_csvs(output_dir: str, summary: Dict[str, Any], records: List[Dict[str, Any]]):
+    """Export summary_metrics.csv and predictions.csv for easy analysis and auditing."""
+    import csv
+    summary_csv_path = os.path.join(output_dir, "summary_metrics.csv")
+    try:
+        with open(summary_csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["category", "metric", "value"])
+            for cat in ["stage1", "stage2", "performance"]:
+                for k, v in summary.get(cat, {}).items():
+                    writer.writerow([cat, k, v])
+            writer.writerow(["overview", "total_evaluated_samples", summary.get("total_evaluated_samples", 0)])
+    except Exception as e:
+        print(f"[WARN] Could not export summary_metrics.csv: {e}")
+
+    predictions_csv_path = os.path.join(output_dir, "predictions.csv")
+    try:
+        with open(predictions_csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                "index", "sample_key", "question_id", "image_name", "question",
+                "pred_answer", "gt_answer_primary", "verified_answers",
+                "iou", "recall", "em_gt", "em_verified", "f1_gt", "f1_verified",
+                "substring_verified", "anls_verified", "latency_s"
+            ])
+            for r in records:
+                gts = r.get("gt_answers", [])
+                ver = r.get("verified_all_answers", [])
+                s1 = r.get("stage1_metrics", {})
+                s2 = r.get("stage2_metrics", {})
+                writer.writerow([
+                    r.get("index", ""),
+                    r.get("sample_key", ""),
+                    r.get("question_id", ""),
+                    r.get("image_name", ""),
+                    r.get("question", ""),
+                    r.get("pred_answer", ""),
+                    gts[0] if gts else "",
+                    "; ".join(ver) if ver else "",
+                    s1.get("iou", 0.0),
+                    s1.get("recall", 0.0),
+                    s2.get("em_gt", 0),
+                    s2.get("em_verified", 0),
+                    s2.get("f1_gt", 0.0),
+                    s2.get("f1_verified", 0.0),
+                    s2.get("substring_verified", 0.0),
+                    s2.get("anls_verified", 0.0),
+                    r.get("latency_s", 0.0),
+                ])
+    except Exception as e:
+        print(f"[WARN] Could not export predictions.csv: {e}")
+
+
+class DualLogger:
+    """Simultaneously writes to stream (e.g. stdout) and an evaluation log file."""
+    def __init__(self, filepath: str, stream):
+        self.stream = stream
+        self.file = open(filepath, "a", encoding="utf-8")
+    def write(self, data):
+        try:
+            self.stream.write(data)
+        except Exception:
             try:
-                total_vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
-                if total_vram_gb >= 20.0:
-                    has_large_vram = True
+                if hasattr(self.stream, "buffer"):
+                    self.stream.buffer.write(data.encode("utf-8", errors="replace"))
+                else:
+                    self.stream.write(data.encode("ascii", errors="replace").decode("ascii"))
             except Exception:
                 pass
+        try:
+            self.file.write(data)
+            self.file.flush()
+        except Exception:
+            pass
+    def flush(self):
+        try:
+            self.stream.flush()
+        except Exception:
+            pass
+        try:
+            self.file.flush()
+        except Exception:
+            pass
 
-        if "1b" in name or "2b" in name:
-            return 8
-        elif "3b" in name:
-            return 8 if has_large_vram else 4
-        elif "7b" in name or "8b" in name:
-            return 4 if (has_large_vram or getattr(self, "load_in_4bit", False) or "4bit" in name) else 2
-        return 4
 
-    def generate_multi(
-        self,
-        image_path: str,
-        questions: List[str],
-        max_chunk_size: int = 4,
-        preloaded_image: Optional[Image.Image] = None
-    ) -> List[str]:
-        """Sinh câu trả lời cho danh sách nhiều câu hỏi cùng chung một hình ảnh (tối ưu gom nhóm & cache ảnh)."""
-        if not questions:
-            return []
+# ==============================================================================
+# MAIN BENCHMARK ENGINE
+# ==============================================================================
 
-        image = preloaded_image
-        if image is None:
-            if not os.path.exists(image_path):
-                return ["" for _ in questions]
+def run_benchmark(args: argparse.Namespace):
+    os.makedirs(args.output_dir, exist_ok=True)
+    lock_file = os.path.join(args.output_dir, "benchmark.lock")
+    if os.path.exists(lock_file):
+        try:
+            with open(lock_file, "r") as f:
+                locked_pid = int(f.read().strip())
+            import psutil
+            if psutil.pid_exists(locked_pid) and locked_pid != os.getpid():
+                print(f"[LOCK] Another benchmark instance is active (PID {locked_pid}). Exiting immediately to protect GPU resources.")
+                return
+        except Exception:
+            pass
+    try:
+        with open(lock_file, "w") as f:
+            f.write(str(os.getpid()))
+    except Exception:
+        pass
+
+    log_file = os.path.join(args.output_dir, "evaluation.log")
+    sys.stdout = DualLogger(log_file, sys.stdout)
+    sys.stderr = DualLogger(log_file, sys.stderr)
+
+    start_time = time.time()
+    device = args.device if torch.cuda.is_available() else "cpu"
+    print("\n" + "=" * 80)
+    print(" SG-VCD & ViTextVQA 400-IMAGE BENCHMARK EVALUATOR")
+    print(f" Timestamp:      {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f" Method:         {args.method.upper()}")
+    print(f" Model:          {args.model_name}")
+    print(f" Device:         {device} (Local RTX 3050 4GB)")
+    print(f" Dataset:        {args.dataset}")
+    print(f" Output Dir:     {args.output_dir}")
+    print("=" * 80)
+
+    # 1. Load dataset
+    samples = load_benchmark_dataset(args.dataset, data_dir=args.data_dir)
+
+    # Handle --test flag: select 3 distinct test samples
+    if args.test:
+        print("[TEST MODE] Running smoke test on 3 distinct test samples...")
+        unique_by_img = {}
+        for s in samples:
+            img = s["image_name"]
+            if img not in unique_by_img:
+                unique_by_img[img] = s
+        test_samples = list(unique_by_img.values())[:3]
+        samples = test_samples
+    elif args.limit and args.limit > 0:
+        print(f"[LIMIT] Restricting evaluation to first {args.limit} questions.")
+        samples = samples[:args.limit]
+
+    total_samples = len(samples)
+
+    # 2. Checkpoint initialization
+    ckpt_path = args.checkpoint or os.path.join(args.output_dir, "checkpoint.json")
+    ckpt_mgr = CheckpointManager(checkpoint_path=ckpt_path, output_dir=args.output_dir, overwrite=args.overwrite)
+
+    # Filter out already evaluated questions
+    remaining_samples = [s for s in samples if not ckpt_mgr.is_completed(s["sample_key"])]
+    num_already_done = total_samples - len(remaining_samples)
+
+    if num_already_done > 0:
+        print(f"\n[RESUME] Found {num_already_done} / {total_samples} samples completed in checkpoint.")
+        print(f"[RESUME] Resuming evaluation on remaining {len(remaining_samples)} samples.")
+
+    # Populate aggregator from existing records (re-aligned with updated normalizer & entity peeling)
+    aggregator = MetricsAggregator()
+    from sg_vcd.pipeline import strip_conversational_preamble
+    for rec in ckpt_mgr.records:
+        clean_pred = strip_conversational_preamble(rec.get("pred_answer", ""), question=rec.get("question"))
+        rec["pred_answer"] = clean_pred
+        s2 = compute_stage2_metrics(
+            pred_answer=clean_pred,
+            gt_answers=rec.get("gt_answers", []),
+            verified_answers=rec.get("verified_all_answers", []),
+            question=rec.get("question"),
+        )
+        rec["stage2_metrics"] = s2
+        aggregator.update(
+            stage1_metrics=rec.get("stage1_metrics"),
+            stage2_metrics=s2,
+            latency_s=rec.get("latency_s"),
+        )
+
+    if len(remaining_samples) == 0:
+        print("\n[COMPLETE] All target samples are already evaluated in checkpoint!")
+        summary = aggregator.summary()
+        print("\n" + "=" * 80)
+        print(" FINAL BENCHMARK SUMMARY (FROM CHECKPOINT):")
+        print("=" * 80)
+        with open(os.path.join(args.output_dir, "summary_metrics.json"), "w", encoding="utf-8") as smf:
+            json.dump(summary, smf, ensure_ascii=False, indent=2)
+        _export_benchmark_csvs(args.output_dir, summary, ckpt_mgr.records)
+        return
+
+    # 3. Load Model and Pipeline
+    model, tokenizer, transform = load_vintern_model(args.model_name, device=device)
+    pipeline = None
+    if args.method == "sg_vcd":
+        pipeline = SGVCDPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device)
+
+    # 4. Group remaining samples by image for visual token & disk caching
+    grouped_samples = group_samples_by_image(remaining_samples)
+    print(f"\n[OPTIMIZATION] Grouped {len(remaining_samples)} questions into {len(grouped_samples)} unique images.")
+    print(f"[OPTIMIZATION] Visual Token Caching active — single PIL decoding & feature reuse per image.")
+
+    processed_count = num_already_done
+    sample_index = num_already_done
+
+    for img_path, q_list in grouped_samples.items():
+        if not img_path or not os.path.isfile(img_path):
+            print(f"[SKIP] Missing image file on disk: {img_path}")
+            continue
+
+        try:
+            image = Image.open(img_path).convert("RGB")
+        except Exception as e:
+            print(f"[ERROR] Could not open image {img_path}: {e}")
+            continue
+
+        W, H = image.size
+        cached_visual_features = None
+
+        # Check if pipeline supports visual feature extraction for caching
+        if pipeline is not None and hasattr(pipeline, "extract_visual_features"):
             try:
-                image = Image.open(image_path).convert("RGB")
+                with torch.inference_mode():
+                    cached_visual_features = pipeline.extract_visual_features(image)
+            except Exception:
+                cached_visual_features = None
+
+        for item in q_list:
+            sample_index += 1
+            processed_count += 1
+            question = item["question"]
+            qid = item["question_id"]
+            img_name = item["image_name"]
+            gts = item["gt_answers"]
+            gts_ver = item["verified_all_answers"]
+            gt_bbox = item["answer_region_bbox"]
+            sub_bboxes = item["sub_bboxes"]
+
+            t0 = time.time()
+            pred_answer = ""
+            pred_bbox = [0, 0, W, H]
+            pred_raw = ""
+            spatial_conf = 0.0
+
+            try:
+                with torch.inference_mode():
+                    if args.method == "sg_vcd":
+                        # Check pipeline.run signature for cached_visual_features
+                        run_kwargs = dict(max_new_tokens=64)
+                        sig = inspect.signature(pipeline.run)
+                        if "cached_visual_features" in sig.parameters and cached_visual_features is not None:
+                            run_kwargs["cached_visual_features"] = cached_visual_features
+
+                        res = pipeline.run(image, question, **run_kwargs)
+
+                        # Extract prediction text (flexible to both current and upgraded PipelineResult)
+                        if hasattr(res, "pred_text"):
+                            pred_answer = res.pred_text
+                        elif hasattr(res, "pred_sg_vcd"):
+                            pred_answer = res.pred_sg_vcd
+                        else:
+                            pred_answer = str(res)
+
+                        # Extract predicted bounding box
+                        if hasattr(res, "stage1_bbox"):
+                            pred_bbox = res.stage1_bbox
+                        elif hasattr(res, "selection") and hasattr(res.selection, "pixel_bbox"):
+                            pred_bbox = res.selection.pixel_bbox
+                        elif hasattr(res, "crop") and hasattr(res.crop, "isotropic_box"):
+                            pred_bbox = res.crop.isotropic_box
+
+                        spatial_conf = getattr(res, "spatial_confidence", getattr(getattr(res, "selection", None), "kl_score", 0.0))
+
+                    elif args.method == "baseline":
+                        # Standard baseline uncropped Vintern inference
+                        prompt_text = f"<image>\nTrả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {question}"
+                        max_patch = getattr(getattr(model, "config", None), "max_dynamic_patch", 6)
+                        pv = load_vintern_pixel_values(image, transform, input_size=448, max_num=max_patch)
+                        if pv is not None:
+                            pv = pv.to(torch.bfloat16).to(device)
+                        gen_cfg = dict(max_new_tokens=64, do_sample=False)
+                        gen_cfg.pop("return_dict", None)
+                        res_raw = model.chat(tokenizer, pv, prompt_text, gen_cfg, history=None, return_history=False)
+                        pred_answer = res_raw[0] if isinstance(res_raw, (tuple, list)) else str(res_raw).strip()
+                        pred_bbox = [0, 0, W, H]
+                        spatial_conf = 1.0
             except Exception as e:
-                print(f"[ERROR] Không đọc được ảnh {image_path}: {e}")
-                return ["" for _ in questions]
+                print(f"[ERROR] Inference exception for question {qid} on {img_name}: {e}")
+                pred_answer = ""
+                pred_bbox = [0, 0, W, H]
+                spatial_conf = 0.0
 
-        all_responses: List[str] = []
-        chunks = chunk_list(questions, max(1, max_chunk_size))
+            elapsed = time.time() - t0
 
-        for chunk_qs in chunks:
-            # 1. Cơ chế cho Vintern (InternVL architecture)
-            if self.actual_backend == "vintern_native":
-                chunk_res = self._generate_vintern_batch(image, chunk_qs)
-                all_responses.extend(chunk_res)
+            # 5. Compute Stage 1 & Stage 2 metrics
+            s1_metrics = compute_stage1_metrics(pred_bbox, gt_bbox, sub_bboxes)
+            s2_metrics = compute_stage2_metrics(pred_answer, gts, gts_ver, question=question)
+            aggregator.update(s1_metrics, s2_metrics, latency_s=elapsed)
 
-            # 2. Cơ chế cho Unsloth (Qwen2.5-VL, Aya)
-            elif self.actual_backend == "unsloth":
-                chunk_res = self._generate_unsloth_batch(image, chunk_qs)
-                all_responses.extend(chunk_res)
+            record = {
+                "sample_key": item["sample_key"],
+                "index": sample_index,
+                "question_id": qid,
+                "image_name": img_name,
+                "image_size": [W, H],
+                "question": question,
+                "gt_answers": gts,
+                "verified_all_answers": gts_ver,
+                "added_gt_answers": item["added_gt_answers"],
+                "gt_bbox": gt_bbox,
+                "pred_bbox": list(pred_bbox),
+                "sub_bboxes": sub_bboxes,
+                "pred_answer": pred_answer,
+                "stage1_metrics": s1_metrics,
+                "stage2_metrics": s2_metrics,
+                "spatial_confidence": float(spatial_conf),
+                "latency_s": round(elapsed, 3),
+            }
 
-            # 3. Cơ chế cho Transformers Native (EraX, Qwen)
-            else:
-                chunk_res = self._generate_transformers_batch(image, chunk_qs)
-                all_responses.extend(chunk_res)
+            ckpt_mgr.append_record(record, aggregator, method=args.method, model_name=args.model_name)
 
-        return all_responses
+            # Print informative per-sample log
+            print(
+                f"[{processed_count:04d}/{total_samples:04d}] {img_name} (QID {qid}) | "
+                f"IoU: {s1_metrics['iou']*100:4.1f}% | Rec: {s1_metrics['recall']*100:4.1f}% | "
+                f"EM(GT): {int(s2_metrics['em_gt'])} | EM(Ver): {int(s2_metrics['em_verified'])} | "
+                f"F1: {s2_metrics['f1_verified']*100:4.1f}% | "
+                f"Sub: {s2_metrics.get('substring_verified', 0.0)*100:4.1f}% | "
+                f"ANLS: {s2_metrics.get('anls_verified', 0.0)*100:4.1f}% | {elapsed:.2f}s"
+            )
+            print(f"   Q   : {question}")
+            print(f"   GT  : {gts[0] if gts else 'N/A'}")
+            print(f"   Pred: {pred_answer}")
 
-    def _generate_vintern_batch(self, image: Image.Image, questions: List[str]) -> List[str]:
-        """Tối ưu sinh đồng thời cho Vintern: trích xuất pixel_values 1 lần và batch inference."""
-        max_patch = getattr(getattr(self.model, "config", None), "max_dynamic_patch", 6)
-        generation_config = dict(max_new_tokens=64, do_sample=False)
-        generation_config.pop("return_dict", None)
-
-        pixel_values = None
-        try:
-            pixel_values = load_vintern_pixel_values(image, max_num=max_patch)
-            if pixel_values is not None:
-                pixel_values = pixel_values.to(torch.bfloat16).to(self.device)
-        except Exception as pv_err:
-            print(f"[WARN] Tiền xử lý pixel_values Vintern gặp lỗi: {pv_err}")
-            pixel_values = None
-
-        prompts = [
-            f"<image>\nTrả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {q}"
-            for q in questions
-        ]
-
-        # Thử 1: Dùng model.batch_chat nếu có sẵn
-        if hasattr(self.model, "batch_chat") and pixel_values is not None:
-            try:
-                num_patches_list = [pixel_values.shape[0]] * len(questions)
-                pixel_values_batch = torch.cat([pixel_values] * len(questions), dim=0)
-                with torch.inference_mode():
-                    res = self.model.batch_chat(
-                        self.tokenizer,
-                        pixel_values_batch,
-                        prompts,
-                        generation_config,
-                        num_patches_list=num_patches_list
-                    )
-                if isinstance(res, list) and len(res) == len(questions):
-                    return [str(r).strip() for r in res]
-            except Exception:
-                pass
-
-        # Fallback an toàn: Dùng lại pixel_values đã tính toán trong bộ nhớ cho từng câu hỏi
-        responses = []
-        image_input = pixel_values if pixel_values is not None else image
-        with torch.inference_mode():
-            for p in prompts:
-                try:
-                    res = self.model.chat(
-                        self.tokenizer,
-                        image_input,
-                        p,
-                        generation_config,
-                        history=None,
-                        return_history=False
-                    )
-                    r = res[0] if isinstance(res, (tuple, list)) else res
-                    responses.append(str(r).strip())
-                except Exception:
-                    try:
-                        res = self.model.chat(self.tokenizer, image_input, p, generation_config)
-                        r = res[0] if isinstance(res, (tuple, list)) else res
-                        responses.append(str(r).strip())
-                    except Exception:
-                        responses.append("")
-        return responses
-
-    def _generate_unsloth_batch(self, image: Image.Image, questions: List[str]) -> List[str]:
-        """Tối ưu sinh đồng thời cho Unsloth: cùng 1 ảnh, nhân bản tham chiếu và batched forward."""
-        if len(questions) == 1:
-            q = questions[0]
-            p = f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {q}"
-            msgs = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": p}]}]
-            try:
-                in_text = self.processor.apply_chat_template(msgs, add_generation_prompt=True)
-                inps = self.processor(image, in_text, add_special_tokens=False, return_tensors="pt").to("cuda")
-                with torch.inference_mode():
-                    outs = self.model.generate(**inps, max_new_tokens=64, use_cache=True, temperature=0.01, do_sample=False)
-                g_ids = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inps.input_ids, outs)]
-                r = self.processor.batch_decode(g_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
-                return [str(r).strip()]
-            except Exception:
-                return [""]
-
-        prompts = [
-            f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {q}"
-            for q in questions
-        ]
-        images = [image] * len(questions)
-        messages_batch = [
-            [{"role": "user", "content": [
-                {"type": "image", "image": img},
-                {"type": "text", "text": p}
-            ]}]
-            for img, p in zip(images, prompts)
-        ]
-        try:
-            input_texts = [
-                self.processor.apply_chat_template(m, add_generation_prompt=True)
-                for m in messages_batch
-            ]
-            inputs = self.processor(
-                images=images,
-                text=input_texts,
-                add_special_tokens=False,
-                return_tensors="pt",
-                padding=True
-            ).to("cuda")
-
-            with torch.inference_mode():
-                outputs = self.model.generate(
-                    **inputs,
-                    max_new_tokens=64,
-                    use_cache=True,
-                    temperature=0.01,
-                    do_sample=False
-                )
-            generated_ids = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, outputs)]
-            responses = self.processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-            return [str(r).strip() for r in responses]
-        except Exception:
-            # Fallback tuần tự an toàn
-            res = []
-            for p_text in prompts:
-                try:
-                    msgs = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": p_text}]}]
-                    in_text = self.processor.apply_chat_template(msgs, add_generation_prompt=True)
-                    inps = self.processor(image, in_text, add_special_tokens=False, return_tensors="pt").to("cuda")
-                    with torch.inference_mode():
-                        outs = self.model.generate(**inps, max_new_tokens=64, use_cache=True, temperature=0.01, do_sample=False)
-                    g_ids = [out_ids[len(in_ids):] for in_ids, out_ids in zip(inps.input_ids, outs)]
-                    r = self.processor.batch_decode(g_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)[0]
-                    res.append(str(r).strip())
-                except Exception:
-                    res.append("")
-            return res
-
-    def _generate_transformers_batch(self, image: Image.Image, questions: List[str]) -> List[str]:
-        """Tối ưu sinh đồng thời cho Transformers Native (EraX, Qwen-VL)."""
-        model_device = getattr(self.model, "device", "cuda" if torch.cuda.is_available() else "cpu")
-        if len(questions) == 1:
-            q = questions[0]
-            p = f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {q}"
-            msgs = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": p}]}]
-            try:
-                if hasattr(self.processor, "apply_chat_template"):
-                    try:
-                        inputs = self.processor.apply_chat_template(
-                            msgs,
-                            padding=True,
-                            add_generation_prompt=True,
-                            tokenize=True,
-                            return_dict=True,
-                            return_tensors="pt"
-                        ).to(model_device)
-                    except Exception:
-                        text_input = self.processor.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
-                        inputs = self.processor(text=[text_input], images=[image], return_tensors="pt").to(model_device)
-                else:
-                    inputs = self.processor(images=image, text=p, return_tensors="pt").to(model_device)
-                with torch.inference_mode():
-                    output_ids = self.model.generate(**inputs, max_new_tokens=64, do_sample=False)
-                if hasattr(inputs, "input_ids"):
-                    output_ids = output_ids[:, inputs.input_ids.shape[1]:]
-                if hasattr(self.processor, "batch_decode"):
-                    r = self.processor.batch_decode(output_ids, skip_special_tokens=True)[0]
-                elif hasattr(self.processor, "tokenizer") and hasattr(self.processor.tokenizer, "batch_decode"):
-                    r = self.processor.tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0]
-                else:
-                    r = str(output_ids[0])
-                return [str(r).strip()]
-            except Exception:
-                return [""]
-
-        prompts = [
-            f"Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: {q}"
-            for q in questions
-        ]
-        images = [image] * len(questions)
-        try:
-            if hasattr(self.processor, "apply_chat_template"):
-                messages_batch = [
-                    [{"role": "user", "content": [{"type": "image", "image": img}, {"type": "text", "text": p}]}]
-                    for img, p in zip(images, prompts)
-                ]
-                try:
-                    inputs = self.processor.apply_chat_template(
-                        messages_batch,
-                        padding=True,
-                        add_generation_prompt=True,
-                        tokenize=True,
-                        return_dict=True,
-                        return_tensors="pt"
-                    ).to(model_device)
-                except Exception:
-                    try:
-                        text_inputs = [
-                            self.processor.apply_chat_template(m, add_generation_prompt=True, tokenize=False)
-                            for m in messages_batch
-                        ]
-                        inputs = self.processor(text=text_inputs, images=images, padding=True, return_tensors="pt").to(model_device)
-                    except Exception:
-                        inputs = self.processor(images=images, text=prompts, padding=True, return_tensors="pt").to(model_device)
-            else:
-                inputs = self.processor(images=images, text=prompts, padding=True, return_tensors="pt").to(model_device)
-
-            with torch.inference_mode():
-                output_ids = self.model.generate(**inputs, max_new_tokens=64, do_sample=False)
-            if hasattr(inputs, "input_ids"):
-                output_ids = output_ids[:, inputs.input_ids.shape[1]:]
-
-            if hasattr(self.processor, "batch_decode"):
-                responses = self.processor.batch_decode(output_ids, skip_special_tokens=True)
-            elif hasattr(self.processor, "tokenizer") and hasattr(self.processor.tokenizer, "batch_decode"):
-                responses = self.processor.tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-            else:
-                responses = [str(o) for o in output_ids]
-            return [str(r).strip() for r in responses]
-        except Exception:
-            # Fallback tuần tự an toàn
-            res = []
-            for p in prompts:
-                try:
-                    inps = self.processor(images=image, text=p, return_tensors="pt").to(model_device)
-                    with torch.inference_mode():
-                        out_ids = self.model.generate(**inps, max_new_tokens=64, do_sample=False)
-                    if hasattr(inps, "input_ids"):
-                        out_ids = out_ids[:, inps.input_ids.shape[1]:]
-                    if hasattr(self.processor, "decode"):
-                        r = self.processor.decode(out_ids[0], skip_special_tokens=True)
-                    else:
-                        r = str(out_ids[0])
-                    res.append(str(r).strip())
-                except Exception:
-                    res.append("")
-            return res
-
-    def unload(self, evict_hf_cache: bool = True):
-        """Giải phóng toàn bộ VRAM GPU và xóa weights khỏi Hugging Face cache."""
-        print(f"\n[CLEANUP] Đang giải phóng VRAM và dọn dẹp bộ nhớ cho {self.model_name}...")
-        del self.model
-        del self.processor
-        del self.tokenizer
-        self.model = None
-        self.processor = None
-        self.tokenizer = None
+        # Explicit image-level memory cleanup
+        del image, cached_visual_features
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-            torch.cuda.ipc_collect()
 
-        if evict_hf_cache:
-            candidate_cache_dirs = []
-            if os.environ.get("HF_HOME"):
-                candidate_cache_dirs.append(os.environ["HF_HOME"])
-                candidate_cache_dirs.append(os.path.join(os.environ["HF_HOME"], "hub"))
-            if os.environ.get("HUGGINGFACE_HUB_CACHE"):
-                candidate_cache_dirs.append(os.environ["HUGGINGFACE_HUB_CACHE"])
+    # 6. Final Summary Report
+    total_time = time.time() - start_time
+    summary = aggregator.summary()
+    peak_alloc = torch.cuda.max_memory_allocated() / (1024 ** 3) if torch.cuda.is_available() else 0.0
+    peak_res = torch.cuda.max_memory_reserved() / (1024 ** 3) if torch.cuda.is_available() else 0.0
 
-            candidate_cache_dirs.extend([
-                "/workspace/.hf_home/hub",
-                "/workspace/.hf_home",
-                os.path.expanduser("~/.cache/huggingface/hub"),
-                os.path.expanduser("~/.cache/huggingface"),
-                "/root/.cache/huggingface/hub",
-                "/root/.cache/huggingface",
-            ])
-
-            try:
-                from huggingface_hub import constants
-                if hasattr(constants, "HF_HUB_CACHE"):
-                    candidate_cache_dirs.append(str(constants.HF_HUB_CACHE))
-                if hasattr(constants, "HF_HOME"):
-                    candidate_cache_dirs.append(str(constants.HF_HOME))
-            except Exception:
-                pass
-
-            target_repo = "models--" + self.model_name.replace("/", "--")
-            deleted_any = False
-            for cdir in set(candidate_cache_dirs):
-                if not cdir or not os.path.exists(cdir):
-                    continue
-                target_path = os.path.join(cdir, target_repo)
-                if os.path.exists(target_path):
-                    print(f"[DISK CLEANUP] Đang xóa cache trọng số: {target_path}")
-                    shutil.rmtree(target_path, ignore_errors=True)
-                    deleted_any = True
-
-            if not deleted_any:
-                for cdir in set(candidate_cache_dirs):
-                    if not cdir or not os.path.exists(cdir):
-                        continue
-                    found = glob.glob(os.path.join(cdir, "**", target_repo), recursive=True)
-                    for f in found:
-                        if os.path.isdir(f):
-                            print(f"[DISK CLEANUP] Đã xóa cache trọng số tìm thấy: {f}")
-                            shutil.rmtree(f, ignore_errors=True)
-
-# ==============================================================================
-# HỖ TRỢ RESUMPTION CẤP DỮ LIỆU (SAMPLE-LEVEL CHECKPOINTING & RESUME)
-# ==============================================================================
-
-def load_existing_predictions(output_jsonl_path: Optional[str]) -> Tuple[List[Dict[str, Any]], Set[str]]:
-    """
-    Nạp các mẫu đã dự đoán từ trước trong file JSONL để resume chính xác từng mẫu.
-    Trả về:
-      - records: danh sách các bản ghi kết quả đã có.
-      - evaluated_keys: tập hợp các key (question_id + image_name) để kiểm tra trùng lặp.
-    """
-    if not output_jsonl_path or not os.path.exists(output_jsonl_path):
-        return [], set()
-
-    records = []
-    evaluated_keys = set()
-    try:
-        with open(output_jsonl_path, "r", encoding="utf-8") as f:
-            for line_no, line in enumerate(f, start=1):
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    item = json.loads(line)
-                    records.append(item)
-                    key = f"{item.get('question_id')}_{item.get('image_name')}"
-                    evaluated_keys.add(key)
-                except Exception as e:
-                    print(f"[CẢNH BÁO] Không parse được dòng JSON #{line_no} trong {output_jsonl_path}: {e}")
-    except Exception as e:
-        print(f"[CẢNH BÁO] Lỗi khi đọc file kết quả cũ {output_jsonl_path}: {e}")
-
-    return records, evaluated_keys
-
-
-def update_summary_csv(summary_csv_path: str, row: Dict[str, Any]):
-    """
-    Ghi hoặc cập nhật dòng kết quả của mô hình vào bảng CSV tổng hợp (tránh ghi trùng lặp).
-    """
-    os.makedirs(os.path.dirname(summary_csv_path), exist_ok=True)
-    fieldnames = [
-        "model_name", "backend", "num_samples",
-        "full_f1", "full_em",
-        "elapsed_seconds", "timestamp"
-    ]
-
-    rows = []
-    found = False
-    if os.path.exists(summary_csv_path):
-        try:
-            with open(summary_csv_path, "r", encoding="utf-8-sig") as csv_file:
-                reader = csv.DictReader(csv_file)
-                for r in reader:
-                    if r.get("model_name") == row["model_name"]:
-                        rows.append(row)
-                        found = True
-                    else:
-                        rows.append(r)
-        except Exception as e:
-            print(f"[CẢNH BÁO] Lỗi khi đọc CSV tổng hợp cũ: {e}")
-
-    if not found:
-        rows.append(row)
-
-    with open(summary_csv_path, "w", newline="", encoding="utf-8-sig") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for r in rows:
-            writer.writerow(r)
-
-
-def update_profiling_csv(profiling_csv_path: str, row: Dict[str, Any]):
-    """
-    Ghi hoặc cập nhật dòng kết quả profiling của mô hình vào bảng CSV profiling (tránh ghi trùng lặp).
-    """
-    os.makedirs(os.path.dirname(profiling_csv_path), exist_ok=True)
-    fieldnames = [
-        "model_name", "backend", "profile_samples",
-        "load_time_s", "avg_latency_s", "throughput_samples_per_min",
-        "peak_vram_allocated_gb", "peak_vram_reserved_gb", "peak_ram_gb",
-        "preliminary_f1", "preliminary_em",
-        "est_full_10028_hours", "est_full_10028_cost_usd", "timestamp"
-    ]
-
-    rows = []
-    found = False
-    if os.path.exists(profiling_csv_path):
-        try:
-            with open(profiling_csv_path, "r", encoding="utf-8-sig") as csv_file:
-                reader = csv.DictReader(csv_file)
-                for r in reader:
-                    if r.get("model_name") == row["model_name"]:
-                        rows.append(row)
-                        found = True
-                    else:
-                        rows.append(r)
-        except Exception as e:
-            print(f"[CẢNH BÁO] Lỗi khi đọc CSV profiling cũ: {e}")
-
-    if not found:
-        rows.append(row)
-
-    with open(profiling_csv_path, "w", newline="", encoding="utf-8-sig") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for r in rows:
-            writer.writerow(r)
-
-
-
-# ==============================================================================
-# DANH MỤC 7 MÔ HÌNH VLM CHUẨN BENCHMARK TRÊN ViTextVQA
-# ==============================================================================
-
-BENCHMARK_MODEL_REGISTRY = [
-    {
-        "id": 1,
-        "name": "Qwen/Qwen2.5-VL-3B-Instruct",
-        "backend": "native",
-        "load_in_4bit": False,
-        "description": "Qwen2.5-VL 3B Native BF16 (Không qua bnb-4bit)"
-    },
-    {
-        "id": 2,
-        "name": "Qwen/Qwen2.5-VL-7B-Instruct",
-        "backend": "native",
-        "load_in_4bit": False,
-        "description": "Qwen2.5-VL 7B Native BF16 (Không qua bnb-4bit)"
-    },
-    {
-        "id": 3,
-        "name": "5CD-AI/Vintern-1B-v3_5",
-        "backend": "native",
-        "load_in_4bit": False,
-        "description": "Vintern 1B v3.5 qua Native BF16"
-    },
-    {
-        "id": 4,
-        "name": "5CD-AI/Vintern-3B-beta",
-        "backend": "native",
-        "load_in_4bit": False,
-        "description": "Vintern 3B beta qua Native BF16"
-    },
-    {
-        "id": 5,
-        "name": "erax-ai/EraX-VL-2B-V1.5",
-        "backend": "native",
-        "load_in_4bit": False,
-        "description": "EraX-VL 2B V1.5 qua Native BF16"
-    },
-    {
-        "id": 6,
-        "name": "erax-ai/EraX-VL-7B-V1.5",
-        "backend": "native",
-        "load_in_4bit": False,
-        "description": "EraX-VL 7B V1.5 qua Native BF16"
-    },
-    {
-        "id": 7,
-        "name": "CohereLabs/aya-vision-8b",
-        "backend": "native",
-        "load_in_4bit": False,
-        "description": "Aya Vision 8B Native BF16 (Cohere upstream hoặc unsloth 16-bit fallback)"
-    },
-]
-
-def resolve_models_to_run(model_arg: str, user_backend: str = "auto", user_4bit: bool = False) -> List[Dict[str, Any]]:
-    """Phân giải chuỗi tham số --model_name thành danh sách các mô hình cần đánh giá."""
-    arg_clean = model_arg.strip().lower()
-
-    # 1. Chạy tất cả mô hình trong danh mục chuẩn
-    if arg_clean in ["all", "list", "all-models", "*"]:
-        return [dict(m) for m in BENCHMARK_MODEL_REGISTRY]
-
-    # 2. Chạy danh sách số thứ tự (ví dụ: "1,2,3" hoặc "3-5" hoặc "3..5")
-    if re.match(r"^(\d+[\s,;-]+\d+)+$", arg_clean) or arg_clean.isdigit():
-        nums = []
-        for part in re.split(r"[\s,;]+", arg_clean):
-            if ".." in part or "-" in part:
-                sep = ".." if ".." in part else "-"
-                sub = part.split(sep)
-                if len(sub) == 2 and sub[0].isdigit() and sub[1].isdigit():
-                    nums.extend(range(int(sub[0]), int(sub[1]) + 1))
-            elif part.isdigit():
-                nums.append(int(part))
-        selected = []
-        for m in BENCHMARK_MODEL_REGISTRY:
-            if m["id"] in nums:
-                selected.append(dict(m))
-        if selected:
-            return selected
-
-    # 3. Danh sách tên mô hình phân tách bằng dấu phẩy
-    if "," in model_arg:
-        names = [n.strip() for n in model_arg.split(",") if n.strip()]
-        resolved = []
-        for n in names:
-            match = next((m for m in BENCHMARK_MODEL_REGISTRY if n.lower() in m["name"].lower() or n.lower() == str(m["id"])), None)
-            if match:
-                resolved.append(dict(match))
-            else:
-                resolved.append({
-                    "id": len(resolved) + 1,
-                    "name": n,
-                    "backend": user_backend,
-                    "load_in_4bit": user_4bit,
-                    "description": n
-                })
-        return resolved
-
-    # 4. Lọc theo từ khóa (ví dụ: "vintern", "qwen", "erax")
-    keyword_matches = [dict(m) for m in BENCHMARK_MODEL_REGISTRY if arg_clean in m["name"].lower()]
-    if keyword_matches and len(keyword_matches) > 1 and arg_clean in ["vintern", "qwen", "erax", "unsloth"]:
-        return keyword_matches
-
-    # 5. Khớp chính xác ID hoặc tên trong registry
-    match = next((m for m in BENCHMARK_MODEL_REGISTRY if arg_clean == m["name"].lower() or arg_clean == str(m["id"])), None)
-    if match:
-        cfg = dict(match)
-        if user_backend != "auto":
-            cfg["backend"] = user_backend
-        if user_4bit:
-            cfg["load_in_4bit"] = True
-        return [cfg]
-
-    # Mặc định: Trả về chính xác model_name do người dùng chỉ định
-    return [{
-        "id": 1,
-        "name": model_arg.strip(),
-        "backend": user_backend,
-        "load_in_4bit": user_4bit,
-        "description": model_arg.strip()
-    }]
-
-
-# ==============================================================================
-# BỘ NẠP TRƯỚC BẤT ĐỒNG BỘ CHO DỮ LIỆU GOM NHÓM (ASYNC PREFETCH PIPELINE)
-# ==============================================================================
-
-class AsyncGroupedPrefetcher:
-    """
-    Bộ nạp trước bất đồng bộ (Producer-Consumer Double Buffering Queue) cho các lô câu hỏi gom nhóm theo ảnh.
-    Một luồng nền (Worker Thread) độc lập chịu trách nhiệm:
-      1. Đọc tệp ảnh từ đĩa NVMe và giải mã PIL.Image trước trong nền.
-      2. Tái sử dụng đối tượng PIL.Image này cho tất cả các chunk thuộc về cùng một ảnh (không đọc lại đĩa).
-      3. Đẩy tuple (img_path, image, chunk_items) vào hàng đợi có giới hạn kích thước (queue.Queue(maxsize=prefetch_depth)).
-    
-    Cơ chế này che giấu hoàn toàn độ trễ đọc đĩa (Disk I/O latency) và triệt tiêu hiện tượng
-    trễ bong bóng (GPU Starvation / Pipeline Bubbles), duy trì GPU ở trạng thái bận rộn liên tục.
-    """
-    def __init__(self, grouped_samples: Dict[str, List[Dict[str, Any]]], effective_bs: int, prefetch_depth: int = 3):
-        self.grouped_samples = grouped_samples
-        self.effective_bs = max(1, effective_bs)
-        self.prefetch_depth = max(1, prefetch_depth)
-        self.queue: queue.Queue = queue.Queue(maxsize=self.prefetch_depth)
-        self.stop_event = threading.Event()
-        self.worker_thread = threading.Thread(target=self._producer_loop, daemon=True)
-
-    def _producer_loop(self):
-        try:
-            for img_path, items in self.grouped_samples.items():
-                if self.stop_event.is_set():
-                    break
-
-                # Đọc ảnh một lần duy nhất trong RAM cho toàn bộ các chunk của ảnh này
-                image = None
-                if os.path.exists(img_path):
-                    try:
-                        image = Image.open(img_path).convert("RGB")
-                    except Exception as e:
-                        print(f"[PREFETCH WARN] Lỗi đọc ảnh {img_path}: {e}")
-                        image = None
-
-                chunks = chunk_list(items, self.effective_bs)
-                for chunk_items in chunks:
-                    if self.stop_event.is_set():
-                        break
-                    while not self.stop_event.is_set():
-                        try:
-                            self.queue.put((img_path, image, chunk_items), timeout=0.2)
-                            break
-                        except queue.Full:
-                            continue
-        except Exception as e:
-            print(f"[PREFETCH ERROR] Ngoại lệ trong luồng nạp trước: {e}")
-        finally:
-            while not self.stop_event.is_set():
-                try:
-                    self.queue.put((None, None, None), timeout=0.2)
-                    break
-                except queue.Full:
-                    continue
-
-    def __enter__(self):
-        self.worker_thread.start()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stop_event.set()
-        while not self.queue.empty():
-            try:
-                self.queue.get_nowait()
-            except queue.Empty:
-                break
-        self.worker_thread.join(timeout=2.0)
-
-    def __iter__(self):
-        while True:
-            try:
-                img_path, image, chunk_items = self.queue.get(timeout=30.0)
-            except queue.Empty:
-                print("[PREFETCH TIMEOUT] Hàng đợi nạp trước bị quá hạn thời gian chờ!")
-                break
-
-            if img_path is None and chunk_items is None:
-                break
-
-            yield img_path, image, chunk_items
-
-
-def evaluate_single_model(
-    model_cfg: Dict[str, Any],
-    samples: List[Dict[str, Any]],
-    args: argparse.Namespace,
-    hf_token: Optional[str] = None,
-    is_multi_model: bool = False
-) -> Dict[str, Any]:
-    """Thực thi đánh giá hoặc profiling cho một mô hình VLM cụ thể."""
-    model_name = model_cfg["name"]
-    model_backend = model_cfg["backend"] if args.backend == "auto" else args.backend
-    load_in_4bit = model_cfg.get("load_in_4bit", False) or args.load_in_4bit
-    safe_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', model_name)
-
-    is_profile_mode = (args.profile is not None and args.profile > 0)
-    target_samples = samples[:args.profile] if is_profile_mode else samples
-    total_samples_target = len(target_samples)
-
-    # Xác định đường dẫn file JSONL đầu ra
-    if args.output_jsonl and not is_multi_model:
-        out_jsonl = args.output_jsonl
-    else:
-        if is_profile_mode:
-            out_jsonl = f"results/profiling/{safe_name}_profile_{args.profile}_preds.jsonl"
-        else:
-            out_jsonl = f"results/predictions/{safe_name}_preds.jsonl"
-
-    overwrite_flag = args.overwrite if not is_profile_mode else True
-
-    # 1. Kiểm tra tiến độ đã hoàn thành trước đó (Sample-level Resumption Check)
-    # Tự động kế thừa checkpoint nếu file mới chưa có nhưng có file tương ứng từ phiên bản cũ (ví dụ unsloth 4-bit)
-    if out_jsonl and (not os.path.exists(out_jsonl) or os.path.getsize(out_jsonl) == 0) and not overwrite_flag:
-        out_dir = os.path.dirname(out_jsonl)
-        if os.path.exists(out_dir):
-            cand_files = []
-            if "qwen2" in safe_name.lower():
-                tag = "7b" if "7b" in safe_name.lower() else ("3b" if "3b" in safe_name.lower() else "")
-                if tag:
-                    cand_files = glob.glob(os.path.join(out_dir, f"*qwen*{tag}*preds.jsonl"))
-            elif "aya" in safe_name.lower():
-                cand_files = glob.glob(os.path.join(out_dir, "*aya*vision*preds.jsonl"))
-
-            valid_cands = [
-                cand for cand in cand_files
-                if os.path.abspath(cand) != os.path.abspath(out_jsonl) and os.path.exists(cand) and os.path.getsize(cand) > 0
-            ]
-            if valid_cands:
-                valid_cands.sort(key=lambda x: os.path.getsize(x), reverse=True)
-                best_cand = valid_cands[0]
-                print("\n==================================================================")
-                print(f" [CHECKPOINT INHERITANCE DETECTED]")
-                print(f" Tìm thấy tiến độ đã chạy từ phiên bản: {os.path.basename(best_cand)}")
-                print(f" Tự động kế thừa sang: {os.path.basename(out_jsonl)} để bảo toàn toàn bộ mẫu cũ!")
-                print("==================================================================")
-                shutil.copyfile(best_cand, out_jsonl)
-
-    existing_predictions = []
-    evaluated_keys = set()
-    if out_jsonl and os.path.exists(out_jsonl) and not overwrite_flag:
-        existing_predictions, evaluated_keys = load_existing_predictions(out_jsonl)
-
-    remaining_samples = []
-    for idx, item in enumerate(target_samples):
-        key = f"{item.get('question_id')}_{item.get('image_name')}"
-        if key not in evaluated_keys or overwrite_flag:
-            item_with_idx = dict(item)
-            item_with_idx["_global_index"] = idx
-            remaining_samples.append(item_with_idx)
-
-    num_already_done = total_samples_target - len(remaining_samples)
-
-    # Trường hợp 1: Tất cả các mẫu đã hoàn thành 100%
-    if len(remaining_samples) == 0:
-        print("\n==================================================================")
-        print(f" [RESUME - ĐÃ HOÀN TẤT 100%] Model: {model_name}")
-        print(f" File kết quả {out_jsonl} đã có đủ {len(existing_predictions)} / {total_samples_target} mẫu.")
-        print(f" Bỏ qua bước nạp trọng số và suy luận lại!")
-        print("==================================================================")
-
-        all_predictions = sorted(existing_predictions, key=lambda x: x.get("index", 0))
-        total_em = sum(p["exact_match"] for p in all_predictions)
-        total_f1 = sum(p["f1_score"] for p in all_predictions)
-        avg_em = (total_em / len(all_predictions)) * 100 if all_predictions else 0.0
-        avg_f1 = (total_f1 / len(all_predictions)) if all_predictions else 0.0
-
-        print(f" Full Test Set F1:           {avg_f1:.2f}%")
-        print(f" Full Test Set Exact Match:  {avg_em:.2f}%")
-        print("==================================================================")
-
-        if args.summary_csv and not is_profile_mode:
-            update_summary_csv(args.summary_csv, {
-                "model_name": model_name,
-                "backend": model_backend,
-                "num_samples": len(all_predictions),
-                "full_f1": round(avg_f1, 2),
-                "full_em": round(avg_em, 2),
-                "elapsed_seconds": 0.0,
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-            })
-        return {
-            "model_name": model_name,
-            "backend": model_backend,
-            "f1": avg_f1,
-            "em": avg_em,
-            "throughput": 0.0,
-            "latency": 0.0,
-            "status": "COMPLETED_SKIPPED"
-        }
-
-    # Trường hợp 2: Cần thực thi (chạy mới hoặc tiếp tục dở dang)
-    if num_already_done > 0:
-        first_rem = remaining_samples[0]
-        print("\n==================================================================")
-        print(f" [SAMPLE RESUME DETECTED] Tìm thấy tiến độ dở dang cho: {model_name}")
-        print(f" Đã hoàn thành trước đó:     {num_already_done} / {total_samples_target} mẫu")
-        print(f" Số mẫu cần chạy tiếp:        {len(remaining_samples)} mẫu")
-        print(f" Bắt đầu suy luận từ mẫu thứ: #{num_already_done + 1} (Dataset Index: {first_rem['_global_index']}, ID: {first_rem['question_id']})")
-        print("==================================================================")
-    else:
-        mode_label = f"PROFILING ({total_samples_target} mẫu)" if is_profile_mode else f"ĐÁNH GIÁ MỚI ({len(target_samples)} mẫu)"
-        print(f"\n[INFERENCE] Bắt đầu {mode_label} cho mô hình {model_name}...")
-
-    # Khởi tạo Runner mô hình (Đo thời gian nạp)
-    load_start_time = time.perf_counter()
-    runner = VLMRunner(model_name, backend=model_backend, load_in_4bit=load_in_4bit, hf_token=hf_token)
-    load_time_s = time.perf_counter() - load_start_time
-
-    if torch is not None and torch.cuda.is_available():
-        torch.cuda.reset_peak_memory_stats()
-
-    # Chuẩn bị file ghi streaming
-    out_f = None
-    if out_jsonl:
-        os.makedirs(os.path.dirname(out_jsonl), exist_ok=True)
-        file_mode = "w" if (overwrite_flag or not os.path.exists(out_jsonl)) else "a"
-        out_f = open(out_jsonl, file_mode, encoding="utf-8")
-
-    new_predictions = []
-    sample_latencies = []
-    start_time = time.time()
+    print("\n" + "=" * 80)
+    print(" BENCHMARK EXECUTION COMPLETED")
+    print("=" * 80)
+    print(f" Total Evaluated Questions: {summary['total_evaluated_samples']}")
+    print(f" Total Execution Time:     {total_time:.1f} s ({total_time/60:.2f} min)")
+    print(f" Peak VRAM Allocated:      {peak_alloc:.2f} GB / 4.29 GB (Hardware budget safe)")
+    print(f" Peak VRAM Reserved:       {peak_res:.2f} GB / 4.29 GB")
+    print("-" * 80)
+    print(" STAGE 1 SPATIAL LOCALIZATION:")
+    print(f"   - Mean IoU:             {summary['stage1']['mean_iou_pct']:.2f}%")
+    print(f"   - Mean GT Inclusion:    {summary['stage1']['mean_recall_pct']:.2f}%")
+    print(f"   - Hit Rate @ IoU >= 0.3: {summary['stage1']['hit_rate_iou_03_pct']:.2f}%")
+    print(f"   - Hit Rate @ IoU >= 0.5: {summary['stage1']['hit_rate_iou_05_pct']:.2f}%")
+    print(f"   - Hit Rate @ Rec >= 0.5: {summary['stage1']['hit_rate_recall_05_pct']:.2f}%")
+    print(f"   - Multi-Box Hit Rate:   {summary['stage1']['multi_box_hit_rate_pct']:.2f}%")
+    print("-" * 80)
+    print(" STAGE 2 VQA ACCURACY:")
+    print(f"   - Exact Match (Original GT):     {summary['stage2']['exact_match_gt_pct']:.2f}%")
+    print(f"   - Exact Match (Verified GT):     {summary['stage2']['exact_match_verified_pct']:.2f}%")
+    print(f"   - VQA Consensus Acc (Orig GT):   {summary['stage2']['vqa_acc_gt_pct']:.2f}%")
+    print(f"   - VQA Consensus Acc (Ver GT):    {summary['stage2']['vqa_acc_verified_pct']:.2f}%")
+    print(f"   - Token F1 (Original GT):        {summary['stage2']['f1_gt_pct']:.2f}%")
+    print(f"   - Token F1 (Verified GT):        {summary['stage2']['f1_verified_pct']:.2f}%")
+    print(f"   - Substring Match (Verified GT): {summary['stage2']['substring_match_verified_pct']:.2f}%")
+    print(f"   - Relaxed Accuracy / ANLS (Verified GT): {summary['stage2']['anls_verified_pct']:.2f}%")
+    print("-" * 80)
+    print(" PERFORMANCE:")
+    print(f"   - Average Latency:      {summary['performance']['avg_latency_s']:.3f} s/question")
+    print(f"   - Throughput:           {summary['performance']['throughput_samples_per_min']:.2f} questions/min")
+    print(f" Checkpoint saved at:     {ckpt_path}")
+    print(f" Summary saved at:        {os.path.join(args.output_dir, 'summary_results.json')}")
+    print("=" * 80)
+    with open(os.path.join(args.output_dir, "summary_metrics.json"), "w", encoding="utf-8") as smf:
+        json.dump(summary, smf, ensure_ascii=False, indent=2)
+    _export_benchmark_csvs(args.output_dir, summary, ckpt_mgr.records)
 
     try:
-        desc_msg = f"Profiling {model_name}" if is_profile_mode else (f"Resuming {model_name}" if num_already_done > 0 else f"Evaluating {model_name}")
-
-        if args.no_group_by_image:
-            # Chế độ chạy tuần tự (Fallback)
-            for item in tqdm(remaining_samples, desc=desc_msg):
-                t_sample_start = time.perf_counter()
-                pred = runner.generate(item["image_path"], item["question"])
-                s_lat = time.perf_counter() - t_sample_start
-                sample_latencies.append(s_lat)
-
-                em = compute_exact_match(pred, item["ground_truths"])
-                f1 = compute_f1_score(pred, item["ground_truths"])
-
-                record = {
-                    "index": item.get("_global_index", len(existing_predictions) + len(new_predictions)),
-                    "question_id": item["question_id"],
-                    "image_name": item["image_name"],
-                    "question": item["question"],
-                    "ground_truths": item["ground_truths"],
-                    "prediction": pred,
-                    "exact_match": em,
-                    "f1_score": round(f1 * 100, 2),
-                    "latency_s": round(s_lat, 3)
-                }
-                new_predictions.append(record)
-
-                if out_f is not None:
-                    out_f.write(json.dumps(record, ensure_ascii=False) + "\n")
-                    out_f.flush()
-        else:
-            # Chế độ tối ưu hóa gom nhóm theo ảnh & Asynchronous Prefetch Pipeline
-            grouped_samples = group_samples_by_image(remaining_samples)
-            effective_bs = args.batch_size if args.batch_size > 0 else runner.get_recommended_batch_size()
-            print(f"\n[OPTIMIZATION] Bật cơ chế Image-Grouped Processing & Asynchronous Prefetch Pipeline!")
-            print(f" - Tổng số câu hỏi cần chạy:      {len(remaining_samples)} câu")
-            print(f" - Số lượng hình ảnh duy nhất:     {len(grouped_samples)} ảnh")
-            print(f" - Kích thước lô tối đa (B_max):   {effective_bs} câu hỏi/lô")
-            print(f" - Hàng đợi nạp trước Double Buffering: 3 ảnh (Ẩn hoàn toàn Disk I/O)")
-
-            with AsyncGroupedPrefetcher(grouped_samples, effective_bs=effective_bs, prefetch_depth=3) as prefetcher:
-                with tqdm(total=len(remaining_samples), desc=desc_msg) as pbar:
-                    for img_path, image, chunk_items in prefetcher:
-                        chunk_questions = [c["question"] for c in chunk_items]
-                        t_chunk_start = time.perf_counter()
-                        chunk_preds = runner.generate_multi(
-                            img_path,
-                            chunk_questions,
-                            max_chunk_size=effective_bs,
-                            preloaded_image=image
-                        )
-                        chunk_dur = time.perf_counter() - t_chunk_start
-
-                        while len(chunk_preds) < len(chunk_items):
-                            chunk_preds.append("")
-
-                        avg_item_lat = chunk_dur / max(1, len(chunk_items))
-
-                        for item, pred in zip(chunk_items, chunk_preds):
-                            sample_latencies.append(avg_item_lat)
-                            em = compute_exact_match(pred, item["ground_truths"])
-                            f1 = compute_f1_score(pred, item["ground_truths"])
-
-                            record = {
-                                "index": item.get("_global_index", len(existing_predictions) + len(new_predictions)),
-                                "question_id": item["question_id"],
-                                "image_name": item["image_name"],
-                                "question": item["question"],
-                                "ground_truths": item["ground_truths"],
-                                "prediction": pred,
-                                "exact_match": em,
-                                "f1_score": round(f1 * 100, 2),
-                                "latency_s": round(avg_item_lat, 3)
-                            }
-                            new_predictions.append(record)
-
-                            if out_f is not None:
-                                out_f.write(json.dumps(record, ensure_ascii=False) + "\n")
-
-                        if out_f is not None:
-                            out_f.flush()
-                        pbar.update(len(chunk_items))
-    finally:
-        if out_f is not None:
-            out_f.close()
-
-    elapsed_time = time.time() - start_time
-
-    # Hợp nhất dữ liệu đã có và dữ liệu mới sinh
-    all_predictions = (existing_predictions if not overwrite_flag else []) + new_predictions
-    all_predictions.sort(key=lambda x: x.get("index", 0))
-
-    total_em = sum(p["exact_match"] for p in all_predictions)
-    total_f1 = sum(p["f1_score"] for p in all_predictions)
-    avg_em = (total_em / len(all_predictions)) * 100 if all_predictions else 0.0
-    avg_f1 = (total_f1 / len(all_predictions)) if all_predictions else 0.0
-
-    avg_latency = (sum(sample_latencies) / len(sample_latencies)) if sample_latencies else 0.0
-    throughput = (60.0 / avg_latency) if avg_latency > 0 else 0.0
-
-    if is_profile_mode:
-        num_prof = len(new_predictions)
-        peak_vram_alloc = (torch.cuda.max_memory_allocated() / (1024 ** 3)) if (torch is not None and torch.cuda.is_available()) else 0.0
-        peak_vram_res = (torch.cuda.max_memory_reserved() / (1024 ** 3)) if (torch is not None and torch.cuda.is_available()) else 0.0
-        peak_ram = (psutil.Process().memory_info().rss / (1024 ** 3)) if psutil is not None else 0.0
-
-        total_dataset_samples = 10028
-        est_full_hours = ((avg_latency * total_dataset_samples) + load_time_s) / 3600.0
-        est_cost_usd = est_full_hours * args.hourly_rate
-
-        print("\n========================================================================================")
-        print(f" BÁO CÁO PROFILING HIỆU NĂNG MÔ HÌNH: {model_name}")
-        print(f" Backend thực tế: {runner.actual_backend}")
-        print("========================================================================================")
-        print(f" - Số mẫu profiling:               {num_prof} mẫu (indices 0..{num_prof - 1})")
-        print(f" - Thời gian nạp mô hình:           {load_time_s:.2f} s")
-        print(f" - Tốc độ suy luận trung bình:      {avg_latency:.2f} s/mẫu")
-        print(f" - Thông lượng (Throughput):        {throughput:.2f} mẫu/phút")
-        print(f" - VRAM tiêu thụ đỉnh (Allocated):  {peak_vram_alloc:.2f} GB")
-        print(f" - VRAM tiêu thụ đỉnh (Reserved):   {peak_vram_res:.2f} GB")
-        print(f" - RAM hệ thống tiêu thụ:           {peak_ram:.2f} GB")
-        print(f" - Điểm sơ bộ (Preliminary):        F1: {avg_f1:.2f}% | Exact Match: {avg_em:.2f}%")
-        print("----------------------------------------------------------------------------------------")
-        print(" - DỰ ĐOÁN NGOẠI SUY TẬP TEST (10.028 MẪU):")
-        print(f"   * Tổng thời gian ước tính:       {est_full_hours:.2f} giờ (~{est_full_hours * 60:.1f} phút)")
-        print(f"   * Ước tính chi phí Vast.ai (${args.hourly_rate:.2f}/h): ${est_cost_usd:.2f} USD")
-        print("========================================================================================")
-
-        if args.profile_csv:
-            prof_row = {
-                "model_name": model_name,
-                "backend": runner.actual_backend,
-                "profile_samples": num_prof,
-                "load_time_s": round(load_time_s, 2),
-                "avg_latency_s": round(avg_latency, 2),
-                "throughput_samples_per_min": round(throughput, 2),
-                "peak_vram_allocated_gb": round(peak_vram_alloc, 2),
-                "peak_vram_reserved_gb": round(peak_vram_res, 2),
-                "peak_ram_gb": round(peak_ram, 2),
-                "preliminary_f1": round(avg_f1, 2),
-                "preliminary_em": round(avg_em, 2),
-                "est_full_10028_hours": round(est_full_hours, 2),
-                "est_full_10028_cost_usd": round(est_cost_usd, 2),
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-            }
-            update_profiling_csv(args.profile_csv, prof_row)
-            print(f"[SAVED] Đã lưu kết quả profiling tại: {args.profile_csv}")
-    else:
-        print("\n==================================================================")
-        print(f" KẾT QUẢ ZERO-SHOT BENCHMARK: {model_name}")
-        print("==================================================================")
-        print(f" Tổng số mẫu hoàn thành:    {len(all_predictions)} / {total_samples_target}")
-        print(f" Mẫu mới hoàn thành phiên này: {len(new_predictions)}")
-        print(f" Thời gian chạy phiên này:   {elapsed_time:.2f} giây")
-        print(f" Full Test Set F1:           {avg_f1:.2f}%")
-        print(f" Full Test Set Exact Match:  {avg_em:.2f}%")
-        print("==================================================================")
-
-        if args.summary_csv:
-            update_summary_csv(args.summary_csv, {
-                "model_name": model_name,
-                "backend": runner.actual_backend,
-                "num_samples": len(all_predictions),
-                "full_f1": round(avg_f1, 2),
-                "full_em": round(avg_em, 2),
-                "elapsed_seconds": round(elapsed_time, 2),
-                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-            })
-            print(f"[SAVED] Đã cập nhật bảng tổng kết tại: {args.summary_csv}")
-
-    # Giải phóng VRAM và dọn dẹp cache đĩa của model này trước khi chuyển sang model kế tiếp
-    runner.unload(evict_hf_cache=(not args.no_evict_cache))
-
-    return {
-        "model_name": model_name,
-        "backend": runner.actual_backend,
-        "f1": avg_f1,
-        "em": avg_em,
-        "throughput": throughput,
-        "latency": avg_latency,
-        "status": "COMPLETED_RUN"
-    }
+        if os.path.exists(lock_file):
+            with open(lock_file, "r") as lf:
+                cur_pid = int(lf.read().strip())
+            if cur_pid == os.getpid():
+                os.remove(lock_file)
+    except Exception:
+        pass
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Zero-shot Evaluation of VLMs on ViTextVQA")
-    parser.add_argument("--model_name", type=str, default="all",
-                        help="Hugging Face model ID hoặc 'all' / '3,4' / 'vintern' để chạy 1 mạch toàn bộ danh sách")
-    parser.add_argument("--backend", type=str, default="auto", choices=["auto", "unsloth", "native"])
-    parser.add_argument("--load_in_4bit", action="store_true", help="Nạp 4-bit qua Unsloth")
-    parser.add_argument("--data_dir", type=str, default="data/vitextvqa", help="Thư mục chứa dataset ViTextVQA")
-    parser.add_argument("--annotations", type=str, default=None, help="Đường dẫn file test annotations json")
-    parser.add_argument("--image_dir", type=str, default=None, help="Đường dẫn thư mục chứa ảnh")
-    parser.add_argument("--max_samples", type=int, default=None, help="Giới hạn số mẫu (ví dụ 10 để smoke test)")
-    parser.add_argument("--output_jsonl", type=str, default=None, help="File lưu chi tiết kết quả dự đoán")
-    parser.add_argument("--summary_csv", type=str, default="results/vitextvqa_benchmark_summary.csv", help="File tổng hợp điểm số")
-    parser.add_argument("--no_evict_cache", action="store_true", help="Không xóa cache sau khi chạy xong")
-    parser.add_argument("--overwrite", action="store_true", help="Ghi đè lại từ đầu, không resume từ kết quả cũ")
-    parser.add_argument("--profile", type=int, default=None, help="Kích hoạt chế độ profiling tốc độ và tài nguyên (ví dụ: --profile 100)")
-    parser.add_argument("--profile_csv", type=str, default="results/profiling_summary.csv", help="File tổng hợp thông số profiling")
-    parser.add_argument("--hourly_rate", type=float, default=0.21, help="Chi phí thuê GPU trên Vast.ai ($/giờ) để ngoại suy chi phí")
-    parser.add_argument("--hf_token", "--token", dest="hf_token", type=str, default=None,
-                        help="Hugging Face Access Token (hoặc tự động nhận từ biến môi trường HF_TOKEN)")
-    parser.add_argument("--batch_size", type=int, default=0,
-                        help="Kích thước lô tối đa cho mỗi nhóm ảnh (0 = auto tự động xác định theo dung lượng VRAM)")
-    parser.add_argument("--no_group_by_image", action="store_true",
-                        help="Vô hiệu hóa tính năng gom nhóm câu hỏi theo ảnh (chạy tuần tự)")
+    parser = argparse.ArgumentParser(description="Resumable ViTextVQA SG-VCD Benchmark Runner")
+    parser.add_argument("--test", action="store_true", help="Run smoke test on 3 samples.")
+    parser.add_argument("--limit", type=int, default=0, help="Limit evaluation to first N questions.")
+    parser.add_argument("--resume", action="store_true", default=True, help="Resume from existing checkpoint (default: True).")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite checkpoint and re-run from scratch.")
+    parser.add_argument("--batch-size", type=int, default=1, help="Batch size (default: 1 for RTX 3050 4GB).")
+    parser.add_argument("--method", type=str, default="sg_vcd", choices=["sg_vcd", "baseline"], help="Evaluation method.")
+    parser.add_argument("--model-name", "--model_name", type=str, default="5CD-AI/Vintern-1B-v3_5", help="Hugging Face model ID.")
+    parser.add_argument("--dataset", type=str, default="results/swintextspotter_auto_annot/answer_bboxes_400_verified.json", help="Path to verified annotations JSON.")
+    parser.add_argument("--data-dir", type=str, default="data/vitextvqa", help="Path to ViTextVQA dataset root.")
+    parser.add_argument("--checkpoint", type=str, default=None, help="Path to checkpoint JSON file.")
+    parser.add_argument("--output-dir", type=str, default="results/sg_vcd_400_benchmark", help="Output directory.")
+    parser.add_argument("--device", type=str, default="cuda", help="Device (cuda or cpu).")
     args = parser.parse_args()
 
-    # 0. Thiết lập Hugging Face Token & Xác thực Hub (Kích hoạt Xet High Performance)
-    os.environ["HF_XET_HIGH_PERFORMANCE"] = "1"
-    hf_token = args.hf_token or os.environ.get("HF_TOKEN") or None
-    if hf_token:
-        os.environ["HF_TOKEN"] = hf_token
-        try:
-            from huggingface_hub import login
-            login(token=hf_token, add_to_git_credential=False)
-            print("[AUTH] Đã kích hoạt xác thực Hugging Face Hub thành công (tăng tốc tải & mở rộng rate limit)!")
-        except Exception as e:
-            print(f"[AUTH] Đã gán HF_TOKEN vào biến môi trường ({e})")
-    else:
-        print("[CẢNH BÁO] Chưa cấu hình HF_TOKEN! Các yêu cầu tải model từ Hugging Face Hub sẽ ở chế độ unauthenticated (có thể bị giới hạn tốc độ).")
-
-    # 1. Định vị và nạp dữ liệu
-    anno_path = args.annotations
-    img_dir = args.image_dir
-    if not anno_path or not img_dir:
-        auto_anno, auto_img = locate_dataset_files(args.data_dir)
-        anno_path = anno_path or auto_anno
-        img_dir = img_dir or auto_img
-
-    samples = load_vitextvqa_test_data(anno_path, img_dir, max_samples=args.max_samples)
-    if not samples:
-        print("[LỖI] Không tìm thấy mẫu kiểm thử nào! Vui lòng kiểm tra lại đường dẫn dataset.")
-        sys.exit(1)
-
-    # 2. Phân giải danh sách mô hình cần chạy
-    models_to_run = resolve_models_to_run(args.model_name, args.backend, args.load_in_4bit)
-    is_multi = len(models_to_run) > 1
-
-    print("\n==================================================================")
-    print(f" CHƯƠNG TRÌNH BENCHMARK VLM TRÊN ViTextVQA")
-    print(f" Số lượng mô hình sẽ thực thi: {len(models_to_run)}")
-    for idx, m in enumerate(models_to_run, 1):
-        print(f"   {idx}. {m['name']} (Backend: {m['backend']})")
-    print("==================================================================")
-
-    results = []
-    for idx, model_cfg in enumerate(models_to_run, 1):
-        if is_multi:
-            print(f"\n######################################################################")
-            print(f">>> [TIẾN TRÌNH {idx}/{len(models_to_run)}] BẮT ĐẦU: {model_cfg['name']}")
-            print(f"######################################################################")
-        res = evaluate_single_model(model_cfg, samples, args, hf_token=hf_token, is_multi_model=is_multi)
-        results.append(res)
-
-    if is_multi:
-        print("\n==================================================================")
-        print(">>> TỔNG KẾT TOÀN BỘ CHUỖI BENCHMARK:")
-        print("==================================================================")
-        for r in results:
-            print(f" - {r['model_name']}: F1 = {r.get('f1', 0.0):.2f}% | EM = {r.get('em', 0.0):.2f}% | Status: {r.get('status', 'DONE')}")
-        print("==================================================================")
+    run_benchmark(args)
 
 
 if __name__ == "__main__":

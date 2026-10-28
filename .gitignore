@@ -26,6 +26,7 @@ datasets/
 scratch/
 .system_generated/
 .agents/scratch/
+.agents/teamwork/
 
 # IDE / OS files
 .vscode/

@@ -30,3 +30,4 @@ pyqt6-sip==13.8.0
 pyqt6-webengine==6.7.0
 pyqt6-webengine-qt6==6.7.3
 x-anylabeling-cvhub>=3.0.0
+pytest>=8.0.0
