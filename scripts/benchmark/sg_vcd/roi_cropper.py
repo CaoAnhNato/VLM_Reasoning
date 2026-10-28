@@ -79,8 +79,9 @@ class IsotropicROICropper(BaseROICropper):
         raw_h = max(2, cby2 - cby1)
 
         # Expand sharp bounding box B by a small symmetric context margin so edge glyphs are never clipped
+        # Protect Vietnamese diacritic ascenders/descenders by ensuring vertical padding pad_y >= 0.15 * raw_h
         pad_x = int(round(raw_w * self.context_margin))
-        pad_y = int(round(raw_h * self.context_margin))
+        pad_y = max(int(round(raw_h * self.context_margin)), int(round(raw_h * 0.15)), 2)
 
         # Cross-bound within canvas ensuring x2 >= x1 + 2 and y2 >= y1 + 2 under all inputs (including out-of-bounds)
         min_dim_x = min(2, W)

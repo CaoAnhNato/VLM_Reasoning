@@ -23,6 +23,7 @@ import math
 import re
 import time
 from typing import Any, Dict, List, Optional, Tuple
+import unicodedata
 
 import numpy as np
 from PIL import Image, ImageFilter
@@ -97,32 +98,47 @@ def strip_conversational_preamble(text: str, question: Optional[str] = None) -> 
     if not text:
         return ""
 
-    clean = text.strip()
-    # Strip prompt-instruction echo if present
-    clean = re.sub(
-        r"^(?:chỉ\s+)?(?:ghi|trả\s+lời|nêu)(?:\s+thật|\s+đúng|\s+ngắn\s+gọn|\s+từ|\s+hoặc|\s+cụm\s+từ|\s+đáp\s+án)*\s*[:,\-]?\s*",
-        "",
-        clean,
-        flags=re.IGNORECASE,
-    ).strip()
-
-    # Strip enclosing quotation marks
-    if len(clean) >= 2 and ((clean[0] in ('"', "'", '“', '‘') and clean[-1] in ('"', "'", '”', '’'))):
-        clean = clean[1:-1].strip()
+    clean = unicodedata.normalize("NFC", text).strip()
 
     # Generic conversational introductory clause patterns
     intro_patterns = [
-        r"^(?:bức\s+)?(?:ảnh|hình)(?:\s+này)?\s+(?:được\s+chụp\s+vào\s+dịp|có\s+nguồn\s+(?:từ|gốc\s+từ)|lấy\s+nguồn\s+từ|nguồn\s+từ|chụp|cho\s+thấy|ghi\s+lại|là)\s*[:,\-]?\s*",
-        r"^(?:câu\s+trả\s+lời|đáp\s+án)(?:\s+(?:của\s+tôi|chính\s+xác|cho\s+câu\s+hỏi))?\s*(?:là)?\s*[:,\-]?\s*",
-        r"^(?:trong\s+(?:bức\s+)?(?:ảnh|hình)\s+(?:có|là|thấy|xuất\s+hiện))\s*[:,\-]?\s*",
+        r"^(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình)(?:\s+này)?\s+(?:được\s+chụp\s+vào\s+dịp|có\s+nguồn\s+(?:từ|gốc\s+từ)|lấy\s+nguồn\s+từ|nguồn\s+từ|chụp|cho\s+thấy|ghi\s+lại|có\s+chữ|chỉ\s+ra|là|có)\s*[:,\-]?\s*",
+        r"^(?:câu\s+trả\s+lời|đáp\s+án)(?:\s+(?:của\s+tôi|chính\s+xác|cho\s+câu\s+hỏi))?\s*(?:là\s*[:,\-]?|[:,\-])\s*",
+        r"^(?:trong\s+(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình|khung\s+hình)\s+(?:có\s+(?:chữ|từ|dòng\s+chữ|chi\s+tiết)?|là|thấy|xuất\s+hiện|ghi))\s*[:,\-]?\s*",
+        r"^(?:chữ\s+(?:trong\s+ảnh|trên\s+ảnh|xuất\s+hiện)\s+(?:là|ghi))\s*[:,\-]?\s*",
         r"^(?:được\s+chụp\s+tại|chụp\s+tại|được\s+chụp\s+vào\s+dịp)\s*[:,\-]?\s*",
-        r"^(?:đây\s+là|đó\s+là|nó\s+là)\s*[:,\-]?\s*",
+        r"^(?:đây\s+là|đó\s+là|nó\s+là)\s*[:,\-]\s*",
         r"^(?:có\s+thể\s+thấy\s+(?:rằng)?)\s*[:,\-]?\s*",
+        r"^(?:theo\s+(?:thông\s+tin\s+trong\s+)?(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình)(?:[:,\s]*)?)\s*",
+        r"^(?:dựa\s+vào\s+(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình)(?:[:,\s]*)?)\s*",
+        r"^(?:kết\s+quả\s+là)\s*[:,\-]?\s*",
     ]
-    for pattern in intro_patterns:
-        m = re.match(pattern, clean, flags=re.IGNORECASE)
-        if m:
-            clean = clean[m.end():].strip()
+
+    # Iteratively strip prompt instructions, outer quotes, and introductory clauses
+    for _ in range(6):
+        prev_len = len(clean)
+
+        # Strip prompt-instruction echo if present
+        clean = re.sub(
+            r"^(?:chỉ\s+)?(?:ghi|trả\s+lời|nêu)(?:\s+thật|\s+đúng|\s+ngắn\s+gọn|\s+từ|\s+hoặc|\s+cụm\s+từ|\s+đáp\s+án)*\s*[:,\-]?\s*",
+            "",
+            clean,
+            flags=re.IGNORECASE,
+        ).strip()
+
+        # Strip enclosing quotation marks
+        if len(clean) >= 2 and ((clean[0] in ('"', "'", '“', '‘') and clean[-1] in ('"', "'", '”', '’'))):
+            clean = clean[1:-1].strip()
+
+        for pattern in intro_patterns:
+            m = re.match(pattern, clean, flags=re.IGNORECASE)
+            if m:
+                candidate = clean[m.end():].strip()
+                if candidate:
+                    clean = candidate
+                break
+
+        if len(clean) == prev_len:
             break
 
     # If question is provided, check for question-echo subject framing before copula / relation verbs
@@ -156,13 +172,13 @@ def strip_conversational_preamble(text: str, question: Optional[str] = None) -> 
                         break
 
     # Strip trailing periods and whitespace (sentence terminator)
-    clean = re.sub(r"[\.\s]+$", "", clean).strip()
+    clean = re.sub(r"[\.,;:!\?\s]+$", "", clean).strip()
 
     # Strip enclosing quotes again if newly exposed
     if len(clean) >= 2 and ((clean[0] in ('"', "'", '“', '‘') and clean[-1] in ('"', "'", '”', '’'))):
         clean = clean[1:-1].strip()
 
-    return clean if clean else text.strip()
+    return clean if clean else unicodedata.normalize("NFC", text).strip()
 
 
 def format_concise_decoding_prompt(question: str) -> str:
@@ -590,17 +606,22 @@ class SGVCDPipeline:
                         fused_y1 = min(sy1, py1)
                         fused_y2 = max(sy2, py2)
 
-                    # Aspect ratio sanity gating (limit extreme elongation <= 3.5)
+                    # Vertical context padding for diacritics (protect ascenders/descenders, pad_y >= 0.15 * h_seed)
+                    pad_y_diacritic = max(int(round(0.15 * h_seed)), 2)
+                    fused_y1 = max(0, fused_y1 - pad_y_diacritic)
+                    fused_y2 = min(H_img, fused_y2 + pad_y_diacritic)
+
+                    # Aspect ratio sanity gating (preserve horizontal text spans up to 4.5 elongation)
                     fw = fused_x2 - fused_x1
                     fh = fused_y2 - fused_y1
-                    if fw > 3.5 * max(1, fh):
-                        target_fw = int(round(3.5 * fh))
+                    if fw > 4.5 * max(1, fh):
+                        target_fw = int(round(4.5 * fh))
                         if target_fw >= w_seed:
                             diff_x = fw - target_fw
                             fused_x1 = min(sx1, fused_x1 + diff_x // 2)
                             fused_x2 = max(sx2, fused_x2 - (diff_x - diff_x // 2))
-                    elif fh > 3.5 * max(1, fw):
-                        target_fh = int(round(3.5 * fw))
+                    elif fh > 4.5 * max(1, fw):
+                        target_fh = int(round(4.5 * fw))
                         if target_fh >= h_seed:
                             diff_y = fh - target_fh
                             fused_y1 = min(sy1, fused_y1 + diff_y // 2)
