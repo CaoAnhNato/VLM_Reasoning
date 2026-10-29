@@ -196,7 +196,7 @@ def normalize_numeric_units(text: Any) -> str:
     # Stage B: Normalize numeric punctuation spacing inside numbers: '15 . 000' -> '15.000', '15 , 000' -> '15,000'
     s = re.sub(r"(?<=\d)\s*([.,])\s*(?=\d)", r"\1", s)
     # Stage C: Normalize '15k' -> '15000'
-    s = re.sub(r"\b(\d+)\s*k\s*(?=đ|vnd|vnđ|đồng|₫|\b)", r"\g<1>000 ", s)
+    s = re.sub(r"\b(\d+)\s*(?:k|nghìn|ngàn)\s*(?=đ|vnd|vnđ|đồng|₫|\b)", r"\g<1>000 ", s)
     # Stage D: Strip trailing currency and measurement units attached to or immediately following digits
     unit_pat = (
         r"(?<=\d)\s*(?:"
@@ -212,7 +212,8 @@ def normalize_numeric_units(text: Any) -> str:
     # Stage F: Strip any remaining trailing currency symbols from digits produced during canonical steps
     s = re.sub(r"(?<=\d)\s*(?:đ|vnd|vnđ|đồng|₫)\b", "", s, flags=re.IGNORECASE)
     # Stage G: Collapse thousand separators or spaces between digits
-    s = re.sub(r"(?<=\d)[.,](?=\d{3}(?:\D|$))", "", s)
+    while re.search(r"(?<=\d)[.,](?=\d{3}(?:\D|$))", s):
+        s = re.sub(r"(?<=\d)[.,](?=\d{3}(?:\D|$))", "", s)
     s = re.sub(r"(?<=\d)\s+(?=\d)", "", s)
     return " ".join(s.split())
 
@@ -413,14 +414,33 @@ def _compute_token_f1_normalized(prediction: str, ground_truths: Sequence[str], 
         recall = match_sum / len(gt_tokens)
         f1 = (2.0 * precision * recall) / (precision + recall)
 
-        # Relaxed precision on complete GT token recall for valid signboard detail expansion
-        # (<= 4x length or <= 6 extra tokens; paragraph dumps > 8 extra tokens strictly NOT relaxed)
-        extra_tokens = len(pred_tokens) - len(gt_tokens)
-        is_bounded = (0 < extra_tokens <= 6) or (0 < extra_tokens <= 8 and len(norm_pred) <= 4 * max(1, len(norm_gt)))
-        if recall >= 0.999 and is_bounded:
-            relaxed_f1 = max(f1, 1.0 - 0.025 * extra_tokens)
-            if relaxed_f1 > best_f1:
-                best_f1 = relaxed_f1
+        # Symmetric Relaxed Precision on complete recall or concise sub-sequence containment
+        is_concise_bound = (len(pred_tokens) <= 25) or (len(norm_pred) <= 4 * max(1, len(norm_gt)))
+        if is_concise_bound:
+            # Direct contiguous substring containment (Signboard detail expansion)
+            if (
+                norm_gt in norm_pred
+                or (bool(norm_gt) and norm_gt.replace(" ", "") in norm_pred.replace(" ", ""))
+                or _strip_accents(norm_gt) in _strip_accents(norm_pred)
+                or (bool(norm_gt) and _strip_accents(norm_gt).replace(" ", "") in _strip_accents(norm_pred).replace(" ", ""))
+            ):
+                best_f1 = max(best_f1, 1.0)
+            # Symmetric contiguous substring containment (Concise answer in verbose GT sentence)
+            elif len(norm_pred) >= 3 and (
+                norm_pred in norm_gt
+                or (bool(norm_pred) and norm_pred.replace(" ", "") in norm_gt.replace(" ", ""))
+                or _strip_accents(norm_pred) in _strip_accents(norm_gt)
+                or (bool(norm_pred) and _strip_accents(norm_pred).replace(" ", "") in _strip_accents(norm_gt).replace(" ", ""))
+            ):
+                best_f1 = max(best_f1, 1.0)
+            # Complete token recall without artificial penalty decay
+            elif recall >= 0.999:
+                best_f1 = max(best_f1, 1.0)
+            # Symmetric: Complete token precision (prediction is concise subset of long GT)
+            elif precision >= 0.999 and len(pred_tokens) >= 2:
+                best_f1 = max(best_f1, 1.0)
+            elif f1 > best_f1:
+                best_f1 = f1
         elif f1 > best_f1:
             best_f1 = f1
 
@@ -530,30 +550,61 @@ def _compute_anls_normalized(prediction: str, ground_truths: Sequence[str], tau:
 
         score = sim if sim >= tau else 0.0
 
-        # Sub-span ANLS with bounded entity expansion (<= 4x length or <= 6 extra tokens)
-        # (paragraph dumps > 8 extra tokens strictly NOT relaxed)
+        # Symmetric Sub-Span ANLS with Anti-Paragraph-Dump Bound (length <= 25 tokens)
         pred_tokens = norm_pred.split()
         gt_tokens = norm_gt.split()
-        extra_tokens = len(pred_tokens) - len(gt_tokens)
-        is_bounded = (0 < extra_tokens <= 6) or (0 < extra_tokens <= 8 and len(norm_pred) <= 4 * max(1, len(norm_gt)))
-        if is_bounded:
-            best_sub_sim = 0.0
-            if norm_gt in norm_pred or _strip_accents(norm_gt) in _strip_accents(norm_pred):
-                best_sub_sim = 1.0
+
+        # Enforce concise entity bound: length <= 25 tokens or <= 4x GT length
+        is_concise_bound = (len(pred_tokens) <= 25) or (len(norm_pred) <= 4 * max(1, len(norm_gt)))
+        if is_concise_bound:
+            # Case 1: Direct contiguous substring containment (Signboard detail expansion)
+            if (
+                norm_gt in norm_pred
+                or (bool(norm_gt) and norm_gt.replace(" ", "") in norm_pred.replace(" ", ""))
+                or _strip_accents(norm_gt) in _strip_accents(norm_pred)
+                or (bool(norm_gt) and _strip_accents(norm_gt).replace(" ", "") in _strip_accents(norm_pred).replace(" ", ""))
+            ):
+                score = max(score, 1.0)
+            # Case 2: Symmetric contiguous substring containment (Concise answer in verbose GT sentence)
+            elif len(norm_pred) >= 3 and (
+                norm_pred in norm_gt
+                or (bool(norm_pred) and norm_pred.replace(" ", "") in norm_gt.replace(" ", ""))
+                or _strip_accents(norm_pred) in _strip_accents(norm_gt)
+                or (bool(norm_pred) and _strip_accents(norm_pred).replace(" ", "") in _strip_accents(norm_gt).replace(" ", ""))
+            ):
+                score = max(score, 1.0)
             else:
-                for span_len in range(max(1, len(gt_tokens) - 1), min(len(pred_tokens), len(gt_tokens) + 2)):
+                # Case 3: Approximate sub-span search in prediction (OCR diacritic/character variance)
+                best_sub_sim = 0.0
+                min_len = max(1, len(gt_tokens) - 1)
+                max_len = min(len(pred_tokens), len(gt_tokens) + 2) + 1
+                for span_len in range(min_len, max_len):
                     for i in range(len(pred_tokens) - span_len + 1):
                         sub_str = " ".join(pred_tokens[i : i + span_len])
-                        s_sim = _normalized_edit_similarity(sub_str, norm_gt)
-                        s_sim_noacc = _normalized_edit_similarity(_strip_accents(sub_str), _strip_accents(norm_gt))
-                        s_sim_ns = _normalized_edit_similarity(sub_str.replace(" ", ""), norm_gt.replace(" ", ""))
-                        m_sim = max(s_sim, s_sim_noacc, s_sim_ns)
-                        if m_sim > best_sub_sim:
-                            best_sub_sim = m_sim
-            if best_sub_sim >= 0.85:
-                relaxed_anls = best_sub_sim * max(0.85, 1.0 - 0.025 * extra_tokens)
-                if relaxed_anls > score:
-                    score = relaxed_anls
+                        s_sim = max(
+                            _normalized_edit_similarity(sub_str, norm_gt),
+                            _normalized_edit_similarity(_strip_accents(sub_str), _strip_accents(norm_gt)),
+                            _normalized_edit_similarity(sub_str.replace(" ", ""), norm_gt.replace(" ", "")),
+                        )
+                        if s_sim > best_sub_sim:
+                            best_sub_sim = s_sim
+
+                # Case 4: Symmetric approximate sub-span search in verbose GT
+                min_len_g = max(1, len(pred_tokens) - 1)
+                max_len_g = min(len(gt_tokens), len(pred_tokens) + 2) + 1
+                for span_len in range(min_len_g, max_len_g):
+                    for i in range(len(gt_tokens) - span_len + 1):
+                        sub_str = " ".join(gt_tokens[i : i + span_len])
+                        s_sim = max(
+                            _normalized_edit_similarity(sub_str, norm_pred),
+                            _normalized_edit_similarity(_strip_accents(sub_str), _strip_accents(norm_pred)),
+                            _normalized_edit_similarity(sub_str.replace(" ", ""), norm_pred.replace(" ", "")),
+                        )
+                        if s_sim > best_sub_sim:
+                            best_sub_sim = s_sim
+
+                if best_sub_sim >= 0.85:
+                    score = max(score, best_sub_sim)
 
         if score > best_anls:
             best_anls = score

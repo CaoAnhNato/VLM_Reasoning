@@ -277,15 +277,18 @@ class TestDynamicContrastiveEOSBoosting(unittest.TestCase):
         self.assertLess(tau_eos, 0.1)
 
     def test_dceb_termination_boost(self):
-        """When entity reading ends (contrast collapses to ~0.05, entropy spikes to 2.4), DCEB boost > 3.0 logits."""
-        effective_peak = max(3.5, self.decoder.delta_peak_min)
+        """When entity reading ends (contrast collapses to ~0.05, entropy spikes to 2.4), DCEB boost > 3.0 logits when enabled."""
+        decoder_enabled = DynamicContrastiveDecoder(kappa_eos=4.00)
+        effective_peak = max(3.5, decoder_enabled.delta_peak_min)
         c_collapse = max(0.0, 1.0 - 0.05 / (effective_peak + 1e-6))
-        sig_entropy = 1.0 / (1.0 + math.exp(-max(-20.0, min(20.0, (2.40 - self.decoder.h_bar_eos) / self.decoder.tau_h_eos))))
-        tau_eos = self.decoder.kappa_eos * c_collapse * sig_entropy
+        sig_entropy = 1.0 / (1.0 + math.exp(-max(-20.0, min(20.0, (2.40 - decoder_enabled.h_bar_eos) / decoder_enabled.tau_h_eos))))
+        tau_eos = decoder_enabled.kappa_eos * c_collapse * sig_entropy
         self.assertGreater(tau_eos, 3.0)
+        # Verify Round 7 default disables DCEB to restore generation fidelity:
+        self.assertEqual(DynamicContrastiveDecoder().kappa_eos, 0.0)
 
-    def test_dceb_apc_unmasking_invariant(self):
-        """EOS token must never be masked out by APC truncation even when P_pos(EOS) is negligible."""
+    def test_dceb_respects_apc_plausibility_constraint(self):
+        """EOS token must respect CAPC/APC plausibility constraints and not be forcibly unmasked when implausible."""
         vocab_size = 50
         eos_id = 49
         pos_logits = torch.zeros((1, vocab_size), dtype=torch.float32)
@@ -294,7 +297,7 @@ class TestDynamicContrastiveEOSBoosting(unittest.TestCase):
         # Distractor token 0 has very high prior
         pos_logits[0, 0] = 12.0
         neg_logits[0, 0] = 11.5
-        # EOS token has low base prior (would be pruned by APC without preservation)
+        # EOS token has low base prior (pruned by APC)
         pos_logits[0, eos_id] = -5.0
         neg_logits[0, eos_id] = -5.0
 
@@ -307,13 +310,13 @@ class TestDynamicContrastiveEOSBoosting(unittest.TestCase):
             eos_id=eos_id,
         )
 
-        # Step 1: Contrast collapsed, entropy high
+        # Step 1: Contrast collapsed, entropy high, but EOS is implausible (-5.0 vs 10.0)
         pos_logits_step1 = torch.zeros((1, vocab_size), dtype=torch.float32)
         neg_logits_step1 = torch.zeros((1, vocab_size), dtype=torch.float32)
-        pos_logits_step1[0, 0] = 1.0
-        neg_logits_step1[0, 0] = 1.0
-        pos_logits_step1[0, eos_id] = 0.5
-        neg_logits_step1[0, eos_id] = 0.5
+        pos_logits_step1[0, 0] = 10.0
+        neg_logits_step1[0, 0] = 10.0
+        pos_logits_step1[0, eos_id] = -5.0
+        neg_logits_step1[0, eos_id] = -5.0
 
         next_token, alpha_t, entropy_val, d_js = self.decoder.decode_step(
             pos_logits=pos_logits_step1,
@@ -322,8 +325,9 @@ class TestDynamicContrastiveEOSBoosting(unittest.TestCase):
             spatial_confidence=1.0,
             eos_id=eos_id,
         )
-        # Because DCEB boosted EOS by > 3.0 logits and unmasked it, EOS wins argmax!
-        self.assertEqual(next_token, eos_id)
+        # Because EOS respects APC plausibility, implausible EOS is pruned and valid token 0 is selected
+        self.assertEqual(next_token, 0)
+        self.assertNotEqual(next_token, eos_id)
 
     def test_dceb_supports_list_of_eos_ids(self):
         """DCEB must accept a list of EOS IDs (e.g. [151645, 151643]) and unmask all of them."""
@@ -365,15 +369,21 @@ class TestSyntacticSpanRefiner(unittest.TestCase):
         self.assertEqual(self.refiner.refine("08:00:00", "Thời gian bắt đầu là khi nào?"), "08:00:00")
         self.assertEqual(self.refiner.refine("Tỉ số là 2:1", "Tỉ số của trận đấu là bao nhiêu?"), "2:1")
 
-    def test_scpdo_spaced_dash_novelty_ranking(self):
-        """Spaced dashes must be disambiguated by novelty conditioned on question."""
+    def test_spaced_dash_preservation(self):
+        """Spaced dashes (e.g. 0 - 1, 7h - 22h, Highlands Coffee - Tầng 1) must be preserved without truncation."""
         self.assertEqual(
             self.refiner.refine("Highlands Coffee - Tầng 1", "Tên quán cà phê là gì?"),
-            "Highlands Coffee",
+            "Highlands Coffee - Tầng 1",
+        )
+        self.assertEqual(self.refiner.refine("0 - 1"), "0 - 1")
+        self.assertEqual(self.refiner.refine("7h - 22h"), "7h - 22h")
+        self.assertEqual(
+            self.refiner.refine("54 - TONKIN - Hanoi - Rue Paul Bert"),
+            "54 - TONKIN - Hanoi - Rue Paul Bert",
         )
 
     def test_qamif_question_echo_peeling(self):
-        """QAMIF must peel leading and trailing tokens that duplicate interrogative question stem."""
+        """Question-echo subject framing before copulas must be peeled, but answer entity tokens preserved."""
         self.assertEqual(
             self.refiner.refine("Tên thương hiệu trên áo là Nike.", "Tên thương hiệu trên áo là gì?"),
             "Nike",
@@ -382,6 +392,11 @@ class TestSyntacticSpanRefiner(unittest.TestCase):
             self.refiner.refine("Cửa tiệm trong ảnh là Nhà thuốc An Khang", "cửa tiệm trong ảnh là gì ?"),
             "Nhà thuốc An Khang",
         )
+        # R7 Fidelity Restoration: Interrogative constituents must NOT be stripped from valid answer entities
+        self.assertEqual(self.refiner.refine("30 ngày", "đổi máy mới trong vòng bao nhiêu ngày ?"), "30 ngày")
+        self.assertEqual(self.refiner.refine("Thứ Tư", "báo này đăng vào thứ mấy ?"), "Thứ Tư")
+        self.assertEqual(self.refiner.refine("Cho thuê xe", "ở đây cho thuê cái gì ?"), "Cho thuê xe")
+        self.assertEqual(self.refiner.refine("bún bò", "quán phương nam bán bún gì ?"), "bún bò")
 
     def test_qamif_non_collapsing_invariant(self):
         """QAMIF must guarantee >= 1 core token is preserved, never collapsing to empty."""

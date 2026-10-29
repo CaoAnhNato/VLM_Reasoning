@@ -106,8 +106,8 @@ class DynamicContrastiveDecoder:
         tau_intent: float = 0.15,
         eta_temp: float = 0.18,
         tau_h: float = 1.50,
-        # Round 6 DCEB Parameters:
-        kappa_eos: float = 4.00,
+        # Round 7 DCEB Parameters (kappa_eos=0.0 by default to restore generation fidelity):
+        kappa_eos: float = 0.0,
         n_min_eos: int = 1,
         h_bar_eos: float = 1.80,
         tau_h_eos: float = 0.40,
@@ -130,7 +130,7 @@ class DynamicContrastiveDecoder:
             tau_intent: Question-Intent Adaptive Contrast Factor (QIACF) tau (0.15)
             eta_temp: Temperature & Entropy Synergistic Gating (TESG) cooling scale (0.18)
             tau_h: Temperature & Entropy Synergistic Gating (TESG) entropy tau (1.50)
-            kappa_eos: Dynamic Contrastive EOS Boosting (DCEB) maximum logit boost scale (4.00)
+            kappa_eos: Dynamic Contrastive EOS Boosting (DCEB) maximum logit boost scale (default 0.0, disabled in R7)
             n_min_eos: DCEB minimum generation step before EOS boosting is enabled (1)
             h_bar_eos: DCEB predictive entropy midpoint threshold (1.80 nats)
             tau_h_eos: DCEB predictive entropy logistic sigmoid scale (0.40)
@@ -280,11 +280,11 @@ class DynamicContrastiveDecoder:
         sig_entropy = 1.0 / (1.0 + math.exp(-np_clip((entropy_val - self.h_bar_eos) / self.tau_h_eos, -20.0, 20.0)))
         tau_eos = float(self.kappa_eos * c_collapse * sig_entropy) if step >= self.n_min_eos else 0.0
 
-        if eos_id is not None:
+        # Round 7 Remediation: EOS respects CAPC/APC plausibility constraints
+        if eos_id is not None and tau_eos > 0.0:
             eos_ids = [eos_id] if isinstance(eos_id, int) else list(eos_id)
             for eid in eos_ids:
-                valid_mask[..., eid] = True  # Ensure EOS is never truncated by APC/contrast mask
-                if tau_eos > 0.0:
+                if valid_mask[..., eid]:
                     calibrated_logits[..., eid] += tau_eos
 
         calibrated_logits = calibrated_logits.masked_fill(~valid_mask, float("-inf"))

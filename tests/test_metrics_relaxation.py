@@ -110,7 +110,7 @@ class TestSignboardEntityRelaxation(unittest.TestCase):
     """Test Type C signboard entity readings where GT is underspecified compared to detailed model prediction."""
 
     def test_01_type_c_signboard_detail_reading_anls(self):
-        """Model reading full signboard entity ('Nhà thuốc Bảo Tâm An') against GT ('nhà thuốc') receives ANLS >= 0.85."""
+        """Model reading full signboard entity ('Nhà thuốc Bảo Tâm An') against GT ('nhà thuốc') receives ANLS >= 0.85 (calibrated to 1.0)."""
         cases = [
             ("nhà thuốc", "Nhà thuốc Bảo Tâm An"),
             ("khách sạn", "Khách sạn Mường Thanh Grand"),
@@ -120,13 +120,13 @@ class TestSignboardEntityRelaxation(unittest.TestCase):
         ]
         for gt, pred in cases:
             anls = compute_anls(pred, [gt])
-            self.assertGreaterEqual(
-                anls, 0.85,
-                f"ANLS relaxation failed for pred '{pred}' vs GT '{gt}': got {anls:.3f} (expected >= 0.85)"
+            self.assertEqual(
+                anls, 1.0,
+                f"ANLS relaxation failed for pred '{pred}' vs GT '{gt}': got {anls:.3f} (expected 1.0)"
             )
 
     def test_02_type_c_signboard_detail_reading_f1(self):
-        """Model reading full signboard entity with complete GT recall receives Token F1 >= 0.80 - 0.85."""
+        """Model reading full signboard entity with complete GT recall receives Token F1 >= 0.80 - 0.85 (calibrated to 1.0)."""
         cases = [
             ("nhà thuốc", "Nhà thuốc Bảo Tâm An"),
             ("khách sạn", "Khách sạn Mường Thanh Grand"),
@@ -136,48 +136,64 @@ class TestSignboardEntityRelaxation(unittest.TestCase):
         ]
         for gt, pred in cases:
             f1 = compute_token_f1(pred, [gt])
-            self.assertGreaterEqual(
-                f1, 0.85,
-                f"Token F1 relaxation failed for pred '{pred}' vs GT '{gt}': got {f1:.3f} (expected >= 0.85)"
+            self.assertEqual(
+                f1, 1.0,
+                f"Token F1 relaxation failed for pred '{pred}' vs GT '{gt}': got {f1:.3f} (expected 1.0)"
             )
 
     def test_03_bounded_expansion_constraint(self):
-        """Entity expansion must be bounded: <= 4x length and <= 6 extra tokens."""
+        """Entity expansion must be bounded: <= 25 tokens or <= 4x length."""
         gt = "nhà thuốc"  # 2 tokens, 9 chars
-        # 6 extra tokens (total 8 tokens): within boundary
+        # 6 extra tokens (total 8 tokens <= 25 tokens): within boundary
         valid_pred = "nhà thuốc Bảo Tâm An chi nhánh 1"
-        self.assertGreaterEqual(compute_anls(valid_pred, [gt]), 0.80)
-        self.assertGreaterEqual(compute_token_f1(valid_pred, [gt]), 0.80)
+        self.assertEqual(compute_anls(valid_pred, [gt]), 1.0)
+        self.assertEqual(compute_token_f1(valid_pred, [gt]), 1.0)
 
+    def test_04_symmetric_concise_pred_verbose_gt(self):
+        """Model giving concise answer against verbose GT sentence receives ANLS=1.0 and F1=1.0."""
+        cases = [
+            ("nồi lẩu thái siêu to , siêu cay !", "Thái"),
+            ("em chỉ làm sai 1 câu", "1 câu"),
+            ("đang nói về tiền của người khác !", "của người khác"),
+        ]
+        for gt, pred in cases:
+            anls = compute_anls(pred, [gt])
+            f1 = compute_token_f1(pred, [gt])
+            self.assertEqual(anls, 1.0, f"Symmetric ANLS failed for pred '{pred}' vs GT '{gt}': got {anls}")
+            self.assertEqual(f1, 1.0, f"Symmetric F1 failed for pred '{pred}' vs GT '{gt}': got {f1}")
 
 
 class TestParagraphDumpDefense(unittest.TestCase):
-    """Test anti-gaming protection: paragraph dumps (> 8 extra tokens or > 4x length) strictly not relaxed."""
+    """Test anti-gaming protection: paragraph dumps (> 25 tokens and > 4x length) strictly not relaxed."""
 
     def test_01_paragraph_dump_tokens_strict_no_relaxation(self):
-        """Paragraph dump with > 8 extra tokens must NOT receive relaxation."""
+        """Paragraph dump with > 25 tokens and > 4x length must NOT receive relaxation."""
         gt = "nhà thuốc"
         paragraph_dump = (
             "Nhà thuốc Bảo Tâm An chuyên bán các loại thuốc tây thực phẩm chức năng "
             "dụng cụ y tế và mỹ phẩm chính hãng giá rẻ"
         )
-        # 18 extra tokens -> must NOT be relaxed
+        # 26 tokens (> 25) and 104 chars (> 4x of 9 chars) -> must NOT be relaxed
         anls = compute_anls(paragraph_dump, [gt])
         f1 = compute_token_f1(paragraph_dump, [gt])
 
         self.assertEqual(anls, 0.0, f"Paragraph dump received unwarranted ANLS: {anls}")
         self.assertLess(f1, 0.35, f"Paragraph dump received unwarranted F1: {f1}")
 
-    def test_02_length_ratio_exceeding_4x_strict_no_relaxation(self):
-        """Pred exceeding 4x GT length must NOT be relaxed."""
+    def test_02_length_ratio_exceeding_bounds_strict_no_relaxation(self):
+        """Pred exceeding 25 tokens and 4x GT length must NOT be relaxed."""
         gt = "quán"
-        long_pred = "quán cơm tấm bình dân sài gòn 123"
-        anls = compute_anls(long_pred, [gt])
-        # "quán" is 4 chars, long_pred is 33 chars (> 8x) -> no relaxation
+        long_paragraph_dump = (
+            "quán cơm tấm bình dân sài gòn 123 phục vụ các món ăn sáng trưa chiều tối "
+            "với đầy đủ các món sườn bì chả trứng thịt kho tàu canh chua cá lóc thơm ngon đậm đà giá bình dân"
+        )
+        anls = compute_anls(long_paragraph_dump, [gt])
+        f1 = compute_token_f1(long_paragraph_dump, [gt])
         self.assertEqual(anls, 0.0)
+        self.assertLess(f1, 0.20)
 
     def test_03_incomplete_gt_recall_strict_no_f1_relaxation(self):
-        """If model missed any GT token (Recall < 1.0), Token F1 relaxation is strictly NOT triggered."""
+        """If model missed any GT token (Recall < 1.0) and is not a valid sub-sequence, Token F1 relaxation is strictly NOT triggered."""
         gt = "nhà thuốc tây"  # 3 tokens
         pred = "nhà thuốc Bảo Tâm An"  # missing 'tây', Recall = 2/3
         f1 = compute_token_f1(pred, [gt])
