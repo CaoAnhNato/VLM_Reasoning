@@ -80,6 +80,13 @@ class DynamicContrastiveDecoder:
     """
     Executes dynamic spatio-temporal calibrated contrastive decoding on top of
     Qwen2.5 language model in torch.bfloat16.
+
+    Round 5 SOTA Algorithmic Upgrades:
+    - CAPC (Contrast-Aware Plausibility Constraint) with contrastive retention floor theta_c = 0.35.
+    - AHRA (Answer-Head Recency Anchoring) boosting initial entity head contrast.
+    - QIACF (Question-Intent Adaptive Contrast Factor) scaling via step-0 visual divergence D_JS^(0).
+    - TESG (Temperature & Entropy Synergistic Gating) sharpening logits under high entropy.
+    - ESSC (Entity-Sustained Soft Cooldown) with softened geometric decay gamma_phase = 0.75.
     """
 
     def __init__(
@@ -91,7 +98,14 @@ class DynamicContrastiveDecoder:
         lambda_decay: float = 0.08,
         tau_entropy_low: float = 0.35,
         tau_entropy_high: float = 2.20,
-        gamma_phase: float = 0.50,
+        gamma_phase: float = 0.75,
+        theta_c: float = 0.35,
+        delta_head: float = 0.45,
+        tau_head: float = 1.8,
+        kappa_intent: float = 0.35,
+        tau_intent: float = 0.15,
+        eta_temp: float = 0.18,
+        tau_h: float = 1.50,
     ):
         """
         Args:
@@ -102,7 +116,14 @@ class DynamicContrastiveDecoder:
             lambda_decay: Exponential rate of visual information decay
             tau_entropy_low: Predictive entropy lower bound for visual certainty
             tau_entropy_high: Predictive entropy upper bound for noise gating
-            gamma_phase: Exponential cooldown rate for soft reasoning transition
+            gamma_phase: Exponential cooldown rate for soft reasoning transition (ESSC, 0.75)
+            theta_c: Contrast-Aware Plausibility Constraint (CAPC) retention floor (0.35)
+            delta_head: Answer-Head Recency Anchoring (AHRA) boost factor (0.45)
+            tau_head: Answer-Head Recency Anchoring (AHRA) decay rate (1.8)
+            kappa_intent: Question-Intent Adaptive Contrast Factor (QIACF) scale (0.35)
+            tau_intent: Question-Intent Adaptive Contrast Factor (QIACF) tau (0.15)
+            eta_temp: Temperature & Entropy Synergistic Gating (TESG) cooling scale (0.18)
+            tau_h: Temperature & Entropy Synergistic Gating (TESG) entropy tau (1.50)
         """
         self.alpha_0 = float(alpha_0)
         self.beta_0 = float(beta_0)
@@ -112,6 +133,14 @@ class DynamicContrastiveDecoder:
         self.tau_entropy_low = float(tau_entropy_low)
         self.tau_entropy_high = float(tau_entropy_high)
         self.gamma_phase = float(gamma_phase)
+        self.theta_c = float(theta_c)
+        self.delta_head = float(delta_head)
+        self.tau_head = float(tau_head)
+        self.kappa_intent = float(kappa_intent)
+        self.tau_intent = float(tau_intent)
+        self.eta_temp = float(eta_temp)
+        self.tau_h = float(tau_h)
+        self._current_step0_d_js: Optional[float] = None
 
     def compute_js_divergence(
         self,
@@ -137,6 +166,7 @@ class DynamicContrastiveDecoder:
         step: int,
         spatial_confidence: float,
         phase_cooldown_step: int = 0,
+        initial_d_js: Optional[float] = None,
     ) -> Tuple[int, float, float, float]:
         """
         Execute a single calibrated decoding step.
@@ -155,13 +185,19 @@ class DynamicContrastiveDecoder:
         entropy_t = -torch.sum(p_pos * log_p_pos, dim=-1, keepdim=True)
         entropy_val = float(entropy_t.squeeze().item())
 
-        # 2. Entropy-Adaptive Plausibility Truncation (EAPT): beta_t = beta_0 * exp(-H(P_pos))
-        beta_t = self.beta_0 * math.exp(-min(5.0, max(0.0, entropy_val)))
+        # 2. CAPC (Contrast-Aware Plausibility Constraint):
+        # V_head(t) = { w in V | P_pos(w) >= beta_t * max_v P_pos(v) or Delta z_t(w) >= theta_c * max_v Delta z_t(v) }
+        beta_t = self.beta_0 * math.exp(-min(4.0, max(0.0, entropy_val)))
         max_p_pos = p_pos.max(dim=-1, keepdim=True).values
-        valid_mask = p_pos >= (beta_t * max_p_pos)
+        apc_mask = p_pos >= (beta_t * max_p_pos)
+
+        delta_z = torch.relu(pos_logits - neg_logits)
+        max_delta_z = delta_z.max(dim=-1, keepdim=True).values
+        has_contrast = max_delta_z > 1e-6
+        contrast_mask = (delta_z >= (self.theta_c * max_delta_z)) & has_contrast
+        valid_mask = apc_mask | contrast_mask
 
         # 3. Dynamic Spatio-Temporal Calibration alpha_t
-        # S_spatial = tanh(max(0, S_Stage1)), directly passed without redundant second tanh
         s_spatial = min(1.0, max(0.0, float(spatial_confidence)))
 
         # M_decay(t) = 1 + gamma * (1 - exp(-lambda * t)) / (exp(-lambda * t) + eps), bounded <= 1.50
@@ -173,6 +209,19 @@ class DynamicContrastiveDecoder:
         d_js = self.compute_js_divergence(p_pos, p_neg)
         d_js_val = float(d_js.squeeze().item())
 
+        # Track or use step-0 visual divergence for QIACF
+        if step == 0 or initial_d_js is not None:
+            d_js_0 = d_js_val if initial_d_js is None else float(initial_d_js)
+            self._current_step0_d_js = d_js_0
+        else:
+            d_js_0 = self._current_step0_d_js if self._current_step0_d_js is not None else d_js_val
+
+        # QIACF: Psi_intent = 1.0 + kappa_intent * tanh(D_JS^(0) / tau_intent)
+        psi_intent = 1.0 + self.kappa_intent * math.tanh(d_js_0 / self.tau_intent)
+
+        # AHRA: A_head(t) = 1.0 + delta_head * exp(-t / tau_head)
+        a_head = 1.0 + self.delta_head * math.exp(-float(step) / self.tau_head)
+
         # Syntax gating: if D_JS <= tau_js, both branches agree (syntactic connector) -> gate = 0
         is_semantic = float(d_js_val > self.tau_js)
         u_div = torch.tanh(torch.relu(kl_div)) * is_semantic
@@ -182,13 +231,23 @@ class DynamicContrastiveDecoder:
         g_entropy_high = 1.0 - math.tanh(max(0.0, entropy_val - self.tau_entropy_high))
         g_entropy = float(np_clip(g_entropy_low * g_entropy_high, 0.0, 1.0))
 
-        alpha_t = float(self.alpha_0 * s_spatial * m_decay * float(u_div.squeeze().item()) * g_entropy)
+        alpha_t = float(
+            self.alpha_0
+            * s_spatial
+            * m_decay
+            * float(u_div.squeeze().item())
+            * g_entropy
+            * a_head
+            * psi_intent
+        )
         if phase_cooldown_step > 0:
             alpha_t *= (self.gamma_phase ** phase_cooldown_step)
-        alpha_t = max(0.0, min(1.8, alpha_t))
+        alpha_t = max(0.0, min(2.0, alpha_t))
 
-        # Calibrated logits
-        calibrated_logits = pos_logits + alpha_t * (pos_logits - neg_logits)
+        # TESG: z_t^*(w) = (z_t^(+)(w) + alpha_t * Delta z_t(w)) / T(H_t)
+        # where T(H_t) = 1.0 - eta_T * tanh(H_t / tau_H)
+        t_entropy = max(0.05, 1.0 - self.eta_temp * math.tanh(entropy_val / self.tau_h))
+        calibrated_logits = (pos_logits + alpha_t * delta_z) / t_entropy
         calibrated_logits = calibrated_logits.masked_fill(~valid_mask, float("-inf"))
 
         next_token_id = int(torch.argmax(calibrated_logits, dim=-1).item())

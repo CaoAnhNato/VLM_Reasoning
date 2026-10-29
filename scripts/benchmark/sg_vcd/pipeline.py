@@ -63,6 +63,7 @@ from .feature_cache import (
 from .roi_cropper import (
     BaseROICropper,
     CropResult,
+    DynamicMultiTileROICropper,
     IsotropicROICropper,
     apply_adaptive_laplacian_edge_reemphasis,
 )
@@ -109,7 +110,8 @@ def strip_conversational_preamble(text: str, question: Optional[str] = None) -> 
 
     # Generic conversational introductory clause patterns
     intro_patterns = [
-        r"^(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình)(?:\s+này)?\s+(?:được\s+chụp\s+vào\s+dịp|có\s+nguồn\s+(?:từ|gốc\s+từ)|lấy\s+nguồn\s+từ|nguồn\s+từ|chụp|cho\s+thấy|ghi\s+lại|có\s+chữ|chỉ\s+ra|là|có)\s*[:,\-]?\s*",
+        r"^(?:yêu\s+cầu|cụm\s+từ|trả\s+lời(?:\s+ngắn\s+gọn)?)\s*[:,\-]?\s*",
+        r"^(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình)(?:\s+này)?\s+(?:được\s+chụp\s+(?:tại|vào\s+dịp)|được\s+chụp|chụp\s+tại|có\s+nguồn\s+(?:từ|gốc\s+từ)|lấy\s+nguồn\s+từ|nguồn\s+từ|chụp|cho\s+thấy|ghi\s+lại|có\s+chữ|chỉ\s+ra|là|có)\s*[:,\-]?\s*",
         r"^(?:câu\s+trả\s+lời|đáp\s+án)(?:\s+(?:của\s+tôi|chính\s+xác|cho\s+câu\s+hỏi))?\s*(?:là\s*[:,\-]?|[:,\-])\s*",
         r"^(?:trong\s+(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình|khung\s+hình)\s+(?:có\s+(?:chữ|từ|dòng\s+chữ|chi\s+tiết)?|là|thấy|xuất\s+hiện|ghi))\s*[:,\-]?\s*",
         r"^(?:chữ\s+(?:trong\s+ảnh|trên\s+ảnh|xuất\s+hiện)\s+(?:là|ghi))\s*[:,\-]?\s*",
@@ -122,19 +124,19 @@ def strip_conversational_preamble(text: str, question: Optional[str] = None) -> 
     ]
 
     # Iteratively strip prompt instructions, outer quotes, and introductory clauses
-    for _ in range(6):
+    for _ in range(8):
         prev_len = len(clean)
 
         # Strip prompt-instruction echo if present
         clean = re.sub(
-            r"^(?:chỉ\s+)?(?:ghi|trả\s+lời|nêu)(?:\s+thật|\s+đúng|\s+ngắn\s+gọn|\s+từ|\s+hoặc|\s+cụm\s+từ|\s+đáp\s+án)*\s*[:,\-]?\s*",
+            r"^(?:yêu\s+cầu|cụm\s+từ|trả\s+lời(?:\s+ngắn\s+gọn)?|(?:chỉ\s+)?(?:ghi|trả\s+lời|nêu))(?:\s+thật|\s+đúng|\s+ngắn\s+gọn|\s+từ|\s+hoặc|\s+cụm\s+từ|\s+đáp\s+án)*\s*[:,\-]?\s*",
             "",
             clean,
             flags=re.IGNORECASE,
         ).strip()
 
         # Strip enclosing quotation marks
-        if len(clean) >= 2 and ((clean[0] in ('"', "'", '“', '‘') and clean[-1] in ('"', "'", '”', '’'))):
+        if len(clean) >= 2 and ((clean[0] in ('"', "'", '“', '‘', '«') and clean[-1] in ('"', "'", '”', '’', '»'))):
             clean = clean[1:-1].strip()
 
         for pattern in intro_patterns:
@@ -144,6 +146,9 @@ def strip_conversational_preamble(text: str, question: Optional[str] = None) -> 
                 if candidate:
                     clean = candidate
                 break
+
+        # Also strip single quotes or boundary quotation marks if left
+        clean = clean.strip("\"'“”‘’«»").strip()
 
         if len(clean) == prev_len:
             break
@@ -193,8 +198,9 @@ def strip_conversational_preamble(text: str, question: Optional[str] = None) -> 
     clean = re.sub(r"[\.,;:!\?\s]+$", "", clean).strip()
 
     # Strip enclosing quotes again if newly exposed
-    if len(clean) >= 2 and ((clean[0] in ('"', "'", '“', '‘') and clean[-1] in ('"', "'", '”', '’'))):
+    if len(clean) >= 2 and ((clean[0] in ('"', "'", '“', '‘', '«') and clean[-1] in ('"', "'", '”', '’', '»'))):
         clean = clean[1:-1].strip()
+    clean = clean.strip("\"'“”‘’«»").strip()
 
     return clean if clean else unicodedata.normalize("NFC", text).strip()
 
@@ -207,7 +213,7 @@ def format_concise_decoding_prompt(question: str) -> str:
     q_clean = question.strip()
     if q_clean.startswith("<image>"):
         q_clean = q_clean[len("<image>"):].strip()
-    return f"{q_clean}\nYêu cầu: Chỉ ghi đúng cụm từ thực thể ngắn nhất xuất hiện trên ảnh (không viết cả câu, không lặp lại câu hỏi)."
+    return f"{q_clean}\nTrả lời ngắn gọn: "
 
 
 class SGVCDPipeline:
@@ -251,7 +257,7 @@ class SGVCDPipeline:
             device=device,
         )
         self.selector = selector or KLDivergenceRegionSelector()
-        self.cropper = cropper or IsotropicROICropper(target_size=448)
+        self.cropper = cropper or DynamicMultiTileROICropper(target_size=448)
         self.propagator = propagator or AdaptiveScalePropagator(device=device)
         self.decoder = decoder or DynamicContrastiveDecoder(
             alpha_0=alpha_cd,
@@ -362,55 +368,33 @@ class SGVCDPipeline:
                 thumb_vit = self.model.extract_feature(thumb_pv)
                 del thumb_pv
 
-            # Extract roi_tiles and lowpass tiles
-            if len(roi_tiles) >= 2:
-                # Top-2 candidate dual crops:
-                # E_pos = [v_thumb, v_pos_1, v_pos_2]
-                # E_neg = [v_thumb, v_neg_1, v_neg_2]
-                roi_pv = torch.stack([
-                    self.transform(pos_crops[0]),
-                    self.transform(neg_crops[0]),
-                    self.transform(pos_crops[1]),
-                    self.transform(neg_crops[1]),
-                ]).to(device=self.device, dtype=torch.bfloat16)
-                roi_vit_all = self.model.extract_feature(roi_pv)
-                del roi_pv
+            # Extract roi_tiles and lowpass tiles with general N-tile sequencing
+            num_roi = len(pos_crops)
+            all_roi_crops = pos_crops + neg_crops
+            all_roi_pv = torch.stack([self.transform(c) for c in all_roi_crops]).to(
+                device=self.device, dtype=torch.bfloat16
+            )
+            all_roi_vit = self.model.extract_feature(all_roi_pv)
+            del all_roi_pv
 
-                pos_vit = torch.cat([thumb_vit, roi_vit_all[0:1], roi_vit_all[2:3]], dim=0)
-                neg_vit = torch.cat([thumb_vit, roi_vit_all[1:2], roi_vit_all[3:4]], dim=0)
-                del roi_vit_all
-            elif context_tile is not None:
-                roi_pair_pv = torch.stack([
-                    self.transform(pos_crops[0]),
-                    self.transform(neg_crops[0]),
-                    self.transform(context_tile),
-                ]).to(device=self.device, dtype=torch.bfloat16)
-                roi_pair_vit = self.model.extract_feature(roi_pair_pv)
-                del roi_pair_pv
+            pos_sub_vits = [all_roi_vit[k : k + 1] for k in range(num_roi)]
+            neg_sub_vits = [all_roi_vit[num_roi + k : num_roi + k + 1] for k in range(num_roi)]
 
-                roi_vit = roi_pair_vit[0:1]
-                roi_lowpass_vit = roi_pair_vit[1:2]
-                ctx_vit = roi_pair_vit[2:3]
+            if context_tile is not None and num_roi == 1:
+                ctx_pv = self.transform(context_tile).unsqueeze(0).to(
+                    device=self.device, dtype=torch.bfloat16
+                )
+                ctx_vit = self.model.extract_feature(ctx_pv)
+                del ctx_pv
+                pos_sub_vits.append(ctx_vit)
+                neg_sub_vits.append(ctx_vit)
 
-                # Multi-tile visual evidence: [global_thumb, roi_tile, context_tile]
-                pos_vit = torch.cat([thumb_vit, roi_vit, ctx_vit], dim=0)
-                neg_vit = torch.cat([thumb_vit, roi_lowpass_vit, ctx_vit], dim=0)
-                del roi_pair_vit
-            else:
-                roi_pair_pv = torch.stack([
-                    self.transform(pos_crops[0]),
-                    self.transform(neg_crops[0]),
-                ]).to(device=self.device, dtype=torch.bfloat16)
-                roi_pair_vit = self.model.extract_feature(roi_pair_pv)
-                del roi_pair_pv
-
-                roi_vit = roi_pair_vit[0:1]
-                roi_lowpass_vit = roi_pair_vit[1:2]
-
-                # Dual-tile views [global_thumb, roi_tile] and [global_thumb, roi_lowpass]
-                pos_vit = torch.cat([thumb_vit, roi_vit], dim=0)
-                neg_vit = torch.cat([thumb_vit, roi_lowpass_vit], dim=0)
-                del roi_pair_vit
+            # Multi-Patch Visual Token Embedding Sequencing:
+            # E^(+) = [v_thumb, v_T0^(+), ..., v_{TN-1}^(+)]
+            # E^(-) = [v_thumb, v_T0^(-), ..., v_{TN-1}^(-)]
+            pos_vit = torch.cat([thumb_vit] + pos_sub_vits, dim=0)
+            neg_vit = torch.cat([thumb_vit] + neg_sub_vits, dim=0)
+            del all_roi_vit
 
             # Calibrate question prompt for concise VQA generation
             decoding_question = format_concise_decoding_prompt(question)
@@ -472,6 +456,11 @@ class SGVCDPipeline:
             phase_cooldown_step = 0
             visual_reading_active = True
 
+            # Step-0 initial visual divergence for QIACF
+            p_pos0 = F.softmax(pos_logits, dim=-1)
+            p_neg0 = F.softmax(neg_logits, dim=-1)
+            initial_d_js = float(self.decoder.compute_js_divergence(p_pos0, p_neg0).squeeze().item())
+
             for step in range(max_new_tokens):
                 step_spatial_conf = 0.0 if phase_reasoning else spatial_confidence
                 next_token_id, alpha_t, entropy_t, d_js_val = self.decoder.decode_step(
@@ -480,6 +469,7 @@ class SGVCDPipeline:
                     step=step,
                     spatial_confidence=step_spatial_conf,
                     phase_cooldown_step=phase_cooldown_step,
+                    initial_d_js=initial_d_js,
                 )
 
                 alpha_history.append(alpha_t)
@@ -489,10 +479,10 @@ class SGVCDPipeline:
                     break
                 generated_ids.append(next_token_id)
 
-                # Soft Information-Theoretic Phase Transition:
-                # If after generating initial tokens (step >= 2), visual divergence drops below tau_js,
-                # the model has transitioned from character recognition to language reasoning.
-                if step >= 2 and d_js_val <= self.decoder.tau_js:
+                # ESSC (Entity-Sustained Soft Cooldown):
+                # Delay cooldown onset until step >= N_min = 4 tokens to prevent premature truncation
+                # of multi-word entities (addresses, phone numbers, brand names).
+                if step >= 4 and d_js_val <= self.decoder.tau_js:
                     visual_reading_active = False
                     phase_cooldown_step += 1
 
@@ -795,6 +785,18 @@ class SGVCDPipeline:
             except Exception:
                 context_tile = None
 
+        # Flatten all dynamic multi-patch sub-tiles across crops
+        all_roi_tiles = []
+        all_magnifications = []
+        all_char_heights = []
+        for idx, c in enumerate(crops):
+            sub_tiles = getattr(c, "roi_tiles", None) or [c.roi_tile]
+            ch = char_heights[idx] if idx < len(char_heights) else None
+            for st in sub_tiles:
+                all_roi_tiles.append(st)
+                all_magnifications.append(c.magnification)
+                all_char_heights.append(ch)
+
         pred_sg_vcd, alpha_mean, entropy_mean = self._decode_spatial_pmi_contrastive(
             roi_tile=crop.roi_tile,
             global_thumb=global_thumb,
@@ -805,9 +807,9 @@ class SGVCDPipeline:
             magnification=crop.magnification,
             cached_thumb_vit=cached_visual_features,
             context_tile=context_tile,
-            roi_tiles=[c.roi_tile for c in crops],
-            magnifications=[c.magnification for c in crops],
-            char_heights=char_heights,
+            roi_tiles=all_roi_tiles,
+            magnifications=all_magnifications,
+            char_heights=all_char_heights,
         )
         t_dec = time.time() - t_start_dec
 
