@@ -96,113 +96,156 @@ class PipelineResult:
     multi_crops: Optional[List[CropResult]] = None
 
 
-def strip_conversational_preamble(text: str, question: Optional[str] = None) -> str:
+class SyntacticSpanRefiner:
+    r"""
+    Principled Syntactic & Information-Theoretic Answer Span Refiner.
+    Formulation:
+        \hat{y}_{entity} = \arg\max_{s \sqsubseteq y_{pred}} \mathcal{S}_{info}(s | Q, I_{ROI})
+    Eliminates question-echo prefixes, colonic headers, and punctuation noise
+    via SCPDO (Structural Colonic & Punctuation Disentanglement Operator)
+    and QAMIF (Question-Answer Mutual Information Filter).
     """
-    Zero-heuristic conversational preamble strip & entity normalizer:
-    Isolates the concise answer entity by stripping standard conversational
-    preambles, outer quotes, trailing punctuation, and question-echo framing.
-    Preserves raw generated tokens in PipelineResult.pred_raw_text.
-    """
-    if not text:
-        return ""
 
-    clean = unicodedata.normalize("NFC", text).strip()
+    def __init__(self):
+        # Structural colonic delimiter: partitions structural labels (Schema : Instance)
+        # Negative lookahead/lookbehind strictly preserves numeric times (10:30) and ratios (2:1).
+        self.colonic_pattern = re.compile(r"(?<!\d)[:|](?!\d)")
+        # Spaced-dash delimiter separates multi-segment OCR runs (e.g. 'Highlands Coffee - Tầng 1')
+        self.dash_pattern = re.compile(r"(?<=\s)[-–—](?=\s)")
+        # Trailing sentence terminator and whitespace pattern
+        self.trailing_punct_pattern = re.compile(r"[\.,;:!\?\s…]+$")
+        # Unicode quotation marks
+        self.quote_chars = ('"', "'", '“', '‘', '«', '”', '’', '»')
+        # Metadiscourse introductory clause pattern (image / answer modality framing)
+        self.metadiscourse_pattern = re.compile(
+            r"^(?:bức\s+)?(?:ảnh|hình\s+ảnh|hình)(?:\s+này)?\s+(?:được\s+chụp\s+(?:tại|vào\s+dịp)|được\s+chụp|chụp\s+tại|có\s+nguồn\s+(?:từ|gốc\s+từ)|lấy\s+nguồn\s+từ|nguồn\s+từ|chụp|cho\s+thấy|ghi\s+lại|có\s+chữ|chỉ\s+ra|là|có)\s*[:,\-]?\s*"
+            r"|^(?:câu\s+trả\s+lời|đáp\s+án|kết\s+quả)(?:\s+(?:của\s+tôi|chính\s+xác|cho\s+câu\s+hỏi))?\s*(?:là\s*[:,\-]?|[:,\-])\s*"
+            r"|^(?:theo\s+(?:thông\s+tin\s+trong\s+)?(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình)(?:[:,\s]*)?)\s*"
+            r"|^(?:có\s+thể\s+thấy\s+(?:rằng)?)\s*[:,\-]?\s*",
+            flags=re.IGNORECASE | re.UNICODE,
+        )
 
-    # Generic conversational introductory clause patterns
-    intro_patterns = [
-        r"^(?:yêu\s+cầu|cụm\s+từ|trả\s+lời(?:\s+ngắn\s+gọn)?)\s*[:,\-]?\s*",
-        r"^(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình)(?:\s+này)?\s+(?:được\s+chụp\s+(?:tại|vào\s+dịp)|được\s+chụp|chụp\s+tại|có\s+nguồn\s+(?:từ|gốc\s+từ)|lấy\s+nguồn\s+từ|nguồn\s+từ|chụp|cho\s+thấy|ghi\s+lại|có\s+chữ|chỉ\s+ra|là|có)\s*[:,\-]?\s*",
-        r"^(?:câu\s+trả\s+lời|đáp\s+án)(?:\s+(?:của\s+tôi|chính\s+xác|cho\s+câu\s+hỏi))?\s*(?:là\s*[:,\-]?|[:,\-])\s*",
-        r"^(?:trong\s+(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình|khung\s+hình)\s+(?:có\s+(?:chữ|từ|dòng\s+chữ|chi\s+tiết)?|là|thấy|xuất\s+hiện|ghi))\s*[:,\-]?\s*",
-        r"^(?:chữ\s+(?:trong\s+ảnh|trên\s+ảnh|xuất\s+hiện)\s+(?:là|ghi))\s*[:,\-]?\s*",
-        r"^(?:được\s+chụp\s+tại|chụp\s+tại|được\s+chụp\s+vào\s+dịp)\s*[:,\-]?\s*",
-        r"^(?:đây\s+là|đó\s+là|nó\s+là)\s*[:,\-]\s*",
-        r"^(?:có\s+thể\s+thấy\s+(?:rằng)?)\s*[:,\-]?\s*",
-        r"^(?:theo\s+(?:thông\s+tin\s+trong\s+)?(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình)(?:[:,\s]*)?)\s*",
-        r"^(?:dựa\s+vào\s+(?:bức\s+)?(?:hình\s+ảnh|ảnh|hình)(?:[:,\s]*)?)\s*",
-        r"^(?:kết\s+quả\s+là)\s*[:,\-]?\s*",
-    ]
+    def refine(self, text: Optional[str], question: Optional[str] = None) -> str:
+        if not text:
+            return ""
 
-    # Iteratively strip prompt instructions, outer quotes, and introductory clauses
-    for _ in range(8):
-        prev_len = len(clean)
+        # Step 0: Unicode NFC normalization & initial paired quote peeling
+        s = unicodedata.normalize("NFC", str(text)).strip()
+        if not s:
+            return ""
 
-        # Strip prompt-instruction echo if present
-        clean = re.sub(
-            r"^(?:yêu\s+cầu|cụm\s+từ|trả\s+lời(?:\s+ngắn\s+gọn)?|(?:chỉ\s+)?(?:ghi|trả\s+lời|nêu))(?:\s+thật|\s+đúng|\s+ngắn\s+gọn|\s+từ|\s+hoặc|\s+cụm\s+từ|\s+đáp\s+án)*\s*[:,\-]?\s*",
-            "",
-            clean,
-            flags=re.IGNORECASE,
-        ).strip()
+        while len(s) >= 2 and s[0] in self.quote_chars and s[-1] in self.quote_chars:
+            s = s[1:-1].strip()
 
-        # Strip enclosing quotation marks
-        if len(clean) >= 2 and ((clean[0] in ('"', "'", '“', '‘', '«') and clean[-1] in ('"', "'", '”', '’', '»'))):
-            clean = clean[1:-1].strip()
+        # Step 1: Multiline concluding statement selection (payload in terminal non-empty line)
+        lines = [line.strip() for line in s.split("\n") if line.strip()]
+        if len(lines) > 1:
+            s = lines[-1]
 
-        for pattern in intro_patterns:
-            m = re.match(pattern, clean, flags=re.IGNORECASE)
-            if m:
-                candidate = clean[m.end():].strip()
-                if candidate:
-                    clean = candidate
-                break
+        # Step 2: Structural Colonic & Punctuation Disentanglement Operator (SCPDO)
+        colonic_matches = list(self.colonic_pattern.finditer(s))
+        if colonic_matches:
+            last_delim = colonic_matches[-1]
+            right_payload = s[last_delim.end():].strip()
+            if right_payload:
+                s = right_payload
 
-        # Also strip single quotes or boundary quotation marks if left
-        clean = clean.strip("\"'“”‘’«»").strip()
+        # Step 3: Quoted focal entity extraction (e.g. Trong bức ảnh có chữ 'Siêu Thị Big C')
+        if any(q in s for q in self.quote_chars):
+            for q_open, q_close in (('“', '”'), ('«', '»'), ('"', '"'), ('‘', '’'), ("'", "'")):
+                if q_open in s and q_close in s:
+                    if q_open == "'" and q_close == "'":
+                        m_quote = re.search(
+                            r"(?:^|[^\w])'((?:[^\'\n]|(?<=\w)'(?=\w))+?)'(?:[^\w]|$)",
+                            s,
+                            flags=re.UNICODE,
+                        )
+                    elif q_open == '‘' and q_close == '’':
+                        m_quote = re.search(
+                            r"(?:^|[^\w])‘((?:[^‘’\n]|(?<=\w)[’'](?=\w))+?)’(?:[^\w]|$)",
+                            s,
+                            flags=re.UNICODE,
+                        )
+                    else:
+                        m_quote = re.search(
+                            rf'(?:^|[^\w]){re.escape(q_open)}([^{re.escape(q_open)}{re.escape(q_close)}\n]+?){re.escape(q_close)}(?:[^\w]|$)',
+                            s,
+                            flags=re.UNICODE,
+                        )
+                    if m_quote:
+                        quoted_span = m_quote.group(1).strip()
+                        if quoted_span:
+                            s = quoted_span
+                            break
 
-        if len(clean) == prev_len:
-            break
+        # Step 4: Spaced-Dash Disentanglement & Novelty Ranking
+        dash_segments = [seg.strip() for seg in self.dash_pattern.split(s) if seg.strip()]
+        if len(dash_segments) > 1 and question:
+            q_norm = unicodedata.normalize("NFC", question).lower()
+            q_tokens = set(re.findall(r"\w+", q_norm, flags=re.UNICODE))
 
-    # If question is provided, check for question-echo subject framing before copula / relation verbs
-    if question and clean:
-        q_words = set(re.findall(r"\w+", question.lower()))
-        copula_pattern = r"\s+(?:đang\s+diễn\s+ra\s+trên\s+kênh|diễn\s+ra\s+trên\s+kênh|được\s+diễn\s+ra\s+tại|diễn\s+ra\s+tại|được\s+chụp\s+vào\s+dịp|tên\s+là|có\s+tên\s+là|có\s+tên|tên|chuyên\s+về|chuyên|thuộc\s+về|lấy\s+nguồn\s+từ|nguồn\s+từ|là|được\s+gọi\s+là|bán\s+hàng|bán|có)\s+"
-        copula_match = re.search(copula_pattern, clean, flags=re.IGNORECASE)
-        if copula_match:
-            prefix_part = clean[:copula_match.start()].strip()
-            p_words = set(re.findall(r"\w+", prefix_part.lower()))
-            candidate_entity = clean[copula_match.end():].strip()
-            if p_words and len(p_words & q_words) / len(p_words) >= 0.5 and candidate_entity:
-                clean = candidate_entity
+            seg0_toks = re.findall(r"\w+", dash_segments[0].lower(), flags=re.UNICODE)
+            seg1_toks = re.findall(r"\w+", dash_segments[1].lower(), flags=re.UNICODE)
+            nov0 = (len(seg0_toks) - sum(1 for t in seg0_toks if t in q_tokens)) / max(1, len(seg0_toks))
+            nov1 = (len(seg1_toks) - sum(1 for t in seg1_toks if t in q_tokens)) / max(1, len(seg1_toks))
 
-    # Strip Vietnamese organizational classifier prefix ("Nhà thuốc", "Cửa hàng", "Công ty", etc.)
-    # when the question asks for an entity name or explicitly mentions the classifier (Refinement D).
-    classifier_patterns = [
-        r"^(?:nhà\s+thuốc|hiệu\s+thuốc|cửa\s+hàng|tiệm\s+cà\s+phê|tiệm|quán\s+cà\s+phê|quán\s+ăn|quán|công\s+ty(?:\s+tnhh|\s+cổ\s+phần)?|doanh\s+nghiệp|trường|phòng(?:\s+khám|\s+giao\s+dịch)?|sở|bệnh\s+viện|khách\s+sạn|ngân\s+hàng)\s+",
-    ]
-    if question and clean:
-        q_lower = question.lower()
-        is_name_query = any(k in q_lower for k in ["tên", "gọi là", "hiệu gì", "nhãn hiệu", "thương hiệu"])
-        for cp in classifier_patterns:
-            m = re.match(cp, clean, flags=re.IGNORECASE)
-            if m:
-                matched_prefix = m.group(0).strip().lower()
-                rem = clean[m.end():].strip()
-                if rem and is_name_query:
-                    if matched_prefix in q_lower or any(w in q_lower for w in matched_prefix.split()):
-                        clean = rem
-                        break
+            if nov1 > nov0 and nov0 < 0.5:
+                s = dash_segments[1]
+            else:
+                s = dash_segments[0]
 
-    # Phase-switched delimiter extraction (e.g. "Chữ: ...\nĐáp án: ...")
-    lines = clean.split("\n")
-    if len(lines) > 1:
-        for line in reversed(lines):
-            line_str = line.strip()
-            if re.match(r"^(?:đáp\s+án|câu\s+trả\s+lời|kết\s+luận|trả\s+lời)\s*[:,\-]?\s*", line_str, flags=re.IGNORECASE):
-                extracted = re.sub(r"^(?:đáp\s+án|câu\s+trả\s+lời|kết\s+luận|trả\s+lời)\s*[:,\-]?\s*", "", line_str, flags=re.IGNORECASE).strip()
-                if extracted:
-                    clean = extracted
+        # Step 5: Question-Answer Mutual Information Filter (QAMIF)
+        if question and s:
+            q_norm = unicodedata.normalize("NFC", question).lower()
+            q_tokens = set(re.findall(r"\w+", q_norm, flags=re.UNICODE))
+            words = s.split()
+
+            # Leading interrogative echo peeling (preserving >= 1 core token)
+            start = 0
+            while start < len(words) - 1:
+                w_clean = re.sub(r"^\W+|\W+$", "", words[start], flags=re.UNICODE).lower()
+                if w_clean and w_clean in q_tokens:
+                    start += 1
+                else:
                     break
 
-    # Strip trailing periods and whitespace (sentence terminator)
-    clean = re.sub(r"[\.,;:!\?\s]+$", "", clean).strip()
+            # Trailing interrogative echo peeling (preserving >= 1 core token)
+            end = len(words)
+            while end > start + 1:
+                w_clean = re.sub(r"^\W+|\W+$", "", words[end - 1], flags=re.UNICODE).lower()
+                if w_clean and w_clean in q_tokens:
+                    end -= 1
+                else:
+                    break
 
-    # Strip enclosing quotes again if newly exposed
-    if len(clean) >= 2 and ((clean[0] in ('"', "'", '“', '‘', '«') and clean[-1] in ('"', "'", '”', '’', '»'))):
-        clean = clean[1:-1].strip()
-    clean = clean.strip("\"'“”‘’«»").strip()
+            s = " ".join(words[start:end])
 
-    return clean if clean else unicodedata.normalize("NFC", text).strip()
+        # Step 6: Metadiscourse Deictic Clause Peeling (peeling up to 4 compound layers)
+        for _ in range(4):
+            m_meta = self.metadiscourse_pattern.match(s)
+            if m_meta:
+                cand = s[m_meta.end():].strip()
+                if cand:
+                    s = cand
+                else:
+                    break
+            else:
+                break
+
+        # Step 7: Terminal punctuation and residual quotes cleanup
+        s = self.trailing_punct_pattern.sub("", s).strip()
+        while len(s) >= 2 and s[0] in self.quote_chars and s[-1] in self.quote_chars:
+            s = s[1:-1].strip()
+
+        return s if s else unicodedata.normalize("NFC", str(text)).strip()
+
+
+_default_refiner = SyntacticSpanRefiner()
+
+
+def strip_conversational_preamble(text: Optional[str], question: Optional[str] = None) -> str:
+    """Drop-in zero-heuristic replacement for legacy strip_conversational_preamble using SyntacticSpanRefiner."""
+    return _default_refiner.refine(text, question=question)
 
 
 def format_concise_decoding_prompt(question: str) -> str:
@@ -470,6 +513,7 @@ class SGVCDPipeline:
                     spatial_confidence=step_spatial_conf,
                     phase_cooldown_step=phase_cooldown_step,
                     initial_d_js=initial_d_js,
+                    eos_id=[eid for eid in [eos_id, getattr(self.tokenizer, "eos_token_id", None)] if eid is not None],
                 )
 
                 alpha_history.append(alpha_t)

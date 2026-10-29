@@ -57,6 +57,7 @@ from .feature_cache import (
 from .pipeline import (
     PipelineResult,
     SGVCDPipeline,
+    SyntacticSpanRefiner,
     strip_conversational_preamble,
 )
 from .roi_cropper import (
@@ -96,5 +97,6 @@ __all__ = [
     "get_or_compute_visual_features",
     "PipelineResult",
     "SGVCDPipeline",
+    "SyntacticSpanRefiner",
     "strip_conversational_preamble",
 ]

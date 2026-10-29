@@ -26,7 +26,7 @@ Mathematical Formulation:
 
 from dataclasses import dataclass
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from PIL import Image, ImageFilter
 
@@ -106,6 +106,12 @@ class DynamicContrastiveDecoder:
         tau_intent: float = 0.15,
         eta_temp: float = 0.18,
         tau_h: float = 1.50,
+        # Round 6 DCEB Parameters:
+        kappa_eos: float = 4.00,
+        n_min_eos: int = 1,
+        h_bar_eos: float = 1.80,
+        tau_h_eos: float = 0.40,
+        delta_peak_min: float = 0.50,
     ):
         """
         Args:
@@ -124,6 +130,11 @@ class DynamicContrastiveDecoder:
             tau_intent: Question-Intent Adaptive Contrast Factor (QIACF) tau (0.15)
             eta_temp: Temperature & Entropy Synergistic Gating (TESG) cooling scale (0.18)
             tau_h: Temperature & Entropy Synergistic Gating (TESG) entropy tau (1.50)
+            kappa_eos: Dynamic Contrastive EOS Boosting (DCEB) maximum logit boost scale (4.00)
+            n_min_eos: DCEB minimum generation step before EOS boosting is enabled (1)
+            h_bar_eos: DCEB predictive entropy midpoint threshold (1.80 nats)
+            tau_h_eos: DCEB predictive entropy logistic sigmoid scale (0.40)
+            delta_peak_min: DCEB minimum historical peak contrast floor (0.50)
         """
         self.alpha_0 = float(alpha_0)
         self.beta_0 = float(beta_0)
@@ -140,7 +151,13 @@ class DynamicContrastiveDecoder:
         self.tau_intent = float(tau_intent)
         self.eta_temp = float(eta_temp)
         self.tau_h = float(tau_h)
+        self.kappa_eos = float(kappa_eos)
+        self.n_min_eos = int(n_min_eos)
+        self.h_bar_eos = float(h_bar_eos)
+        self.tau_h_eos = float(tau_h_eos)
+        self.delta_peak_min = float(delta_peak_min)
         self._current_step0_d_js: Optional[float] = None
+        self._peak_delta_z: float = 0.0
 
     def compute_js_divergence(
         self,
@@ -167,6 +184,7 @@ class DynamicContrastiveDecoder:
         spatial_confidence: float,
         phase_cooldown_step: int = 0,
         initial_d_js: Optional[float] = None,
+        eos_id: Optional[Union[int, List[int]]] = None,
     ) -> Tuple[int, float, float, float]:
         """
         Execute a single calibrated decoding step.
@@ -196,6 +214,13 @@ class DynamicContrastiveDecoder:
         has_contrast = max_delta_z > 1e-6
         contrast_mask = (delta_z >= (self.theta_c * max_delta_z)) & has_contrast
         valid_mask = apc_mask | contrast_mask
+
+        # Track historical peak visual contrast across generation steps (DCEB sensor)
+        m_t = float(max_delta_z.squeeze().item())
+        if step == 0:
+            self._peak_delta_z = m_t
+        else:
+            self._peak_delta_z = max(self._peak_delta_z, m_t)
 
         # 3. Dynamic Spatio-Temporal Calibration alpha_t
         s_spatial = min(1.0, max(0.0, float(spatial_confidence)))
@@ -248,7 +273,20 @@ class DynamicContrastiveDecoder:
         # where T(H_t) = 1.0 - eta_T * tanh(H_t / tau_H)
         t_entropy = max(0.05, 1.0 - self.eta_temp * math.tanh(entropy_val / self.tau_h))
         calibrated_logits = (pos_logits + alpha_t * delta_z) / t_entropy
-        calibrated_logits = calibrated_logits.masked_fill(~valid_mask, float("-inf"))
 
+        # 4. Dynamic Contrastive EOS Boosting (DCEB) & CAPC EOS Preservation:
+        effective_peak = max(self._peak_delta_z, self.delta_peak_min)
+        c_collapse = max(0.0, 1.0 - m_t / (effective_peak + 1e-6))
+        sig_entropy = 1.0 / (1.0 + math.exp(-np_clip((entropy_val - self.h_bar_eos) / self.tau_h_eos, -20.0, 20.0)))
+        tau_eos = float(self.kappa_eos * c_collapse * sig_entropy) if step >= self.n_min_eos else 0.0
+
+        if eos_id is not None:
+            eos_ids = [eos_id] if isinstance(eos_id, int) else list(eos_id)
+            for eid in eos_ids:
+                valid_mask[..., eid] = True  # Ensure EOS is never truncated by APC/contrast mask
+                if tau_eos > 0.0:
+                    calibrated_logits[..., eid] += tau_eos
+
+        calibrated_logits = calibrated_logits.masked_fill(~valid_mask, float("-inf"))
         next_token_id = int(torch.argmax(calibrated_logits, dim=-1).item())
         return next_token_id, alpha_t, entropy_val, d_js_val
