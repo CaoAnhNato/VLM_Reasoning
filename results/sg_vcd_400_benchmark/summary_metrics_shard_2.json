@@ -1,0 +1,31 @@
+{
+  "total_evaluated_samples": 305,
+  "stage1": {
+    "mean_iou_pct": 19.14,
+    "mean_recall_pct": 84.79,
+    "mean_gt_inclusion_recall_pct": 84.79,
+    "mean_precision_pct": 20.63,
+    "hit_rate_iou_03_pct": 24.59,
+    "hit_rate_iou_05_pct": 8.2,
+    "hit_rate_recall_05_pct": 87.54,
+    "multi_box_hit_rate_pct": 87.87,
+    "multi_box_text_coverage_pct": 87.87,
+    "sub_coverage_recall_pct": 84.87
+  },
+  "stage2": {
+    "exact_match_gt_pct": 50.82,
+    "vqa_acc_gt_pct": 50.82,
+    "f1_gt_pct": 69.61,
+    "substring_match_gt_pct": 72.22,
+    "anls_gt_pct": 66.77,
+    "exact_match_verified_pct": 51.48,
+    "vqa_acc_verified_pct": 50.6,
+    "f1_verified_pct": 70.44,
+    "substring_match_verified_pct": 73.49,
+    "anls_verified_pct": 67.63
+  },
+  "performance": {
+    "avg_latency_s": 2.83,
+    "throughput_samples_per_min": 21.2
+  }
+}
