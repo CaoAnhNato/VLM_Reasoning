@@ -66,15 +66,43 @@ from PIL import Image
 from tqdm import tqdm
 import torch
 
-# Enable hardware TF32 & cuDNN benchmark on Ampere/Ada Lovelace (NVIDIA L4)
-if torch.cuda.is_available():
+# Enable hardware TF32 & guard against Colab cuDNN sublibrary version mismatch (CUDNN_STATUS_SUBLIBRARY_VERSION_MISMATCH)
+def _configure_cuda_and_cudnn_guard():
+    if not torch.cuda.is_available():
+        return
     try:
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
-        torch.backends.cudnn.benchmark = True
+        # Disable cudnn.benchmark & cudnn_sdp to avoid CUDNN_BACKEND_TENSOR_DESCRIPTOR graph finalization bug on dynamic VLM shapes
+        torch.backends.cudnn.benchmark = False
+        if hasattr(torch.backends.cuda, "enable_cudnn_sdp"):
+            torch.backends.cuda.enable_cudnn_sdp(False)
+        if hasattr(torch.backends.cuda, "enable_flash_sdp"):
+            torch.backends.cuda.enable_flash_sdp(True)
+        if hasattr(torch.backends.cuda, "enable_mem_efficient_sdp"):
+            torch.backends.cuda.enable_mem_efficient_sdp(True)
+        if hasattr(torch.backends.cuda, "enable_math_sdp"):
+            torch.backends.cuda.enable_math_sdp(True)
         torch.set_float32_matmul_precision("high")
     except Exception:
         pass
+
+    # Probe Conv3d & Conv2d in bfloat16 (used by Qwen2.5-VL / EraX-VL / Aya vision patch embedders)
+    try:
+        with torch.inference_mode():
+            x3 = torch.zeros((1, 3, 2, 14, 14), device="cuda", dtype=torch.bfloat16)
+            w3 = torch.zeros((8, 3, 2, 14, 14), device="cuda", dtype=torch.bfloat16)
+            _ = torch.nn.functional.conv3d(x3, w3, stride=(2, 14, 14))
+            x2 = torch.zeros((1, 3, 14, 14), device="cuda", dtype=torch.bfloat16)
+            w2 = torch.zeros((8, 3, 14, 14), device="cuda", dtype=torch.bfloat16)
+            _ = torch.nn.functional.conv2d(x2, w2, stride=(14, 14))
+            del x3, w3, x2, w2
+    except Exception as e:
+        print(f"[CUDNN-GUARD] Detected cuDNN sublibrary mismatch ({e}). Disabling cuDNN wrapper -> using native CUDA ATen/Flash kernels.")
+        torch.backends.cudnn.enabled = False
+
+
+_configure_cuda_and_cudnn_guard()
 
 # Compatibility patches for InternVLChatModel / Vintern on modern transformers
 if hasattr(torch.nn.Module, "__getattr__") and not getattr(torch.nn.Module, "_all_tied_weights_patched", False):
@@ -857,7 +885,14 @@ class UnifiedModelWorkerEngine:
                     inputs = self.processor(images=images_batch, text=prompts, padding=True, return_tensors="pt").to(model_dev)
 
                 with torch.inference_mode():
-                    out_ids = self.model.generate(**inputs, max_new_tokens=64, do_sample=False, use_cache=True)
+                    try:
+                        out_ids = self.model.generate(**inputs, max_new_tokens=64, do_sample=False, use_cache=True)
+                    except Exception as gen_err:
+                        if "cudnn" in str(gen_err).lower():
+                            torch.backends.cudnn.enabled = False
+                            out_ids = self.model.generate(**inputs, max_new_tokens=64, do_sample=False, use_cache=True)
+                        else:
+                            raise gen_err
                 if hasattr(inputs, "input_ids"):
                     out_ids = out_ids[:, inputs.input_ids.shape[1] :]
 
@@ -867,7 +902,9 @@ class UnifiedModelWorkerEngine:
                     preds = [s.strip() for s in self.processor.tokenizer.batch_decode(out_ids, skip_special_tokens=True)]
                 else:
                     preds = [str(o).strip() for o in out_ids]
-            except Exception:
+            except Exception as batch_err:
+                if "cudnn" in str(batch_err).lower():
+                    torch.backends.cudnn.enabled = False
                 # Safe sequential fallback per question
                 preds = []
                 for p_text in prompts:
@@ -881,7 +918,14 @@ class UnifiedModelWorkerEngine:
                             t_in = self.processor.apply_chat_template(msgs, add_generation_prompt=True, tokenize=False)
                             inps = self.processor(text=[t_in], images=[image], return_tensors="pt").to(model_dev)
                         with torch.inference_mode():
-                            o_ids = self.model.generate(**inps, max_new_tokens=64, do_sample=False, use_cache=True)
+                            try:
+                                o_ids = self.model.generate(**inps, max_new_tokens=64, do_sample=False, use_cache=True)
+                            except Exception as seq_gen_err:
+                                if "cudnn" in str(seq_gen_err).lower():
+                                    torch.backends.cudnn.enabled = False
+                                    o_ids = self.model.generate(**inps, max_new_tokens=64, do_sample=False, use_cache=True)
+                                else:
+                                    raise seq_gen_err
                         if hasattr(inps, "input_ids"):
                             o_ids = o_ids[:, inps.input_ids.shape[1] :]
                         if hasattr(self.processor, "batch_decode"):
@@ -966,17 +1010,29 @@ def run_worker_shard(args: argparse.Namespace):
     my_samples = [s for iname in my_img_names for s in grouped_all[iname]]
 
     # Check existing completed sample keys in shard_jsonl for crash-proof resume
+    # Auto-purge any empty pred_answer records caused by prior cuDNN / runtime exceptions
     done_keys: Set[str] = set()
     if not args.overwrite and os.path.isfile(shard_jsonl):
+        valid_lines: List[str] = []
+        purged_empty = 0
         with open(shard_jsonl, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
                     try:
                         rec = json.loads(line)
-                        done_keys.add(rec["sample_key"])
+                        if str(rec.get("pred_answer", "")).strip():
+                            done_keys.add(rec["sample_key"])
+                            valid_lines.append(line)
+                        else:
+                            purged_empty += 1
                     except Exception:
                         pass
+        if purged_empty > 0:
+            _wlog(f"Auto-purged {purged_empty} empty prediction records from previous interrupted run.")
+            with open(shard_jsonl, "w", encoding="utf-8") as wf:
+                for vl in valid_lines:
+                    wf.write(vl + "\n")
     elif args.overwrite and os.path.isfile(shard_jsonl):
         try:
             os.remove(shard_jsonl)
@@ -1206,12 +1262,22 @@ def run_single_model_coordinated(
     master_log_file = os.path.join(logs_dir, f"{model_key}.log")
     master_summary_json = os.path.join(summaries_dir, f"{model_key}_summary.json")
 
-    # Check if already 100% completed
+    # Check if already 100% completed (and not a 0.0% F1 broken run from cuDNN error)
     if not args.overwrite and os.path.isfile(master_summary_json) and count_lines_fast(master_pred_jsonl) >= total_target_questions:
         with open(master_summary_json, "r", encoding="utf-8") as sf:
             cached_sum = json.load(sf)
-        print(f"\n[RESUME-SKIP] {display_name} already completed ({total_target_questions} questions). Loaded summary from {master_summary_json}.")
-        return cached_sum
+        cached_f1 = float(cached_sum.get("stage2", {}).get("f1_verified_pct", 0.0))
+        if cached_f1 > 1.0:
+            print(f"\n[RESUME-SKIP] {display_name} already completed ({total_target_questions} questions, F1={cached_f1:.2f}%). Loaded summary from {master_summary_json}.")
+            return cached_sum
+        else:
+            print(f"\n[AUTO-REPAIR] Found corrupted 0.0% F1 summary for {display_name} (from previous cuDNN error). Cleaning and re-running...")
+            for f in (master_summary_json, master_pred_jsonl, master_pred_csv):
+                if os.path.isfile(f):
+                    try:
+                        os.remove(f)
+                    except Exception:
+                        pass
 
     # 1. Pre-download weights once via HF API Key (unless in --mock mode)
     if not args.mock:
