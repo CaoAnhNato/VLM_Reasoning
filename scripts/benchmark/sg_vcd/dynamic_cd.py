@@ -89,6 +89,9 @@ class DynamicContrastiveDecoder:
         tau_js: float = 0.04,
         gamma_decay: float = 0.50,
         lambda_decay: float = 0.08,
+        tau_entropy_low: float = 0.35,
+        tau_entropy_high: float = 2.20,
+        gamma_phase: float = 0.50,
     ):
         """
         Args:
@@ -97,12 +100,18 @@ class DynamicContrastiveDecoder:
             tau_js: Jensen-Shannon divergence syntax gate threshold
             gamma_decay: Visual information decay compensation strength
             lambda_decay: Exponential rate of visual information decay
+            tau_entropy_low: Predictive entropy lower bound for visual certainty
+            tau_entropy_high: Predictive entropy upper bound for noise gating
+            gamma_phase: Exponential cooldown rate for soft reasoning transition
         """
         self.alpha_0 = float(alpha_0)
         self.beta_0 = float(beta_0)
         self.tau_js = float(tau_js)
         self.gamma_decay = float(gamma_decay)
         self.lambda_decay = float(lambda_decay)
+        self.tau_entropy_low = float(tau_entropy_low)
+        self.tau_entropy_high = float(tau_entropy_high)
+        self.gamma_phase = float(gamma_phase)
 
     def compute_js_divergence(
         self,
@@ -127,6 +136,7 @@ class DynamicContrastiveDecoder:
         neg_logits: "torch.Tensor",
         step: int,
         spatial_confidence: float,
+        phase_cooldown_step: int = 0,
     ) -> Tuple[int, float, float, float]:
         """
         Execute a single calibrated decoding step.
@@ -167,7 +177,14 @@ class DynamicContrastiveDecoder:
         is_semantic = float(d_js_val > self.tau_js)
         u_div = torch.tanh(torch.relu(kl_div)) * is_semantic
 
-        alpha_t = float(self.alpha_0 * s_spatial * m_decay * float(u_div.squeeze().item()))
+        # Entropy Modulation Gate: G_entropy(H) in [0, 1]
+        g_entropy_low = math.tanh(max(0.0, entropy_val) / self.tau_entropy_low)
+        g_entropy_high = 1.0 - math.tanh(max(0.0, entropy_val - self.tau_entropy_high))
+        g_entropy = float(np_clip(g_entropy_low * g_entropy_high, 0.0, 1.0))
+
+        alpha_t = float(self.alpha_0 * s_spatial * m_decay * float(u_div.squeeze().item()) * g_entropy)
+        if phase_cooldown_step > 0:
+            alpha_t *= (self.gamma_phase ** phase_cooldown_step)
         alpha_t = max(0.0, min(1.8, alpha_t))
 
         # Calibrated logits

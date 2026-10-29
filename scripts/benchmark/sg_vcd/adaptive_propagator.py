@@ -188,7 +188,7 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
         self,
         work_max_side: int = 640,
         diacritic_belt_ratio: float = 0.50,
-        parallel_gap_scale: float = 1.65,
+        parallel_gap_scale: float = 3.20,
         stack_gap_scale: float = 0.90,
         device: Optional[str] = None,
     ):
@@ -480,7 +480,7 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
         left_bound = seed_pos
         gap_count = 0
         barrier_count = 0
-        max_barrier = max(2, max_gap // 3)
+        max_barrier = max(4, int(round(0.40 * max_gap)))
         for pos in range(seed_pos, -1, -1):
             if active_col[pos]:
                 left_bound = pos

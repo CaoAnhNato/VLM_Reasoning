@@ -61,7 +61,8 @@ if hasattr(torch.nn.Module, "__getattr__") and not getattr(torch.nn.Module, "_al
     _orig_nn_getattr = torch.nn.Module.__getattr__
     def _safe_nn_getattr(self, name):
         if name == "all_tied_weights_keys":
-            return self.__dict__.get("all_tied_weights_keys", getattr(self, "_tied_weights_keys", {}))
+            val = self.__dict__.get("all_tied_weights_keys") or getattr(self, "_tied_weights_keys", None)
+            return val if isinstance(val, dict) else {}
         return _orig_nn_getattr(self, name)
     torch.nn.Module.__getattr__ = _safe_nn_getattr
     torch.nn.Module._all_tied_weights_patched = True
@@ -700,6 +701,21 @@ def aggregate_shards(output_dir: str, num_workers: int, method: str = "sg_vcd", 
 
     # 5. Generate BENCHMARK_REPORT.md
     generate_benchmark_report(output_dir, summary, total_time=total_time, method=method)
+
+    # 6. Consolidate worker logs into evaluation.log
+    eval_log_path = os.path.join(output_dir, "evaluation.log")
+    worker_logs = sorted(glob.glob(os.path.join(output_dir, "evaluation_worker_*.log")))
+    if worker_logs:
+        with open(eval_log_path, "w", encoding="utf-8") as out_log:
+            for wlog in worker_logs:
+                w_name = os.path.basename(wlog)
+                out_log.write(f"=== {w_name} ===\n")
+                try:
+                    with open(wlog, "r", encoding="utf-8", errors="replace") as wf:
+                        out_log.write(wf.read())
+                except Exception:
+                    pass
+                out_log.write("\n")
 
     # Print summary
     print("\n" + "=" * 80)

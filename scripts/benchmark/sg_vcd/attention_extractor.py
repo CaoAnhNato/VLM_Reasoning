@@ -364,8 +364,11 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
             "<|im_start|>user\n"
             "<img>" + ("<IMG_CONTEXT>" * total_img_tokens) + "</img>\n"
         )
-        if question and question.strip():
-            suffix_str = f"{question.strip()}<|im_end|>\n<|im_start|>assistant\n"
+        q_text = question.strip() if question else ""
+        if q_text.startswith("<image>"):
+            q_text = q_text[len("<image>"):].strip()
+        if q_text:
+            suffix_str = f"{q_text}<|im_end|>\n<|im_start|>assistant\n"
         else:
             # Query-agnostic neutral prompt attention sink baseline A_0(u)
             suffix_str = "<|im_end|>\n<|im_start|>assistant\n"
@@ -527,7 +530,15 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
         else:
             q_end_indices = list(range(max(0, n_q_orig - 1)))
         # Skip index 0 (the immediate </img>->text transition token) and include question + reading trajectory
-        q_indices = q_end_indices + list(range(max(0, n_q_orig - 1), n_q_full))
+        draft_indices = list(range(max(0, n_q_orig - 1), n_q_full))
+        q_indices = q_end_indices + draft_indices
+
+        # Decoupled prompt weighting: question tokens 0.70, draft rollout tokens 0.30
+        q_token_weights = torch.ones(len(q_indices), dtype=torch.float32, device=self.device)
+        num_q = len(q_end_indices)
+        if len(q_indices) > num_q:
+            q_token_weights[:num_q] = 0.70
+            q_token_weights[num_q:] = 0.30
 
         n_g = suffix_gen.shape[1]
         if n_g > 4:
@@ -557,9 +568,18 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
                 p_g_head = (layer_g / layer_g.sum(dim=-1, keepdim=True).clamp(min=1e-9)).mean(dim=1, keepdim=True).detach()
                 p_g_heads_dict[l_idx] = p_g_head
 
-            # Information content weight w_t^{(l,h)} = alpha_t^{(l,h)} * D_KL(p_t^{(l,h)} || U(Omega))^2
-            kl_uniform = (p_q * (torch.log(p_q.clamp(min=1e-9)) + log_n_vis)).sum(dim=-1)
-            weights = alpha_vis * (torch.relu(kl_uniform) ** 2)  # (H_heads, T_q)
+            # Linear-entropy saturating specificity with cross-head consensus gating
+            tau_kl = max(1.0, 0.25 * log_n_vis)
+            spec_weight = alpha_vis * torch.tanh(torch.relu((p_q * (torch.log(p_q.clamp(min=1e-9)) + log_n_vis)).sum(dim=-1)) / tau_kl)
+
+            # Consensus weighting across heads
+            layer_mean_p = p_q.mean(dim=0, keepdim=True)
+            m_dist = 0.5 * (p_q + layer_mean_p)
+            js_div = 0.5 * (p_q * (torch.log(p_q.clamp(min=1e-9)) - torch.log(m_dist.clamp(min=1e-9)))).sum(dim=-1) + \
+                     0.5 * (layer_mean_p * (torch.log(layer_mean_p.clamp(min=1e-9)) - torch.log(m_dist.clamp(min=1e-9)))).sum(dim=-1)
+            head_gate = torch.exp(-js_div / 0.35)
+
+            weights = spec_weight * head_gate * q_token_weights.unsqueeze(0)
             head_weights = weights.sum(dim=1, keepdim=True)      # (H_heads, 1)
 
             accum_q += (p_q * weights.unsqueeze(-1)).sum(dim=(0, 1))

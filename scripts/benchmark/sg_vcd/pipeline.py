@@ -50,6 +50,7 @@ from .bbox_selector import (
     KLDivergenceRegionSelector,
     MultiRegionSelectionResult,
     RegionSelectionResult,
+    merge_aligned_candidates,
 )
 from .dynamic_cd import (
     DynamicContrastiveDecoder,
@@ -200,15 +201,13 @@ def strip_conversational_preamble(text: str, question: Optional[str] = None) -> 
 
 def format_concise_decoding_prompt(question: str) -> str:
     """
-    Format decoding prompt aligned with Vintern SFT distribution for concise entity answering (Refinement D).
-    Uses a single-turn instruction without a trailing colon line to prevent prompt-instruction echoing.
+    Format recency-anchored prompt without dangling <image> tags.
+    Anchors brevity constraints at the tail to prevent question echoing and prompt dilution.
     """
     q_clean = question.strip()
     if q_clean.startswith("<image>"):
-        return q_clean
-    if q_clean.startswith("Câu hỏi:") or q_clean.startswith("Trả lời") or q_clean.startswith("Dựa vào chữ"):
-        return f"<image>\n{q_clean}"
-    return f"<image>\nTrả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh (chỉ ghi đúng từ hoặc cụm từ đáp án): {q_clean}"
+        q_clean = q_clean[len("<image>"):].strip()
+    return f"{q_clean}\nYêu cầu: Chỉ ghi đúng cụm từ thực thể ngắn nhất xuất hiện trên ảnh (không viết cả câu, không lặp lại câu hỏi)."
 
 
 class SGVCDPipeline:
@@ -470,14 +469,17 @@ class SGVCDPipeline:
             alpha_history: List[float] = []
             entropy_history: List[float] = []
             phase_reasoning = False
+            phase_cooldown_step = 0
+            visual_reading_active = True
 
             for step in range(max_new_tokens):
                 step_spatial_conf = 0.0 if phase_reasoning else spatial_confidence
-                next_token_id, alpha_t, entropy_t, _ = self.decoder.decode_step(
+                next_token_id, alpha_t, entropy_t, d_js_val = self.decoder.decode_step(
                     pos_logits=pos_logits,
                     neg_logits=neg_logits,
                     step=step,
                     spatial_confidence=step_spatial_conf,
+                    phase_cooldown_step=phase_cooldown_step,
                 )
 
                 alpha_history.append(alpha_t)
@@ -487,13 +489,21 @@ class SGVCDPipeline:
                     break
                 generated_ids.append(next_token_id)
 
-                # Two-phase reasoning transition:
+                # Soft Information-Theoretic Phase Transition:
+                # If after generating initial tokens (step >= 2), visual divergence drops below tau_js,
+                # the model has transitioned from character recognition to language reasoning.
+                if step >= 2 and d_js_val <= self.decoder.tau_js:
+                    visual_reading_active = False
+                    phase_cooldown_step += 1
+
+                # Two-phase reasoning transition fallback:
                 # If delimiter (e.g. newline or colon) is emitted, switch off contrastive subtraction (alpha_t -> 0)
                 # to allow unconstrained world-knowledge language reasoning for Group C resolution.
                 if not phase_reasoning and len(generated_ids) >= 1:
                     token_str = self.tokenizer.decode([next_token_id], skip_special_tokens=True)
                     if "\n" in token_str or ":" in token_str:
                         phase_reasoning = True
+                        phase_cooldown_step = max(phase_cooldown_step, 4)
 
                 next_token_tensor = torch.tensor([[next_token_id]], device=self.device, dtype=torch.long)
                 next_embed = embed_layer(next_token_tensor)
@@ -599,7 +609,7 @@ class SGVCDPipeline:
         px1, py1, px2, py2 = prop_bbox
         W_img, H_img = image_size
         max_dim = max(W_img, H_img)
-        max_allowed_side = min(448, int(round(0.50 * max_dim)))
+        max_allowed_side = int(round(0.85 * max_dim))
 
         w_seed = max(2, sx2 - sx1)
         h_seed = max(2, sy2 - sy1)
@@ -628,24 +638,9 @@ class SGVCDPipeline:
             fused_y1 = min(sy1, py1)
             fused_y2 = max(sy2, py2)
 
-        pad_y_diacritic = max(int(round(0.15 * h_seed)), 2)
+        pad_y_diacritic = max(int(round(0.25 * h_seed)), 4)
         fused_y1 = max(0, fused_y1 - pad_y_diacritic)
         fused_y2 = min(H_img, fused_y2 + pad_y_diacritic)
-
-        fw = fused_x2 - fused_x1
-        fh = fused_y2 - fused_y1
-        if fw > 4.5 * max(1, fh):
-            target_fw = int(round(4.5 * fh))
-            if target_fw >= w_seed:
-                diff_x = fw - target_fw
-                fused_x1 = min(sx1, fused_x1 + diff_x // 2)
-                fused_x2 = max(sx2, fused_x2 - (diff_x - diff_x // 2))
-        elif fh > 4.5 * max(1, fw):
-            target_fh = int(round(4.5 * fw))
-            if target_fh >= h_seed:
-                diff_y = fh - target_fh
-                fused_y1 = min(sy1, fused_y1 + diff_y // 2)
-                fused_y2 = max(sy2, fused_y2 - (diff_y - diff_y // 2))
 
         fused_x1 = max(0, min(W_img - 2, fused_x1))
         fused_y1 = max(0, min(H_img - 2, fused_y1))
@@ -760,8 +755,13 @@ class SGVCDPipeline:
                         stage1_bboxes = resolved
                         char_heights = [fused_char_heights[0]]
                     else:
-                        stage1_bboxes = fused_candidates
-                        char_heights = fused_char_heights
+                        aligned_merged = merge_aligned_candidates([tuple(b) for b in fused_candidates])
+                        if len(aligned_merged) < len(fused_candidates):
+                            stage1_bboxes = [list(b) for b in aligned_merged]
+                            char_heights = [fused_char_heights[0]]
+                        else:
+                            stage1_bboxes = fused_candidates
+                            char_heights = fused_char_heights
                 else:
                     stage1_bboxes = fused_candidates
                     char_heights = fused_char_heights
@@ -774,12 +774,7 @@ class SGVCDPipeline:
         W_img, H_img = image.size
         crops = []
         for b in stage1_bboxes:
-            s_prop = max(b[2] - b[0], b[3] - b[1])
-            if s_prop > 448 or s_prop > 0.50 * max(W_img, H_img):
-                focal_crop_bbox = tuple(selection.pixel_bbox)
-            else:
-                focal_crop_bbox = tuple(b)
-            c = self.cropper.crop(image, focal_crop_bbox)
+            c = self.cropper.crop(image, tuple(b))
             crops.append(c)
 
         crop = crops[0]

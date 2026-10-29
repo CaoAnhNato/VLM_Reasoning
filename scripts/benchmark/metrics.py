@@ -90,6 +90,24 @@ ADMIN_EXPANSION_MAP = {
     r"\bđh\b": "đại học",
     r"\bcđ\b": "cao đẳng",
     r"\bbcđ\b": "ban chỉ đạo",
+    # Roads & Routes (Decree 30/2020/ND-CP)
+    r"\bql\s*\.?\s*(?=[a-zà-ỹ0-9])": "quốc lộ ",
+    r"\btl\s*\.?\s*(?=[a-zà-ỹ0-9])": "tỉnh lộ ",
+    r"\bđt\s*\.?\s*(?=\d+)": "đường tỉnh ",
+    r"\bng\s*\.?\s*(?=\d+)": "ngõ ",
+    # Commercial & Institutional
+    r"\bcty\b|\bc\.ty\b|\bc\s+ty\b": "công ty",
+    r"\bdntn\b": "doanh nghiệp tư nhân",
+    r"\bhtx\b": "hợp tác xã",
+    r"\bcn\s*\.\s*(?=[a-zà-ỹ])": "chi nhánh ",
+    r"\bvpđd\b|\bvp\s*\.\s*đd\b": "văn phòng đại diện",
+    r"\btttm\b": "trung tâm thương mại",
+    r"\bbv\s*\.\s*(?=[a-zà-ỹ])|\bbv\b": "bệnh viện",
+    r"\bpk\s*\.\s*(?=[a-zà-ỹ])|\bpk\b": "phòng khám",
+    r"\bttyt\b": "trung tâm y tế",
+    r"\bca\s*\.\s*(?=[a-zà-ỹ])": "công an ",
+    # Currency and Prices
+    r"\b(\d+)\s*k\s*(?=đ|vnd|vnđ|đồng|₫|\b)": r"\g<1>000 ",
 }
 
 # 2. Number Words <-> Digits Equivalence (Cardinal 0-10)

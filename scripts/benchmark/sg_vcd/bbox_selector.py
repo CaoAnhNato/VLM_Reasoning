@@ -23,7 +23,7 @@ Why J_KL(C) resolves the Discrete Green's Theorem small-window collapse:
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Sequence, Tuple
 
 import numpy as np
 from PIL import Image
@@ -292,16 +292,20 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
     ) -> Tuple[int, int, int, int]:
         """
         Trim outer rows/columns of a candidate bounding box using 1D Otsu thresholding
-        on marginal projection densities. Eliminates hardcoded 0.22 cutoff.
+        on marginal projection densities, protecting Vietnamese vowel diacritic peaks.
         """
         # Trim rows along Y using 1D Otsu threshold computed once on initial marginal row density
         sub_y = prob_map[gy1:gy2, gx1:gx2]
         if sub_y.size > 0:
             tau_y = compute_otsu_threshold_1d(sub_y.mean(axis=1))
             while (gy2 - gy1) > 2:
-                if float(prob_map[gy1, gx1:gx2].mean()) < tau_y:
+                row_top_mean = float(prob_map[gy1, gx1:gx2].mean())
+                row_top_max = float(prob_map[gy1, gx1:gx2].max())
+                row_bot_mean = float(prob_map[gy2 - 1, gx1:gx2].mean())
+                row_bot_max = float(prob_map[gy2 - 1, gx1:gx2].max())
+                if row_top_mean < tau_y and row_top_max < 1.5 * tau_y:
                     gy1 += 1
-                elif float(prob_map[gy2 - 1, gx1:gx2].mean()) < tau_y:
+                elif row_bot_mean < tau_y and row_bot_max < 1.5 * tau_y:
                     gy2 -= 1
                 else:
                     break
@@ -311,9 +315,13 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
         if sub_x.size > 0:
             tau_x = compute_otsu_threshold_1d(sub_x.mean(axis=0))
             while (gx2 - gx1) > 2:
-                if float(prob_map[gy1:gy2, gx1].mean()) < tau_x:
+                col_left_mean = float(prob_map[gy1:gy2, gx1].mean())
+                col_left_max = float(prob_map[gy1:gy2, gx1].max())
+                col_right_mean = float(prob_map[gy1:gy2, gx2 - 1].mean())
+                col_right_max = float(prob_map[gy1:gy2, gx2 - 1].max())
+                if col_left_mean < tau_x and col_left_max < 1.5 * tau_x:
                     gx1 += 1
-                elif float(prob_map[gy1:gy2, gx2 - 1].mean()) < tau_x:
+                elif col_right_mean < tau_x and col_right_max < 1.5 * tau_x:
                     gx2 -= 1
                 else:
                     break
@@ -477,8 +485,8 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
             if max_k >= 2:
                 tau_iou = getattr(self, "tau_iou", 0.20)
                 tau_iom = getattr(self, "tau_iom", 0.35)
-                gamma_signif = getattr(self, "gamma_signif", 0.40)
-                tau_mass = getattr(self, "min_prob_threshold", 0.10)
+                gamma_signif = max(0.25, 0.40 * float(np.exp(-getattr(self, "spatial_confidence", 0.8))))
+                tau_mass = max(0.04, 1.5 / total_cells)
 
                 for (box_k, kl_k, p_k, a_k) in scored_candidates[1:]:
                     inter_x1 = max(c1_box[0], box_k[0])
@@ -552,3 +560,48 @@ class KLDivergenceRegionSelector(BaseRegionSelector):
             area_fractions=area_fractions,
             k=len(pixel_bboxes),
         )
+
+
+def merge_aligned_candidates(
+    candidates: Sequence[Tuple[int, int, int, int]],
+    y_alignment_ratio: float = 0.40,
+    x_gap_scale: float = 2.5,
+) -> List[Tuple[int, int, int, int]]:
+    """
+    Merge horizontally-aligned candidate bounding boxes into a unified continuous banner.
+    Prevents splitting a single multi-word sign into disjoint visual tiles.
+    """
+    if len(candidates) <= 1:
+        return list(candidates)
+
+    c1 = candidates[0]
+    c2 = candidates[1]
+    w1, h1 = c1[2] - c1[0], c1[3] - c1[1]
+    w2, h2 = c2[2] - c2[0], c2[3] - c2[1]
+    min_h = max(1, min(h1, h2))
+    max_h = max(1, max(h1, h2))
+
+    # Center-y vertical alignment
+    cy1 = c1[1] + c1[3]
+    cy2 = c2[1] + c2[3]
+    center_y_diff = abs(cy1 - cy2) / (2.0 * min_h)
+
+    # Horizontal distance between boxes
+    if c1[2] <= c2[0]:
+        dist_x = c2[0] - c1[2]
+    elif c2[2] <= c1[0]:
+        dist_x = c1[0] - c2[2]
+    else:
+        # Overlapping along X
+        dist_x = 0
+
+    if center_y_diff <= y_alignment_ratio and dist_x <= x_gap_scale * max_h:
+        # Merge c1 and c2 into unified banner
+        union_box = (
+            min(c1[0], c2[0]),
+            min(c1[1], c2[1]),
+            max(c1[2], c2[2]),
+            max(c1[3], c2[3]),
+        )
+        return [union_box] + list(candidates[2:])
+    return list(candidates)
