@@ -13,19 +13,19 @@
     "sub_coverage_recall_pct": 82.67
   },
   "stage2": {
-    "exact_match_gt_pct": 42.3,
-    "vqa_acc_gt_pct": 42.3,
-    "f1_gt_pct": 65.96,
-    "substring_match_gt_pct": 69.47,
-    "anls_gt_pct": 62.08,
-    "exact_match_verified_pct": 43.61,
-    "vqa_acc_verified_pct": 43.39,
-    "f1_verified_pct": 66.76,
-    "substring_match_verified_pct": 70.83,
-    "anls_verified_pct": 62.91
+    "exact_match_gt_pct": 51.48,
+    "vqa_acc_gt_pct": 51.48,
+    "f1_gt_pct": 78.93,
+    "substring_match_gt_pct": 77.64,
+    "anls_gt_pct": 78.18,
+    "exact_match_verified_pct": 52.79,
+    "vqa_acc_verified_pct": 51.91,
+    "f1_verified_pct": 79.83,
+    "substring_match_verified_pct": 78.94,
+    "anls_verified_pct": 78.97
   },
   "performance": {
-    "avg_latency_s": 2.878,
-    "throughput_samples_per_min": 20.85
+    "avg_latency_s": 2.956,
+    "throughput_samples_per_min": 20.3
   }
 }

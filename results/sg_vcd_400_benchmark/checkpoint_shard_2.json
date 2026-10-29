@@ -1,315 +1,315 @@
 {
   "checkpoint_version": "1.0",
-  "last_updated": "2026-10-29T07:02:36.408462+00:00",
+  "last_updated": "2026-10-29T13:43:52.616763+00:00",
   "method": "sg_vcd",
   "model_name": "5CD-AI/Vintern-1B-v3_5",
   "total_completed": 305,
   "completed_sample_keys": [
-    "4085_1468.jpg",
-    "8833_3005.jpg",
-    "4658_1650.jpg",
-    "8539_2900.jpg",
-    "4855_1706.jpg",
-    "10552_3531.jpg",
-    "2397_898.jpg",
-    "5758_1988.jpg",
-    "10417_3486.jpg",
-    "5035_1771.jpg",
-    "441_152.jpg",
-    "11339_3812.jpg",
-    "2039_795.jpg",
-    "6669_2309.jpg",
-    "7888_2702.jpg",
-    "11141_3748.jpg",
-    "2315_874.jpg",
-    "8360_2841.jpg",
-    "272_77.jpg",
-    "8787_2994.jpg",
-    "1059_365.jpg",
-    "11625_3904.jpg",
-    "7636_2622.jpg",
-    "8663_2947.jpg",
-    "7621_2617.jpg",
-    "6829_2362.jpg",
-    "3154_1149.jpg",
-    "6334_2191.jpg",
-    "7104_2456.jpg",
-    "5356_1873.jpg",
-    "10836_3628.jpg",
-    "6018_2086.jpg",
     "10977_3680.jpg",
-    "9065_3071.jpg",
-    "9375_3159.jpg",
-    "5868_2026.jpg",
-    "10009_3355.jpg",
-    "9755_3285.jpg",
-    "412_141.jpg",
-    "4305_1539.jpg",
-    "4700_1664.jpg",
-    "11590_3889.jpg",
-    "9888_3321.jpg",
-    "4767_1681.jpg",
-    "3643_1320.jpg",
-    "1738_632.jpg",
-    "6002_2080.jpg",
-    "7828_2685.jpg",
-    "3747_1354.jpg",
-    "2813_1032.jpg",
-    "7157_2474.jpg",
-    "2730_1014.jpg",
-    "6212_2155.jpg",
-    "1969_755.jpg",
-    "8775_2991.jpg",
-    "9560_3214.jpg",
-    "8779_2991.jpg",
-    "867_296.jpg",
-    "8611_2927.jpg",
-    "1790_669.jpg",
-    "10236_3426.jpg",
-    "3651_1321.jpg",
-    "5162_1814.jpg",
-    "5263_1845.jpg",
-    "11534_3875.jpg",
-    "7368_2532.jpg",
-    "8479_2876.jpg",
-    "11552_3880.jpg",
-    "9749_3283.jpg",
-    "5417_1892.jpg",
-    "8687_2957.jpg",
-    "4592_1629.jpg",
-    "1229_427.jpg",
-    "1145_398.jpg",
-    "4567_1620.jpg",
-    "2548_952.jpg",
-    "9942_3335.jpg",
-    "3120_1136.jpg",
-    "11618_3902.jpg",
-    "8260_2807.jpg",
-    "246_68.jpg",
-    "1781_664.jpg",
-    "980_332.jpg",
-    "6811_2352.jpg",
-    "7129_2467.jpg",
-    "11556_3880.jpg",
-    "3845_1392.jpg",
-    "8706_2965.jpg",
-    "5051_1777.jpg",
-    "2525_940.jpg",
-    "2311_874.jpg",
-    "4463_1587.jpg",
-    "923_311.jpg",
-    "8942_3037.jpg",
-    "4296_1537.jpg",
-    "3809_1379.jpg",
-    "4678_1656.jpg",
-    "9570_3219.jpg",
-    "6524_2256.jpg",
-    "478_163.jpg",
-    "9946_3335.jpg",
-    "1183_412.jpg",
-    "2760_1021.jpg",
-    "7122_2464.jpg",
-    "3417_1248.jpg",
-    "10217_3417.jpg",
-    "5989_2073.jpg",
-    "4724_1671.jpg",
-    "6259_2171.jpg",
-    "9353_3152.jpg",
-    "9506_3198.jpg",
-    "11584_3887.jpg",
-    "6298_2181.jpg",
-    "386_130.jpg",
-    "1509_521.jpg",
-    "949_319.jpg",
-    "1865_712.jpg",
-    "5009_1761.jpg",
-    "109_30.jpg",
-    "1149_399.jpg",
-    "7499_2575.jpg",
-    "2864_1046.jpg",
-    "1589_554.jpg",
-    "8946_3037.jpg",
-    "2257_854.jpg",
-    "678_229.jpg",
-    "1030_352.jpg",
-    "2102_811.jpg",
-    "6322_2188.jpg",
-    "7977_2730.jpg",
-    "721_246.jpg",
-    "2079_804.jpg",
-    "3100_1129.jpg",
-    "7989_2734.jpg",
-    "5558_1930.jpg",
-    "5801_2006.jpg",
-    "3910_1411.jpg",
-    "10832_3627.jpg",
-    "2393_898.jpg",
-    "3936_1422.jpg",
-    "3410_1246.jpg",
-    "4062_1460.jpg",
-    "9884_3321.jpg",
-    "3342_1222.jpg",
-    "10421_3486.jpg",
-    "9048_3067.jpg",
-    "3840_1390.jpg",
-    "7071_2447.jpg",
-    "3235_1181.jpg",
-    "4820_1695.jpg",
-    "7718_2649.jpg",
-    "11442_3847.jpg",
-    "10413_3484.jpg",
-    "10727_3591.jpg",
-    "4605_1632.jpg",
-    "1121_390.jpg",
-    "4267_1526.jpg",
-    "5363_1875.jpg",
-    "6107_2123.jpg",
-    "11005_3691.jpg",
-    "3311_1211.jpg",
-    "3617_1313.jpg",
-    "1831_693.jpg",
-    "5860_2025.jpg",
-    "8848_3010.jpg",
-    "8733_2976.jpg",
-    "6692_2318.jpg",
-    "8228_2798.jpg",
-    "11218_3776.jpg",
     "4810_1692.jpg",
-    "5496_1914.jpg",
-    "4459_1586.jpg",
+    "980_332.jpg",
+    "2397_898.jpg",
+    "7803_2676.jpg",
+    "3417_1248.jpg",
+    "5292_1854.jpg",
+    "2315_874.jpg",
+    "9048_3067.jpg",
+    "4085_1468.jpg",
+    "2102_811.jpg",
+    "1854_709.jpg",
     "141_38.jpg",
-    "613_206.jpg",
-    "663_225.jpg",
-    "1070_370.jpg",
-    "1500_518.jpg",
-    "5847_2021.jpg",
-    "8190_2790.jpg",
+    "11552_3880.jpg",
+    "3651_1321.jpg",
+    "2223_847.jpg",
+    "412_141.jpg",
+    "3201_1167.jpg",
+    "7274_2511.jpg",
+    "272_77.jpg",
+    "2311_874.jpg",
+    "4865_1710.jpg",
+    "11359_3821.jpg",
+    "7499_2575.jpg",
+    "6811_2352.jpg",
+    "10723_3591.jpg",
+    "9331_3146.jpg",
     "8013_2739.jpg",
-    "7266_2509.jpg",
+    "5847_2021.jpg",
+    "10413_3484.jpg",
+    "9884_3321.jpg",
+    "6221_2158.jpg",
+    "6322_2188.jpg",
+    "3000_1092.jpg",
+    "9375_3159.jpg",
+    "8228_2798.jpg",
+    "4678_1656.jpg",
+    "10217_3417.jpg",
+    "6018_2086.jpg",
+    "1661_589.jpg",
+    "4248_1520.jpg",
+    "5077_1788.jpg",
+    "8787_2994.jpg",
+    "7888_2702.jpg",
+    "2852_1043.jpg",
+    "8491_2880.jpg",
+    "10832_3627.jpg",
+    "8436_2863.jpg",
+    "1229_427.jpg",
+    "2525_940.jpg",
+    "4724_1671.jpg",
+    "109_30.jpg",
+    "1950_746.jpg",
+    "6310_2184.jpg",
+    "2484_929.jpg",
+    "8833_3005.jpg",
+    "2039_795.jpg",
+    "4305_1539.jpg",
+    "4567_1620.jpg",
+    "5068_1784.jpg",
+    "4463_1587.jpg",
+    "5417_1892.jpg",
+    "5860_2025.jpg",
+    "8190_2790.jpg",
+    "1030_352.jpg",
+    "7589_2605.jpg",
+    "5044_1775.jpg",
+    "2098_811.jpg",
+    "7104_2456.jpg",
+    "1121_390.jpg",
+    "2352_885.jpg",
+    "678_229.jpg",
     "9021_3057.jpg",
+    "9433_3175.jpg",
+    "9942_3335.jpg",
+    "2253_854.jpg",
+    "7875_2698.jpg",
+    "3845_1392.jpg",
+    "268_76.jpg",
+    "7714_2649.jpg",
+    "923_311.jpg",
+    "8555_2905.jpg",
+    "4008_1442.jpg",
     "7985_2733.jpg",
+    "8367_2843.jpg",
+    "9353_3152.jpg",
+    "11218_3776.jpg",
+    "3647_1321.jpg",
+    "7828_2685.jpg",
+    "5009_1761.jpg",
+    "3876_1401.jpg",
+    "7679_2638.jpg",
+    "11584_3887.jpg",
+    "9506_3198.jpg",
+    "4459_1586.jpg",
+    "10236_3426.jpg",
+    "5005_1761.jpg",
+    "7071_2447.jpg",
+    "7621_2617.jpg",
+    "10836_3628.jpg",
+    "3311_1211.jpg",
+    "9035_3062.jpg",
+    "7129_2467.jpg",
+    "9065_3071.jpg",
+    "11141_3748.jpg",
+    "3617_1313.jpg",
+    "4662_1652.jpg",
+    "6757_2338.jpg",
+    "7368_2532.jpg",
+    "1790_669.jpg",
+    "11169_3758.jpg",
+    "6764_2340.jpg",
+    "10768_3605.jpg",
+    "5162_1814.jpg",
+    "11601_3894.jpg",
+    "7157_2474.jpg",
+    "663_225.jpg",
+    "4825_1697.jpg",
+    "4658_1650.jpg",
+    "10240_3426.jpg",
+    "10964_3673.jpg",
+    "5363_1875.jpg",
+    "4292_1537.jpg",
     "9207_3108.jpg",
     "9456_3183.jpg",
-    "10048_3369.jpg",
-    "10078_3378.jpg",
-    "6764_2340.jpg",
-    "3647_1321.jpg",
+    "10224_3421.jpg",
+    "11386_3829.jpg",
+    "5485_1912.jpg",
+    "5554_1930.jpg",
+    "11590_3889.jpg",
+    "1865_712.jpg",
+    "8385_2847.jpg",
+    "1509_521.jpg",
+    "3393_1241.jpg",
+    "7977_2730.jpg",
+    "9379_3160.jpg",
+    "9667_3256.jpg",
+    "374_126.jpg",
+    "3809_1379.jpg",
+    "10421_3486.jpg",
+    "949_319.jpg",
+    "386_130.jpg",
+    "7397_2542.jpg",
+    "8281_2816.jpg",
+    "3154_1149.jpg",
+    "1500_518.jpg",
+    "5263_1845.jpg",
+    "9888_3321.jpg",
+    "10365_3467.jpg",
+    "10213_3417.jpg",
+    "5666_1962.jpg",
+    "2548_952.jpg",
+    "3767_1366.jpg",
+    "10926_3656.jpg",
+    "6524_2256.jpg",
+    "1070_370.jpg",
+    "7636_2622.jpg",
+    "4820_1695.jpg",
+    "2760_1021.jpg",
+    "5801_2006.jpg",
+    "1394_484.jpg",
+    "5864_2026.jpg",
+    "6002_2080.jpg",
+    "6107_2123.jpg",
+    "8663_2947.jpg",
+    "11442_3847.jpg",
+    "1488_514.jpg",
+    "10069_3375.jpg",
+    "7149_2471.jpg",
+    "1145_398.jpg",
+    "5758_1988.jpg",
+    "76_22.jpg",
+    "6242_2165.jpg",
+    "8938_3037.jpg",
+    "6298_2181.jpg",
+    "1149_399.jpg",
+    "246_68.jpg",
+    "7989_2734.jpg",
+    "5158_1814.jpg",
+    "4189_1503.jpg",
+    "3478_1271.jpg",
+    "5051_1777.jpg",
+    "6212_2155.jpg",
+    "2079_804.jpg",
+    "1969_755.jpg",
+    "8539_2900.jpg",
     "423_145.jpg",
     "6103_2123.jpg",
-    "9171_3098.jpg",
-    "2253_854.jpg",
-    "4055_1458.jpg",
-    "5195_1825.jpg",
-    "7714_2649.jpg",
-    "4008_1442.jpg",
-    "7454_2558.jpg",
-    "4248_1520.jpg",
-    "5292_1854.jpg",
-    "3393_1241.jpg",
-    "6116_2126.jpg",
-    "10964_3673.jpg",
-    "2352_885.jpg",
-    "5077_1788.jpg",
-    "7803_2676.jpg",
-    "9760_3287.jpg",
-    "8473_2874.jpg",
-    "2098_811.jpg",
-    "10240_3426.jpg",
-    "2484_929.jpg",
-    "3136_1143.jpg",
-    "3876_1401.jpg",
     "11065_3714.jpg",
-    "11359_3821.jpg",
-    "3201_1167.jpg",
-    "8436_2863.jpg",
-    "10926_3656.jpg",
-    "7843_2689.jpg",
-    "9052_3068.jpg",
-    "4103_1474.jpg",
-    "4601_1631.jpg",
-    "6310_2184.jpg",
-    "8938_3037.jpg",
-    "8385_2847.jpg",
-    "11335_3812.jpg",
-    "7875_2698.jpg",
-    "8659_2946.jpg",
-    "5554_1930.jpg",
-    "5754_1987.jpg",
-    "7052_2440.jpg",
-    "10361_3466.jpg",
-    "4662_1652.jpg",
-    "10069_3375.jpg",
-    "4825_1697.jpg",
+    "8611_2927.jpg",
     "11258_3788.jpg",
-    "3737_1350.jpg",
-    "7149_2471.jpg",
-    "10213_3417.jpg",
-    "3000_1092.jpg",
-    "11386_3829.jpg",
-    "4292_1537.jpg",
-    "7679_2638.jpg",
-    "8559_2905.jpg",
-    "1482_511.jpg",
-    "5485_1912.jpg",
-    "10768_3605.jpg",
-    "7589_2605.jpg",
-    "8491_2880.jpg",
-    "10606_3550.jpg",
-    "9667_3256.jpg",
-    "1488_514.jpg",
-    "6242_2165.jpg",
-    "7274_2511.jpg",
-    "5158_1814.jpg",
-    "8281_2816.jpg",
-    "3542_1290.jpg",
-    "1394_484.jpg",
-    "5434_1897.jpg",
-    "7270_2510.jpg",
-    "6757_2338.jpg",
-    "7904_2706.jpg",
-    "9379_3160.jpg",
-    "5068_1784.jpg",
-    "9769_3291.jpg",
-    "2223_847.jpg",
-    "10365_3467.jpg",
-    "11169_3758.jpg",
-    "6221_2158.jpg",
-    "3767_1366.jpg",
-    "10723_3591.jpg",
-    "7892_2702.jpg",
-    "1350_471.jpg",
-    "2852_1043.jpg",
-    "9035_3062.jpg",
-    "1051_362.jpg",
-    "5005_1761.jpg",
-    "1854_709.jpg",
-    "374_126.jpg",
-    "9331_3146.jpg",
-    "3608_1311.jpg",
-    "6120_2126.jpg",
-    "3478_1271.jpg",
-    "4133_1483.jpg",
-    "6266_2173.jpg",
-    "9211_3108.jpg",
-    "2016_785.jpg",
     "2180_834.jpg",
-    "5864_2026.jpg",
-    "5666_1962.jpg",
-    "7397_2542.jpg",
-    "8555_2905.jpg",
-    "4865_1710.jpg",
-    "10224_3421.jpg",
-    "9433_3175.jpg",
-    "10602_3549.jpg",
-    "11601_3894.jpg",
-    "268_76.jpg",
-    "76_22.jpg",
-    "1661_589.jpg",
-    "4189_1503.jpg",
     "4728_1671.jpg",
-    "8367_2843.jpg",
-    "5044_1775.jpg",
-    "1950_746.jpg"
+    "7454_2558.jpg",
+    "1482_511.jpg",
+    "5558_1930.jpg",
+    "8848_3010.jpg",
+    "10552_3531.jpg",
+    "1831_693.jpg",
+    "4062_1460.jpg",
+    "6116_2126.jpg",
+    "2016_785.jpg",
+    "4700_1664.jpg",
+    "7892_2702.jpg",
+    "9052_3068.jpg",
+    "10361_3466.jpg",
+    "11618_3902.jpg",
+    "6266_2173.jpg",
+    "5868_2026.jpg",
+    "3936_1422.jpg",
+    "1059_365.jpg",
+    "11625_3904.jpg",
+    "3840_1390.jpg",
+    "4296_1537.jpg",
+    "9570_3219.jpg",
+    "8946_3037.jpg",
+    "8559_2905.jpg",
+    "5496_1914.jpg",
+    "9769_3291.jpg",
+    "3136_1143.jpg",
+    "2864_1046.jpg",
+    "8779_2991.jpg",
+    "6120_2126.jpg",
+    "6259_2171.jpg",
+    "11534_3875.jpg",
+    "441_152.jpg",
+    "4103_1474.jpg",
+    "3342_1222.jpg",
+    "1589_554.jpg",
+    "5356_1873.jpg",
+    "8360_2841.jpg",
+    "613_206.jpg",
+    "8687_2957.jpg",
+    "7843_2689.jpg",
+    "8479_2876.jpg",
+    "10727_3591.jpg",
+    "867_296.jpg",
+    "9946_3335.jpg",
+    "5035_1771.jpg",
+    "5989_2073.jpg",
+    "10048_3369.jpg",
+    "5754_1987.jpg",
+    "3542_1290.jpg",
+    "6334_2191.jpg",
+    "8260_2807.jpg",
+    "3747_1354.jpg",
+    "1051_362.jpg",
+    "2730_1014.jpg",
+    "4592_1629.jpg",
+    "3608_1311.jpg",
+    "4133_1483.jpg",
+    "8733_2976.jpg",
+    "6692_2318.jpg",
+    "9171_3098.jpg",
+    "9760_3287.jpg",
+    "2257_854.jpg",
+    "4267_1526.jpg",
+    "1350_471.jpg",
+    "1781_664.jpg",
+    "4767_1681.jpg",
+    "7270_2510.jpg",
+    "7904_2706.jpg",
+    "8942_3037.jpg",
+    "8775_2991.jpg",
+    "7052_2440.jpg",
+    "3910_1411.jpg",
+    "3410_1246.jpg",
+    "4601_1631.jpg",
+    "11335_3812.jpg",
+    "3737_1350.jpg",
+    "3235_1181.jpg",
+    "3643_1320.jpg",
+    "6669_2309.jpg",
+    "8473_2874.jpg",
+    "9755_3285.jpg",
+    "10606_3550.jpg",
+    "2813_1032.jpg",
+    "11005_3691.jpg",
+    "11339_3812.jpg",
+    "4055_1458.jpg",
+    "3120_1136.jpg",
+    "1183_412.jpg",
+    "8706_2965.jpg",
+    "4855_1706.jpg",
+    "721_246.jpg",
+    "9749_3283.jpg",
+    "1738_632.jpg",
+    "7718_2649.jpg",
+    "10078_3378.jpg",
+    "10417_3486.jpg",
+    "11556_3880.jpg",
+    "6829_2362.jpg",
+    "8659_2946.jpg",
+    "3100_1129.jpg",
+    "9560_3214.jpg",
+    "10602_3549.jpg",
+    "9211_3108.jpg",
+    "10009_3355.jpg",
+    "5195_1825.jpg",
+    "7122_2464.jpg",
+    "4605_1632.jpg",
+    "7266_2509.jpg",
+    "2393_898.jpg",
+    "5434_1897.jpg",
+    "478_163.jpg"
   ],
   "summary_metrics": {
     "total_evaluated_samples": 305,
@@ -326,20 +326,20 @@
       "sub_coverage_recall_pct": 84.87
     },
     "stage2": {
-      "exact_match_gt_pct": 50.82,
-      "vqa_acc_gt_pct": 50.82,
-      "f1_gt_pct": 69.61,
-      "substring_match_gt_pct": 72.22,
-      "anls_gt_pct": 66.77,
-      "exact_match_verified_pct": 51.48,
-      "vqa_acc_verified_pct": 50.6,
-      "f1_verified_pct": 70.44,
-      "substring_match_verified_pct": 73.49,
-      "anls_verified_pct": 67.63
+      "exact_match_gt_pct": 58.36,
+      "vqa_acc_gt_pct": 58.36,
+      "f1_gt_pct": 84.43,
+      "substring_match_gt_pct": 82.97,
+      "anls_gt_pct": 84.63,
+      "exact_match_verified_pct": 59.34,
+      "vqa_acc_verified_pct": 58.58,
+      "f1_verified_pct": 85.23,
+      "substring_match_verified_pct": 84.11,
+      "anls_verified_pct": 85.4
     },
     "performance": {
-      "avg_latency_s": 2.83,
-      "throughput_samples_per_min": 21.2
+      "avg_latency_s": 2.986,
+      "throughput_samples_per_min": 20.09
     }
   },
   "records": [
@@ -407,7 +407,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.92497204711535,
-      "latency_s": 3.721
+      "latency_s": 3.658
     },
     {
       "sample_key": "109_30.jpg",
@@ -452,7 +452,7 @@
           324
         ]
       ],
-      "pred_answer": "bếp gas và bếp từ",
+      "pred_answer": "Bếp gas",
       "stage1_metrics": {
         "iou": 0.4913214571461228,
         "recall": 0.5448619284744228,
@@ -471,14 +471,14 @@
         "f1_gt": 0.0,
         "substring_gt": 0.0,
         "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5714285714285715,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 0.3333333333333333,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.6536822464418064,
-      "latency_s": 2.021
+      "latency_s": 2.404
     },
     {
       "sample_key": "141_38.jpg",
@@ -544,7 +544,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9303785460884357,
-      "latency_s": 3.106
+      "latency_s": 3.962
     },
     {
       "sample_key": "246_68.jpg",
@@ -584,7 +584,7 @@
           181
         ]
       ],
-      "pred_answer": "Thẻ SIM",
+      "pred_answer": "Điện thoại, máy tính bảng",
       "stage1_metrics": {
         "iou": 0.0618820177643707,
         "recall": 1.0,
@@ -598,19 +598,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9879225922697792,
-      "latency_s": 2.315
+      "latency_s": 2.997
     },
     {
       "sample_key": "268_76.jpg",
@@ -650,7 +650,7 @@
           1102
         ]
       ],
-      "pred_answer": "COCO XIM",
+      "pred_answer": "Coco xim",
       "stage1_metrics": {
         "iou": 0.1018032546547427,
         "recall": 1.0,
@@ -676,7 +676,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9416615174263817,
-      "latency_s": 2.968
+      "latency_s": 3.257
     },
     {
       "sample_key": "272_77.jpg",
@@ -719,7 +719,7 @@
           508
         ]
       ],
-      "pred_answer": "0945 799 979 - 0945 986 999",
+      "pred_answer": "0945 166 799 - 0945 166 899",
       "stage1_metrics": {
         "iou": 0.014150943396226415,
         "recall": 1.0,
@@ -735,17 +735,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 0.5,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 0.5,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9729980594275202,
-      "latency_s": 4.295
+      "latency_s": 4.713
     },
     {
       "sample_key": "374_126.jpg",
@@ -811,7 +811,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9857076440001243,
-      "latency_s": 2.03
+      "latency_s": 2.545
     },
     {
       "sample_key": "386_130.jpg",
@@ -900,7 +900,7 @@
           818
         ]
       ],
-      "pred_answer": "Phaner Pie Luxury",
+      "pred_answer": "Bánh phaner pie luxury",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -921,12 +921,12 @@
         "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.6
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9330352305111367,
-      "latency_s": 2.396
+      "latency_s": 3.438
     },
     {
       "sample_key": "412_141.jpg",
@@ -966,7 +966,7 @@
           739
         ]
       ],
-      "pred_answer": "Buổi lễ kỷ niệm 39 năm Ngày Nhà giáo Việt Nam",
+      "pred_answer": "Buổi lễ kỷ niệm 39 năm ngày nhà giáo Việt Nam",
       "stage1_metrics": {
         "iou": 0.048031633737273205,
         "recall": 1.0,
@@ -992,7 +992,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.7537214965294313,
-      "latency_s": 3.647
+      "latency_s": 3.8
     },
     {
       "sample_key": "423_145.jpg",
@@ -1058,7 +1058,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7287960171867304,
-      "latency_s": 2.837
+      "latency_s": 2.202
     },
     {
       "sample_key": "441_152.jpg",
@@ -1098,7 +1098,7 @@
           507
         ]
       ],
-      "pred_answer": "khu vực cách ly",
+      "pred_answer": "Khu vực cách ly",
       "stage1_metrics": {
         "iou": 0.16762214983713355,
         "recall": 1.0,
@@ -1124,7 +1124,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.917889329006562,
-      "latency_s": 2.5
+      "latency_s": 2.509
     },
     {
       "sample_key": "478_163.jpg",
@@ -1164,7 +1164,7 @@
           233
         ]
       ],
-      "pred_answer": "Yêu cầu: Chỉ ghi đúng cụm từ thực thể ngắn nhất xuất hiện trên ảnh (không viết cả câu, không lặp lại câu hỏi)",
+      "pred_answer": "Gạo sạch",
       "stage1_metrics": {
         "iou": 0.02808641975308642,
         "recall": 1.0,
@@ -1178,19 +1178,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9621525170221883,
-      "latency_s": 4.205
+      "latency_s": 2.808
     },
     {
       "sample_key": "613_206.jpg",
@@ -1256,7 +1256,7 @@
         "anls_verified": 0.9090909090909091
       },
       "spatial_confidence": 0.8178600360984943,
-      "latency_s": 3.096
+      "latency_s": 3.423
     },
     {
       "sample_key": "663_225.jpg",
@@ -1296,7 +1296,7 @@
           35
         ]
       ],
-      "pred_answer": "Tiệm thuốc",
+      "pred_answer": "Bán thuốc giá sỉ",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -1310,19 +1310,19 @@
         "multi_box_hit": 0.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8045087307812836,
-      "latency_s": 2.49
+      "latency_s": 3.2
     },
     {
       "sample_key": "678_229.jpg",
@@ -1362,7 +1362,7 @@
           620
         ]
       ],
-      "pred_answer": "Yên đường",
+      "pred_answer": "Trước cửa hàng Mega Market",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -1378,17 +1378,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8789226756576372,
-      "latency_s": 2.888
+      "latency_s": 4.038
     },
     {
       "sample_key": "721_246.jpg",
@@ -1431,7 +1431,7 @@
           158
         ]
       ],
-      "pred_answer": "63.300 - 89.000",
+      "pred_answer": "81.300 - 92.900",
       "stage1_metrics": {
         "iou": 0.0120616869130697,
         "recall": 1.0,
@@ -1447,17 +1447,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.25,
-        "substring_gt": 0.3333333333333333,
-        "anls_gt": 0.5384615384615384,
+        "f1_gt": 0.8000000000000002,
+        "substring_gt": 0.6666666666666666,
+        "anls_gt": 0.8461538461538461,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.25,
-        "substring_verified": 0.3333333333333333,
-        "anls_verified": 0.6153846153846154
+        "f1_verified": 0.9,
+        "substring_verified": 0.75,
+        "anls_verified": 0.9230769230769231
       },
       "spatial_confidence": 0.7851312239366002,
-      "latency_s": 3.315
+      "latency_s": 3.586
     },
     {
       "sample_key": "867_296.jpg",
@@ -1523,7 +1523,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9507584135834065,
-      "latency_s": 2.576
+      "latency_s": 2.665
     },
     {
       "sample_key": "923_311.jpg",
@@ -1563,7 +1563,7 @@
           102
         ]
       ],
-      "pred_answer": "Phượng và Hải",
+      "pred_answer": "Có",
       "stage1_metrics": {
         "iou": 0.49574687776575865,
         "recall": 0.7132246312736533,
@@ -1577,19 +1577,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
-        "f1_gt": 1.0,
-        "substring_gt": 1.0,
-        "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
-        "f1_verified": 1.0,
-        "substring_verified": 1.0,
-        "anls_verified": 1.0
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
+        "f1_gt": 0.0,
+        "substring_gt": 0.0,
+        "anls_gt": 0.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
+        "f1_verified": 0.0,
+        "substring_verified": 0.0,
+        "anls_verified": 0.0
       },
       "spatial_confidence": 0.9546279831325535,
-      "latency_s": 2.407
+      "latency_s": 2.528
     },
     {
       "sample_key": "949_319.jpg",
@@ -1652,17 +1652,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6666666666666666,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.5
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9623404251212124,
-      "latency_s": 2.732
+      "latency_s": 3.05
     },
     {
       "sample_key": "980_332.jpg",
@@ -1728,7 +1728,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9779514221058455,
-      "latency_s": 2.525
+      "latency_s": 2.537
     },
     {
       "sample_key": "1030_352.jpg",
@@ -1794,7 +1794,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9070800126802411,
-      "latency_s": 2.078
+      "latency_s": 2.26
     },
     {
       "sample_key": "1051_362.jpg",
@@ -1850,17 +1850,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.7272727272727273,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.7272727272727273
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.5805291297338555,
-      "latency_s": 2.699
+      "latency_s": 3.612
     },
     {
       "sample_key": "1059_365.jpg",
@@ -1903,7 +1903,7 @@
           28
         ]
       ],
-      "pred_answer": "Đang trốn mẹ đi chơi với anh",
+      "pred_answer": "Bé gái đang trốn mẹ đi chơi với anh",
       "stage1_metrics": {
         "iou": 0.208984375,
         "recall": 1.0,
@@ -1919,17 +1919,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6363636363636364,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.5365853658536586,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.7272727272727273,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.5365853658536586
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9102443968436487,
-      "latency_s": 2.99
+      "latency_s": 3.301
     },
     {
       "sample_key": "1070_370.jpg",
@@ -1995,7 +1995,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7914018899105992,
-      "latency_s": 2.556
+      "latency_s": 3.014
     },
     {
       "sample_key": "1121_390.jpg",
@@ -2035,7 +2035,7 @@
           395
         ]
       ],
-      "pred_answer": "Gương kia ngự ở trên tường",
+      "pred_answer": "Trên tường",
       "stage1_metrics": {
         "iou": 0.3638446393413281,
         "recall": 0.9897750511247444,
@@ -2049,19 +2049,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8688544040311496,
-      "latency_s": 2.456
+      "latency_s": 2.614
     },
     {
       "sample_key": "1145_398.jpg",
@@ -2127,7 +2127,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.28972759711898677,
-      "latency_s": 2.384
+      "latency_s": 2.866
     },
     {
       "sample_key": "1149_399.jpg",
@@ -2167,7 +2167,7 @@
           469
         ]
       ],
-      "pred_answer": "LOOK",
+      "pred_answer": "Look",
       "stage1_metrics": {
         "iou": 0.0454760217339948,
         "recall": 1.0,
@@ -2193,7 +2193,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.992570548061675,
-      "latency_s": 1.999
+      "latency_s": 2.314
     },
     {
       "sample_key": "1183_412.jpg",
@@ -2259,7 +2259,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.829993406585513,
-      "latency_s": 2.337
+      "latency_s": 2.725
     },
     {
       "sample_key": "1229_427.jpg",
@@ -2299,7 +2299,7 @@
           59
         ]
       ],
-      "pred_answer": "htuti Healthk.com",
+      "pred_answer": "Healthk.com",
       "stage1_metrics": {
         "iou": 0.08049721818455215,
         "recall": 1.0,
@@ -2325,7 +2325,7 @@
         "anls_verified": 0.9090909090909091
       },
       "spatial_confidence": 0.9563122033187292,
-      "latency_s": 2.395
+      "latency_s": 2.604
     },
     {
       "sample_key": "1350_471.jpg",
@@ -2365,7 +2365,7 @@
           156
         ]
       ],
-      "pred_answer": "Nói thật đi",
+      "pred_answer": "Nói thật đi! Sáng nay mấy giờ mới dậy",
       "stage1_metrics": {
         "iou": 0.8839480973902901,
         "recall": 0.9923076923076923,
@@ -2379,19 +2379,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.5,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9188772959568301,
-      "latency_s": 2.566
+      "latency_s": 3.138
     },
     {
       "sample_key": "1394_484.jpg",
@@ -2431,7 +2431,7 @@
           517
         ]
       ],
-      "pred_answer": "Tao báo công an mày ăn nói",
+      "pred_answer": "Ba trọn",
       "stage1_metrics": {
         "iou": 0.09284621119962327,
         "recall": 0.5833333333333334,
@@ -2447,17 +2447,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9645456294499939,
-      "latency_s": 2.806
+      "latency_s": 1.992
     },
     {
       "sample_key": "1482_511.jpg",
@@ -2523,7 +2523,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8980809255544775,
-      "latency_s": 2.892
+      "latency_s": 3.798
     },
     {
       "sample_key": "1488_514.jpg",
@@ -2579,17 +2579,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9655172413793104,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.9655172413793104,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9655172413793104,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.9655172413793104
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9754994635106499,
-      "latency_s": 3.403
+      "latency_s": 3.436
     },
     {
       "sample_key": "1500_518.jpg",
@@ -2629,7 +2629,7 @@
           421
         ]
       ],
-      "pred_answer": "Em chỉ làm sai 1 câu",
+      "pred_answer": "1 câu",
       "stage1_metrics": {
         "iou": 0.27394740675990675,
         "recall": 1.0,
@@ -2643,19 +2643,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.90272869605003,
-      "latency_s": 2.54
+      "latency_s": 2.087
     },
     {
       "sample_key": "1509_521.jpg",
@@ -2695,7 +2695,7 @@
           449
         ]
       ],
-      "pred_answer": "Yêu cầu: -newton Kneel",
+      "pred_answer": "Newton Kneel",
       "stage1_metrics": {
         "iou": 0.23353293413173654,
         "recall": 0.9919354838709677,
@@ -2709,19 +2709,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6666666666666666,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.6470588235294117,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6666666666666666,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.6470588235294117
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.981285801854808,
-      "latency_s": 2.621
+      "latency_s": 2.291
     },
     {
       "sample_key": "1589_554.jpg",
@@ -2761,7 +2761,7 @@
           488
         ]
       ],
-      "pred_answer": "Vì sao con khóc",
+      "pred_answer": "Vì tiền điện tháng này x3 Bụp ơi",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -2775,19 +2775,19 @@
         "multi_box_hit": 0.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.7762852340199384,
-      "latency_s": 2.512
+      "latency_s": 3.335
     },
     {
       "sample_key": "1661_589.jpg",
@@ -2827,7 +2827,7 @@
           587
         ]
       ],
-      "pred_answer": "Tôi là một AI được huấn luyện để đọc và hiểu văn bản, nhưng tôi không thể xác định chính xác danh tính của người sở hữu tấm ảnh",
+      "pred_answer": "Tôi",
       "stage1_metrics": {
         "iou": 0.4060958904109589,
         "recall": 1.0,
@@ -2843,17 +2843,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.07407407407407407,
-        "substring_gt": 0.3333333333333333,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.07407407407407407,
-        "substring_verified": 0.3333333333333333,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8117835894184052,
-      "latency_s": 4.037
+      "latency_s": 2.294
     },
     {
       "sample_key": "1738_632.jpg",
@@ -2919,7 +2919,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.955676185187694,
-      "latency_s": 2.601
+      "latency_s": 2.55
     },
     {
       "sample_key": "1781_664.jpg",
@@ -2959,7 +2959,7 @@
           125
         ]
       ],
-      "pred_answer": "hình ảnh của giấy chứng nhận đã có người yêu",
+      "pred_answer": "Giấy chứng nhận đã có người yêu",
       "stage1_metrics": {
         "iou": 0.24809093558729234,
         "recall": 1.0,
@@ -2985,7 +2985,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9431175619635467,
-      "latency_s": 2.987
+      "latency_s": 2.638
     },
     {
       "sample_key": "1790_669.jpg",
@@ -3041,17 +3041,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9090909090909091,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.8235294117647058,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9090909090909091,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.8235294117647058
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9774148953992762,
-      "latency_s": 3.144
+      "latency_s": 2.814
     },
     {
       "sample_key": "1831_693.jpg",
@@ -3091,7 +3091,7 @@
           397
         ]
       ],
-      "pred_answer": "Ảnh được lấy từ nguồn ThuThuatPhanMem.vn",
+      "pred_answer": "ThuThuatPhanMem.vn",
       "stage1_metrics": {
         "iou": 0.23163998429089566,
         "recall": 0.9783393501805054,
@@ -3117,7 +3117,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9788416705901257,
-      "latency_s": 2.949
+      "latency_s": 2.756
     },
     {
       "sample_key": "1854_709.jpg",
@@ -3157,7 +3157,7 @@
           82
         ]
       ],
-      "pred_answer": "Xốc vác như neo rừng",
+      "pred_answer": "nhẹo rừng",
       "stage1_metrics": {
         "iou": 0.3267962171728909,
         "recall": 0.9661733615221987,
@@ -3173,17 +3173,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.25,
-        "substring_gt": 0.3333333333333333,
-        "anls_gt": 0.0,
+        "f1_gt": 0.0,
+        "substring_gt": 0.0,
+        "anls_gt": 0.5555555555555556,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.25,
-        "substring_verified": 0.3333333333333333,
-        "anls_verified": 0.0
+        "f1_verified": 0.0,
+        "substring_verified": 0.0,
+        "anls_verified": 0.5555555555555556
       },
       "spatial_confidence": 0.911711585282238,
-      "latency_s": 2.796
+      "latency_s": 2.771
     },
     {
       "sample_key": "1865_712.jpg",
@@ -3249,7 +3249,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.915306512037377,
-      "latency_s": 2.635
+      "latency_s": 2.421
     },
     {
       "sample_key": "1950_746.jpg",
@@ -3289,7 +3289,7 @@
           131
         ]
       ],
-      "pred_answer": "Đức",
+      "pred_answer": "Đực",
       "stage1_metrics": {
         "iou": 0.03259259259259259,
         "recall": 1.0,
@@ -3303,19 +3303,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.85,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.85,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8716250806252571,
-      "latency_s": 2.342
+      "latency_s": 2.684
     },
     {
       "sample_key": "1969_755.jpg",
@@ -3355,7 +3355,7 @@
           531
         ]
       ],
-      "pred_answer": "Bỏ chém con bich",
+      "pred_answer": "Chịch chịch",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -3381,7 +3381,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.5251344066832693,
-      "latency_s": 2.871
+      "latency_s": 3.327
     },
     {
       "sample_key": "2016_785.jpg",
@@ -3421,7 +3421,7 @@
           338
         ]
       ],
-      "pred_answer": "Người đàn ông yêu cầu người phụ nữ chia bớt việc nhà cho anh",
+      "pred_answer": "Chia bớt việc nhà cho anh",
       "stage1_metrics": {
         "iou": 0.14018037135278513,
         "recall": 1.0,
@@ -3447,7 +3447,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8519120319666044,
-      "latency_s": 3.207
+      "latency_s": 3.214
     },
     {
       "sample_key": "2039_795.jpg",
@@ -3513,7 +3513,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8033635876276221,
-      "latency_s": 2.539
+      "latency_s": 2.86
     },
     {
       "sample_key": "2079_804.jpg",
@@ -3579,7 +3579,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9872076535785428,
-      "latency_s": 2.493
+      "latency_s": 2.954
     },
     {
       "sample_key": "2098_811.jpg",
@@ -3619,7 +3619,7 @@
           211
         ]
       ],
-      "pred_answer": "cá",
+      "pred_answer": "Cá",
       "stage1_metrics": {
         "iou": 0.001339046598821639,
         "recall": 0.23076923076923078,
@@ -3637,15 +3637,15 @@
         "vqa_acc_gt": 0.0,
         "f1_gt": 0.4,
         "substring_gt": 0.25,
-        "anls_gt": 0.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
         "f1_verified": 0.4,
         "substring_verified": 0.25,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.6432523199781157,
-      "latency_s": 3.044
+      "latency_s": 2.953
     },
     {
       "sample_key": "2102_811.jpg",
@@ -3685,7 +3685,7 @@
           216
         ]
       ],
-      "pred_answer": "1 đùi ếch tươi trên 1 kg",
+      "pred_answer": "20 - 25 đùi/kg",
       "stage1_metrics": {
         "iou": 0.023014525561214864,
         "recall": 1.0,
@@ -3699,19 +3699,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.22222222222222224,
-        "substring_gt": 0.5,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.22222222222222224,
-        "substring_verified": 0.5,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9725152461968264,
-      "latency_s": 2.397
+      "latency_s": 2.495
     },
     {
       "sample_key": "2180_834.jpg",
@@ -3751,7 +3751,7 @@
           123
         ]
       ],
-      "pred_answer": "Người đàn ông đang trang trí bảng hiệu cho trung tâm chăm sóc sức khỏe",
+      "pred_answer": "Trung tâm chăm sóc sức khỏe",
       "stage1_metrics": {
         "iou": 0.3764622033169672,
         "recall": 0.9367469879518072,
@@ -3777,7 +3777,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.6824272532455478,
-      "latency_s": 3.185
+      "latency_s": 2.725
     },
     {
       "sample_key": "2223_847.jpg",
@@ -3817,7 +3817,7 @@
           75
         ]
       ],
-      "pred_answer": "Khu Du Lịch Sinh Thái Thiên Đàng",
+      "pred_answer": "Khu du lịch sinh thái thiên đàng",
       "stage1_metrics": {
         "iou": 0.659195088102948,
         "recall": 0.9984076433121019,
@@ -3843,7 +3843,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9682601600510858,
-      "latency_s": 2.821
+      "latency_s": 3.496
     },
     {
       "sample_key": "2253_854.jpg",
@@ -3883,7 +3883,7 @@
           367
         ]
       ],
-      "pred_answer": "22.500 đồng",
+      "pred_answer": "9.900 đồng",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -3897,19 +3897,19 @@
         "multi_box_hit": 0.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.4588084039681329,
-      "latency_s": 3.531
+      "latency_s": 4.299
     },
     {
       "sample_key": "2257_854.jpg",
@@ -3949,7 +3949,7 @@
           209
         ]
       ],
-      "pred_answer": "giá của táo",
+      "pred_answer": "Bi đỏ tròn",
       "stage1_metrics": {
         "iou": 0.006604101494612443,
         "recall": 1.0,
@@ -3965,17 +3965,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.6385429896443928,
-      "latency_s": 2.866
+      "latency_s": 2.903
     },
     {
       "sample_key": "2311_874.jpg",
@@ -4015,7 +4015,7 @@
           185
         ]
       ],
-      "pred_answer": "Công ty TNHH P&AS Việt Nam",
+      "pred_answer": "Công ty TNHH PSA Việt Nam",
       "stage1_metrics": {
         "iou": 0.1768186484273175,
         "recall": 1.0,
@@ -4031,17 +4031,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8421052631578947,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.8421052631578947,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8421052631578947,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.8421052631578947
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9514290340580225,
-      "latency_s": 3.143
+      "latency_s": 3.654
     },
     {
       "sample_key": "2315_874.jpg",
@@ -4081,7 +4081,7 @@
           236
         ]
       ],
-      "pred_answer": "Psas.vn",
+      "pred_answer": "//psasvietnam.com",
       "stage1_metrics": {
         "iou": 0.007565211190311569,
         "recall": 1.0,
@@ -4095,19 +4095,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.7857142857142857,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.7857142857142857
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8789270628891285,
-      "latency_s": 1.459
+      "latency_s": 2.252
     },
     {
       "sample_key": "2352_885.jpg",
@@ -4173,7 +4173,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8154352256178421,
-      "latency_s": 2.755
+      "latency_s": 3.126
     },
     {
       "sample_key": "2393_898.jpg",
@@ -4213,7 +4213,7 @@
           152
         ]
       ],
-      "pred_answer": "cháo nóng",
+      "pred_answer": "Cháo nóng",
       "stage1_metrics": {
         "iou": 0.2670836696260425,
         "recall": 1.0,
@@ -4239,7 +4239,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7171605267091078,
-      "latency_s": 2.521
+      "latency_s": 2.272
     },
     {
       "sample_key": "2397_898.jpg",
@@ -4279,7 +4279,7 @@
           388
         ]
       ],
-      "pred_answer": "Tưng bừng khai trương",
+      "pred_answer": "Giảm 50%",
       "stage1_metrics": {
         "iou": 0.12754946727549468,
         "recall": 1.0,
@@ -4305,7 +4305,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.9861063940127565,
-      "latency_s": 1.64
+      "latency_s": 2.396
     },
     {
       "sample_key": "2484_929.jpg",
@@ -4371,7 +4371,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9621262155126983,
-      "latency_s": 3.303
+      "latency_s": 3.728
     },
     {
       "sample_key": "2525_940.jpg",
@@ -4437,7 +4437,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9849010813817672,
-      "latency_s": 2.234
+      "latency_s": 2.154
     },
     {
       "sample_key": "2548_952.jpg",
@@ -4477,7 +4477,7 @@
           271
         ]
       ],
-      "pred_answer": "Nổi tiếng với vân mỡ đều, thịt mềm mọng, thơm ngậy",
+      "pred_answer": "Nổi tiếng với vân mỡ đều, thịt mềm mọng, thơm ngon",
       "stage1_metrics": {
         "iou": 0.38025108643167554,
         "recall": 0.8344370860927153,
@@ -4491,19 +4491,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
-        "f1_gt": 1.0,
-        "substring_gt": 1.0,
-        "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
-        "f1_verified": 1.0,
-        "substring_verified": 1.0,
-        "anls_verified": 1.0
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
+        "f1_gt": 0.9259259259259259,
+        "substring_gt": 0.875,
+        "anls_gt": 0.9411764705882353,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
+        "f1_verified": 0.9259259259259259,
+        "substring_verified": 0.875,
+        "anls_verified": 0.9411764705882353
       },
       "spatial_confidence": 0.9065119547310417,
-      "latency_s": 3.46
+      "latency_s": 3.391
     },
     {
       "sample_key": "2730_1014.jpg",
@@ -4569,7 +4569,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8687300536977255,
-      "latency_s": 2.439
+      "latency_s": 2.261
     },
     {
       "sample_key": "2760_1021.jpg",
@@ -4609,7 +4609,7 @@
           673
         ]
       ],
-      "pred_answer": "Tôi muốn chết",
+      "pred_answer": "Tôi muốn chết nhưng tôi thèm ăn Tteokbokki",
       "stage1_metrics": {
         "iou": 0.6754562658625874,
         "recall": 0.8987792472024415,
@@ -4623,19 +4623,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.5454545454545454,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5454545454545454,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8069137340861868,
-      "latency_s": 3.142
+      "latency_s": 4.397
     },
     {
       "sample_key": "2813_1032.jpg",
@@ -4694,9 +4694,9 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.7499999999999999,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.5555555555555556,
+        "anls_gt": 1.0,
         "em_verified": 1.0,
         "vqa_acc_verified": 1.0,
         "f1_verified": 1.0,
@@ -4704,7 +4704,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8664161200788169,
-      "latency_s": 3.784
+      "latency_s": 3.916
     },
     {
       "sample_key": "2852_1043.jpg",
@@ -4744,7 +4744,7 @@
           137
         ]
       ],
-      "pred_answer": "Tại VinMart",
+      "pred_answer": "tại VinMart",
       "stage1_metrics": {
         "iou": 0.039799635701275045,
         "recall": 1.0,
@@ -4770,7 +4770,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9836545946140247,
-      "latency_s": 2.166
+      "latency_s": 2.614
     },
     {
       "sample_key": "2864_1046.jpg",
@@ -4836,7 +4836,7 @@
         "anls_verified": 0.9411764705882353
       },
       "spatial_confidence": 0.9851365497082866,
-      "latency_s": 1.945
+      "latency_s": 2.663
     },
     {
       "sample_key": "3000_1092.jpg",
@@ -4902,7 +4902,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8470729090289651,
-      "latency_s": 2.505
+      "latency_s": 3.044
     },
     {
       "sample_key": "3100_1129.jpg",
@@ -4942,7 +4942,7 @@
           272
         ]
       ],
-      "pred_answer": "Công viên Gà Ngon",
+      "pred_answer": "Gà Ngon",
       "stage1_metrics": {
         "iou": 0.289163412436167,
         "recall": 0.30471253907331936,
@@ -4958,17 +4958,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.4,
-        "substring_gt": 0.3333333333333333,
-        "anls_gt": 0.5172413793103448,
+        "f1_gt": 0.0,
+        "substring_gt": 0.0,
+        "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.4,
-        "substring_verified": 0.3333333333333333,
-        "anls_verified": 0.5172413793103448
+        "f1_verified": 0.0,
+        "substring_verified": 0.0,
+        "anls_verified": 0.0
       },
       "spatial_confidence": 0.5456829174376837,
-      "latency_s": 2.687
+      "latency_s": 3.043
     },
     {
       "sample_key": "3120_1136.jpg",
@@ -5024,17 +5024,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8571428571428571,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.7894736842105263,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8571428571428571,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.7894736842105263
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9483483430549935,
-      "latency_s": 2.533
+      "latency_s": 2.977
     },
     {
       "sample_key": "3136_1143.jpg",
@@ -5100,7 +5100,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9733683692168195,
-      "latency_s": 2.379
+      "latency_s": 2.726
     },
     {
       "sample_key": "3154_1149.jpg",
@@ -5166,7 +5166,7 @@
         "anls_verified": 0.9411764705882353
       },
       "spatial_confidence": 0.9833234810924436,
-      "latency_s": 2.529
+      "latency_s": 2.807
     },
     {
       "sample_key": "3201_1167.jpg",
@@ -5206,7 +5206,7 @@
           107
         ]
       ],
-      "pred_answer": "một siêu thị sơn số 1 Việt Nam",
+      "pred_answer": "Siêu thị sơn số 1 Việt Nam",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -5220,19 +5220,19 @@
         "multi_box_hit": 0.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9523809523809523,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.9523809523809523,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9523809523809523,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.9523809523809523
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.5695953772507607,
-      "latency_s": 3.125
+      "latency_s": 2.999
     },
     {
       "sample_key": "3235_1181.jpg",
@@ -5272,7 +5272,7 @@
           155
         ]
       ],
-      "pred_answer": "Các loại táo Mỹ, táo Pháp, táo Gala",
+      "pred_answer": "Táo Mỹ, Táo Pháp, Táo Gala",
       "stage1_metrics": {
         "iou": 0.24836601307189543,
         "recall": 1.0,
@@ -5298,7 +5298,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9096106797340106,
-      "latency_s": 3.212
+      "latency_s": 2.988
     },
     {
       "sample_key": "3311_1211.jpg",
@@ -5338,7 +5338,7 @@
           172
         ]
       ],
-      "pred_answer": "Khu di tích lịch sử địa đạo Củ Chi",
+      "pred_answer": "Khu Di Tích Lịch Sử Địa Đạo Củ Chi",
       "stage1_metrics": {
         "iou": 0.18328877005347594,
         "recall": 1.0,
@@ -5354,17 +5354,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9833333333333333,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9833333333333333,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9509288692449889,
-      "latency_s": 2.984
+      "latency_s": 3.478
     },
     {
       "sample_key": "3342_1222.jpg",
@@ -5404,7 +5404,7 @@
           227
         ]
       ],
-      "pred_answer": "Hàng Đồ Sĩ",
+      "pred_answer": "Hàng Đồ",
       "stage1_metrics": {
         "iou": 0.06421709084780043,
         "recall": 1.0,
@@ -5422,15 +5422,15 @@
         "vqa_acc_gt": 0.0,
         "f1_gt": 0.0,
         "substring_gt": 0.0,
-        "anls_gt": 0.5454545454545454,
+        "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
         "f1_verified": 0.0,
         "substring_verified": 0.0,
-        "anls_verified": 0.5454545454545454
+        "anls_verified": 0.0
       },
       "spatial_confidence": 0.9230710857157874,
-      "latency_s": 2.666
+      "latency_s": 2.488
     },
     {
       "sample_key": "3393_1241.jpg",
@@ -5496,7 +5496,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9378448273283793,
-      "latency_s": 3.186
+      "latency_s": 3.49
     },
     {
       "sample_key": "3410_1246.jpg",
@@ -5536,7 +5536,7 @@
           712
         ]
       ],
-      "pred_answer": "Có",
+      "pred_answer": "đáp án",
       "stage1_metrics": {
         "iou": 0.10251903925014645,
         "recall": 0.9776536312849162,
@@ -5550,19 +5550,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8055164113079767,
-      "latency_s": 2.312
+      "latency_s": 3.107
     },
     {
       "sample_key": "3417_1248.jpg",
@@ -5628,7 +5628,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.9006539021938031,
-      "latency_s": 3.151
+      "latency_s": 2.964
     },
     {
       "sample_key": "3478_1271.jpg",
@@ -5668,7 +5668,7 @@
           210
         ]
       ],
-      "pred_answer": "cuốn sách tâm lý về tiền",
+      "pred_answer": "Tiền",
       "stage1_metrics": {
         "iou": 0.5422761327149482,
         "recall": 0.9313725490196079,
@@ -5694,7 +5694,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9162927546035805,
-      "latency_s": 2.929
+      "latency_s": 2.164
     },
     {
       "sample_key": "3542_1290.jpg",
@@ -5734,7 +5734,7 @@
           1268
         ]
       ],
-      "pred_answer": "Bộ Ngoại Giao",
+      "pred_answer": "Bộ Ngoại giao",
       "stage1_metrics": {
         "iou": 0.5251250648094952,
         "recall": 0.8796108300961188,
@@ -5760,7 +5760,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9819579251519708,
-      "latency_s": 2.803
+      "latency_s": 2.903
     },
     {
       "sample_key": "3608_1311.jpg",
@@ -5826,7 +5826,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9466713501876021,
-      "latency_s": 3.184
+      "latency_s": 3.201
     },
     {
       "sample_key": "3617_1313.jpg",
@@ -5892,7 +5892,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9749354742267451,
-      "latency_s": 2.141
+      "latency_s": 2.517
     },
     {
       "sample_key": "3643_1320.jpg",
@@ -5932,7 +5932,7 @@
           623
         ]
       ],
-      "pred_answer": "giá 1900 đồng một cân",
+      "pred_answer": "64900",
       "stage1_metrics": {
         "iou": 0.010105219597277492,
         "recall": 1.0,
@@ -5946,19 +5946,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8804803996049578,
-      "latency_s": 3.499
+      "latency_s": 3.757
     },
     {
       "sample_key": "3647_1321.jpg",
@@ -6024,7 +6024,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8568312774648041,
-      "latency_s": 3.286
+      "latency_s": 3.814
     },
     {
       "sample_key": "3651_1321.jpg",
@@ -6090,7 +6090,7 @@
         "anls_verified": 0.96
       },
       "spatial_confidence": 0.38208778241169195,
-      "latency_s": 1.924
+      "latency_s": 3.22
     },
     {
       "sample_key": "3737_1350.jpg",
@@ -6130,7 +6130,7 @@
           327
         ]
       ],
-      "pred_answer": "Khám phá những địa đạo ở Huế",
+      "pred_answer": "Những địa đạo ở Huế",
       "stage1_metrics": {
         "iou": 0.12023811327042215,
         "recall": 0.4434389140271493,
@@ -6156,7 +6156,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8676134772099515,
-      "latency_s": 2.843
+      "latency_s": 3.272
     },
     {
       "sample_key": "3747_1354.jpg",
@@ -6196,7 +6196,7 @@
           159
         ]
       ],
-      "pred_answer": "đại lý linh kiện - phụ kiện",
+      "pred_answer": "Đại lý Linh Kiện - Phụ Kiện",
       "stage1_metrics": {
         "iou": 0.4795388450353137,
         "recall": 1.0,
@@ -6222,7 +6222,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8561836617512868,
-      "latency_s": 3.221
+      "latency_s": 3.44
     },
     {
       "sample_key": "3767_1366.jpg",
@@ -6262,7 +6262,7 @@
           572
         ]
       ],
-      "pred_answer": "Đình Phong Quán đặt tiệc",
+      "pred_answer": "Liên hoan - Sinh Nhật",
       "stage1_metrics": {
         "iou": 0.035134849286092014,
         "recall": 1.0,
@@ -6276,19 +6276,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9556970762199725,
-      "latency_s": 3.054
+      "latency_s": 3.201
     },
     {
       "sample_key": "3809_1379.jpg",
@@ -6354,7 +6354,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8647460232084397,
-      "latency_s": 2.784
+      "latency_s": 2.467
     },
     {
       "sample_key": "3840_1390.jpg",
@@ -6420,7 +6420,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.962797354599137,
-      "latency_s": 2.487
+      "latency_s": 2.202
     },
     {
       "sample_key": "3845_1392.jpg",
@@ -6460,7 +6460,7 @@
           327
         ]
       ],
-      "pred_answer": "bịch Black Coffee",
+      "pred_answer": "Bịch Black Bag Chia",
       "stage1_metrics": {
         "iou": 0.007752873563218391,
         "recall": 1.0,
@@ -6474,19 +6474,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.4,
-        "substring_gt": 0.3333333333333333,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.4,
-        "substring_verified": 0.3333333333333333,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8796298032552312,
-      "latency_s": 2.926
+      "latency_s": 3.141
     },
     {
       "sample_key": "3876_1401.jpg",
@@ -6526,7 +6526,7 @@
           541
         ]
       ],
-      "pred_answer": "Ấp 2, Xã Phú Nhuận, TP Bến Tre",
+      "pred_answer": "Ấp 2, Xã Phú Nhuận, TP. Bến Tre",
       "stage1_metrics": {
         "iou": 0.056407645307848975,
         "recall": 1.0,
@@ -6552,7 +6552,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.777087145372171,
-      "latency_s": 3.184
+      "latency_s": 4.378
     },
     {
       "sample_key": "3910_1411.jpg",
@@ -6592,7 +6592,7 @@
           583
         ]
       ],
-      "pred_answer": "www.top1hue.com",
+      "pred_answer": "www.tophue.com",
       "stage1_metrics": {
         "iou": 0.3854784420580221,
         "recall": 0.9840425531914894,
@@ -6606,19 +6606,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
-        "f1_gt": 1.0,
-        "substring_gt": 1.0,
-        "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
-        "f1_verified": 1.0,
-        "substring_verified": 1.0,
-        "anls_verified": 1.0
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
+        "f1_gt": 0.9523809523809524,
+        "substring_gt": 0.6666666666666666,
+        "anls_gt": 0.9333333333333333,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
+        "f1_verified": 0.9523809523809524,
+        "substring_verified": 0.6666666666666666,
+        "anls_verified": 0.9333333333333333
       },
       "spatial_confidence": 0.9273430526344881,
-      "latency_s": 2.015
+      "latency_s": 2.742
     },
     {
       "sample_key": "3936_1422.jpg",
@@ -6658,7 +6658,7 @@
           134
         ]
       ],
-      "pred_answer": "ABBW Lê Đại Hành",
+      "pred_answer": "Siêu thị ABBW Lê Đại Hành",
       "stage1_metrics": {
         "iou": 0.12586445366528354,
         "recall": 0.7647058823529411,
@@ -6684,7 +6684,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9287670479604884,
-      "latency_s": 2.925
+      "latency_s": 3.092
     },
     {
       "sample_key": "4008_1442.jpg",
@@ -6724,7 +6724,7 @@
           189
         ]
       ],
-      "pred_answer": "lễ ký kết hợp tác",
+      "pred_answer": "Lễ ký kết hợp tác",
       "stage1_metrics": {
         "iou": 0.18883193957377933,
         "recall": 1.0,
@@ -6750,7 +6750,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9091487963405144,
-      "latency_s": 2.568
+      "latency_s": 2.47
     },
     {
       "sample_key": "4055_1458.jpg",
@@ -6816,7 +6816,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9837517929605218,
-      "latency_s": 3.348
+      "latency_s": 3.828
     },
     {
       "sample_key": "4062_1460.jpg",
@@ -6882,7 +6882,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9547963674394278,
-      "latency_s": 4.415
+      "latency_s": 4.283
     },
     {
       "sample_key": "4085_1468.jpg",
@@ -6938,17 +6938,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8235294117647058,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.7741935483870968,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8235294117647058,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.7741935483870968
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8865105263331555,
-      "latency_s": 3.265
+      "latency_s": 3.196
     },
     {
       "sample_key": "4103_1474.jpg",
@@ -6988,7 +6988,7 @@
           402
         ]
       ],
-      "pred_answer": "quần áo",
+      "pred_answer": "Bán quần áo",
       "stage1_metrics": {
         "iou": 0.33001493280238925,
         "recall": 0.9866071428571429,
@@ -7014,7 +7014,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.7500961866595833,
-      "latency_s": 2.632
+      "latency_s": 2.95
     },
     {
       "sample_key": "4133_1483.jpg",
@@ -7054,7 +7054,7 @@
           20
         ]
       ],
-      "pred_answer": "MẪU TRÀN BÙ ĐỐP",
+      "pred_answer": "Mẫu Trần Bù Đốp",
       "stage1_metrics": {
         "iou": 0.05707762557077625,
         "recall": 1.0,
@@ -7070,17 +7070,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.925,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.925,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8919617871567854,
-      "latency_s": 2.525
+      "latency_s": 3.095
     },
     {
       "sample_key": "4189_1503.jpg",
@@ -7120,7 +7120,7 @@
           417
         ]
       ],
-      "pred_answer": "Bức hình này được chụp ở một khu chợ hoa tươi",
+      "pred_answer": "ở một khu chợ",
       "stage1_metrics": {
         "iou": 0.02340635535103124,
         "recall": 1.0,
@@ -7136,17 +7136,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6,
-        "substring_gt": 0.6,
+        "f1_gt": 0.25,
+        "substring_gt": 0.2,
         "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6,
-        "substring_verified": 0.6,
+        "f1_verified": 0.25,
+        "substring_verified": 0.2,
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.2545669406150499,
-      "latency_s": 2.708
+      "latency_s": 4.18
     },
     {
       "sample_key": "4248_1520.jpg",
@@ -7186,7 +7186,7 @@
           110
         ]
       ],
-      "pred_answer": "ĐTV",
+      "pred_answer": "Trên kênh ĐTV",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -7212,7 +7212,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7494510654964955,
-      "latency_s": 3.3
+      "latency_s": 3.663
     },
     {
       "sample_key": "4267_1526.jpg",
@@ -7278,7 +7278,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9627208024849554,
-      "latency_s": 2.964
+      "latency_s": 2.69
     },
     {
       "sample_key": "4292_1537.jpg",
@@ -7318,7 +7318,7 @@
           315
         ]
       ],
-      "pred_answer": "đông lạnh",
+      "pred_answer": "Trong khu vực bán hàng đông lạnh",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -7344,7 +7344,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.7345215484392507,
-      "latency_s": 3.955
+      "latency_s": 2.865
     },
     {
       "sample_key": "4296_1537.jpg",
@@ -7410,7 +7410,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8339534950548249,
-      "latency_s": 2.99
+      "latency_s": 2.571
     },
     {
       "sample_key": "4305_1539.jpg",
@@ -7450,7 +7450,7 @@
           281
         ]
       ],
-      "pred_answer": "Cần hoa, lá chụp ảnh",
+      "pred_answer": "Chụp ảnh",
       "stage1_metrics": {
         "iou": 0.3298465829846583,
         "recall": 1.0,
@@ -7476,7 +7476,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8592475118668557,
-      "latency_s": 2.865
+      "latency_s": 2.693
     },
     {
       "sample_key": "4459_1586.jpg",
@@ -7542,7 +7542,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8237236096741631,
-      "latency_s": 2.881
+      "latency_s": 2.743
     },
     {
       "sample_key": "4463_1587.jpg",
@@ -7582,7 +7582,7 @@
           209
         ]
       ],
-      "pred_answer": "Xinh Hảo",
+      "pred_answer": "Kiến hào",
       "stage1_metrics": {
         "iou": 0.02921908368749761,
         "recall": 1.0,
@@ -7596,19 +7596,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.425,
-        "substring_gt": 0.5,
-        "anls_gt": 0.625,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.425,
-        "substring_verified": 0.5,
-        "anls_verified": 0.625
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9597609543548339,
-      "latency_s": 2.508
+      "latency_s": 2.727
     },
     {
       "sample_key": "4567_1620.jpg",
@@ -7648,7 +7648,7 @@
           484
         ]
       ],
-      "pred_answer": "Cửa hàng phụ tùng Honda chính hãng tại Biên Hòa",
+      "pred_answer": "Phụ tùng Honda",
       "stage1_metrics": {
         "iou": 0.2135102533172497,
         "recall": 0.9833333333333333,
@@ -7662,19 +7662,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.6864645277859323,
-      "latency_s": 3.399
+      "latency_s": 3.308
     },
     {
       "sample_key": "4592_1629.jpg",
@@ -7714,7 +7714,7 @@
           268
         ]
       ],
-      "pred_answer": "Địa điểm cách ly y tế này được lập ra để phòng, chống dịch bệnh COVID-19",
+      "pred_answer": "Để phòng, chống dịch bệnh COVID-19",
       "stage1_metrics": {
         "iou": 0.22091377741837662,
         "recall": 0.9724137931034482,
@@ -7730,17 +7730,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9259259259259259,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.9259259259259259,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9259259259259259,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.9259259259259259
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9583554126310563,
-      "latency_s": 3.786
+      "latency_s": 2.986
     },
     {
       "sample_key": "4601_1631.jpg",
@@ -7806,12 +7806,12 @@
         "anls_gt": 0.9795918367346939,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9444444444444444,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.9795918367346939
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8270229916340188,
-      "latency_s": 4.542
+      "latency_s": 4.578
     },
     {
       "sample_key": "4605_1632.jpg",
@@ -7851,7 +7851,7 @@
           482
         ]
       ],
-      "pred_answer": "Thế giới nghệ thuật",
+      "pred_answer": "Trung tâm biểu diễn nghệ thuật Linh hội",
       "stage1_metrics": {
         "iou": 0.001844276037824425,
         "recall": 1.0,
@@ -7867,17 +7867,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 0.4,
+        "substring_gt": 0.3333333333333333,
+        "anls_gt": 0.5555555555555556,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 0.4,
+        "substring_verified": 0.3333333333333333,
+        "anls_verified": 0.5555555555555556
       },
       "spatial_confidence": 0.8680317600135115,
-      "latency_s": 2.449
+      "latency_s": 2.858
     },
     {
       "sample_key": "4658_1650.jpg",
@@ -7943,7 +7943,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7232869138088581,
-      "latency_s": 3.171
+      "latency_s": 2.687
     },
     {
       "sample_key": "4662_1652.jpg",
@@ -8009,7 +8009,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9291973995894593,
-      "latency_s": 2.564
+      "latency_s": 3.762
     },
     {
       "sample_key": "4678_1656.jpg",
@@ -8049,7 +8049,7 @@
           1727
         ]
       ],
-      "pred_answer": "Campus 3, Số 1, Lương Yên, Hà Nội",
+      "pred_answer": "Số 1 - Lương Yên - Hà Nội",
       "stage1_metrics": {
         "iou": 0.03964969503860331,
         "recall": 1.0,
@@ -8075,7 +8075,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.933530330681315,
-      "latency_s": 3.914
+      "latency_s": 3.964
     },
     {
       "sample_key": "4700_1664.jpg",
@@ -8141,7 +8141,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9150195267885735,
-      "latency_s": 2.435
+      "latency_s": 3.021
     },
     {
       "sample_key": "4724_1671.jpg",
@@ -8207,7 +8207,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9676521793676288,
-      "latency_s": 2.255
+      "latency_s": 2.868
     },
     {
       "sample_key": "4728_1671.jpg",
@@ -8247,7 +8247,7 @@
           624
         ]
       ],
-      "pred_answer": "10",
+      "pred_answer": "310",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -8265,15 +8265,15 @@
         "vqa_acc_gt": 0.0,
         "f1_gt": 0.0,
         "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "anls_gt": 0.6666666666666667,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
         "f1_verified": 0.0,
         "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "anls_verified": 0.6666666666666667
       },
       "spatial_confidence": 0.9634934455780351,
-      "latency_s": 1.208
+      "latency_s": 1.593
     },
     {
       "sample_key": "4767_1681.jpg",
@@ -8339,7 +8339,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7395493827010714,
-      "latency_s": 2.277
+      "latency_s": 2.501
     },
     {
       "sample_key": "4810_1692.jpg",
@@ -8379,7 +8379,7 @@
           171
         ]
       ],
-      "pred_answer": "Thanh long",
+      "pred_answer": "40.500đ",
       "stage1_metrics": {
         "iou": 0.016631652661064426,
         "recall": 1.0,
@@ -8393,19 +8393,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9516018000208606,
-      "latency_s": 2.563
+      "latency_s": 3.104
     },
     {
       "sample_key": "4820_1695.jpg",
@@ -8471,7 +8471,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.6588956993667526,
-      "latency_s": 2.629
+      "latency_s": 3.342
     },
     {
       "sample_key": "4825_1697.jpg",
@@ -8537,7 +8537,7 @@
         "anls_verified": 0.9565217391304348
       },
       "spatial_confidence": 0.22122604663876053,
-      "latency_s": 2.811
+      "latency_s": 3.213
     },
     {
       "sample_key": "4855_1706.jpg",
@@ -8577,7 +8577,7 @@
           306
         ]
       ],
-      "pred_answer": "Tấm bảng này kêu gọi mọi người chung tay góp sức xây dựng thành phố Vĩnh Long với chủ đề \"Sáng - Xanh - Sạch - Đẹp\"",
+      "pred_answer": "Tấm bảng này kêu gọi mọi người chung tay góp sức xây dựng thành phố Vĩnh Long",
       "stage1_metrics": {
         "iou": 0.37233720648753327,
         "recall": 1.0,
@@ -8593,17 +8593,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6666666666666666,
+        "f1_gt": 0.8695652173913043,
         "substring_gt": 0.9090909090909091,
-        "anls_gt": 0.5465116279069768,
+        "anls_gt": 0.925,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6666666666666666,
+        "f1_verified": 0.8695652173913043,
         "substring_verified": 0.9090909090909091,
-        "anls_verified": 0.5465116279069768
+        "anls_verified": 0.925
       },
       "spatial_confidence": 0.8945310310837348,
-      "latency_s": 4.339
+      "latency_s": 4.462
     },
     {
       "sample_key": "4865_1710.jpg",
@@ -8674,7 +8674,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.6761200271770139,
-      "latency_s": 4.691
+      "latency_s": 5.286
     },
     {
       "sample_key": "5005_1761.jpg",
@@ -8730,17 +8730,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.925,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.925,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.3291070810792661,
-      "latency_s": 3.349
+      "latency_s": 3.403
     },
     {
       "sample_key": "5009_1761.jpg",
@@ -8780,7 +8780,7 @@
           212
         ]
       ],
-      "pred_answer": "Yêu cầu: Chỉ ghi đúng cụm từ ngắn nhất xuất hiện trên ảnh (không viết cả câu, không lặp lại câu hỏi)",
+      "pred_answer": "VinMart cảm ơn các nhà tài trợ vì đã đóng hành cùng chương trình khuyến mãi",
       "stage1_metrics": {
         "iou": 0.030176281587402667,
         "recall": 1.0,
@@ -8796,17 +8796,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.05357142857142857,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.05357142857142857,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8675425409840432,
-      "latency_s": 3.326
+      "latency_s": 2.915
     },
     {
       "sample_key": "5035_1771.jpg",
@@ -8872,7 +8872,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8094743704248148,
-      "latency_s": 2.887
+      "latency_s": 3.179
     },
     {
       "sample_key": "5044_1775.jpg",
@@ -8912,7 +8912,7 @@
           488
         ]
       ],
-      "pred_answer": "0394.266.204",
+      "pred_answer": "0328.103.133",
       "stage1_metrics": {
         "iou": 0.02166756581192817,
         "recall": 1.0,
@@ -8926,19 +8926,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8998056707908165,
-      "latency_s": 2.924
+      "latency_s": 3.479
     },
     {
       "sample_key": "5051_1777.jpg",
@@ -8978,7 +8978,7 @@
           2097
         ]
       ],
-      "pred_answer": "Xây dựng thương hiệu hợp lý nhất",
+      "pred_answer": "Xây dựng mức giá hợp lý nhất",
       "stage1_metrics": {
         "iou": 0.019206014044521904,
         "recall": 1.0,
@@ -8994,17 +8994,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.37999999999999995,
-        "substring_gt": 0.375,
+        "f1_gt": 0.12142857142857143,
+        "substring_gt": 0.14285714285714285,
         "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.37999999999999995,
-        "substring_verified": 0.375,
+        "f1_verified": 0.12142857142857143,
+        "substring_verified": 0.14285714285714285,
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.858608242093638,
-      "latency_s": 4.627
+      "latency_s": 4.42
     },
     {
       "sample_key": "5068_1784.jpg",
@@ -9070,7 +9070,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8960955455568297,
-      "latency_s": 2.574
+      "latency_s": 3.324
     },
     {
       "sample_key": "5077_1788.jpg",
@@ -9110,7 +9110,7 @@
           179
         ]
       ],
-      "pred_answer": "Cái gì",
+      "pred_answer": "Lễ khởi công",
       "stage1_metrics": {
         "iou": 0.1474275832252486,
         "recall": 1.0,
@@ -9124,19 +9124,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8001544867675624,
-      "latency_s": 2.289
+      "latency_s": 2.25
     },
     {
       "sample_key": "5158_1814.jpg",
@@ -9176,7 +9176,7 @@
           831
         ]
       ],
-      "pred_answer": "Cuộc Chiến Luân Hới",
+      "pred_answer": "Cuộc chiến luân hồi",
       "stage1_metrics": {
         "iou": 0.16285475443946754,
         "recall": 1.0,
@@ -9190,19 +9190,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9625000000000001,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9625000000000001,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9112438514963782,
-      "latency_s": 3.66
+      "latency_s": 3.885
     },
     {
       "sample_key": "5162_1814.jpg",
@@ -9268,7 +9268,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9663639919942285,
-      "latency_s": 2.219
+      "latency_s": 2.933
     },
     {
       "sample_key": "5195_1825.jpg",
@@ -9334,7 +9334,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.974202105008419,
-      "latency_s": 2.345
+      "latency_s": 2.267
     },
     {
       "sample_key": "5263_1845.jpg",
@@ -9390,17 +9390,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.5,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9861055575316617,
-      "latency_s": 2.251
+      "latency_s": 2.694
     },
     {
       "sample_key": "5292_1854.jpg",
@@ -9471,7 +9471,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9563979538716287,
-      "latency_s": 2.925
+      "latency_s": 3.029
     },
     {
       "sample_key": "5356_1873.jpg",
@@ -9537,7 +9537,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.6657802507560815,
-      "latency_s": 2.546
+      "latency_s": 2.861
     },
     {
       "sample_key": "5363_1875.jpg",
@@ -9577,7 +9577,7 @@
           1226
         ]
       ],
-      "pred_answer": "cự vinh cam kết rẻ nhanh, sạch, đẹp",
+      "pred_answer": "Rẻ nhanh, sạch, đẹp",
       "stage1_metrics": {
         "iou": 0.22027047878827097,
         "recall": 0.9470338983050848,
@@ -9603,7 +9603,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9805905643124893,
-      "latency_s": 3.549
+      "latency_s": 3.047
     },
     {
       "sample_key": "5417_1892.jpg",
@@ -9669,7 +9669,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9053756623421914,
-      "latency_s": 2.626
+      "latency_s": 2.867
     },
     {
       "sample_key": "5434_1897.jpg",
@@ -9709,7 +9709,7 @@
           522
         ]
       ],
-      "pred_answer": "Cửa tiệm cầm đồ trong ảnh nhận cầm xe máy, laptop, iPad, điện thoại, và các loại đồ dùng khác",
+      "pred_answer": "Có thể nhận được nhiều loại xe máy, laptop, ipad, điện thoại",
       "stage1_metrics": {
         "iou": 0.04864819408821427,
         "recall": 0.839622641509434,
@@ -9735,7 +9735,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.506928998881094,
-      "latency_s": 3.637
+      "latency_s": 3.371
     },
     {
       "sample_key": "5485_1912.jpg",
@@ -9778,7 +9778,7 @@
           390
         ]
       ],
-      "pred_answer": "Ấp 5",
+      "pred_answer": "Ấp 1",
       "stage1_metrics": {
         "iou": 0.005355830153673819,
         "recall": 1.0,
@@ -9792,19 +9792,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5,
-        "substring_verified": 0.5,
-        "anls_verified": 0.75
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.6043334216291579,
-      "latency_s": 2.704
+      "latency_s": 3.566
     },
     {
       "sample_key": "5496_1914.jpg",
@@ -9860,17 +9860,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.888888888888889,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 0.8666666666666667,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.888888888888889,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 0.8666666666666667
       },
       "spatial_confidence": 0.8798169576544717,
-      "latency_s": 2.582
+      "latency_s": 3.224
     },
     {
       "sample_key": "5554_1930.jpg",
@@ -9936,7 +9936,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.7903211845945708,
-      "latency_s": 3.22
+      "latency_s": 3.597
     },
     {
       "sample_key": "5558_1930.jpg",
@@ -9976,7 +9976,7 @@
           397
         ]
       ],
-      "pred_answer": "Công ty TNHH Tư vấn Thiết kế Xây dựng Kiến trúc Nội thất NESA nằm ở số 5C Ngách 23, Ngõ 279 Hoàng Mai, P. Hoàng Văn Thụ, Q. Hoàng Mai, Hà Nội",
+      "pred_answer": "Ngõ 279 Hoàng Mai",
       "stage1_metrics": {
         "iou": 0.1474411733670993,
         "recall": 1.0,
@@ -9990,19 +9990,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.17647058823529413,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.17647058823529413,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.7442391408932205,
-      "latency_s": 4.785
+      "latency_s": 2.189
     },
     {
       "sample_key": "5666_1962.jpg",
@@ -10042,7 +10042,7 @@
           1020
         ]
       ],
-      "pred_answer": "Nhà xuất bản Phụ Nữ Việt Nam",
+      "pred_answer": "Nhà xuất bản Phụ nữ Việt Nam",
       "stage1_metrics": {
         "iou": 0.05731546210161281,
         "recall": 1.0,
@@ -10068,7 +10068,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9631259141175547,
-      "latency_s": 2.84
+      "latency_s": 2.735
     },
     {
       "sample_key": "5754_1987.jpg",
@@ -10108,7 +10108,7 @@
           104
         ]
       ],
-      "pred_answer": "Siêu thị VinMart",
+      "pred_answer": "VinMart",
       "stage1_metrics": {
         "iou": 0.012916371367824237,
         "recall": 1.0,
@@ -10134,7 +10134,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.6861003923921855,
-      "latency_s": 2.936
+      "latency_s": 2.934
     },
     {
       "sample_key": "5758_1988.jpg",
@@ -10179,7 +10179,7 @@
           250
         ]
       ],
-      "pred_answer": "90.000 đồng/lb",
+      "pred_answer": "90.000 đồng",
       "stage1_metrics": {
         "iou": 0.0980804259492784,
         "recall": 1.0,
@@ -10195,17 +10195,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.33333333333333337,
+        "f1_gt": 0.8333333333333334,
         "substring_gt": 0.2,
-        "anls_gt": 0.5,
+        "anls_gt": 0.8333333333333334,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.4,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.5
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9763588096543439,
-      "latency_s": 2.613
+      "latency_s": 2.533
     },
     {
       "sample_key": "5801_2006.jpg",
@@ -10277,7 +10277,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7958287047065793,
-      "latency_s": 2.626
+      "latency_s": 2.816
     },
     {
       "sample_key": "5847_2021.jpg",
@@ -10343,7 +10343,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8799782197989151,
-      "latency_s": 2.293
+      "latency_s": 2.389
     },
     {
       "sample_key": "5860_2025.jpg",
@@ -10409,7 +10409,7 @@
         "anls_verified": 0.8333333333333334
       },
       "spatial_confidence": 0.9289157422261752,
-      "latency_s": 2.855
+      "latency_s": 3.178
     },
     {
       "sample_key": "5864_2026.jpg",
@@ -10449,7 +10449,7 @@
           175
         ]
       ],
-      "pred_answer": "Quán Cơm 68",
+      "pred_answer": "Cơm tấm - Hủ tiếu Nam Vàng",
       "stage1_metrics": {
         "iou": 0.28941849627174815,
         "recall": 1.0,
@@ -10465,17 +10465,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.2222222222222222,
-        "substring_gt": 0.16666666666666666,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.2222222222222222,
-        "substring_verified": 0.16666666666666666,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.6960158687955972,
-      "latency_s": 3.043
+      "latency_s": 3.736
     },
     {
       "sample_key": "5868_2026.jpg",
@@ -10515,7 +10515,7 @@
           255
         ]
       ],
-      "pred_answer": "Nhận giao hàng tận nơi",
+      "pred_answer": "Nhận giao hàng tận nơi (không tính phí giao hàng)",
       "stage1_metrics": {
         "iou": 0.4587326853388424,
         "recall": 0.5798373287671232,
@@ -10529,19 +10529,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6666666666666666,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.5294117647058824,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6666666666666666,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.5294117647058824
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9001076002429802,
-      "latency_s": 1.865
+      "latency_s": 2.603
     },
     {
       "sample_key": "5989_2073.jpg",
@@ -10581,7 +10581,7 @@
           152
         ]
       ],
-      "pred_answer": "Khu di tích lịch sử Công an Nhân dân",
+      "pred_answer": "Khu di tích lịch sử công an nhân dân Minh Thanh - Sơn Dương - Tuyên Quang",
       "stage1_metrics": {
         "iou": 0.14229787234042554,
         "recall": 1.0,
@@ -10595,19 +10595,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9778740875453809,
-      "latency_s": 2.74
+      "latency_s": 3.409
     },
     {
       "sample_key": "6002_2080.jpg",
@@ -10647,7 +10647,7 @@
           267
         ]
       ],
-      "pred_answer": "Ý MỸ",
+      "pred_answer": "Vật liệu xây dựng Ý Mỹ",
       "stage1_metrics": {
         "iou": 0.2616052668440958,
         "recall": 1.0,
@@ -10661,19 +10661,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8915860889487269,
-      "latency_s": 2.348
+      "latency_s": 2.681
     },
     {
       "sample_key": "6018_2086.jpg",
@@ -10713,7 +10713,7 @@
           1668
         ]
       ],
-      "pred_answer": "Thẻ này thuộc Trung Tâm Quản Lý Kỳ Tục Túc Xá, Khu B, Nhà Xe Gói 6/9",
+      "pred_answer": "Đại học Quốc gia TP.HCM",
       "stage1_metrics": {
         "iou": 0.12534253526844616,
         "recall": 1.0,
@@ -10729,17 +10729,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6380952380952382,
-        "substring_gt": 1.0,
-        "anls_gt": 0.5526315789473684,
+        "f1_gt": 0.0,
+        "substring_gt": 0.0,
+        "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6380952380952382,
-        "substring_verified": 1.0,
-        "anls_verified": 0.5526315789473684
+        "f1_verified": 0.0,
+        "substring_verified": 0.0,
+        "anls_verified": 0.0
       },
       "spatial_confidence": 0.9645381834193569,
-      "latency_s": 4.526
+      "latency_s": 3.1
     },
     {
       "sample_key": "6103_2123.jpg",
@@ -10805,7 +10805,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9650459370947231,
-      "latency_s": 2.266
+      "latency_s": 2.605
     },
     {
       "sample_key": "6107_2123.jpg",
@@ -10845,7 +10845,7 @@
           307
         ]
       ],
-      "pred_answer": "Hàng Nhung A",
+      "pred_answer": "Hồng Nhung",
       "stage1_metrics": {
         "iou": 0.04685030480921201,
         "recall": 1.0,
@@ -10861,17 +10861,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.3,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 0.5,
+        "substring_gt": 0.5,
+        "anls_gt": 0.5,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.3,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 0.5,
+        "substring_verified": 0.5,
+        "anls_verified": 0.5
       },
       "spatial_confidence": 0.6649232068117562,
-      "latency_s": 1.651
+      "latency_s": 2.06
     },
     {
       "sample_key": "6116_2126.jpg",
@@ -10911,7 +10911,7 @@
           188
         ]
       ],
-      "pred_answer": "máy tính và laptop cũ",
+      "pred_answer": "laptop cũ",
       "stage1_metrics": {
         "iou": 0.29675315468594926,
         "recall": 0.978494623655914,
@@ -10927,17 +10927,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.5,
-        "substring_gt": 0.6666666666666666,
-        "anls_gt": 0.5882352941176471,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5,
-        "substring_verified": 0.6666666666666666,
-        "anls_verified": 0.5882352941176471
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.4869625063008413,
-      "latency_s": 2.657
+      "latency_s": 2.523
     },
     {
       "sample_key": "6120_2126.jpg",
@@ -10980,7 +10980,7 @@
           597
         ]
       ],
-      "pred_answer": "máy tính, laptop cũ",
+      "pred_answer": "Mua Macbook",
       "stage1_metrics": {
         "iou": 0.052083333333333336,
         "recall": 1.0,
@@ -10996,17 +10996,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.5454545454545454,
-        "substring_gt": 0.42857142857142855,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5454545454545454,
-        "substring_verified": 0.42857142857142855,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.6863007701485601,
-      "latency_s": 2.102
+      "latency_s": 2.142
     },
     {
       "sample_key": "6212_2155.jpg",
@@ -11046,7 +11046,7 @@
           137
         ]
       ],
-      "pred_answer": "Bánh kẹo - Thực phẩm",
+      "pred_answer": "Quầy bánh kẹo - thực phẩm",
       "stage1_metrics": {
         "iou": 0.02076673230863661,
         "recall": 1.0,
@@ -11072,7 +11072,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.6830852074109565,
-      "latency_s": 3.029
+      "latency_s": 3.093
     },
     {
       "sample_key": "6221_2158.jpg",
@@ -11138,7 +11138,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9437950448108494,
-      "latency_s": 2.519
+      "latency_s": 3.129
     },
     {
       "sample_key": "6242_2165.jpg",
@@ -11204,7 +11204,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8868928847750793,
-      "latency_s": 2.41
+      "latency_s": 2.561
     },
     {
       "sample_key": "6259_2171.jpg",
@@ -11270,7 +11270,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9870335707651822,
-      "latency_s": 1.749
+      "latency_s": 2.243
     },
     {
       "sample_key": "6266_2173.jpg",
@@ -11310,7 +11310,7 @@
           418
         ]
       ],
-      "pred_answer": "Đoàn kết - Kỹ chương - Đổi mới - Sáng tạo",
+      "pred_answer": "Đoàn kết - Kỹ chương - Đối mới - Sáng tạo",
       "stage1_metrics": {
         "iou": 0.042248453615740776,
         "recall": 1.0,
@@ -11328,15 +11328,15 @@
         "vqa_acc_gt": 0.0,
         "f1_gt": 0.5380952380952381,
         "substring_gt": 0.35,
-        "anls_gt": 0.0,
+        "anls_gt": 0.9714285714285714,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
         "f1_verified": 0.5380952380952381,
         "substring_verified": 0.35,
-        "anls_verified": 0.0
+        "anls_verified": 0.9714285714285714
       },
       "spatial_confidence": 0.7997148328072912,
-      "latency_s": 2.971
+      "latency_s": 3.373
     },
     {
       "sample_key": "6298_2181.jpg",
@@ -11402,7 +11402,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9613159694600577,
-      "latency_s": 2.656
+      "latency_s": 3.336
     },
     {
       "sample_key": "6310_2184.jpg",
@@ -11442,7 +11442,7 @@
           1896
         ]
       ],
-      "pred_answer": "TS. Bùi Mạnh Hùng",
+      "pred_answer": "Trần Minh Hùng",
       "stage1_metrics": {
         "iou": 0.3614295808355936,
         "recall": 0.8416666666666667,
@@ -11458,17 +11458,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9625000000000001,
-        "substring_gt": 1.0,
-        "anls_gt": 1.0,
+        "f1_gt": 0.4571428571428572,
+        "substring_gt": 0.25,
+        "anls_gt": 0.625,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9625000000000001,
-        "substring_verified": 1.0,
-        "anls_verified": 1.0
+        "f1_verified": 0.4571428571428572,
+        "substring_verified": 0.25,
+        "anls_verified": 0.625
       },
       "spatial_confidence": 0.950842328584734,
-      "latency_s": 3.675
+      "latency_s": 3.319
     },
     {
       "sample_key": "6322_2188.jpg",
@@ -11534,7 +11534,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.793838699445927,
-      "latency_s": 2.859
+      "latency_s": 3.63
     },
     {
       "sample_key": "6334_2191.jpg",
@@ -11574,7 +11574,7 @@
           1015
         ]
       ],
-      "pred_answer": "Tiến sĩ Alan Phan",
+      "pred_answer": "Quà tặng từ Tiến Sĩ Alan Phan",
       "stage1_metrics": {
         "iou": 0.09338599930803829,
         "recall": 1.0,
@@ -11600,7 +11600,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9763300881778207,
-      "latency_s": 2.298
+      "latency_s": 3.013
     },
     {
       "sample_key": "6524_2256.jpg",
@@ -11640,7 +11640,7 @@
           52
         ]
       ],
-      "pred_answer": "Các bức tranh này được vẽ trên tường của một tòa nhà",
+      "pred_answer": "Trên tường",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -11666,7 +11666,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.5214772433876264,
-      "latency_s": 3.331
+      "latency_s": 2.641
     },
     {
       "sample_key": "6669_2309.jpg",
@@ -11732,7 +11732,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.844505346723134,
-      "latency_s": 2.364
+      "latency_s": 2.757
     },
     {
       "sample_key": "6692_2318.jpg",
@@ -11772,7 +11772,7 @@
           245
         ]
       ],
-      "pred_answer": "Lực lượng vũ trang miền Nam Việt Nam",
+      "pred_answer": "Lực lượng vũ trang miền Nam",
       "stage1_metrics": {
         "iou": 0.04390243902439024,
         "recall": 1.0,
@@ -11788,17 +11788,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6666666666666666,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.5172413793103448,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6666666666666666,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.5172413793103448
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9751351009135398,
-      "latency_s": 2.865
+      "latency_s": 3.262
     },
     {
       "sample_key": "6757_2338.jpg",
@@ -11864,7 +11864,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.984598695832722,
-      "latency_s": 2.233
+      "latency_s": 2.481
     },
     {
       "sample_key": "6764_2340.jpg",
@@ -11904,7 +11904,7 @@
           264
         ]
       ],
-      "pred_answer": "Xã Tam Bình, Cái Lây",
+      "pred_answer": "Xã Tam Bình, Cai Lậy",
       "stage1_metrics": {
         "iou": 0.11656246313554323,
         "recall": 1.0,
@@ -11920,17 +11920,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8545454545454546,
+        "f1_gt": 1.0,
         "substring_gt": 0.8333333333333334,
         "anls_gt": 0.9375,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8545454545454546,
+        "f1_verified": 1.0,
         "substring_verified": 0.8333333333333334,
         "anls_verified": 0.9375
       },
       "spatial_confidence": 0.9434506505696936,
-      "latency_s": 3.134
+      "latency_s": 3.243
     },
     {
       "sample_key": "6811_2352.jpg",
@@ -11996,7 +11996,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.919866824988531,
-      "latency_s": 3.292
+      "latency_s": 3.877
     },
     {
       "sample_key": "6829_2362.jpg",
@@ -12062,7 +12062,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8566301395840759,
-      "latency_s": 2.104
+      "latency_s": 3.021
     },
     {
       "sample_key": "7052_2440.jpg",
@@ -12118,17 +12118,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.5,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.5
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9871406030556986,
-      "latency_s": 2.516
+      "latency_s": 2.435
     },
     {
       "sample_key": "7071_2447.jpg",
@@ -12194,7 +12194,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.798602843132245,
-      "latency_s": 2.392
+      "latency_s": 2.809
     },
     {
       "sample_key": "7104_2456.jpg",
@@ -12234,7 +12234,7 @@
           183
         ]
       ],
-      "pred_answer": "Yêu cầu: Yêu cầu phải là cụm từ ngắn nhất xuất hiện trên ảnh, không viết cả câu, không lặp lại câu hỏi",
+      "pred_answer": "Phạm Xích Long",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -12250,17 +12250,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 0.5714285714285715,
+        "substring_gt": 0.5,
+        "anls_gt": 0.9285714285714286,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 0.5714285714285715,
+        "substring_verified": 0.5,
+        "anls_verified": 0.9285714285714286
       },
       "spatial_confidence": 0.9758625409278201,
-      "latency_s": 4.541
+      "latency_s": 2.495
     },
     {
       "sample_key": "7122_2464.jpg",
@@ -12326,7 +12326,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9444251166998499,
-      "latency_s": 2.734
+      "latency_s": 2.928
     },
     {
       "sample_key": "7129_2467.jpg",
@@ -12392,7 +12392,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8416920084973439,
-      "latency_s": 2.661
+      "latency_s": 3.108
     },
     {
       "sample_key": "7149_2471.jpg",
@@ -12432,7 +12432,7 @@
           90
         ]
       ],
-      "pred_answer": "Nội thất xanh Đà Nẵng",
+      "pred_answer": "Cửa hàng Nội thất Xanh Đà Nẵng",
       "stage1_metrics": {
         "iou": 0.21664050235478807,
         "recall": 1.0,
@@ -12448,17 +12448,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.888888888888889,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 0.7647058823529411,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.888888888888889,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 0.7647058823529411
       },
       "spatial_confidence": 0.7924953146655517,
-      "latency_s": 2.627
+      "latency_s": 2.97
     },
     {
       "sample_key": "7157_2474.jpg",
@@ -12498,7 +12498,7 @@
           51
         ]
       ],
-      "pred_answer": "Yêu cầu: Chỉ ghi đúng cụm từ thực thể ngắn nhất xuất hiện trên ảnh (không viết cả câu, không lặp lại câu hỏi)",
+      "pred_answer": "Trang web suio mo park",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -12514,17 +12514,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
+        "f1_gt": 0.5,
+        "substring_gt": 0.6666666666666666,
         "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
+        "f1_verified": 0.5,
+        "substring_verified": 0.6666666666666666,
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8643497016741389,
-      "latency_s": 4.514
+      "latency_s": 3.127
     },
     {
       "sample_key": "7266_2509.jpg",
@@ -12564,7 +12564,7 @@
           1059
         ]
       ],
-      "pred_answer": "Sự kiện sắp khai trương",
+      "pred_answer": "Sắp khai trương",
       "stage1_metrics": {
         "iou": 0.07030836659593863,
         "recall": 1.0,
@@ -12590,7 +12590,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8799642374299348,
-      "latency_s": 3.899
+      "latency_s": 3.882
     },
     {
       "sample_key": "7270_2510.jpg",
@@ -12656,7 +12656,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9795951596022333,
-      "latency_s": 2.67
+      "latency_s": 3.077
     },
     {
       "sample_key": "7274_2511.jpg",
@@ -12722,7 +12722,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8655168684019183,
-      "latency_s": 2.447
+      "latency_s": 3.128
     },
     {
       "sample_key": "7368_2532.jpg",
@@ -12762,7 +12762,7 @@
           312
         ]
       ],
-      "pred_answer": "Yêu cầu: Yêu cầu: Chỉ ghi đúng cụm từ thực thể ngắn nhất xuất hiện trên ảnh (không viết cả câu, không lặp lại câu hỏi)",
+      "pred_answer": "LÀM BẢNG QUẢNG CÁO GIÁ RẺ",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -12776,19 +12776,19 @@
         "multi_box_hit": 0.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9258739970851957,
-      "latency_s": 4.428
+      "latency_s": 3.27
     },
     {
       "sample_key": "7397_2542.jpg",
@@ -12828,7 +12828,7 @@
           1068
         ]
       ],
-      "pred_answer": "Văn hóa du lịch Việt Nam",
+      "pred_answer": "Du lịch Việt Nam",
       "stage1_metrics": {
         "iou": 0.029217138728015065,
         "recall": 1.0,
@@ -12842,19 +12842,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.5853690713541835,
-      "latency_s": 2.715
+      "latency_s": 2.435
     },
     {
       "sample_key": "7454_2558.jpg",
@@ -12894,7 +12894,7 @@
           381
         ]
       ],
-      "pred_answer": "227/10 Ấp Tân Lạc, Bà Điểm Biên, Quận 1, Thành phố Hồ Chí Minh",
+      "pred_answer": "327 Ấp Tiến Lâm, Bà Điểm, Hóc Môn, TP. HCM",
       "stage1_metrics": {
         "iou": 0.027889491169784928,
         "recall": 1.0,
@@ -12910,17 +12910,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6730769230769231,
-        "substring_gt": 0.6666666666666666,
-        "anls_gt": 0.6896551724137931,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6730769230769231,
-        "substring_verified": 0.6666666666666666,
-        "anls_verified": 0.6896551724137931
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8299633315288284,
-      "latency_s": 3.565
+      "latency_s": 3.613
     },
     {
       "sample_key": "7499_2575.jpg",
@@ -12960,7 +12960,7 @@
           146
         ]
       ],
-      "pred_answer": "Nha khoa Kỹ thuật Cao",
+      "pred_answer": "Khoa Kỹ Thuật Cao",
       "stage1_metrics": {
         "iou": 0.38291421437488854,
         "recall": 0.952247191011236,
@@ -12986,7 +12986,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8287256923763143,
-      "latency_s": 2.811
+      "latency_s": 2.487
     },
     {
       "sample_key": "7589_2605.jpg",
@@ -13052,7 +13052,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.6991436619369805,
-      "latency_s": 2.124
+      "latency_s": 2.226
     },
     {
       "sample_key": "7621_2617.jpg",
@@ -13092,7 +13092,7 @@
           174
         ]
       ],
-      "pred_answer": "bảng hiệu xanh dương là \"Blue Sky\"",
+      "pred_answer": "Givitech",
       "stage1_metrics": {
         "iou": 0.03851495726495727,
         "recall": 1.0,
@@ -13118,7 +13118,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.859546385631391,
-      "latency_s": 2.941
+      "latency_s": 2.758
     },
     {
       "sample_key": "7636_2622.jpg",
@@ -13158,7 +13158,7 @@
           58
         ]
       ],
-      "pred_answer": "Nhà hàng Phương Linh",
+      "pred_answer": "bán ẩm thực đồng quê",
       "stage1_metrics": {
         "iou": 0.18818181818181817,
         "recall": 1.0,
@@ -13174,17 +13174,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.7405445307114352,
-      "latency_s": 2.374
+      "latency_s": 2.703
     },
     {
       "sample_key": "7679_2638.jpg",
@@ -13224,7 +13224,7 @@
           76
         ]
       ],
-      "pred_answer": "Hàng Việt Nam - Thái Lan",
+      "pred_answer": "Mê Chợ",
       "stage1_metrics": {
         "iou": 0.06380921688688367,
         "recall": 1.0,
@@ -13240,17 +13240,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 0.5,
+        "substring_gt": 0.5,
+        "anls_gt": 0.5714285714285714,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 0.5,
+        "substring_verified": 0.5,
+        "anls_verified": 0.5714285714285714
       },
       "spatial_confidence": 0.8829254529968448,
-      "latency_s": 2.891
+      "latency_s": 2.42
     },
     {
       "sample_key": "7714_2649.jpg",
@@ -13316,7 +13316,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9521333011033927,
-      "latency_s": 3.123
+      "latency_s": 3.483
     },
     {
       "sample_key": "7718_2649.jpg",
@@ -13356,7 +13356,7 @@
           289
         ]
       ],
-      "pred_answer": "Mic.vn",
+      "pred_answer": "Website",
       "stage1_metrics": {
         "iou": 0.008162255750680188,
         "recall": 1.0,
@@ -13370,19 +13370,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8051487758559174,
-      "latency_s": 1.534
+      "latency_s": 1.902
     },
     {
       "sample_key": "7803_2676.jpg",
@@ -13448,7 +13448,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9628563543390691,
-      "latency_s": 3.818
+      "latency_s": 3.951
     },
     {
       "sample_key": "7828_2685.jpg",
@@ -13488,7 +13488,7 @@
           217
         ]
       ],
-      "pred_answer": "Tình hình thực hiện đề án phát triển thị trường trong nước gắn với cuộc vận động \"Người Việt Nam ủng hộ Việt Nam\" giai đoạn 2014 - 2020",
+      "pred_answer": "Người Việt Nam ủng hộ Việt Nam",
       "stage1_metrics": {
         "iou": 0.06257482640274563,
         "recall": 0.5,
@@ -13504,17 +13504,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.830188679245283,
-        "substring_gt": 0.8333333333333334,
-        "anls_gt": 0.8091603053435115,
+        "f1_gt": 0.30303030303030304,
+        "substring_gt": 0.125,
+        "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.830188679245283,
-        "substring_verified": 0.8333333333333334,
-        "anls_verified": 0.8091603053435115
+        "f1_verified": 0.30303030303030304,
+        "substring_verified": 0.125,
+        "anls_verified": 0.0
       },
       "spatial_confidence": 0.8276191119756968,
-      "latency_s": 4.722
+      "latency_s": 4.436
     },
     {
       "sample_key": "7843_2689.jpg",
@@ -13554,7 +13554,7 @@
           318
         ]
       ],
-      "pred_answer": "Các hộ kinh doanh, khách ra vào chợ, người lao động tại chợ",
+      "pred_answer": "Các hộ kinh doanh, khách ra vào chợ, người lao động tại chợ phải đeo khẩu trang và thực hiện tốt các biện pháp phòng dịch Covid-19",
       "stage1_metrics": {
         "iou": 0.493737678302215,
         "recall": 0.5343247991967871,
@@ -13568,19 +13568,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7696587062717934,
-      "latency_s": 3.142
+      "latency_s": 4.368
     },
     {
       "sample_key": "7875_2698.jpg",
@@ -13620,7 +13620,7 @@
           2055
         ]
       ],
-      "pred_answer": "bảng hiệu màu đỏ trong ảnh có tên là \"Cửa hàng Quang Anh\"",
+      "pred_answer": "Cảm Đồ Quang Anh",
       "stage1_metrics": {
         "iou": 0.11536206587898318,
         "recall": 1.0,
@@ -13636,17 +13636,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.5714285714285715,
-        "substring_gt": 0.75,
-        "anls_gt": 0.6923076923076923,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5714285714285715,
-        "substring_verified": 0.75,
-        "anls_verified": 0.6923076923076923
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.42455834258262587,
-      "latency_s": 4.312
+      "latency_s": 4.324
     },
     {
       "sample_key": "7888_2702.jpg",
@@ -13702,17 +13702,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.888888888888889,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.8235294117647058,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.888888888888889,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.8235294117647058
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.39062860843500574,
-      "latency_s": 4.132
+      "latency_s": 4.658
     },
     {
       "sample_key": "7892_2702.jpg",
@@ -13752,7 +13752,7 @@
           2883
         ]
       ],
-      "pred_answer": "tái bản lần thứ 10",
+      "pred_answer": "Lần thứ 12",
       "stage1_metrics": {
         "iou": 0.0008274522707766224,
         "recall": 1.0,
@@ -13766,19 +13766,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.5,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.5
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.5020652370534454,
-      "latency_s": 3.287
+      "latency_s": 3.53
     },
     {
       "sample_key": "7904_2706.jpg",
@@ -13818,7 +13818,7 @@
           705
         ]
       ],
-      "pred_answer": "Yêu cầu: Chỉ ghi đúng cụm từ thực thể ngắn nhất xuất hiện trên ảnh (không viết cả câu, không lặp lại câu hỏi)",
+      "pred_answer": "Không được chụp ảnh",
       "stage1_metrics": {
         "iou": 0.006096199840552751,
         "recall": 1.0,
@@ -13844,7 +13844,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8847725160267095,
-      "latency_s": 3.921
+      "latency_s": 2.699
     },
     {
       "sample_key": "7977_2730.jpg",
@@ -13884,7 +13884,7 @@
           1374
         ]
       ],
-      "pred_answer": "Tèo Rửa xe Thay nhớt",
+      "pred_answer": "Tèo rửa xe",
       "stage1_metrics": {
         "iou": 0.05676185270742238,
         "recall": 1.0,
@@ -13898,19 +13898,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8539133203099265,
-      "latency_s": 3.203
+      "latency_s": 2.744
     },
     {
       "sample_key": "7985_2733.jpg",
@@ -13950,7 +13950,7 @@
           286
         ]
       ],
-      "pred_answer": "Yêu cầu: Chỉ ghi đúng cụm từ thực thể ngắn nhất xuất hiện trên ảnh (không viết cả câu, không lặp lại câu hỏi)",
+      "pred_answer": "Con đường giúp bạn trở thành người tiêu dùng thông minh",
       "stage1_metrics": {
         "iou": 0.09043992065091708,
         "recall": 1.0,
@@ -13966,17 +13966,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.1625,
-        "substring_gt": 0.25,
+        "f1_gt": 0.4,
+        "substring_gt": 0.375,
         "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.1625,
-        "substring_verified": 0.25,
+        "f1_verified": 0.4,
+        "substring_verified": 0.375,
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.7960262658824626,
-      "latency_s": 4.39
+      "latency_s": 3.218
     },
     {
       "sample_key": "7989_2734.jpg",
@@ -14042,7 +14042,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8587321689169028,
-      "latency_s": 2.199
+      "latency_s": 3.401
     },
     {
       "sample_key": "8013_2739.jpg",
@@ -14082,7 +14082,7 @@
           526
         ]
       ],
-      "pred_answer": "Năm 2019",
+      "pred_answer": "2019",
       "stage1_metrics": {
         "iou": 0.005775860100906331,
         "recall": 1.0,
@@ -14108,7 +14108,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9453461398788379,
-      "latency_s": 2.741
+      "latency_s": 3.09
     },
     {
       "sample_key": "8190_2790.jpg",
@@ -14174,7 +14174,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9877843739880905,
-      "latency_s": 3.213
+      "latency_s": 3.182
     },
     {
       "sample_key": "8228_2798.jpg",
@@ -14214,7 +14214,7 @@
           153
         ]
       ],
-      "pred_answer": "bán \"Cơm Phở Trứng vịt lộn\"",
+      "pred_answer": "Cơm phở",
       "stage1_metrics": {
         "iou": 0.09510442398383112,
         "recall": 1.0,
@@ -14228,19 +14228,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9149509892150799,
-      "latency_s": 3.637
+      "latency_s": 2.449
     },
     {
       "sample_key": "8260_2807.jpg",
@@ -14306,7 +14306,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.9010294123066931,
-      "latency_s": 1.672
+      "latency_s": 2.547
     },
     {
       "sample_key": "8281_2816.jpg",
@@ -14372,7 +14372,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8933965797486185,
-      "latency_s": 1.896
+      "latency_s": 2.293
     },
     {
       "sample_key": "8360_2841.jpg",
@@ -14428,17 +14428,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.925,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.925,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8995889908318865,
-      "latency_s": 2.064
+      "latency_s": 2.663
     },
     {
       "sample_key": "8367_2843.jpg",
@@ -14478,7 +14478,7 @@
           334
         ]
       ],
-      "pred_answer": "Ủy ban nhân dân Thành phố Đà Nẵng",
+      "pred_answer": "Ủy ban nhân dân thành phố Đà Nẵng",
       "stage1_metrics": {
         "iou": 0.47956375217060065,
         "recall": 0.9924012158054711,
@@ -14504,7 +14504,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9148777986664811,
-      "latency_s": 3.15
+      "latency_s": 3.546
     },
     {
       "sample_key": "8385_2847.jpg",
@@ -14544,7 +14544,7 @@
           1430
         ]
       ],
-      "pred_answer": "CHEAP ADV247",
+      "pred_answer": "CHEAP ADV",
       "stage1_metrics": {
         "iou": 0.5455757432751298,
         "recall": 0.9915730337078652,
@@ -14558,19 +14558,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.932992565569361,
-      "latency_s": 2.644
+      "latency_s": 2.71
     },
     {
       "sample_key": "8436_2863.jpg",
@@ -14610,7 +14610,7 @@
           391
         ]
       ],
-      "pred_answer": "Không có câu trả lời nào trong ảnh",
+      "pred_answer": "Phòng, chống dịch Covid-19",
       "stage1_metrics": {
         "iou": 0.023317555052479934,
         "recall": 1.0,
@@ -14624,19 +14624,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8442578093094093,
-      "latency_s": 2.748
+      "latency_s": 3.436
     },
     {
       "sample_key": "8473_2874.jpg",
@@ -14702,7 +14702,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.9510248414795677,
-      "latency_s": 2.745
+      "latency_s": 2.158
     },
     {
       "sample_key": "8479_2876.jpg",
@@ -14742,7 +14742,7 @@
           300
         ]
       ],
-      "pred_answer": "118.000đ - 25.600đ",
+      "pred_answer": "118.000 đồng",
       "stage1_metrics": {
         "iou": 0.03618314781638227,
         "recall": 1.0,
@@ -14756,19 +14756,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6666666666666666,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.65,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6666666666666666,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.65
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.981639504103057,
-      "latency_s": 3.73
+      "latency_s": 2.799
     },
     {
       "sample_key": "8491_2880.jpg",
@@ -14824,17 +14824,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.5714285714285715,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5714285714285715,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8893638233061648,
-      "latency_s": 2.393
+      "latency_s": 2.846
     },
     {
       "sample_key": "8539_2900.jpg",
@@ -14879,7 +14879,7 @@
           998
         ]
       ],
-      "pred_answer": "85k/bịch (15 cái)",
+      "pred_answer": "15 cái",
       "stage1_metrics": {
         "iou": 0.04292394199467298,
         "recall": 1.0,
@@ -14893,19 +14893,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 0.3333333333333333,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9708882975806905,
-      "latency_s": 3.178
+      "latency_s": 3.163
     },
     {
       "sample_key": "8555_2905.jpg",
@@ -14971,7 +14971,7 @@
         "anls_verified": 0.8928571428571429
       },
       "spatial_confidence": 0.96135912475899,
-      "latency_s": 2.443
+      "latency_s": 3.055
     },
     {
       "sample_key": "8559_2905.jpg",
@@ -15011,7 +15011,7 @@
           107
         ]
       ],
-      "pred_answer": "Việc làm ở đây làm vào giờ hành chính",
+      "pred_answer": "Giờ hành chính",
       "stage1_metrics": {
         "iou": 0.17576243980738362,
         "recall": 1.0,
@@ -15037,7 +15037,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9252560540404541,
-      "latency_s": 1.902
+      "latency_s": 2.053
     },
     {
       "sample_key": "8611_2927.jpg",
@@ -15077,7 +15077,7 @@
           123
         ]
       ],
-      "pred_answer": "TTV",
+      "pred_answer": "Truyền hình Tây Ninh",
       "stage1_metrics": {
         "iou": 0.2899198520345253,
         "recall": 0.792,
@@ -15091,19 +15091,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.6156339142411685,
-      "latency_s": 2.222
+      "latency_s": 2.05
     },
     {
       "sample_key": "8659_2946.jpg",
@@ -15169,7 +15169,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9579586736604867,
-      "latency_s": 3.56
+      "latency_s": 3.762
     },
     {
       "sample_key": "8663_2947.jpg",
@@ -15209,7 +15209,7 @@
           128
         ]
       ],
-      "pred_answer": "Đây thuộc Tết tuần lễ Chúc mừng năm mới",
+      "pred_answer": "Đây thuộc bào tuần lễ 202",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -15225,17 +15225,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.3333333333333333,
+        "f1_gt": 0.3636363636363636,
         "substring_gt": 0.4,
         "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.3333333333333333,
+        "f1_verified": 0.3636363636363636,
         "substring_verified": 0.4,
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.7941863913825846,
-      "latency_s": 2.791
+      "latency_s": 3.099
     },
     {
       "sample_key": "8687_2957.jpg",
@@ -15301,7 +15301,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7560180233594913,
-      "latency_s": 1.895
+      "latency_s": 2.109
     },
     {
       "sample_key": "8706_2965.jpg",
@@ -15367,7 +15367,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8587805723003866,
-      "latency_s": 2.949
+      "latency_s": 2.822
     },
     {
       "sample_key": "8733_2976.jpg",
@@ -15433,7 +15433,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9306038248769197,
-      "latency_s": 2.113
+      "latency_s": 2.713
     },
     {
       "sample_key": "8775_2991.jpg",
@@ -15486,7 +15486,7 @@
           234
         ]
       ],
-      "pred_answer": "bán \"TÂM KÝ\"",
+      "pred_answer": "Bán các món ăn",
       "stage1_metrics": {
         "iou": 0.003856169871794872,
         "recall": 1.0,
@@ -15512,7 +15512,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.2615181872298777,
-      "latency_s": 3.123
+      "latency_s": 2.965
     },
     {
       "sample_key": "8779_2991.jpg",
@@ -15552,7 +15552,7 @@
           236
         ]
       ],
-      "pred_answer": "Cơm sườn Huế",
+      "pred_answer": "Cơm sườn chua ngọt",
       "stage1_metrics": {
         "iou": 0.008063910009895906,
         "recall": 1.0,
@@ -15568,17 +15568,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.5714285714285715,
-        "substring_gt": 0.5,
-        "anls_gt": 0.6111111111111112,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.5714285714285715,
-        "substring_verified": 0.5,
-        "anls_verified": 0.6111111111111112
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.5652958095315442,
-      "latency_s": 1.875
+      "latency_s": 2.25
     },
     {
       "sample_key": "8787_2994.jpg",
@@ -15618,7 +15618,7 @@
           160
         ]
       ],
-      "pred_answer": "Không có câu trả lời nào được tìm thấy từ hình ảnh",
+      "pred_answer": "Không có hình ảnh",
       "stage1_metrics": {
         "iou": 0.4409171075837742,
         "recall": 1.0,
@@ -15644,7 +15644,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.981144485479479,
-      "latency_s": 2.846
+      "latency_s": 2.1
     },
     {
       "sample_key": "8833_3005.jpg",
@@ -15684,7 +15684,7 @@
           887
         ]
       ],
-      "pred_answer": "Gửi hàng đi Canada tại Đồng Nai",
+      "pred_answer": "Gửi hàng đi Canada",
       "stage1_metrics": {
         "iou": 0.42789562940703935,
         "recall": 0.8924050632911392,
@@ -15710,7 +15710,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9465955199710805,
-      "latency_s": 2.579
+      "latency_s": 2.754
     },
     {
       "sample_key": "8848_3010.jpg",
@@ -15750,7 +15750,7 @@
           148
         ]
       ],
-      "pred_answer": "Yêu cầu: 0967 380 234",
+      "pred_answer": "Ô dù - Hải xếp độc quyến",
       "stage1_metrics": {
         "iou": 0.12848705796573096,
         "recall": 1.0,
@@ -15766,17 +15766,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 0.5700000000000001,
+        "substring_gt": 0.75,
+        "anls_gt": 0.9411764705882353,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 0.5700000000000001,
+        "substring_verified": 0.75,
+        "anls_verified": 0.9411764705882353
       },
       "spatial_confidence": 0.7818922796376919,
-      "latency_s": 3.783
+      "latency_s": 4.092
     },
     {
       "sample_key": "8938_3037.jpg",
@@ -15816,7 +15816,7 @@
           571
         ]
       ],
-      "pred_answer": "Nhà thuốc Minh Châu",
+      "pred_answer": "nhà thuốc Minh Châu",
       "stage1_metrics": {
         "iou": 0.08738082259899972,
         "recall": 1.0,
@@ -15832,17 +15832,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6666666666666666,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.5,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6666666666666666,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.5
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8701470642590252,
-      "latency_s": 3.066
+      "latency_s": 4.132
     },
     {
       "sample_key": "8942_3037.jpg",
@@ -15882,7 +15882,7 @@
           1944
         ]
       ],
-      "pred_answer": "thuốc là \"Chuyên bán lẻ thuốc thành phẩm\"",
+      "pred_answer": "Chuyên bán lẻ thuốc thành phẩm",
       "stage1_metrics": {
         "iou": 0.023753877605590182,
         "recall": 0.08495596646793573,
@@ -15898,17 +15898,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.14285714285714285,
+        "f1_gt": 0.15384615384615383,
         "substring_gt": 0.2,
         "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.14285714285714285,
+        "f1_verified": 0.15384615384615383,
         "substring_verified": 0.2,
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8962460130321952,
-      "latency_s": 2.87
+      "latency_s": 3.041
     },
     {
       "sample_key": "8946_3037.jpg",
@@ -15948,7 +15948,7 @@
           868
         ]
       ],
-      "pred_answer": "64 664 664 664",
+      "pred_answer": "0936 26 06 39",
       "stage1_metrics": {
         "iou": 0.0038357094173882113,
         "recall": 0.2465753424657534,
@@ -15962,19 +15962,19 @@
         "multi_box_hit": 0.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8503541711395046,
-      "latency_s": 2.96
+      "latency_s": 3.235
     },
     {
       "sample_key": "9021_3057.jpg",
@@ -16014,7 +16014,7 @@
           218
         ]
       ],
-      "pred_answer": "Áo cưới của hàng thùy trang",
+      "pred_answer": "Có",
       "stage1_metrics": {
         "iou": 0.016065706936233586,
         "recall": 0.034489440031001746,
@@ -16040,7 +16040,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.5665774086250177,
-      "latency_s": 2.973
+      "latency_s": 2.808
     },
     {
       "sample_key": "9035_3062.jpg",
@@ -16083,7 +16083,7 @@
           968
         ]
       ],
-      "pred_answer": "Vietsensetravel.com",
+      "pred_answer": "Vietsensenetravel . com",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -16097,19 +16097,19 @@
         "multi_box_hit": 0.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
-        "f1_gt": 1.0,
-        "substring_gt": 1.0,
-        "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
-        "f1_verified": 1.0,
-        "substring_verified": 1.0,
-        "anls_verified": 1.0
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
+        "f1_gt": 0.9411764705882353,
+        "substring_gt": 0.5,
+        "anls_gt": 0.9047619047619048,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
+        "f1_verified": 0.9411764705882353,
+        "substring_verified": 0.5,
+        "anls_verified": 0.9047619047619048
       },
       "spatial_confidence": 0.8390662444431264,
-      "latency_s": 2.077
+      "latency_s": 2.261
     },
     {
       "sample_key": "9048_3067.jpg",
@@ -16175,7 +16175,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9506504976664972,
-      "latency_s": 2.288
+      "latency_s": 2.254
     },
     {
       "sample_key": "9052_3068.jpg",
@@ -16215,7 +16215,7 @@
           317
         ]
       ],
-      "pred_answer": "KHÔNG HÚT THUỐC TRONG CHỢ",
+      "pred_answer": "Không hút thuốc trong chợ",
       "stage1_metrics": {
         "iou": 0.32598425196850395,
         "recall": 0.9627906976744186,
@@ -16241,7 +16241,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9228806799952879,
-      "latency_s": 2.948
+      "latency_s": 2.134
     },
     {
       "sample_key": "9065_3071.jpg",
@@ -16300,9 +16300,9 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9333333333333333,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.9444444444444444,
+        "anls_gt": 1.0,
         "em_verified": 1.0,
         "vqa_acc_verified": 1.0,
         "f1_verified": 1.0,
@@ -16310,7 +16310,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8784696566937824,
-      "latency_s": 2.351
+      "latency_s": 2.737
     },
     {
       "sample_key": "9171_3098.jpg",
@@ -16350,7 +16350,7 @@
           220
         ]
       ],
-      "pred_answer": "Đại lộ 10",
+      "pred_answer": "Lực lượng Vô Trang miền Nam Bộ",
       "stage1_metrics": {
         "iou": 0.05932213380489242,
         "recall": 1.0,
@@ -16376,7 +16376,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8494641464412083,
-      "latency_s": 2.537
+      "latency_s": 3.826
     },
     {
       "sample_key": "9207_3108.jpg",
@@ -16442,7 +16442,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.886031874338406,
-      "latency_s": 3.696
+      "latency_s": 4.48
     },
     {
       "sample_key": "9211_3108.jpg",
@@ -16482,7 +16482,7 @@
           2538
         ]
       ],
-      "pred_answer": "bán sữa, bánh kẹo và rượu bia",
+      "pred_answer": "Bán sữa, bánh kẹo",
       "stage1_metrics": {
         "iou": 0.4853621615905321,
         "recall": 0.7378089512358049,
@@ -16498,17 +16498,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.7499999999999999,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.7499999999999999,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.7973507232811002,
-      "latency_s": 3.391
+      "latency_s": 2.976
     },
     {
       "sample_key": "9331_3146.jpg",
@@ -16574,7 +16574,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9675896339547778,
-      "latency_s": 2.336
+      "latency_s": 2.414
     },
     {
       "sample_key": "9353_3152.jpg",
@@ -16614,7 +16614,7 @@
           61
         ]
       ],
-      "pred_answer": "Cửa hàng này kinh doanh các loại thực phẩm đóng hộp",
+      "pred_answer": "Kệ siêu thị miền Nam",
       "stage1_metrics": {
         "iou": 0.2110833270187669,
         "recall": 1.0,
@@ -16628,19 +16628,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.7580659515055321,
-      "latency_s": 2.663
+      "latency_s": 2.559
     },
     {
       "sample_key": "9375_3159.jpg",
@@ -16706,7 +16706,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.66599248500696,
-      "latency_s": 2.375
+      "latency_s": 3.113
     },
     {
       "sample_key": "9379_3160.jpg",
@@ -16772,7 +16772,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8772756440327436,
-      "latency_s": 3.196
+      "latency_s": 2.435
     },
     {
       "sample_key": "9433_3175.jpg",
@@ -16812,7 +16812,7 @@
           411
         ]
       ],
-      "pred_answer": "Hồ Chí Minh từng giữ chức vụ Chủ tịch Hồ Chí Minh",
+      "pred_answer": "Chủ tịch",
       "stage1_metrics": {
         "iou": 0.01868980502701433,
         "recall": 1.0,
@@ -16838,7 +16838,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9149579800882361,
-      "latency_s": 3.334
+      "latency_s": 2.736
     },
     {
       "sample_key": "9456_3183.jpg",
@@ -16883,7 +16883,7 @@
           329
         ]
       ],
-      "pred_answer": "61.200 VND/chai",
+      "pred_answer": "61.200",
       "stage1_metrics": {
         "iou": 0.12076119616540278,
         "recall": 1.0,
@@ -16903,7 +16903,7 @@
         "substring_gt": 1.0,
         "anls_gt": 1.0,
         "em_verified": 1.0,
-        "vqa_acc_verified": 0.3333333333333333,
+        "vqa_acc_verified": 0.6666666666666666,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
@@ -16949,7 +16949,7 @@
           992
         ]
       ],
-      "pred_answer": "Clack Nguyễn",
+      "pred_answer": "Foody.vn",
       "stage1_metrics": {
         "iou": 0.039431575739103934,
         "recall": 1.0,
@@ -16963,19 +16963,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.823605814789049,
-      "latency_s": 1.933
+      "latency_s": 2.941
     },
     {
       "sample_key": "9560_3214.jpg",
@@ -17015,7 +17015,7 @@
           415
         ]
       ],
-      "pred_answer": "ĐIỆN BIÊN LÀM THEO LỜI BÁC",
+      "pred_answer": "Điện Biên làm theo lời bác",
       "stage1_metrics": {
         "iou": 0.48274355613805153,
         "recall": 1.0,
@@ -17041,7 +17041,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.897671249129426,
-      "latency_s": 3.109
+      "latency_s": 2.394
     },
     {
       "sample_key": "9570_3219.jpg",
@@ -17081,7 +17081,7 @@
           231
         ]
       ],
-      "pred_answer": "Đoàn Thanh học sinh Hồ Chí Minh, Huyện Thường Xuân\nHãy nói không với rượu bia khi tham gia giao thông",
+      "pred_answer": "Hãy nói không với rượu bia khi tham gia giao thông",
       "stage1_metrics": {
         "iou": 0.20682346506221796,
         "recall": 1.0,
@@ -17095,19 +17095,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6875000000000001,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.5,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6875000000000001,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.5
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8693486486295826,
-      "latency_s": 4.731
+      "latency_s": 3.313
     },
     {
       "sample_key": "9667_3256.jpg",
@@ -17173,7 +17173,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8695329780687691,
-      "latency_s": 2.934
+      "latency_s": 2.446
     },
     {
       "sample_key": "9749_3283.jpg",
@@ -17239,7 +17239,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7760139408540638,
-      "latency_s": 2.671
+      "latency_s": 2.508
     },
     {
       "sample_key": "9755_3285.jpg",
@@ -17305,7 +17305,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9051493597776488,
-      "latency_s": 2.232
+      "latency_s": 2.436
     },
     {
       "sample_key": "9760_3287.jpg",
@@ -17371,7 +17371,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.5800434335106688,
-      "latency_s": 2.72
+      "latency_s": 3.049
     },
     {
       "sample_key": "9769_3291.jpg",
@@ -17437,7 +17437,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9893058920813677,
-      "latency_s": 2.158
+      "latency_s": 2.275
     },
     {
       "sample_key": "9884_3321.jpg",
@@ -17503,7 +17503,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8575178784210358,
-      "latency_s": 2.711
+      "latency_s": 2.984
     },
     {
       "sample_key": "9888_3321.jpg",
@@ -17569,7 +17569,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.889556565573196,
-      "latency_s": 1.75
+      "latency_s": 1.639
     },
     {
       "sample_key": "9942_3335.jpg",
@@ -17612,7 +17612,7 @@
           171
         ]
       ],
-      "pred_answer": "Nhà quảng cáo Nhật Thiên",
+      "pred_answer": "Nhật Thiên",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -17633,12 +17633,12 @@
         "anls_gt": 0.9,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.942288279055977,
-      "latency_s": 2.373
+      "latency_s": 2.306
     },
     {
       "sample_key": "9946_3335.jpg",
@@ -17678,7 +17678,7 @@
           754
         ]
       ],
-      "pred_answer": "biển hiệu quảng cáo Nhật Thiên",
+      "pred_answer": "ở một cửa hàng",
       "stage1_metrics": {
         "iou": 0.0,
         "recall": 0.0,
@@ -17694,17 +17694,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.17,
-        "substring_gt": 0.25,
+        "f1_gt": 0.0,
+        "substring_gt": 0.0,
         "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.17,
-        "substring_verified": 0.25,
+        "f1_verified": 0.0,
+        "substring_verified": 0.0,
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8361606480172066,
-      "latency_s": 2.434
+      "latency_s": 2.635
     },
     {
       "sample_key": "10009_3355.jpg",
@@ -17744,7 +17744,7 @@
           606
         ]
       ],
-      "pred_answer": "2020",
+      "pred_answer": "2019",
       "stage1_metrics": {
         "iou": 0.026181209520035848,
         "recall": 1.0,
@@ -17758,19 +17758,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.5,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.5
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9904095946088067,
-      "latency_s": 2.171
+      "latency_s": 3.245
     },
     {
       "sample_key": "10048_3369.jpg",
@@ -17810,7 +17810,7 @@
           212
         ]
       ],
-      "pred_answer": "quầy số 32",
+      "pred_answer": "32",
       "stage1_metrics": {
         "iou": 0.006191369606003753,
         "recall": 1.0,
@@ -17836,7 +17836,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7745141391653884,
-      "latency_s": 3.135
+      "latency_s": 2.358
     },
     {
       "sample_key": "10069_3375.jpg",
@@ -17876,7 +17876,7 @@
           185
         ]
       ],
-      "pred_answer": "Sàn giao dịch bán",
+      "pred_answer": "căn hộ",
       "stage1_metrics": {
         "iou": 0.06715281501340482,
         "recall": 1.0,
@@ -17892,17 +17892,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8571428571428571,
-        "substring_gt": 1.0,
-        "anls_gt": 0.7857142857142857,
+        "f1_gt": 0.0,
+        "substring_gt": 0.0,
+        "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8571428571428571,
-        "substring_verified": 1.0,
-        "anls_verified": 0.7857142857142857
+        "f1_verified": 0.0,
+        "substring_verified": 0.0,
+        "anls_verified": 0.0
       },
       "spatial_confidence": 0.4322941176438281,
-      "latency_s": 3.153
+      "latency_s": 3.796
     },
     {
       "sample_key": "10078_3378.jpg",
@@ -17942,7 +17942,7 @@
           532
         ]
       ],
-      "pred_answer": "Bùng nổ khuyến mại giảm 50%+",
+      "pred_answer": "50%",
       "stage1_metrics": {
         "iou": 0.27614906832298136,
         "recall": 0.890625,
@@ -17968,7 +17968,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9579047877584088,
-      "latency_s": 2.334
+      "latency_s": 2.616
     },
     {
       "sample_key": "10213_3417.jpg",
@@ -18008,7 +18008,7 @@
           279
         ]
       ],
-      "pred_answer": "Người đàn ông đang thi công cho cửa hàng thời trang cao cấp",
+      "pred_answer": "Thời trang cao cấp",
       "stage1_metrics": {
         "iou": 0.1312898646016995,
         "recall": 0.815403422982885,
@@ -18034,7 +18034,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.4724181266253569,
-      "latency_s": 3.231
+      "latency_s": 2.769
     },
     {
       "sample_key": "10217_3417.jpg",
@@ -18074,7 +18074,7 @@
           435
         ]
       ],
-      "pred_answer": "0907 123 727",
+      "pred_answer": "0903 679 552 - 0907 123 727",
       "stage1_metrics": {
         "iou": 0.06625756920415225,
         "recall": 1.0,
@@ -18090,17 +18090,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.6666666666666666,
-        "substring_gt": 1.0,
-        "anls_gt": 0.5,
+        "f1_gt": 0.9500000000000001,
+        "substring_gt": 0.8333333333333334,
+        "anls_gt": 0.96,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.6666666666666666,
-        "substring_verified": 1.0,
-        "anls_verified": 0.5
+        "f1_verified": 0.9500000000000001,
+        "substring_verified": 0.8333333333333334,
+        "anls_verified": 0.96
       },
       "spatial_confidence": 0.7734353354330249,
-      "latency_s": 2.157
+      "latency_s": 3.602
     },
     {
       "sample_key": "10224_3421.jpg",
@@ -18140,7 +18140,7 @@
           98
         ]
       ],
-      "pred_answer": "sơn số 1 Việt Nam",
+      "pred_answer": "Siêu thị sơn số 1 Việt Nam",
       "stage1_metrics": {
         "iou": 0.18743343982960597,
         "recall": 1.0,
@@ -18166,7 +18166,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9664192712695551,
-      "latency_s": 2.781
+      "latency_s": 3.261
     },
     {
       "sample_key": "10236_3426.jpg",
@@ -18206,7 +18206,7 @@
           654
         ]
       ],
-      "pred_answer": "Phố Hàng Trung",
+      "pred_answer": "Phố Mai Hác Đề",
       "stage1_metrics": {
         "iou": 0.013243387861183306,
         "recall": 1.0,
@@ -18222,17 +18222,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9557764132145635,
-      "latency_s": 2.22
+      "latency_s": 2.975
     },
     {
       "sample_key": "10240_3426.jpg",
@@ -18288,17 +18288,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.4,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.0,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.4,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9590888660597402,
-      "latency_s": 1.68
+      "latency_s": 1.86
     },
     {
       "sample_key": "10361_3466.jpg",
@@ -18364,7 +18364,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8440636329958542,
-      "latency_s": 2.735
+      "latency_s": 2.73
     },
     {
       "sample_key": "10365_3467.jpg",
@@ -18430,7 +18430,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8070573077343581,
-      "latency_s": 1.825
+      "latency_s": 2.213
     },
     {
       "sample_key": "10413_3484.jpg",
@@ -18470,7 +18470,7 @@
           374
         ]
       ],
-      "pred_answer": "Yêu cầu: Chỉ ghi đúng cụm từ thực thể ngắn nhất xuất hiện trên ảnh (không viết cả câu, không lặp lại câu hỏi)",
+      "pred_answer": "Lối ra",
       "stage1_metrics": {
         "iou": 0.020605472395386164,
         "recall": 1.0,
@@ -18486,17 +18486,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 0.5,
+        "substring_gt": 0.5,
+        "anls_gt": 0.7142857142857143,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 0.5,
+        "substring_verified": 0.5,
+        "anls_verified": 0.7142857142857143
       },
       "spatial_confidence": 0.8051685192572063,
-      "latency_s": 4.31
+      "latency_s": 3.347
     },
     {
       "sample_key": "10417_3486.jpg",
@@ -18555,17 +18555,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9235294117647059,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.9,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9833333333333333,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9212793922325199,
-      "latency_s": 3.229
+      "latency_s": 3.655
     },
     {
       "sample_key": "10421_3486.jpg",
@@ -18631,7 +18631,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9842023432349362,
-      "latency_s": 2.335
+      "latency_s": 2.336
     },
     {
       "sample_key": "10552_3531.jpg",
@@ -18697,7 +18697,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9852271476198607,
-      "latency_s": 2.581
+      "latency_s": 2.4
     },
     {
       "sample_key": "10602_3549.jpg",
@@ -18737,7 +18737,7 @@
           173
         ]
       ],
-      "pred_answer": "Thùy Chi",
+      "pred_answer": "Shop Thùy Chi",
       "stage1_metrics": {
         "iou": 0.3103747828245222,
         "recall": 1.0,
@@ -18763,7 +18763,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9143243551386682,
-      "latency_s": 3.009
+      "latency_s": 3.292
     },
     {
       "sample_key": "10606_3550.jpg",
@@ -18829,7 +18829,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.963506896949654,
-      "latency_s": 3.237
+      "latency_s": 3.083
     },
     {
       "sample_key": "10723_3591.jpg",
@@ -18869,7 +18869,7 @@
           267
         ]
       ],
-      "pred_answer": "Longquan Group",
+      "pred_answer": "Longvan Group",
       "stage1_metrics": {
         "iou": 0.029997565132700268,
         "recall": 1.0,
@@ -18883,19 +18883,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8461538461538461,
-        "substring_gt": 0.3333333333333333,
-        "anls_gt": 0.8571428571428572,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8461538461538461,
-        "substring_verified": 0.3333333333333333,
-        "anls_verified": 0.8571428571428572
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.4614287920295841,
-      "latency_s": 2.366
+      "latency_s": 3.458
     },
     {
       "sample_key": "10727_3591.jpg",
@@ -18935,7 +18935,7 @@
           801
         ]
       ],
-      "pred_answer": "Longquan Group",
+      "pred_answer": "Gia Long",
       "stage1_metrics": {
         "iou": 0.20847245544310528,
         "recall": 0.9455128205128205,
@@ -18949,19 +18949,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.8983127663101342,
-      "latency_s": 1.639
+      "latency_s": 2.23
     },
     {
       "sample_key": "10768_3605.jpg",
@@ -19030,7 +19030,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9939238040371031,
-      "latency_s": 2.614
+      "latency_s": 2.515
     },
     {
       "sample_key": "10832_3627.jpg",
@@ -19070,7 +19070,7 @@
           22
         ]
       ],
-      "pred_answer": "Công ty Cổ phần Đầu tư LDG",
+      "pred_answer": "Công ty cổ phần đầu tư LDG",
       "stage1_metrics": {
         "iou": 0.15372487189594009,
         "recall": 1.0,
@@ -19096,7 +19096,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.869671187504852,
-      "latency_s": 2.684
+      "latency_s": 2.352
     },
     {
       "sample_key": "10836_3628.jpg",
@@ -19162,7 +19162,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8972567971474836,
-      "latency_s": 2.707
+      "latency_s": 2.563
     },
     {
       "sample_key": "10926_3656.jpg",
@@ -19202,7 +19202,7 @@
           67
         ]
       ],
-      "pred_answer": "Yêu cầu: Khu di tích lịch sử địa đạo Củ Chi",
+      "pred_answer": "Khu di tích lịch sử địa đạo củ chi",
       "stage1_metrics": {
         "iou": 0.2261955060495487,
         "recall": 1.0,
@@ -19216,19 +19216,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.8125,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.8125
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9714919325217178,
-      "latency_s": 2.335
+      "latency_s": 2.968
     },
     {
       "sample_key": "10964_3673.jpg",
@@ -19294,7 +19294,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.38966618390474345,
-      "latency_s": 3.222
+      "latency_s": 3.966
     },
     {
       "sample_key": "10977_3680.jpg",
@@ -19360,7 +19360,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9067943349774009,
-      "latency_s": 2.285
+      "latency_s": 3.274
     },
     {
       "sample_key": "11005_3691.jpg",
@@ -19426,7 +19426,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.69632526652319,
-      "latency_s": 2.833
+      "latency_s": 3.02
     },
     {
       "sample_key": "11065_3714.jpg",
@@ -19482,17 +19482,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.85,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.85,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9932925987234832,
-      "latency_s": 2.399
+      "latency_s": 2.926
     },
     {
       "sample_key": "11141_3748.jpg",
@@ -19558,7 +19558,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7497108100391006,
-      "latency_s": 3.364
+      "latency_s": 3.634
     },
     {
       "sample_key": "11169_3758.jpg",
@@ -19598,7 +19598,7 @@
           194
         ]
       ],
-      "pred_answer": "Động Xuân Lộc",
+      "pred_answer": "Đồng Xuân Lộc",
       "stage1_metrics": {
         "iou": 0.2802937576499388,
         "recall": 0.9123505976095617,
@@ -19612,19 +19612,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.9500000000000001,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.9500000000000001,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8452177457481419,
-      "latency_s": 2.519
+      "latency_s": 2.54
     },
     {
       "sample_key": "11218_3776.jpg",
@@ -19690,7 +19690,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.824847334121959,
-      "latency_s": 2.359
+      "latency_s": 2.936
     },
     {
       "sample_key": "11258_3788.jpg",
@@ -19730,7 +19730,7 @@
           241
         ]
       ],
-      "pred_answer": "Nhận đặt tiệc - Liên hoan - Vui nhộn",
+      "pred_answer": "Đặt tiệc, liên hoan, kinh doanh",
       "stage1_metrics": {
         "iou": 0.047365969920280526,
         "recall": 1.0,
@@ -19746,17 +19746,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.6818181818181819,
+        "anls_gt": 1.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.6818181818181819
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9670294968071692,
-      "latency_s": 3.404
+      "latency_s": 3.186
     },
     {
       "sample_key": "11335_3812.jpg",
@@ -19822,7 +19822,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.5790747272550867,
-      "latency_s": 4.213
+      "latency_s": 4.217
     },
     {
       "sample_key": "11339_3812.jpg",
@@ -19888,7 +19888,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9222596812286116,
-      "latency_s": 1.788
+      "latency_s": 2.021
     },
     {
       "sample_key": "11359_3821.jpg",
@@ -19928,7 +19928,7 @@
           325
         ]
       ],
-      "pred_answer": "99+",
+      "pred_answer": "Lời chúc Giáng sinh cho khách hàng, đồng nghiệp",
       "stage1_metrics": {
         "iou": 0.4546324655436447,
         "recall": 0.5320340501792115,
@@ -19944,17 +19944,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
+        "f1_gt": 1.0,
+        "substring_gt": 0.9,
+        "anls_gt": 0.9512195121951219,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "f1_verified": 1.0,
+        "substring_verified": 0.9,
+        "anls_verified": 0.9512195121951219
       },
       "spatial_confidence": 0.940215259508724,
-      "latency_s": 2.421
+      "latency_s": 3.089
     },
     {
       "sample_key": "11386_3829.jpg",
@@ -19994,7 +19994,7 @@
           65
         ]
       ],
-      "pred_answer": "Đại lộ 103",
+      "pred_answer": "Daiso Food & Fruits",
       "stage1_metrics": {
         "iou": 0.3178684118265747,
         "recall": 0.9577464788732394,
@@ -20008,19 +20008,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.0,
-        "substring_gt": 0.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.0,
-        "substring_verified": 0.0,
-        "anls_verified": 0.0
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
+        "substring_gt": 1.0,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
+        "substring_verified": 1.0,
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.6917283004477528,
-      "latency_s": 2.799
+      "latency_s": 2.584
     },
     {
       "sample_key": "11442_3847.jpg",
@@ -20060,7 +20060,7 @@
           257
         ]
       ],
-      "pred_answer": "Trên bãi biển",
+      "pred_answer": "Bãi biển",
       "stage1_metrics": {
         "iou": 0.0919871794871795,
         "recall": 1.0,
@@ -20074,19 +20074,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 1.0,
-        "vqa_acc_gt": 1.0,
+        "em_gt": 0.0,
+        "vqa_acc_gt": 0.0,
         "f1_gt": 1.0,
         "substring_gt": 1.0,
         "anls_gt": 1.0,
-        "em_verified": 1.0,
-        "vqa_acc_verified": 1.0,
+        "em_verified": 0.0,
+        "vqa_acc_verified": 0.0,
         "f1_verified": 1.0,
         "substring_verified": 1.0,
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9749114730754598,
-      "latency_s": 2.592
+      "latency_s": 2.297
     },
     {
       "sample_key": "11534_3875.jpg",
@@ -20126,7 +20126,7 @@
           251
         ]
       ],
-      "pred_answer": "EAIFO",
+      "pred_answer": "L'Olive",
       "stage1_metrics": {
         "iou": 0.007202881152460984,
         "recall": 1.0,
@@ -20142,17 +20142,17 @@
       "stage2_metrics": {
         "em_gt": 0.0,
         "vqa_acc_gt": 0.0,
-        "f1_gt": 0.8000000000000002,
+        "f1_gt": 0.0,
         "substring_gt": 0.0,
-        "anls_gt": 0.8,
+        "anls_gt": 0.0,
         "em_verified": 0.0,
         "vqa_acc_verified": 0.0,
-        "f1_verified": 0.8000000000000002,
+        "f1_verified": 0.0,
         "substring_verified": 0.0,
-        "anls_verified": 0.8
+        "anls_verified": 0.0
       },
       "spatial_confidence": 0.920638725763987,
-      "latency_s": 3.102
+      "latency_s": 2.756
     },
     {
       "sample_key": "11552_3880.jpg",
@@ -20192,7 +20192,7 @@
           2600
         ]
       ],
-      "pred_answer": "Vũ Thái Hà",
+      "pred_answer": "Vũ Thái Hà, Trần Lan Anh, Trần Thị Thùy Trang",
       "stage1_metrics": {
         "iou": 0.10423320144649528,
         "recall": 1.0,
@@ -20206,19 +20206,19 @@
         "multi_box_hit": 1.0
       },
       "stage2_metrics": {
-        "em_gt": 0.0,
-        "vqa_acc_gt": 0.0,
-        "f1_gt": 0.4615384615384615,
+        "em_gt": 1.0,
+        "vqa_acc_gt": 1.0,
+        "f1_gt": 1.0,
         "substring_gt": 1.0,
-        "anls_gt": 0.0,
-        "em_verified": 0.0,
-        "vqa_acc_verified": 0.0,
-        "f1_verified": 0.4615384615384615,
+        "anls_gt": 1.0,
+        "em_verified": 1.0,
+        "vqa_acc_verified": 1.0,
+        "f1_verified": 1.0,
         "substring_verified": 1.0,
-        "anls_verified": 0.0
+        "anls_verified": 1.0
       },
       "spatial_confidence": 0.9486336931145438,
-      "latency_s": 2.823
+      "latency_s": 4.248
     },
     {
       "sample_key": "11556_3880.jpg",
@@ -20284,7 +20284,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.9579058134575564,
-      "latency_s": 2.106
+      "latency_s": 2.372
     },
     {
       "sample_key": "11584_3887.jpg",
@@ -20350,7 +20350,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8879065940387755,
-      "latency_s": 3.14
+      "latency_s": 3.19
     },
     {
       "sample_key": "11590_3889.jpg",
@@ -20416,7 +20416,7 @@
         "anls_verified": 0.0
       },
       "spatial_confidence": 0.8372050846722299,
-      "latency_s": 2.457
+      "latency_s": 2.418
     },
     {
       "sample_key": "11601_3894.jpg",
@@ -20482,7 +20482,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8338319011898574,
-      "latency_s": 2.248
+      "latency_s": 2.286
     },
     {
       "sample_key": "11618_3902.jpg",
@@ -20522,7 +20522,7 @@
           557
         ]
       ],
-      "pred_answer": "SONG ANH",
+      "pred_answer": "Song Anh",
       "stage1_metrics": {
         "iou": 0.6070216446786313,
         "recall": 0.9744027303754266,
@@ -20548,7 +20548,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.7406459758551235,
-      "latency_s": 2.073
+      "latency_s": 2.37
     },
     {
       "sample_key": "11625_3904.jpg",
@@ -20614,7 +20614,7 @@
         "anls_verified": 1.0
       },
       "spatial_confidence": 0.8936134625386212,
-      "latency_s": 2.2
+      "latency_s": 1.804
     }
   ]
 }
