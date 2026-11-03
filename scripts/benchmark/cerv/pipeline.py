@@ -87,6 +87,16 @@ class CERVResult:
 CERVPipelineResult = CERVResult
 
 
+class BayesianOddsResult(tuple):
+    """5-tuple backwards-compatible container with phi_res attribute."""
+    phi_res: float
+
+    def __new__(cls, lambda_t, pi_t, uncertainty, spatial_entropy, layer_vis_vecs, phi_res=0.0):
+        obj = super().__new__(cls, (lambda_t, pi_t, uncertainty, spatial_entropy, layer_vis_vecs))
+        obj.phi_res = float(phi_res)
+        return obj
+
+
 def _find_closest_aspect_ratio(
     aspect_ratio: float,
     target_ratios: List[Tuple[int, int]],
@@ -212,19 +222,18 @@ class CERVPipeline:
     @staticmethod
     def _extract_causal_entity(question: str, full_text: str) -> str:
         r"""
-        Extract concise causal visual entity E from autoregressive sequence S = \Pi(Q) \circ C \circ E.
+        Extract concise causal visual entity E from autoregressive sequence S = \Pi_Q \circ C \circ E.
 
-        Zero-Heuristic Monotonic Question-Echo Alignment:
-        1. Tokenizes question Q and full_text S into words with Unicode NFC normalization.
-        2. Computes maximal common prefix length k where leading words of S match leading words of Q monotonically.
-        3. If k >= 2 (or k == 1 for a long word >= 4 chars with multiple words in S):
-           - Conversational preamble spans tokens 0..k-1.
-           - Slices after word k, strips optional immediate copula/punctuation (`^(là|:|-)\s*`).
-           - Returns the remaining entity string.
-        4. If k < 2:
-           - The model answered directly with the entity (\Pi(Q) = \epsilon).
-           - Returns the full text string as-is.
-        Zero hardcoded stopwords, zero if-else hacks for specific words, 100% language-agnostic.
+        Subsequence-Aligned Causal Entity Extraction:
+        1. Dynamically extract question vocabulary V_Q = {q_1, ..., q_m} normalized to Unicode NFC lowercase.
+        2. Scan leading words of clean_full. If a leading contiguous span of words
+           (ignoring optional prepositions 'của', 'ở', 'trong', 'này' and copula 'là')
+           belongs to V_Q with at least 1 substantive question word (>= 3 letters, in V_Q, not in connectors)
+           and total matched length >= 2, treat this leading span as conversational preamble \Pi_Q.
+        3. Slice clean_full after the matched preamble span, strip optional immediate copula/punctuation
+           (e.g., `^(?:(?:là\b|[:\-–—])\s*)+`), and return the clean visual entity E.
+        4. If matched length < 2 or no substantive question word is present, return clean_full as-is.
+        Zero hardcoded stopwords: vocabulary V_Q is dynamically derived per question directly from prompt.
         """
         if not full_text or not full_text.strip():
             return ""
@@ -233,30 +242,37 @@ class CERVPipeline:
         if not question or not question.strip():
             return clean_full.rstrip(".").strip()
 
-        # Extract normalized words and character spans from full_text
+        # Dynamically derive question vocabulary V_Q with Unicode NFC normalization
         q_words = [unicodedata.normalize("NFC", m.group()).lower() for m in re.finditer(r"\w+", question)]
+        v_q = set(q_words)
+
         s_matches = list(re.finditer(r"\w+", clean_full))
         s_words = [unicodedata.normalize("NFC", m.group()).lower() for m in s_matches]
 
-        if not q_words or not s_words:
+        if not v_q or not s_words:
             return clean_full.rstrip(".").strip()
 
-        # Maximal common prefix length k where leading words of full_text match leading words of question
+        # Optional connective tokens allowed to bridge conversational question echoes
+        connectors = {"của", "ở", "trong", "này", "là"}
+
+        # Scan leading contiguous span of words belonging to V_Q or connectors
         k = 0
-        max_k = min(len(q_words), len(s_words))
-        while k < max_k and s_words[k] == q_words[k]:
-            k += 1
+        while k < len(s_words):
+            w = s_words[k]
+            if w in v_q or w in connectors:
+                k += 1
+            else:
+                break
 
-        # Check echo threshold: k >= 2 or (k == 1 and word length >= 4 and len(s_words) > 1)
-        is_echo = (k >= 2) or (k == 1 and len(s_words[0]) >= 4 and len(s_words) > 1)
+        # Check validity of conversational preamble Pi_Q:
+        # Total matched length >= 2, with at least 1 substantive question word (>= 3 letters, in V_Q, not connector)
+        substantive = [w for w in s_words[:k] if w in v_q and w not in connectors and len(w) >= 3]
 
-        if is_echo:
-            # End offset of word k in clean_full (0-indexed match k-1)
+        if k >= 2 and len(substantive) >= 1 and k < len(s_words):
             end_offset = s_matches[k - 1].end()
             remainder = clean_full[end_offset:].strip()
-            # Strip optional immediate copula / delimiter: e.g. "^(là|:|-|–|—)\s*"
-            remainder = re.sub(r"^(?:là\b|[:\-–—])\s*", "", remainder, flags=re.IGNORECASE).strip()
-            remainder = re.sub(r"^(?:là\b|[:\-–—])\s*", "", remainder, flags=re.IGNORECASE).strip()
+            # Strip optional immediate copula / punctuation delimiters
+            remainder = re.sub(r"^(?:(?:là\b|[:\-–—])\s*)+", "", remainder, flags=re.IGNORECASE).strip()
             remainder = remainder.rstrip(".").strip()
             if len(remainder) > 0:
                 return remainder
@@ -508,7 +524,9 @@ class CERVPipeline:
         r0_t = (1.0 - pi_t) * uncertainty + self.lambda_cost
         lambda_t = evsi_t / max(1e-12, r0_t)
 
-        return float(lambda_t), float(pi_t), float(uncertainty), float(spatial_entropy), layer_vis_vecs
+        return BayesianOddsResult(
+            float(lambda_t), float(pi_t), float(uncertainty), float(spatial_entropy), layer_vis_vecs, phi_res=float(phi_res)
+        )
 
     def _project_patch_vector_to_2d_grid(
         self,
@@ -812,6 +830,7 @@ class CERVPipeline:
 
         verified_ids: List[int] = []
         alpha_trace: List[float] = []
+        content_token_count = 0
 
         for _ in range(max(1, remaining_tokens)):
             z_pos = logits_both[0].float()
@@ -825,12 +844,20 @@ class CERVPipeline:
             h_neg = -torch.sum(p_neg * torch.log(p_neg.clamp(min=1e-12)))
             h_m = -torch.sum(m_t * torch.log(m_t.clamp(min=1e-12)))
 
-            h_m_val = float(h_m.item())
-            if h_m_val > 1e-9:
-                alpha_t = 1.0 - float((h_pos + h_neg).item()) / (2.0 * h_m_val)
-                alpha_t = float(min(1.0, max(0.0, alpha_t)))
-            else:
-                alpha_t = 0.0
+            # Effective Support Entropy Normalization for Counterfactual Contrast (Pillar 4):
+            # JSD(p_t^+ || p_t^-) = H(m_t) - 0.5 * (H(p_t^+) + H(p_t^-))
+            jsd_t = h_m - 0.5 * (h_pos + h_neg)
+            jsd_val = float(max(0.0, jsd_t.item()))
+
+            k_support = min(50, m_t.shape[-1])
+            top_m = torch.topk(m_t, k=k_support).values
+            top_m_norm = top_m / top_m.sum().clamp(min=1e-12)
+            h_k50 = -torch.sum(top_m_norm * torch.log(top_m_norm.clamp(min=1e-12)))
+            h_k50_val = float(max(1e-6, h_k50.item()))
+
+            # Normalized JSD over top-50 support distribution bounded in [0.15, 0.45]
+            alpha_raw = jsd_val / h_k50_val
+            alpha_t = float(min(0.45, max(0.15, alpha_raw)))
 
             alpha_trace.append(alpha_t)
 
@@ -859,6 +886,18 @@ class CERVPipeline:
                         unspaced_ids = self.tokenizer.encode(cand_str.lstrip(" "), add_special_tokens=False)
                         if len(unspaced_ids) == 1 and bool(plausible_mask[unspaced_ids[0]].item()):
                             next_id = int(unspaced_ids[0])
+
+            tok_str = self.tokenizer.decode([next_id], skip_special_tokens=False)
+            is_content = any(ch.isalnum() for ch in tok_str)
+
+            # Mutual Information-Bounded Dynamic Stopping Condition (Pillar 3):
+            # Pointwise Mutual Information delta_t = log P(y_t | I+, Q, y_{<t}) - log P(y_t | I-, Q, y_{<t})
+            delta_t = float((log_p_pos[next_id] - log_p_neg[next_id]).item())
+            if content_token_count >= 2 and delta_t < 0:
+                break
+
+            if is_content:
+                content_token_count += 1
 
             verified_ids.append(next_id)
             next_tok = torch.tensor([[next_id], [next_id]], dtype=torch.long, device=self.device)
@@ -905,11 +944,17 @@ class CERVPipeline:
             del prefix_embeds_tmp
 
             kv_stage1 = self._clone_kv_cache(shared_kv)
+            null_suffix_embeds = state.get("null_suffix_embeds")
+            kv_null = self._clone_kv_cache(shared_kv) if null_suffix_embeds is not None else None
+            logits_null = None
+            out_null = None
+
             embed_layer = self.model.language_model.get_input_embeddings()
             eos_im_end = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
             eos_std = self.tokenizer.eos_token_id
 
             generated_ids: List[int] = []
+            fast_content_tokens = 0
             step_s_layers_history: List[Dict[int, torch.Tensor]] = []
             fork_s_layers_list: List[Dict[int, torch.Tensor]] = []
             trajectory_trace: List[Dict[str, float]] = []
@@ -935,6 +980,17 @@ class CERVPipeline:
                 last_hidden = out.last_hidden_state[:, -1:, :]
                 logits = self.model.language_model.lm_head(last_hidden)[:, -1, :]
 
+                if kv_null is not None:
+                    out_null = self.model.language_model.model(
+                        inputs_embeds=null_suffix_embeds,
+                        past_key_values=kv_null,
+                        use_cache=True,
+                        output_attentions=False,
+                        return_dict=True,
+                    )
+                    kv_null = out_null.past_key_values
+                    logits_null = self.model.language_model.lm_head(out_null.last_hidden_state[:, -1:, :])[:, -1, :]
+
                 for step_idx in range(1, max_new_tokens + 1):
                     if step_idx > 1:
                         top2_vals, _ = torch.topk(logits[0], k=2)
@@ -947,11 +1003,22 @@ class CERVPipeline:
                     if next_id == eos_im_end or (eos_std is not None and next_id == eos_std):
                         break
 
-                    if not fork_triggered and step_idx <= 25:
-                        tok_str = self.tokenizer.decode([next_id], skip_special_tokens=False)
-                        is_content_token = any(ch.isalnum() for ch in tok_str)
+                    tok_str = self.tokenizer.decode([next_id], skip_special_tokens=False)
+                    is_content_token = any(ch.isalnum() for ch in tok_str)
 
-                        lambda_t, pi_t, risk_t, ent_t, s_layers = self._compute_step_bayesian_odds(
+                    # Mutual Information-Bounded Dynamic Stopping Condition on Fast-Path (Pillar 3)
+                    if logits_null is not None and not fork_triggered:
+                        log_p_q = F.log_softmax(logits[0].float(), dim=-1)
+                        log_p_null = F.log_softmax(logits_null[0].float(), dim=-1)
+                        delta_t_fast = float((log_p_q[next_id] - log_p_null[next_id]).item())
+                        if fast_content_tokens >= 2 and delta_t_fast < 0:
+                            break
+
+                    if is_content_token:
+                        fast_content_tokens += 1
+
+                    if not fork_triggered and step_idx <= 25:
+                        odds_res = self._compute_step_bayesian_odds(
                             logits=logits[0],
                             attentions=out.attentions,
                             vis_start=vis_start,
@@ -961,6 +1028,14 @@ class CERVPipeline:
                             assistant_end=assistant_end,
                             is_prefill_step=(step_idx == 1),
                         )
+                        lambda_t, pi_t, risk_t, ent_t, s_layers = odds_res
+                        uncertainty = risk_t
+                        if hasattr(odds_res, "phi_res"):
+                            phi_res = float(odds_res.phi_res)
+                        else:
+                            denom = max(1e-12, pi_t * risk_t)
+                            phi_res = float((lambda_t * ((1.0 - pi_t) * risk_t + self.lambda_cost)) / denom)
+
                         step_s_layers_history.append(s_layers)
 
                         if is_content_token and lambda_t > max_lambda:
@@ -975,11 +1050,14 @@ class CERVPipeline:
                                 "pi_t": round(pi_t, 4),
                                 "risk_t": round(risk_t, 4),
                                 "entropy_t": round(ent_t, 4),
+                                "phi_res": round(phi_res, 4),
                             }
                         )
 
-                        # Decision Rule: Trigger Slow-Path when Lambda_t > 1 on an entity token
-                        if is_content_token and lambda_t > 1.0:
+                        # Epistemically Calibrated VoI Gate
+                        tau_u = 0.30       # Model must exhibit genuine epistemic uncertainty
+                        tau_phi = 0.35     # Visual attention must be spatially concentrated
+                        if is_content_token and uncertainty >= tau_u and phi_res >= tau_phi and lambda_t > 1.0:
                             fork_triggered = True
                             fork_step = step_idx
                             fork_lambda = lambda_t
@@ -988,6 +1066,9 @@ class CERVPipeline:
                             fork_entropy = ent_t
                             fork_s_layers_list = list(step_s_layers_history)
                             self._set_attn_implementation("sdpa")
+                            if kv_null is not None:
+                                del kv_null
+                                kv_null = None
                         elif step_idx == 25:
                             # Past entity region without fork: finish remaining tokens via fast SDPA
                             self._set_attn_implementation("sdpa")
@@ -1008,10 +1089,25 @@ class CERVPipeline:
                         kv_stage1 = out.past_key_values
                         last_hidden = out.last_hidden_state[:, -1:, :]
                         logits = self.model.language_model.lm_head(last_hidden)[:, -1, :]
+
+                        if kv_null is not None and not fork_triggered:
+                            out_null = self.model.language_model.model(
+                                inputs_embeds=next_emb,
+                                past_key_values=kv_null,
+                                use_cache=True,
+                                output_attentions=False,
+                                return_dict=True,
+                            )
+                            kv_null = out_null.past_key_values
+                            logits_null = self.model.language_model.lm_head(out_null.last_hidden_state[:, -1:, :])[:, -1, :]
             finally:
                 self._set_attn_implementation(prev_mode)
 
             del kv_stage1, out, last_hidden
+            if kv_null is not None:
+                del kv_null
+            if out_null is not None:
+                del out_null
 
             fast_draft_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
 
