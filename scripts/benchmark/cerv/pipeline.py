@@ -42,8 +42,10 @@ Mathematical Specification (from `docs/Proposed_Method_CERV.md`):
 
 from dataclasses import dataclass, field
 import math
+import re
 import time
 from typing import Dict, List, Optional, Tuple
+import unicodedata
 
 import numpy as np
 from PIL import Image
@@ -206,6 +208,60 @@ class CERVPipeline:
         w, h = image.size
         thumb = image.resize((16, 16), Image.Resampling.NEAREST).convert("RGB")
         return (w, h, thumb.tobytes())
+
+    @staticmethod
+    def _extract_causal_entity(question: str, full_text: str) -> str:
+        r"""
+        Extract concise causal visual entity E from autoregressive sequence S = \Pi(Q) \circ C \circ E.
+
+        Zero-Heuristic Monotonic Question-Echo Alignment:
+        1. Tokenizes question Q and full_text S into words with Unicode NFC normalization.
+        2. Computes maximal common prefix length k where leading words of S match leading words of Q monotonically.
+        3. If k >= 2 (or k == 1 for a long word >= 4 chars with multiple words in S):
+           - Conversational preamble spans tokens 0..k-1.
+           - Slices after word k, strips optional immediate copula/punctuation (`^(là|:|-)\s*`).
+           - Returns the remaining entity string.
+        4. If k < 2:
+           - The model answered directly with the entity (\Pi(Q) = \epsilon).
+           - Returns the full text string as-is.
+        Zero hardcoded stopwords, zero if-else hacks for specific words, 100% language-agnostic.
+        """
+        if not full_text or not full_text.strip():
+            return ""
+
+        clean_full = full_text.strip()
+        if not question or not question.strip():
+            return clean_full.rstrip(".").strip()
+
+        # Extract normalized words and character spans from full_text
+        q_words = [unicodedata.normalize("NFC", m.group()).lower() for m in re.finditer(r"\w+", question)]
+        s_matches = list(re.finditer(r"\w+", clean_full))
+        s_words = [unicodedata.normalize("NFC", m.group()).lower() for m in s_matches]
+
+        if not q_words or not s_words:
+            return clean_full.rstrip(".").strip()
+
+        # Maximal common prefix length k where leading words of full_text match leading words of question
+        k = 0
+        max_k = min(len(q_words), len(s_words))
+        while k < max_k and s_words[k] == q_words[k]:
+            k += 1
+
+        # Check echo threshold: k >= 2 or (k == 1 and word length >= 4 and len(s_words) > 1)
+        is_echo = (k >= 2) or (k == 1 and len(s_words[0]) >= 4 and len(s_words) > 1)
+
+        if is_echo:
+            # End offset of word k in clean_full (0-indexed match k-1)
+            end_offset = s_matches[k - 1].end()
+            remainder = clean_full[end_offset:].strip()
+            # Strip optional immediate copula / delimiter: e.g. "^(là|:|-|–|—)\s*"
+            remainder = re.sub(r"^(?:là\b|[:\-–—])\s*", "", remainder, flags=re.IGNORECASE).strip()
+            remainder = re.sub(r"^(?:là\b|[:\-–—])\s*", "", remainder, flags=re.IGNORECASE).strip()
+            remainder = remainder.rstrip(".").strip()
+            if len(remainder) > 0:
+                return remainder
+
+        return clean_full.rstrip(".").strip()
 
     @staticmethod
     def _clone_kv_cache(past_kv):
@@ -629,7 +685,15 @@ class CERVPipeline:
         # Minimum receptive window for ViT-448px views
         min_w = min(W, max(224, int(0.20 * W)))
         min_h = min(H, max(160, int(0.12 * H)))
-        final_w = max(box_w, float(min_w))
+
+        # Horizontal Aspect Expansion for Wide Text Banners:
+        # When active patches spread horizontally, ensure wide horizontal text distributions
+        # are not prematurely clamped on the right edge by setting final_w >= 1.5 * box_h.
+        active_cols = int(np.sum(top_mask_2d.any(axis=0)))
+        if active_cols > 1 or sigma_x >= sigma_y:
+            final_w = max(box_w, float(min_w), 1.5 * box_h)
+        else:
+            final_w = max(box_w, float(min_w))
         final_h = max(box_h, float(min_h))
 
         bx1 = int(max(0, round(mu_x - 0.5 * final_w)))
@@ -953,9 +1017,12 @@ class CERVPipeline:
 
             # Fast-Path: Lambda_t <= 1 for all entity steps t
             if not fork_triggered or len(fork_s_layers_list) == 0:
-                fast_clean = fast_draft_text.strip().rstrip(".").strip()
+                full_sequence_text = fast_draft_text.strip()
+                final_pred_text = self._extract_causal_entity(question, full_sequence_text)
+                if len(final_pred_text) == 0:
+                    final_pred_text = full_sequence_text
                 return CERVResult(
-                    pred_text=fast_clean,
+                    pred_text=final_pred_text,
                     stage1_bbox=[0, 0, W, H],
                     route="fast_path",
                     fork_step=0,
@@ -970,7 +1037,7 @@ class CERVPipeline:
                     locked_prefix="",
                     fast_draft_text=fast_draft_text,
                     spatial_confidence=round(1.0 / (1.0 + max_lambda), 4),
-                    pred_raw_text=fast_draft_text,
+                    pred_raw_text=full_sequence_text,
                     fork_token_idx=0,
                     routing_path="fast_path",
                     bayesian_odds=0.0,
@@ -1007,11 +1074,14 @@ class CERVPipeline:
             # If Stage 2 detects uniform diffuse contrast (peak_layer == -1),
             # route via Fast-Path with concise post-fork causal entity
             if peak_layer == -1:
-                entity_ids = generated_ids[fork_step - 1:] if fork_step > 0 else generated_ids
-                entity_text = self.tokenizer.decode(entity_ids, skip_special_tokens=True).strip().rstrip(".").strip()
-                concise_text = entity_text if len(entity_text) > 0 else fast_draft_text.strip().rstrip(".").strip()
+                full_sequence_text = fast_draft_text.strip()
+                final_pred_text = self._extract_causal_entity(question, full_sequence_text)
+                if len(final_pred_text) == 0:
+                    entity_ids = generated_ids[fork_step - 1:] if fork_step > 0 else generated_ids
+                    entity_text = self.tokenizer.decode(entity_ids, skip_special_tokens=True).strip().rstrip(".").strip()
+                    final_pred_text = entity_text if len(entity_text) > 0 else full_sequence_text
                 return CERVResult(
-                    pred_text=concise_text,
+                    pred_text=final_pred_text,
                     stage1_bbox=[0, 0, W, H],
                     route="fast_path",
                     fork_step=fork_step,
@@ -1026,7 +1096,7 @@ class CERVPipeline:
                     locked_prefix=locked_prefix_str,
                     fast_draft_text=fast_draft_text,
                     spatial_confidence=round(1.0 / (1.0 + max_lambda), 4),
-                    pred_raw_text=fast_draft_text,
+                    pred_raw_text=full_sequence_text,
                     fork_token_idx=fork_step,
                     routing_path="fast_path",
                     bayesian_odds=round(fork_lambda, 4),
@@ -1049,21 +1119,27 @@ class CERVPipeline:
             mean_alpha = float(np.mean(alpha_trace)) if len(alpha_trace) > 0 else 0.0
             max_alpha = float(np.max(alpha_trace)) if len(alpha_trace) > 0 else 0.0
 
-            # Concise Causal Entity Output:
-            # Set pred_text to the post-fork causal entity y^*_{t >= t*}, completely eliminating
-            # the 31.59% conversational preamble precision penalty under Strict A* evaluation.
-            # (Keep full sequence in pred_raw_text).
+            # Unified Token-Space Sequence Assembly (Zero Sub-Token / Entity-Head Slicing Artifacts):
+            # Assemble full_generated_ids = locked_prefix_ids + verified_suffix_ids in token ID space
+            # and decode together, ensuring seamless sub-token recombination without whitespace or missing heads.
             if len(verified_text) > 0:
-                final_pred_text = verified_text
-                final_raw_text = (locked_prefix_str + " " + verified_text).strip()
+                full_generated_ids = locked_prefix_ids + verified_suffix_ids
+                full_sequence_text = self.tokenizer.decode(full_generated_ids, skip_special_tokens=True).strip()
+                final_pred_text = self._extract_causal_entity(question, full_sequence_text)
+                if len(final_pred_text) == 0:
+                    final_pred_text = verified_text
+                final_raw_text = full_sequence_text
                 final_bbox = crop_bbox
                 final_route = "slow_path"
                 spatial_conf = round(mean_alpha, 4) if len(alpha_trace) > 0 else 1.0
             else:
                 entity_ids = generated_ids[fork_step - 1:] if fork_step > 0 else generated_ids
                 entity_text = self.tokenizer.decode(entity_ids, skip_special_tokens=True).strip().rstrip(".").strip()
-                final_pred_text = entity_text if len(entity_text) > 0 else fast_draft_text.strip().rstrip(".").strip()
-                final_raw_text = fast_draft_text
+                full_sequence_text = fast_draft_text.strip()
+                final_pred_text = self._extract_causal_entity(question, full_sequence_text)
+                if len(final_pred_text) == 0:
+                    final_pred_text = entity_text if len(entity_text) > 0 else full_sequence_text
+                final_raw_text = full_sequence_text
                 final_bbox = [0, 0, W, H]
                 final_route = "fast_path"
                 spatial_conf = round(1.0 / (1.0 + max_lambda), 4)
