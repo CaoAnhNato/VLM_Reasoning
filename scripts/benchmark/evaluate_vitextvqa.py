@@ -106,8 +106,9 @@ from scripts.benchmark.metrics import (
     MetricsAggregator,
 )
 
-# Import SG-VCD pipeline
+# Import SG-VCD & CERV pipelines
 from sg_vcd import SGVCDPipeline
+from cerv import CERVPipeline
 
 
 # ==============================================================================
@@ -780,7 +781,9 @@ def run_multiprocess_coordinator(args: argparse.Namespace):
             "--output-dir", str(args.output_dir),
             "--batch-size", str(args.batch_size),
         ]
-        if args.test_samples and args.test_samples > 0:
+        if getattr(args, "test_images", 0) and args.test_images > 0:
+            cmd += ["--test-images", str(args.test_images)]
+        elif args.test_samples and args.test_samples > 0:
             cmd += ["--test-samples", str(args.test_samples)]
         elif args.limit and args.limit > 0:
             cmd += ["--limit", str(args.limit)]
@@ -907,7 +910,7 @@ def run_benchmark(args: argparse.Namespace):
     for idx, s in enumerate(samples):
         s["global_index"] = idx
 
-    # Handle --test flag or limit / test_samples
+    # Handle --test flag or test_images / test_samples / limit
     if args.test:
         print("[TEST MODE] Running smoke test on 3 distinct test samples...")
         unique_by_img = {}
@@ -917,6 +920,19 @@ def run_benchmark(args: argparse.Namespace):
                 unique_by_img[img] = s
         test_samples = list(unique_by_img.values())[:3]
         samples = test_samples
+    elif getattr(args, "test_images", 0) and args.test_images > 0:
+        ordered_imgs: List[str] = []
+        seen_imgs: Set[str] = set()
+        for s in samples:
+            img = s["image_name"]
+            if img not in seen_imgs:
+                seen_imgs.add(img)
+                ordered_imgs.append(img)
+                if len(ordered_imgs) >= args.test_images:
+                    break
+        allowed_imgs = set(ordered_imgs)
+        samples = [s for s in samples if s["image_name"] in allowed_imgs]
+        print(f"[TEST IMAGES] Restricting evaluation to first {len(ordered_imgs)} unique images ({len(samples)} questions).")
     elif getattr(args, "test_samples", 0) and args.test_samples > 0:
         print(f"[TEST SAMPLES] Restricting evaluation to first {args.test_samples} questions.")
         samples = samples[:args.test_samples]
@@ -924,11 +940,17 @@ def run_benchmark(args: argparse.Namespace):
         print(f"[LIMIT] Restricting evaluation to first {args.limit} questions.")
         samples = samples[:args.limit]
 
-    # Deterministic sharding: worker K evaluates sample i where i % num_workers == worker_id
+    # Deterministic image-grouped sharding: worker K evaluates all questions of image_idx % num_workers == worker_id
+    # This preserves per-image visual token & KV caching while partitioning all questions disjointly.
     if getattr(args, "num_workers", 1) > 1:
         assert 0 <= args.worker_id < args.num_workers, f"Invalid worker_id {args.worker_id} for num_workers {args.num_workers}"
-        sharded_samples = [s for s in samples if s["global_index"] % args.num_workers == args.worker_id]
-        print(f"[SHARDING] Worker {args.worker_id}/{args.num_workers}: assigned {len(sharded_samples)} of {len(samples)} questions (i % {args.num_workers} == {args.worker_id}).")
+        img_to_idx: Dict[str, int] = {}
+        for s in samples:
+            img_name = s["image_name"]
+            if img_name not in img_to_idx:
+                img_to_idx[img_name] = len(img_to_idx)
+        sharded_samples = [s for s in samples if img_to_idx[s["image_name"]] % args.num_workers == args.worker_id]
+        print(f"[SHARDING] Worker {args.worker_id}/{args.num_workers}: assigned {len(sharded_samples)} of {len(samples)} questions across {len({s['image_name'] for s in sharded_samples})} images.")
         samples = sharded_samples
 
     total_samples = len(samples)
@@ -951,14 +973,12 @@ def run_benchmark(args: argparse.Namespace):
         print(f"\n[RESUME] Found {num_already_done} / {total_samples} samples completed in checkpoint.")
         print(f"[RESUME] Resuming evaluation on remaining {len(remaining_samples)} samples.")
 
-    # Populate aggregator from existing records (re-aligned with updated normalizer & entity peeling)
+    # Populate aggregator from existing records (Strict A* Evaluation Protocol — no preamble stripping)
     aggregator = MetricsAggregator()
-    from sg_vcd.pipeline import strip_conversational_preamble
     for rec in ckpt_mgr.records:
-        clean_pred = strip_conversational_preamble(rec.get("pred_answer", ""), question=rec.get("question"))
-        rec["pred_answer"] = clean_pred
+        raw_pred = rec.get("pred_answer", "")
         s2 = compute_stage2_metrics(
-            pred_answer=clean_pred,
+            pred_answer=raw_pred,
             gt_answers=rec.get("gt_answers", []),
             verified_answers=rec.get("verified_all_answers", []),
             question=rec.get("question"),
@@ -992,6 +1012,8 @@ def run_benchmark(args: argparse.Namespace):
         pipeline = None
         if args.method == "sg_vcd":
             pipeline = SGVCDPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device)
+        elif args.method == "cerv":
+            pipeline = CERVPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device)
 
     # 4. Group remaining samples by image for visual token & disk caching
     grouped_samples = group_samples_by_image(remaining_samples)
@@ -1042,12 +1064,32 @@ def run_benchmark(args: argparse.Namespace):
             pred_bbox = [0, 0, W, H]
             pred_raw = ""
             spatial_conf = 0.0
+            cerv_diagnostics = {}
 
             try:
                 if getattr(args, "mock", False):
                     pred_answer = gts[0] if gts else "đáp án"
                     pred_bbox = gt_bbox if (gt_bbox and gt_bbox[2] > gt_bbox[0]) else [10, 10, 50, 50]
                     spatial_conf = 0.95
+                elif args.method == "cerv":
+                    with torch.inference_mode():
+                        res = pipeline.run(image, question, max_new_tokens=64)
+                        pred_answer = res.pred_text
+                        pred_bbox = res.stage1_bbox
+                        spatial_conf = res.spatial_confidence
+                        cerv_diagnostics = {
+                            "route": res.route,
+                            "fork_step": res.fork_step,
+                            "max_lambda": res.max_lambda,
+                            "fork_lambda": res.fork_lambda,
+                            "fork_pi": res.fork_pi,
+                            "fork_risk": res.fork_risk,
+                            "fork_entropy": res.fork_entropy,
+                            "peak_layer": res.peak_layer,
+                            "mean_alpha": res.mean_alpha,
+                            "max_alpha": res.max_alpha,
+                            "locked_prefix": res.locked_prefix,
+                        }
                 elif args.method == "sg_vcd":
                     with torch.inference_mode():
                         # Check pipeline.run signature for cached_visual_features
@@ -1121,6 +1163,7 @@ def run_benchmark(args: argparse.Namespace):
                 "stage1_metrics": s1_metrics,
                 "stage2_metrics": s2_metrics,
                 "spatial_confidence": float(spatial_conf),
+                "cerv_diagnostics": cerv_diagnostics,
                 "latency_s": round(elapsed, 3),
             }
 
@@ -1139,6 +1182,13 @@ def run_benchmark(args: argparse.Namespace):
             print(f"   Q   : {question}")
             print(f"   GT  : {gts[0] if gts else 'N/A'}")
             print(f"   Pred: {pred_answer}")
+            if cerv_diagnostics:
+                print(
+                    f"   CERV: route={cerv_diagnostics['route']} | t*={cerv_diagnostics['fork_step']} | "
+                    f"Lambda={cerv_diagnostics['max_lambda']:.3f} | pi={cerv_diagnostics['fork_pi']:.3f} | "
+                    f"risk={cerv_diagnostics['fork_risk']:.3f} | l*={cerv_diagnostics['peak_layer']} | "
+                    f"alpha_mean={cerv_diagnostics['mean_alpha']:.3f} (max={cerv_diagnostics['max_alpha']:.3f})"
+                )
 
         # Explicit image-level memory cleanup
         del image, cached_visual_features
@@ -1209,6 +1259,7 @@ def main():
     parser = argparse.ArgumentParser(description="Resumable ViTextVQA SG-VCD Benchmark Runner")
     parser.add_argument("--test", action="store_true", help="Run smoke test on 3 samples.")
     parser.add_argument("--limit", type=int, default=0, help="Limit evaluation to first N questions.")
+    parser.add_argument("--test-images", "--test_images", type=int, default=0, help="Evaluate first M unique images from dataset (e.g. 20 images).")
     parser.add_argument("--test-samples", "--test_samples", type=int, default=0, help="Evaluate first S samples (e.g. 20 for pre-test).")
     parser.add_argument("--num-workers", "--num_workers", type=int, default=1, help="Number of parallel worker shards.")
     parser.add_argument("--worker-id", "--worker_id", type=int, default=0, help="Worker shard ID (0 <= worker_id < num_workers).")
@@ -1217,7 +1268,7 @@ def main():
     parser.add_argument("--resume", action="store_true", default=True, help="Resume from existing checkpoint (default: True).")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite checkpoint and re-run from scratch.")
     parser.add_argument("--batch-size", type=int, default=1, help="Batch size (default: 1 for RTX 3050 4GB).")
-    parser.add_argument("--method", type=str, default="sg_vcd", choices=["sg_vcd", "baseline"], help="Evaluation method.")
+    parser.add_argument("--method", type=str, default="cerv", choices=["cerv", "sg_vcd", "baseline"], help="Evaluation method.")
     parser.add_argument("--model-name", "--model_name", type=str, default="5CD-AI/Vintern-1B-v3_5", help="Hugging Face model ID.")
     parser.add_argument("--dataset", type=str, default="results/swintextspotter_auto_annot/answer_bboxes_400_verified.json", help="Path to verified annotations JSON.")
     parser.add_argument("--data-dir", type=str, default="data/vitextvqa", help="Path to ViTextVQA dataset root.")
