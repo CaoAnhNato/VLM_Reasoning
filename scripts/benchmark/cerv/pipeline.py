@@ -830,7 +830,6 @@ class CERVPipeline:
 
         verified_ids: List[int] = []
         alpha_trace: List[float] = []
-        content_token_count = 0
 
         for _ in range(max(1, remaining_tokens)):
             z_pos = logits_both[0].float()
@@ -886,19 +885,6 @@ class CERVPipeline:
                         unspaced_ids = self.tokenizer.encode(cand_str.lstrip(" "), add_special_tokens=False)
                         if len(unspaced_ids) == 1 and bool(plausible_mask[unspaced_ids[0]].item()):
                             next_id = int(unspaced_ids[0])
-
-            tok_str = self.tokenizer.decode([next_id], skip_special_tokens=False)
-            is_content = any(ch.isalnum() for ch in tok_str)
-
-            # Mutual Information-Bounded Dynamic Stopping Condition (Pillar 3):
-            # Pointwise Mutual Information delta_t = log P(y_t | I+, Q, y_{<t}) - log P(y_t | I-, Q, y_{<t})
-            delta_t = float((log_p_pos[next_id] - log_p_neg[next_id]).item())
-            if content_token_count >= 2 and delta_t < 0:
-                break
-
-            if is_content:
-                content_token_count += 1
-
             verified_ids.append(next_id)
             next_tok = torch.tensor([[next_id], [next_id]], dtype=torch.long, device=self.device)
             next_emb = embed_layer(next_tok)
@@ -944,17 +930,12 @@ class CERVPipeline:
             del prefix_embeds_tmp
 
             kv_stage1 = self._clone_kv_cache(shared_kv)
-            null_suffix_embeds = state.get("null_suffix_embeds")
-            kv_null = self._clone_kv_cache(shared_kv) if null_suffix_embeds is not None else None
-            logits_null = None
-            out_null = None
 
             embed_layer = self.model.language_model.get_input_embeddings()
             eos_im_end = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
             eos_std = self.tokenizer.eos_token_id
 
             generated_ids: List[int] = []
-            fast_content_tokens = 0
             step_s_layers_history: List[Dict[int, torch.Tensor]] = []
             fork_s_layers_list: List[Dict[int, torch.Tensor]] = []
             trajectory_trace: List[Dict[str, float]] = []
@@ -980,17 +961,6 @@ class CERVPipeline:
                 last_hidden = out.last_hidden_state[:, -1:, :]
                 logits = self.model.language_model.lm_head(last_hidden)[:, -1, :]
 
-                if kv_null is not None:
-                    out_null = self.model.language_model.model(
-                        inputs_embeds=null_suffix_embeds,
-                        past_key_values=kv_null,
-                        use_cache=True,
-                        output_attentions=False,
-                        return_dict=True,
-                    )
-                    kv_null = out_null.past_key_values
-                    logits_null = self.model.language_model.lm_head(out_null.last_hidden_state[:, -1:, :])[:, -1, :]
-
                 for step_idx in range(1, max_new_tokens + 1):
                     if step_idx > 1:
                         top2_vals, _ = torch.topk(logits[0], k=2)
@@ -1005,17 +975,6 @@ class CERVPipeline:
 
                     tok_str = self.tokenizer.decode([next_id], skip_special_tokens=False)
                     is_content_token = any(ch.isalnum() for ch in tok_str)
-
-                    # Mutual Information-Bounded Dynamic Stopping Condition on Fast-Path (Pillar 3)
-                    if logits_null is not None and not fork_triggered:
-                        log_p_q = F.log_softmax(logits[0].float(), dim=-1)
-                        log_p_null = F.log_softmax(logits_null[0].float(), dim=-1)
-                        delta_t_fast = float((log_p_q[next_id] - log_p_null[next_id]).item())
-                        if fast_content_tokens >= 2 and delta_t_fast < 0:
-                            break
-
-                    if is_content_token:
-                        fast_content_tokens += 1
 
                     if not fork_triggered and step_idx <= 25:
                         odds_res = self._compute_step_bayesian_odds(
@@ -1066,9 +1025,6 @@ class CERVPipeline:
                             fork_entropy = ent_t
                             fork_s_layers_list = list(step_s_layers_history)
                             self._set_attn_implementation("sdpa")
-                            if kv_null is not None:
-                                del kv_null
-                                kv_null = None
                         elif step_idx == 25:
                             # Past entity region without fork: finish remaining tokens via fast SDPA
                             self._set_attn_implementation("sdpa")
@@ -1090,24 +1046,10 @@ class CERVPipeline:
                         last_hidden = out.last_hidden_state[:, -1:, :]
                         logits = self.model.language_model.lm_head(last_hidden)[:, -1, :]
 
-                        if kv_null is not None and not fork_triggered:
-                            out_null = self.model.language_model.model(
-                                inputs_embeds=next_emb,
-                                past_key_values=kv_null,
-                                use_cache=True,
-                                output_attentions=False,
-                                return_dict=True,
-                            )
-                            kv_null = out_null.past_key_values
-                            logits_null = self.model.language_model.lm_head(out_null.last_hidden_state[:, -1:, :])[:, -1, :]
             finally:
                 self._set_attn_implementation(prev_mode)
 
             del kv_stage1, out, last_hidden
-            if kv_null is not None:
-                del kv_null
-            if out_null is not None:
-                del out_null
 
             fast_draft_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
 

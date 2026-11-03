@@ -638,6 +638,37 @@ class TestAdversarialConciseCausalEntityExtraction(unittest.TestCase):
         self.assertIsInstance(res.pred_text, str)
         self.assertGreater(len(res.pred_text), 0, "Aborted Stage 2 produced empty pred_text!")
 
+    def test_05_multi_token_post_fork_entity_preservation(self):
+        """
+        Verify that multi-token post-fork generation is fully preserved without
+        premature sequence truncation, allowing Stage 3 to output the full entity.
+        """
+        dummy_s = {l: torch.randn(256) for l in range(0, 4)}
+        # Mock Stage 3 returning tokens for "đáp án" [100, 102, 101]
+        self.pipe._stage3_fork_anchored_counterfactual_verification = lambda *args, **kwargs: ([100, 102, 101], [0.35, 0.40, 0.38])
+        self.pipe._compute_step_bayesian_odds = lambda *args, **kwargs: (2.5, 0.7, 0.6, 0.4, dummy_s)
+
+        dummy_img = Image.new("RGB", (400, 300), color=(200, 200, 200))
+        res = self.pipe.run(dummy_img, question="Hỏi gì?", max_new_tokens=10)
+
+        self.assertEqual(res.route, "slow_path")
+        self.assertIn("đáp án", res.pred_text)
+
+    def test_06_benchmark_preamble_causal_entity_extraction(self):
+        """
+        Verify that _extract_causal_entity properly strips conversational question
+        echoes from untruncated model generations across ViTextVQA benchmark failure cases.
+        """
+        cases = [
+            ("nhà thuốc trong ảnh tên gì ?", "Nhà thuốc trong ảnh tên là Bảo Tâm An.", "Bảo Tâm An"),
+            ("nơi này thuộc về phòng nào ?", "Nơi này thuộc về Phòng Thương mại và Công nghiệp Việt Nam", "Thương mại và Công nghiệp Việt Nam"),
+            ("địa chỉ website nơi này là gì ?", "Địa chỉ website nơi này là www.cbam.edu.vn", "www.cbam.edu.vn"),
+            ("nơi này tên là gì ?", "Nơi này tên là CBAM.", "CBAM"),
+        ]
+        for q, full_gen, expected in cases:
+            extracted = CERVPipeline._extract_causal_entity(q, full_gen)
+            self.assertEqual(extracted, expected, f"Failed for question '{q}': got '{extracted}' vs '{expected}'")
+
 
 # ==============================================================================
 # SUITE 4: END-TO-END PIPELINE SIMULATION & METRIC INVARIANTS AUDIT
