@@ -785,6 +785,12 @@ def run_multiprocess_coordinator(args: argparse.Namespace):
             "--output-dir", str(args.output_dir),
             "--batch-size", str(args.batch_size),
         ]
+        if getattr(args, "lambda_param", None) is not None:
+            cmd += ["--lambda-param", str(args.lambda_param)]
+        if getattr(args, "beta_param", None) is not None:
+            cmd += ["--beta-param", str(args.beta_param)]
+        if getattr(args, "mu_param", None) is not None:
+            cmd += ["--mu-param", str(args.mu_param)]
         if getattr(args, "test_images", 0) and args.test_images > 0:
             cmd += ["--test-images", str(args.test_images)]
         elif args.test_samples and args.test_samples > 0:

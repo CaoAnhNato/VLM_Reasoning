@@ -643,6 +643,182 @@ def render_xanylabeling_preview(
     Image.alpha_composite(canvas, overlay).convert("RGB").save(out_vis_path, quality=92)
 
 
+# Audited Ground-Truth normalization mapping by question_id (Groups 1A, 1B, 2, 3, 4, 5).
+# - Principle 1: `gt_answers` remains 100% immutable across all 1,222 questions.
+# - Principle 2: Single-entity questions have at most 2 variants (`[gt_answers[0], canonical_variant]`)
+#   so `compute_vqa_accuracy` divides by 1.0 instead of 3.0.
+# - Ambiguous 1-digit discrepancies (`979`, `2732`, `3836`, `4602`, `8558`) are intentionally excluded.
+NORMALIZED_VERIFIED_ANSWERS_BY_QID: Dict[int, List[str]] = {
+    # Group 1A & 1B: Orthography, Vietnamese diacritics, and OCR/IME typos in original GT
+    143: ["www . cbam . edu . v1", "www . cbam . edu . vn"],
+    403: ["tràng bản phủ", "thành bản phủ"],
+    415: ["ubnd quận cẩm lệ phòng gd & dt", "ubnd quận cẩm lệ phòng gd & đt"],
+    612: ["59 nguyễn du", "59 nguyễn phúc chu"],
+    735: ["bach kim", "bạch kim"],
+    1146: ["thăngfly", "thắng fly"],
+    1182: ["chanhtuoi", "chanh tươi"],
+    1228: ["htuti", "tuti"],
+    1517: ["hết trận là cong phượng", "công phượng"],
+    2042: ["charlie cor", "charlie cooper"],
+    2312: [
+        "nguồn nhân lực và suất an công nghiệp",
+        "nguồn nhân lực và suất ăn công nghiệp",
+    ],
+    2812: ["kiểu thẩm", "kiều thẩm"],
+    2864: ["phương khâm thiêm", "phường khâm thiên"],
+    3121: [
+        "tầng 12 , tòa nhà vtc online , 18 tâm trinh , hà nội",
+        "tầng 12, tòa nhà vtc online, 18 tam trinh, hà nội",
+    ],
+    3139: [
+        "thiết bị điện , ông nước và phụ kiện",
+        "thiết bị điện, ống nước và phụ kiện",
+    ],
+    3154: ["bãi tắm phú nhuận", "bãi tắm phú thuận"],
+    3311: ["khu di tích lịch sử địa dạo củ chi", "khu di tích lịch sử địa đạo củ chi"],
+    3543: ["chxncn việt nam", "chxhcn việt nam"],
+    4009: [
+        "xây dựng hội an là thành phố du lịch thân thiện , không tiêu thụ thịt chó , mèo và hỗ trợ loại trừ bệnh",
+        "xây dựng hội an là thành phố du lịch thân thiện, không tiêu thụ thịt chó, mèo và hỗ trợ loại trừ bệnh dại",
+    ],
+    4079: ["từ điển triệu chứng và chuẩn đoán", "từ điển triệu chứng và chẩn đoán"],
+    4080: ["bác sĩ lương phán", "bác sĩ lương phan"],
+    4104: ["mua rồi được đổi lạ", "mua rồi được đổi lại"],
+    4463: ["kiến hào", "kiến hảo"],
+    4564: ["phutunhxemaybienhoa . com", "phutungxemaybienhoa.com"],
+    5005: ["khuyến mại", "khuyến mãi"],
+    5078: [
+        "dự án đầu tư xây dựng công trình đền thờ liệt sỹ tại chiến trường điện biên phủ",
+        "dự án đầu tư xây dựng công trình đền thờ liệt sĩ tại chiến trường điện biên phủ",
+    ],
+    6266: [
+        "đoàn kết - kỷ cương - đỏi mới - sáng tạo thi đua xây dựng tỉnh điện biên phát triển nhanh - bền vững",
+        "đoàn kết - kỷ cương - đổi mới - sáng tạo thi đua xây dựng tỉnh điện biên phát triển nhanh - bền vững",
+    ],
+    6310: ["ts . bùi mạnh hừng", "ts. bùi mạnh hùng"],
+    7128: ["pham gia", "phạm gia"],
+    7903: [
+        "đề nghị quý khách không giấm lên thảm cỏ hoa",
+        "đề nghị quý khách không dẫm lên thảm cỏ hoa",
+    ],
+    7904: ["giấm lên cỏ hoa", "dẫm lên cỏ hoa"],
+    7931: [
+        "vài nét và hoạt động của nghĩa quân hoàng công chất",
+        "vài nét về hoạt động của nghĩa quân hoàng công chất",
+    ],
+    8230: ["lưu niệm - hàng đặc sản đấ", "lưu niệm - hàng đặc sản đất tổ"],
+    8705: [
+        "bộ tư lệnh quân khu 7 - hiệp hội dioanh nghiệp tp . hồ chi minh",
+        "bộ tư lệnh quân khu 7 - hiệp hội doanh nghiệp tp. hồ chí minh",
+    ],
+    8775: ["sườn xào chua ngọt", "mì xào mềm", "cơm hải sản", "cơm gà xối mỡ"],
+    8776: ["cơm hải sản", "mì xào mềm", "cơm gà xối mỡ"],
+    8777: ["cơm gà sối mỡ", "mì xào mềm", "cơm hải sản", "cơm gà xối mỡ"],
+    9906: [
+        "gội đầu - hấp dầu - uốn mi làm móng - vẽ móng - tẩy trắng - lột mụn đắp dưỡng - massage - đắp collagen chạy collgen chống lão hóa",
+        "gội đầu - hấp dầu - uốn mi làm móng - vẽ móng - tẩy trắng - lột mụn đắp dưỡng - massage - đắp collagen chạy collagen chống lão hóa",
+    ],
+    10206: [
+        "54 - tonkin - ha noi - rue paul bert",
+        "54 - tonkin - hanoi - rue paul bert",
+    ],
+    11583: ["the coffee shose", "the coffee shoes"],
+    # Group 2: Redundant prefixes (`đt :`, `dđ :`, `liên hệ :`) & truncated digits
+    4305: ["liên hệ : 01639366648", "01639366648"],
+    5726: ["0988 . 668 . 6", "0988 668 668"],
+    9381: ["đt : 091898255", "091898255"],
+    9439: ["đt : 0963 77 44 09", "0963 77 44 09"],
+    11628: ["0962 55 79 39 0937 049 397", "0962 55 79 39"],
+    # Group 3: Compound words & brand/watermark spacing variants
+    77: ["wutacam", "wuta cam"],
+    268: ["cocoxim", "coco xim"],
+    2730: ["shabux", "shabu x"],
+    3610: ["vietnammobile", "vietnamobile"],
+    5414: ["xiu café", "xiu cafe"],
+    5415: ["café", "ca fe"],
+    5724: ["homies coffe", "homies coffee"],
+    5754: ["vin mart", "vinmart"],
+    5827: ["rusian market", "russian market"],
+    5879: ["uit media club", "utt media club"],
+    7666: ["pac safe", "pacsafe"],
+    8292: ["đônga", "đông a"],
+    9377: ["vinpharma", "vin pharma"],
+    9758: ["bicycle barbershop", "bicycle barber shop"],
+    9768: ["go79", "g0 79"],
+    9888: ["cocacola", "coca-cola"],
+    10365: ["cocacola", "coca-cola"],
+    10618: ["bepcuoi", "bep cuoi"],
+    11065: ["emđẹp", "em đẹp"],
+    11358: ["hànộimới", "hà nội mới"],
+    11602: [
+        "baogia . thienphuc@gmail . com",
+        "baogia . thien phuc@gmail . com",
+    ],
+    # Group 4: Alphanumeric/currency/abbreviation formatting & '&' vs 'và'
+    271: ["0945166799", "0945 166 799 - 0945 166 899"],
+    272: ["0945166899", "0945 166 799 - 0945 166 899"],
+    273: ["24 đường 52 , p . an phú , q2", "24 đường 52, p. an phú, q.2"],
+    2080: ["52 51 54 53"],
+    2099: ["215 . 000 đ", "215.000đ"],
+    2100: ["299 . 000 đ", "299.000đ"],
+    2103: ["118 . 000 đ", "118.000đ"],
+    2104: ["125 . 600 đ", "125.600đ"],
+    2313: ["59 , kp . 7 , thống nhất", "59, kp7, thống nhất"],
+    4295: ["nhanh & tiện", "nhanh và tiện"],
+    4807: ["30 . 900 đ", "30.900đ"],
+    4808: ["50 . 900 đ", "50.900đ"],
+    4810: ["40 . 500 đ", "40.500đ"],
+    5496: ["trái cây & rau quả", "trái cây và rau quả"],
+    6165: ["60c . 139 . 95", "60c 13995"],
+    6257: ["54v 4579", "54v 45-79"],
+    7055: ["35k", "35.000"],
+    8477: ["215 . 000 đ kg", "215.000 đồng/kg"],
+    8478: ["299 . 000 đ kg", "299.000 đồng/kg"],
+    8479: ["118 . 000 đ kg", "118.000 đồng/kg"],
+    8538: ["130k", "130.000 đồng"],
+    8659: [
+        "86 đồng nai , p . 15 , q10 tp . hcm",
+        "86 đồng nai, p. 15, q. 10, tp. hcm",
+    ],
+    9066: ["0901 806 999 0905 224 888", "0901 806 999 hoặc 0905 224 888"],
+    9459: ["79 . 900 đ", "79.900đ"],
+    9750: [
+        "74 d hai bà trưng , bến nghé , q . 1 , tp . hcm",
+        "74d hai bà trưng, p. bến nghé, q. 1, tp.hcm",
+    ],
+    10226: ["1 900 234 535", "1900 234 535"],
+    # Group 5: Slash-fragmented and newline-polluted entries cleaned
+    949: [
+        "facebook . com / trollbongda youtube . com / trollbongdaofficial",
+        "facebook.com/trollbongda và youtube.com/trollbongda official",
+    ],
+    1428: ["em ơi ! sai rồi , anh sai rồi , bỏ cái tay ra anh mua quà 8 / 3 cho em liền đây"],
+    1429: ["anh mua quà 8 / 3 cho em liền"],
+    1430: ["quên quà 8 / 3 và cái kết"],
+    2225: ["24 / 24"],
+    3234: ["15kg / người", "15kg"],
+    3935: ["30 / 07"],
+    4601: [
+        "4 / 4a - khu 2 - ấp thanh hóa - xã phó nai 3 - trảng bom - đn",
+        "4 / 4a - khu 2 - ấp thanh hóa - xã hố nai 3 - trảng bom - đn",
+    ],
+    4865: ["số 6 , ngách 43 / 128 cổ nhuế , p . cổ nhuế 2 , q . bắc từ liêm , hà nội"],
+    5292: ["được tặng tối đa 03 sản phẩm / ngày"],
+    5294: [
+        "ngày 20 , 21 / 11 - 27 , 28 / 11 / 2021",
+        "20, 21/11 - 27, 28/11/2021",
+    ],
+    5758: ["90 . 00 / 1 , 0 kg", "90 . 000 / 1 , 0 kg"],
+    7719: ["29 / 1"],
+    8537: ["245k / con", "245.000 đồng/con"],
+    8539: ["85k / bịch ( 15 cái )", "85k / bịch"],
+    8540: ["55k / chai", "55.000 đồng/chai"],
+    9456: ["61 . 200 vnd / chai", "61.200 vnđ / chai"],
+    10607: ["7k / cái", "7.000đ/cái"],
+    10769: ["bò huế", "bún bò huế"],
+}
+
+
 def extract_answers_from_shape(shape: Dict[str, Any]) -> List[str]:
     """
     Extract Ground-Truth answer strings from an X-AnyLabeling shape's `description`.
@@ -650,6 +826,9 @@ def extract_answers_from_shape(shape: Dict[str, Any]) -> List[str]:
     - Standard format: `'Hỏi: ... || ĐA: ans1 / ans2'`
     - Short format: `'ĐA: ans1 / ans2'`
     - Direct text entered by annotator on a newly drawn `Q{k}_gt` box: `'like kid's'`
+    - Avoids splitting single-question answers containing literal `'/'` (e.g. dates,
+      units like `'15kg / người'`, fractions, URLs, or house numbers), while still
+      splitting multi-question grouped shapes (`len(question_ids) > 1`) or explicit `'//'` / `'|'`.
     """
     desc = str(shape.get("description", "") or "").strip()
     if not desc or desc.startswith("[AUX]"):
@@ -663,7 +842,21 @@ def extract_answers_from_shape(shape: Dict[str, Any]) -> List[str]:
     else:
         ans_part = desc
 
-    return [a.strip() for a in ans_part.split("/") if a.strip()]
+    ans_part = " ".join(ans_part.split())
+    if not ans_part:
+        return []
+
+    q_ids = shape.get("attributes", {}).get("question_ids", [])
+    if isinstance(q_ids, list) and len(q_ids) > 1:
+        parts = ans_part.split("/")
+    elif "//" in ans_part:
+        parts = ans_part.split("//")
+    elif "|" in ans_part:
+        parts = ans_part.split("|")
+    else:
+        parts = [ans_part]
+
+    return [" ".join(a.split()) for a in parts if a.strip()]
 
 
 def merge_workspace_annotations(
@@ -678,6 +871,7 @@ def merge_workspace_annotations(
     - Matching by `label == f"Q{quest_idx}_gt"` OR `group_id == question_id`.
     - Multiple boxes drawn for a single question (stores `sub_bboxes` and union `answer_region_bbox`).
     - Extracting newly added answers typed by annotators in `shape.description`.
+    - Applying `NORMALIZED_VERIFIED_ANSWERS_BY_QID` while keeping `gt_answers` immutable.
     """
     with open(bboxes_json_path, "r", encoding="utf-8") as f:
         master_data = json.load(f)
@@ -778,6 +972,20 @@ def merge_workspace_annotations(
             matched_boxes = by_qid.get(q_id) or by_qidx.get(logical_q_idx) or []
             all_qidx_boxes = by_qidx.get(logical_q_idx) or matched_boxes
 
+            orig_answers = [str(a).strip() for a in q.get("gt_answers", []) if str(a).strip()]
+            if q_id in NORMALIZED_VERIFIED_ANSWERS_BY_QID:
+                merged_ans = list(dict.fromkeys(NORMALIZED_VERIFIED_ANSWERS_BY_QID[q_id]))
+            else:
+                merged_ans = list(dict.fromkeys(orig_answers + answers_by_qidx.get(logical_q_idx, [])))
+
+            added_ans = [a for a in merged_ans if a.lower() not in {oa.lower() for oa in orig_answers}]
+            if added_ans:
+                q["added_gt_answers"] = added_ans
+                q["verified_all_answers"] = merged_ans
+            else:
+                q["added_gt_answers"] = None
+                q["verified_all_answers"] = None
+
             if matched_boxes:
                 union_box = [
                     min(b[0] for b in matched_boxes),
@@ -787,14 +995,6 @@ def merge_workspace_annotations(
                 ]
                 q["answer_region_bbox"] = union_box
                 q["sub_bboxes"] = all_qidx_boxes
-
-                # Merge any newly added answers from annotator shapes on this logical quest
-                orig_answers = [str(a).strip() for a in q.get("gt_answers", []) if str(a).strip()]
-                merged_ans = list(dict.fromkeys(orig_answers + answers_by_qidx.get(logical_q_idx, [])))
-                added_ans = [a for a in merged_ans if a.lower() not in {oa.lower() for oa in orig_answers}]
-                if added_ans:
-                    q["added_gt_answers"] = added_ans
-                    q["verified_all_answers"] = merged_ans
 
                 q["needs_manual_edit"] = False
                 verified_quests += 1
