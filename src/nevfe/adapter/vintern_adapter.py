@@ -18,7 +18,10 @@ import torch
 import torchvision.transforms as T
 from torchvision.transforms.functional import InterpolationMode
 
-from src.nevfe.core.engine import NEVFEEngine
+from src.nevfe.core.engine import (
+    NEVFEEngine,
+    compute_thermodynamic_spatial_window,
+)
 
 
 PROMPT_INSTRUCTION = "Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: "
@@ -154,7 +157,7 @@ class VinternNEVFEAdapter:
         device: str = "cuda",
         lambda_param: float = 1.0,
         beta_param: float = 1.0,
-        mu_param: float = 3.0,
+        mu_param: float = 4.0,
     ):
         self.model = model
         self.tokenizer = tokenizer
@@ -174,6 +177,8 @@ class VinternNEVFEAdapter:
         # Cache for visual features per image
         self._cached_img_key: Optional[Tuple[int, int, bytes]] = None
         self._cached_vit_embeds: Optional[torch.Tensor] = None
+        self._last_crop_box: Optional[Tuple[int, int, int, int]] = None
+        self._last_spatial_window: Optional[Tuple[float, float, float, float]] = None
 
     @staticmethod
     def _build_default_transform(input_size: int = 448):
@@ -190,43 +195,81 @@ class VinternNEVFEAdapter:
         thumb = image.resize((16, 16), Image.Resampling.NEAREST).convert("RGB")
         return (w, h, thumb.tobytes())
 
-    def extract_and_modulate_visual_features(self, image: Image.Image) -> torch.Tensor:
+    def extract_vit_embeds(
+        self,
+        image: Image.Image,
+        question: Optional[str] = None,
+    ) -> torch.Tensor:
         """
-        Extract visual features from InternViT-300M and apply continuous
-        Fisher-Saliency patch energy modulation (Directive 3).
+        Extract dual-scale visual features from InternViT-300M (Directive 2):
+        1. Global scene tile V_G (full canvas downsampled to 448x448) -> [1, 256, 896].
+        2. Thermodynamic Chebyshev spatial bounding window computed from V_G.
+        3. Local focal crop V_L (optical magnification resized to 448x448) -> [1, 256, 896].
+        4. Stack into dual-tile representation V in R^{2 x 256 x 896}.
+        5. Modulate flattened patches [512, 896] via continuous Fisher-Saliency energy.
         """
         img_key = self._make_image_key(image)
         if self._cached_img_key == img_key and self._cached_vit_embeds is not None:
             return self._cached_vit_embeds
 
-        tiles = dynamic_preprocess_vintern(
-            image,
-            min_num=1,
-            max_num=self.max_dynamic_patch,
-            image_size=448,
-            use_thumbnail=True,
-        )
+        W, H = image.size
 
-        pixel_values = torch.stack([self.transform(t) for t in tiles]).to(
+        # a) Extract global features V_G from full image
+        pixel_values_g = self.transform(image).unsqueeze(0).to(
+            device=self.device, dtype=torch.bfloat16
+        )
+        with torch.no_grad():
+            v_g = self.model.extract_feature(pixel_values_g)  # [1, 256, 896]
+        del pixel_values_g
+
+        # b) Compute Chebyshev crop window from V_G using compute_thermodynamic_spatial_window
+        x_min, y_min, x_max, y_max = compute_thermodynamic_spatial_window(
+            v_g[0],
+            grid_size=16,
+            k_sigma=self.engine.k_sigma,
+            min_span=self.engine.min_span,
+        )
+        self._last_spatial_window = (x_min, y_min, x_max, y_max)
+
+        # c) Crop PIL image to [x_min, y_min, x_max, y_max] and resize to 448x448
+        x0 = max(0, min(W - 1, int(round(x_min * W))))
+        y0 = max(0, min(H - 1, int(round(y_min * H))))
+        x1 = max(x0 + 1, min(W, int(round(x_max * W))))
+        y1 = max(y0 + 1, min(H, int(round(y_max * H))))
+        self._last_crop_box = (x0, y0, x1, y1)
+
+        focal_crop = image.crop((x0, y0, x1, y1))
+        pixel_values_l = self.transform(focal_crop).unsqueeze(0).to(
             device=self.device, dtype=torch.bfloat16
         )
 
+        # d) Extract focal features V_L
         with torch.no_grad():
-            raw_vit_embeds = self.model.extract_feature(pixel_values) # [N_tiles, 256, 896]
+            v_l = self.model.extract_feature(pixel_values_l)  # [1, 256, 896]
+        del pixel_values_l
 
-        del pixel_values
+        # e) Stack into V in R^{2 x 256 x 896}
+        v_raw = torch.cat([v_g, v_l], dim=0)  # [2, 256, 896]
 
-        # Continuous Fisher-Saliency Modulation on flattened visual patches
-        n_tiles, n_tokens, d_dim = raw_vit_embeds.shape
-        flat_vit = raw_vit_embeds.reshape(n_tiles * n_tokens, d_dim)
-        modulated_flat = self.engine.modulate_patches(flat_vit)
+        # Modulate flattened patches [512, 896] using self.engine.modulate_patches(flat_v)
+        n_tiles, n_tokens, d_dim = v_raw.shape
+        flat_v = v_raw.reshape(n_tiles * n_tokens, d_dim)
+        modulated_flat = self.engine.modulate_patches(flat_v)
         modulated_vit = modulated_flat.reshape(n_tiles, n_tokens, d_dim).to(
-            dtype=raw_vit_embeds.dtype, device=self.device
+            dtype=v_raw.dtype, device=self.device
         )
 
         self._cached_img_key = img_key
         self._cached_vit_embeds = modulated_vit
         return modulated_vit
+
+    def extract_and_modulate_visual_features(
+        self,
+        image: Image.Image,
+        question: Optional[str] = None,
+    ) -> torch.Tensor:
+        """Alias for extract_vit_embeds preserving backwards compatibility."""
+        return self.extract_vit_embeds(image, question=question)
 
     def build_multimodal_embeds(
         self,
@@ -313,7 +356,7 @@ class VinternNEVFEAdapter:
         Dual-Stream Autoregressive Generation with NE-VFE Trajectory Steering and MFVR Reference.
         """
         with torch.no_grad():
-            vit_embeds = self.extract_and_modulate_visual_features(image)
+            vit_embeds = self.extract_vit_embeds(image, question=question)
 
             multimodal_embeds = self.build_multimodal_embeds(vit_embeds, question)
             # Mean-Field Visual Reference (MFVR) stream embeddings

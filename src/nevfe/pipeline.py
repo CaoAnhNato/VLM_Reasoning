@@ -39,7 +39,7 @@ class NEVFEPipeline:
         device: str = "cuda",
         lambda_param: float = 1.0,
         beta_param: float = 1.0,
-        mu_param: float = 3.0,
+        mu_param: float = 4.0,
     ):
         self.model = model
         self.tokenizer = tokenizer
@@ -61,7 +61,7 @@ class NEVFEPipeline:
 
     def extract_visual_features(self, image: Image.Image) -> torch.Tensor:
         """Extract and cache visual features for image-level reuse."""
-        return self.adapter.extract_and_modulate_visual_features(image)
+        return self.adapter.extract_vit_embeds(image)
 
     def run(
         self,
@@ -74,7 +74,7 @@ class NEVFEPipeline:
         Execute NE-VFE inference on (image, question).
 
         Returns:
-            NEVFEResult with predicted answer text and full-image bounding box.
+            NEVFEResult with predicted answer text and Chebyshev crop bounding box.
         """
         t0 = time.time()
         w, h = image.size
@@ -86,9 +86,12 @@ class NEVFEPipeline:
         )
         elapsed = time.time() - t0
 
+        crop_box = getattr(self.adapter, "_last_crop_box", None)
+        stage1_bbox = list(crop_box) if crop_box is not None else [0, 0, w, h]
+
         return NEVFEResult(
             pred_text=pred_text,
-            stage1_bbox=[0, 0, w, h],
+            stage1_bbox=stage1_bbox,
             spatial_confidence=1.0,
             timing={"latency_s": elapsed},
             diagnostics={

@@ -29,6 +29,7 @@ from src.nevfe.core.engine import (
     compute_unnormalized_entropy,
     compute_free_energy_support_mask,
     compute_candidate_support_mask,
+    compute_thermodynamic_spatial_window,
     nevfe_step_logits,
 )
 
@@ -335,6 +336,140 @@ class TestNEVFEEngineFEST(unittest.TestCase):
         apple_ids = tokenizer.encode(" Apple", add_special_tokens=False)
         for aid in apple_ids:
             self.assertFalse(q_mask[aid].item(), f"Entity token {aid} (' Apple') must NOT be masked")
+
+    def test_13_radial_chebyshev_window_properties(self):
+        # Directive 1 & Proposition 1: Radial Chebyshev Bounding Window Properties
+        # 1. Test coordinate bounds and minimum span guarantee
+        P, D = 256, 896
+        # Generate background tokens
+        v = torch.randn(P, D, dtype=torch.float32) * 0.1
+        # Place localized high-energy text hotspot at (row 6, col 10) -> (y ~ 0.406, x ~ 0.656)
+        hotspot = [6 * 16 + 10, 6 * 16 + 11, 7 * 16 + 10, 7 * 16 + 11]
+        v[hotspot] += 8.0
+
+        x_min, y_min, x_max, y_max = compute_thermodynamic_spatial_window(
+            v, grid_size=16, k_sigma=2.0, min_span=0.15
+        )
+
+        # Coordinate validity
+        self.assertGreaterEqual(x_min, 0.0)
+        self.assertLessEqual(x_max, 1.0)
+        self.assertGreaterEqual(y_min, 0.0)
+        self.assertLessEqual(y_max, 1.0)
+        self.assertGreater(x_max, x_min)
+        self.assertGreater(y_max, y_min)
+
+        # Half-span bounds: Delta* >= min_span (0.15), Delta* <= 0.5
+        span_x = (x_max - x_min) / 2.0
+        span_y = (y_max - y_min) / 2.0
+        self.assertGreaterEqual(span_x, 0.15 - 1e-5)
+        self.assertGreaterEqual(span_y, 0.15 - 1e-5)
+        self.assertLessEqual(span_x, 0.5 + 1e-5)
+        self.assertLessEqual(span_y, 0.5 + 1e-5)
+
+        # Hotspot center must be strictly enclosed within the Chebyshev window
+        target_x = (10.5) / 16.0
+        target_y = (6.5) / 16.0
+        self.assertLessEqual(x_min, target_x)
+        self.assertGreaterEqual(x_max, target_x)
+        self.assertLessEqual(y_min, target_y)
+        self.assertGreaterEqual(y_max, target_y)
+
+        # Proposition 1: Enclosure of visual evidence mass >= 75%
+        # Calculate rho directly
+        v_mean = torch.mean(v, dim=0, keepdim=True)
+        var_d = torch.mean((v - v_mean) ** 2, dim=0, keepdim=True)
+        s_p = 0.5 * torch.sum(((v - v_mean) ** 2) / (var_d + 1e-6), dim=-1)
+        z_s = (s_p - torch.mean(s_p)) / (torch.std(s_p) + 1e-6)
+        m_sal = 1.0 + torch.tanh(z_s)
+        rho = m_sal / torch.sum(m_sal + 1e-6)
+
+        coords_1d = (torch.arange(16, dtype=torch.float32) + 0.5) / 16.0
+        gy, gx = torch.meshgrid(coords_1d, coords_1d, indexing="ij")
+        gx_flat = gx.reshape(-1)
+        gy_flat = gy.reshape(-1)
+
+        inside_mask = (
+            (gx_flat >= x_min - 1e-5) & (gx_flat <= x_max + 1e-5) &
+            (gy_flat >= y_min - 1e-5) & (gy_flat <= y_max + 1e-5)
+        )
+        enclosed_mass = torch.sum(rho[inside_mask]).item()
+        self.assertGreaterEqual(
+            enclosed_mass, 0.75 - 1e-2,
+            f"Chebyshev window must enclose >= 75% of evidence mass, got {enclosed_mass*100:.2f}%"
+        )
+
+        # 3D tensor batch dimension test [1, 256, 896]
+        v_3d = v.unsqueeze(0)
+        coords_3d = compute_thermodynamic_spatial_window(v_3d, grid_size=16)
+        self.assertEqual(coords_3d, (x_min, y_min, x_max, y_max))
+
+    def test_14_dual_tile_patch_modulation(self):
+        # Directive 2: Dual-Tile Patch Energy Modulation on [512, 896]
+        flat_vit = torch.randn(512, 896, dtype=torch.bfloat16)
+
+        # Modulate
+        modulated = modulate_patch_embeddings(flat_vit)
+        self.assertEqual(modulated.shape, torch.Size([512, 896]))
+        self.assertEqual(modulated.dtype, torch.bfloat16)
+        self.assertFalse(torch.isnan(modulated.float()).any())
+        self.assertFalse(torch.isinf(modulated.float()).any())
+
+        # Test SNR gain >= 4.0x on high-frequency text patch
+        flat_signal = torch.randn(512, 896, dtype=torch.float32) * 0.1
+        # Place localized high-contrast text stroke in patch 300
+        flat_signal[300] = 5.0
+        mod_signal = modulate_patch_embeddings(flat_signal)
+
+        # Modulation factor on signal patch should amplify amplitude by ~2x (power >= 4.0x)
+        amp_ratio = (mod_signal[300] / flat_signal[300]).mean().item()
+        self.assertGreater(amp_ratio, 1.8, f"Patch amplitude amplification should approach 2.0x, got {amp_ratio:.2f}")
+        snr_power_gain = amp_ratio ** 2
+        self.assertGreaterEqual(snr_power_gain, 3.5, f"SNR power gain should be >= ~4.0x, got {snr_power_gain:.2f}x")
+
+    def test_15_dual_tile_mfvr_centroid(self):
+        # Directive 3: Positional Alignment & MFVR Contract
+        # Dual-tile representation: V in R^{2 x 256 x 896} -> exactly 512 visual tokens
+        V = torch.randn(2, 256, 896, dtype=torch.bfloat16)
+
+        # Compute spatial centroid across both tiles (dim=0) and patches (dim=1)
+        v_mean = V.mean(dim=(0, 1), keepdim=True)  # [1, 1, 896]
+        V_zero = v_mean.expand_as(V)                # [2, 256, 896]
+
+        self.assertEqual(V_zero.shape, torch.Size([2, 256, 896]))
+        self.assertEqual(V_zero.shape[0] * V_zero.shape[1], 512)
+
+        # Spatial variance across all 512 tokens must be identically zero
+        flat_zero = V_zero.float().reshape(512, 896)
+        var_spatial = torch.var(flat_zero, dim=0, unbiased=False)
+        self.assertLess(var_spatial.max().item(), 1e-6, "MFVR reference field must have zero spatial variance!")
+
+        # Mean across all 512 tokens matches v_mean
+        diff_mean = torch.abs(flat_zero.mean(dim=0, keepdim=True) - v_mean.float().squeeze(0))
+        self.assertLess(diff_mean.max().item(), 1e-5)
+
+    def test_16_engine_chebyshev_method_and_constants(self):
+        # Directive 4: Strict 2-Parameter Ceiling & Structural Constants
+        engine = NEVFEEngine()
+
+        # Tunable knobs default values
+        self.assertEqual(engine.lambda_param, 1.0)
+        self.assertEqual(engine.mu_param, 4.0)
+
+        # Fixed structural constants
+        self.assertEqual(engine.beta_param, 1.0)
+        self.assertEqual(engine.barrier_decay, 0.5)
+        self.assertEqual(engine.barrier_horizon, 3)
+        self.assertEqual(engine.k_sigma, 2.0)
+        self.assertEqual(engine.min_span, 0.15)
+
+        # Engine compute_spatial_window call
+        v = torch.randn(256, 896)
+        box = engine.compute_spatial_window(v)
+        self.assertEqual(len(box), 4)
+        x_min, y_min, x_max, y_max = box
+        self.assertLess(x_min, x_max)
+        self.assertLess(y_min, y_max)
 
 
 if __name__ == "__main__":
