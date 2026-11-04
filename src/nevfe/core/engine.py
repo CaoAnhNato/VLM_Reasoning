@@ -106,10 +106,22 @@ def compute_thermodynamic_spatial_window(
     mu_s = torch.mean(s_p)
     sigma_s = torch.std(s_p) + eps
     z_s = (s_p - mu_s) / sigma_s
-    m_sal = 1.0 + torch.tanh(z_s)  # [P] in [0, 2]
+    m_sal = torch.relu(z_s)  # Rectified Contrastive Saliency: suppresses background to 0
+
+    total_m = torch.sum(m_sal)
+    if total_m < eps:
+        # Degenerate case: uniform or constant tokens with zero variance
+        # Default center to (0.5, 0.5) with physical minimum half_span
+        half_span = float(min_span)
+        return (
+            float(0.5 - half_span),
+            float(0.5 - half_span),
+            float(0.5 + half_span),
+            float(0.5 + half_span),
+        )
 
     # Normalized spatial probability measure rho on [0, 1]^2
-    rho = m_sal / torch.sum(m_sal + eps)  # [P]
+    rho = m_sal / (total_m + eps)  # [P]
 
     # Coordinate grid
     device = visual_tokens.device

@@ -381,7 +381,7 @@ class TestNEVFEEngineFEST(unittest.TestCase):
         var_d = torch.mean((v - v_mean) ** 2, dim=0, keepdim=True)
         s_p = 0.5 * torch.sum(((v - v_mean) ** 2) / (var_d + 1e-6), dim=-1)
         z_s = (s_p - torch.mean(s_p)) / (torch.std(s_p) + 1e-6)
-        m_sal = 1.0 + torch.tanh(z_s)
+        m_sal = torch.relu(z_s)
         rho = m_sal / torch.sum(m_sal + 1e-6)
 
         coords_1d = (torch.arange(16, dtype=torch.float32) + 0.5) / 16.0
