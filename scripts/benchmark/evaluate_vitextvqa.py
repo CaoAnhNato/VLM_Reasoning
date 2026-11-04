@@ -109,6 +109,10 @@ from scripts.benchmark.metrics import (
 # Import SG-VCD & CERV pipelines
 from sg_vcd import SGVCDPipeline
 from cerv import CERVPipeline
+try:
+    from src.nevfe.pipeline import NEVFEPipeline
+except Exception:
+    NEVFEPipeline = None
 
 
 # ==============================================================================
@@ -1014,6 +1018,11 @@ def run_benchmark(args: argparse.Namespace):
             pipeline = SGVCDPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device)
         elif args.method == "cerv":
             pipeline = CERVPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device)
+        elif args.method == "nevfe":
+            lambda_p = getattr(args, "lambda_param", 1.0)
+            beta_p = getattr(args, "beta_param", 1.0)
+            mu_p = getattr(args, "mu_param", 3.0)
+            pipeline = NEVFEPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device, lambda_param=lambda_p, beta_param=beta_p, mu_param=mu_p)
 
     # 4. Group remaining samples by image for visual token & disk caching
     grouped_samples = group_samples_by_image(remaining_samples)
@@ -1131,6 +1140,12 @@ def run_benchmark(args: argparse.Namespace):
                         res_raw = model.chat(tokenizer, pv, prompt_text, gen_cfg, history=None, return_history=False)
                         pred_answer = res_raw[0] if isinstance(res_raw, (tuple, list)) else str(res_raw).strip()
                         pred_bbox = [0, 0, W, H]
+                        spatial_conf = 1.0
+                elif args.method == "nevfe":
+                    with torch.inference_mode():
+                        res = pipeline.run(image, question, max_new_tokens=64)
+                        pred_answer = res.pred_text
+                        pred_bbox = res.stage1_bbox
                         spatial_conf = 1.0
             except Exception as e:
                 print(f"[ERROR] Inference exception for question {qid} on {img_name}: {e}")
@@ -1268,7 +1283,10 @@ def main():
     parser.add_argument("--resume", action="store_true", default=True, help="Resume from existing checkpoint (default: True).")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite checkpoint and re-run from scratch.")
     parser.add_argument("--batch-size", type=int, default=1, help="Batch size (default: 1 for RTX 3050 4GB).")
-    parser.add_argument("--method", "--pipeline-type", "--pipeline_type", dest="method", type=str, default="cerv", choices=["cerv", "sg_vcd", "baseline"], help="Evaluation method.")
+    parser.add_argument("--method", "--pipeline-type", "--pipeline_type", dest="method", type=str, default="cerv", choices=["cerv", "sg_vcd", "baseline", "nevfe"], help="Evaluation method.")
+    parser.add_argument("--lambda-param", "--lambda", dest="lambda_param", type=float, default=1.0, help="NE-VFE visual coupling constant.")
+    parser.add_argument("--beta-param", "--beta", dest="beta_param", type=float, default=1.0, help="NE-VFE thermodynamic precision.")
+    parser.add_argument("--mu-param", "--mu", dest="mu_param", type=float, default=3.0, help="QO-VFE query barrier height parameter.")
     parser.add_argument("--model-name", "--model_name", "--model-path", "--model_path", dest="model_name", type=str, default="5CD-AI/Vintern-1B-v3_5", help="Hugging Face model ID.")
     parser.add_argument("--dataset", type=str, default="results/swintextspotter_auto_annot/answer_bboxes_400_verified.json", help="Path to verified annotations JSON.")
     parser.add_argument("--data-dir", type=str, default="data/vitextvqa", help="Path to ViTextVQA dataset root.")
