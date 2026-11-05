@@ -20,6 +20,7 @@ from src.nevfe.core.engine import (
     compute_otsu_threshold,
     compute_visual_token_saliency_and_mask,
     evaluate_semantic_stopping,
+    pool_question_guided_focal_tokens,
 )
 
 
@@ -389,21 +390,24 @@ class VinternNEVFEAdapter:
         self,
         image: Image.Image,
         crop_box: Tuple[int, int, int, int],
+        question_embeddings: Optional[torch.Tensor] = None,
         use_amct: bool = True,
     ) -> torch.Tensor:
         """
-        Stage 2: Anisotropic Multi-Crop Tiling (AMCT - Theorem 16, Directive W5).
+        Stage 2: Anisotropic Multi-Crop Tiling with LP-Q-CrossAttn Pooling (Theorems 16 & 19, Directives W1 & W2).
         Extracts gx * gy square sub-tiles from crop_box with (gx, gy) in {(1, 1), (2, 1), (1, 2)},
-        resizes each sub-tile to 448x448, and extracts K * 256 focal visual tokens V_L with Fisher-Saliency modulation.
+        extracts K * 256 focal visual tokens with Fisher-Saliency modulation, and condenses K * 256 -> 256 tokens
+        via Locality-Preserving Question-Guided Cross-Attention Pooling when K > 1.
 
         Returns:
-            v_l_mod: Modulated focal visual tokens [1, K * 256, 896], where K in {1, 2}.
+            v_l_mod: Invariant focal visual tokens strictly [1, 256, 896].
         """
         img_key = self._make_image_key(image)
         if (
             self._cached_img_key == img_key
             and self._cached_v_l is not None
             and self._last_crop_box == crop_box
+            and question_embeddings is None
         ):
             return self._cached_v_l
 
@@ -422,6 +426,7 @@ class VinternNEVFEAdapter:
             grid = select_admissible_aspect_ratio_grid(w_box, h_box)
             tiles = extract_anisotropic_focal_tiles(image, crop_box, grid, target_tile_size=self.image_size)
         else:
+            grid = (1, 1)
             crop = image.crop(crop_box)
             cw, ch = crop.size
             if cw != ch:
@@ -445,7 +450,16 @@ class VinternNEVFEAdapter:
             )
             tile_mods.append(v_k_mod)
 
-        v_l_mod = torch.cat(tile_mods, dim=1) if len(tile_mods) > 1 else tile_mods[0]
+        # Condense K * 256 -> strictly 256 tokens via LP-Q-CrossAttn Pooling (Directives W1 & W2)
+        if use_amct and len(tile_mods) > 1:
+            v_l_cat = torch.cat(tile_mods, dim=1)  # [1, 512, 896]
+            v_l_mod = pool_question_guided_focal_tokens(
+                visual_tokens=v_l_cat,
+                grid=grid,
+                question_embeddings=question_embeddings,
+            )  # strictly [1, 256, 896]
+        else:
+            v_l_mod = tile_mods[0]  # [1, 256, 896]
 
         self._cached_v_l = v_l_mod
         self._last_crop_box = crop_box
@@ -462,16 +476,16 @@ class VinternNEVFEAdapter:
         user_prompt: Optional[str] = None,
     ) -> torch.Tensor:
         """
-        Construct input embeddings for standard single-tile or multi-tile stream (Directive W1 & W5).
-        vit_embeds: [1, num_tokens, 896] or [num_tokens, 896], where num_tokens is a multiple of 256.
-        Strictly preserves canonical visual tokens inside <img><IMG_CONTEXT>*num_tokens</img>.
+        Construct input embeddings for standard single-tile stream (Directives W1 & W2).
+        vit_embeds: [1, num_tokens, 896] or [num_tokens, 896], where num_tokens == 256.
+        Strictly preserves canonical visual tokens inside <img><IMG_CONTEXT>*256</img>.
         """
         if vit_embeds.dim() == 2:
             vit_embeds = vit_embeds.unsqueeze(0)
 
         num_tokens = vit_embeds.shape[1]
-        assert num_tokens % self.num_image_token == 0, (
-            f"Expected multiple of {self.num_image_token}, got {num_tokens}"
+        assert num_tokens == self.num_image_token, (
+            f"Expected strictly {self.num_image_token} visual tokens (Directive W2 invariance), got {num_tokens}"
         )
 
         prefix_str = (
@@ -498,6 +512,19 @@ class VinternNEVFEAdapter:
 
         prefix_embeds[0, vis_start:vis_end, :] = vit_embeds[0].to(prefix_embeds.dtype)
         return torch.cat([prefix_embeds, suffix_embeds], dim=1)
+
+    def prepare_inputs(
+        self,
+        vit_embeds: torch.Tensor,
+        question: str,
+        user_prompt: Optional[str] = None,
+    ) -> torch.Tensor:
+        """
+        Directive W2: Configure prompt generation such that:
+        "<img>" + ("<IMG_CONTEXT>" * 256) + "</img>\n"
+        is identical for both Stream G and Stream L, guaranteeing sequence length invariance S_G = S_L.
+        """
+        return self.build_multimodal_embeds(vit_embeds, question, user_prompt=user_prompt)
 
     def build_mfvr_embeds(
         self,
@@ -538,10 +565,24 @@ class VinternNEVFEAdapter:
     ) -> torch.Tensor:
         """
         Benchmark caching hook: runs Stage 1 and Stage 2, caching both V_G and V_L.
-        Returns V_L (256 tokens) for downstream processing.
+        Returns V_L (strictly 256 tokens) for downstream processing.
         """
         _, pixel_box, _ = self.compute_stage1_window(image, question=question)
-        v_l = self.extract_stage2_focal_features(image, pixel_box)
+        q_embeds = None
+        if question:
+            norm_q = question.strip()
+            raw_ids = self.tokenizer.encode(norm_q, add_special_tokens=False)
+            if isinstance(raw_ids, torch.Tensor):
+                q_ids = raw_ids.to(self.device)
+            else:
+                q_ids = torch.tensor(raw_ids, dtype=torch.long, device=self.device)
+            if q_ids.ndim == 1:
+                q_ids = q_ids.unsqueeze(0)
+            with torch.no_grad():
+                q_embeds = self.model.language_model.get_input_embeddings()(q_ids)
+        v_l = self.extract_stage2_focal_features(
+            image, pixel_box, question_embeddings=q_embeds, use_amct=True
+        )
         self._cached_vit_embeds = v_l
         return v_l
 
@@ -603,23 +644,44 @@ class VinternNEVFEAdapter:
         max_new_tokens: int = 64,
     ) -> str:
         """
-        Decoupled Dual-Stream Generation with Independent Dual KV-Caches (Directives W1–W6).
-        Stream G (Global 256 tokens) and Stream L (Focal AMCT K*256 tokens, K in {1, 2}).
+        Decoupled Dual-Stream Generation with Sequence Length Invariance (Directives W1–W6).
+        Stream G (Global 256 tokens) and Stream L (Condensed Focal 256 tokens, K in {1, 2}).
+        Dual KV-caches have identical sequence lengths (S_G = S_L = 266).
         """
         with torch.no_grad():
             # 1. Stage 1: Window extraction & Global features V_G
             v_g, pixel_box, _ = self.compute_stage1_window(image, question=question)
 
-            # 2. Stage 2: Focal feature extraction V_L (AMCT: K * 256 tokens, K in {1, 2})
-            v_l = self.extract_stage2_focal_features(image, pixel_box, use_amct=True)
+            # Compute question embeddings if available for Q-CrossAttn pooling (Directive W1)
+            q_embeds = None
+            if question:
+                norm_q = question.strip()
+                raw_ids = self.tokenizer.encode(norm_q, add_special_tokens=False)
+                if isinstance(raw_ids, torch.Tensor):
+                    q_ids = raw_ids.to(self.device)
+                else:
+                    q_ids = torch.tensor(raw_ids, dtype=torch.long, device=self.device)
+                if q_ids.ndim == 1:
+                    q_ids = q_ids.unsqueeze(0)
+                embed_layer = self.model.language_model.get_input_embeddings()
+                q_embeds = embed_layer(q_ids)
 
-            # 3. Canonical natural prompt framing & Stream Embeddings
+            # 2. Stage 2: Focal feature extraction V_L (condensed strictly to 256 tokens, Directives W1 & W2)
+            v_l = self.extract_stage2_focal_features(
+                image, pixel_box, question_embeddings=q_embeds, use_amct=True
+            )
+
+            # 3. Canonical natural prompt framing & Stream Embeddings (Directive W2)
             prompt_text = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
-            embeds_g = self.build_multimodal_embeds(v_g, question, user_prompt=prompt_text)
-            embeds_l = self.build_multimodal_embeds(v_l, question, user_prompt=prompt_text)
+            embeds_g = self.prepare_inputs(v_g, question, user_prompt=prompt_text)
+            embeds_l = self.prepare_inputs(v_l, question, user_prompt=prompt_text)
 
-            # 4. Independent Dual KV-Cache Prefill (Directive W1)
-            # Separate forward passes prevent tensor shape mismatch crashes when K=2 (512 vs 256 tokens)
+            # Assert sequence length invariance (Directive W2)
+            assert embeds_g.shape == embeds_l.shape, (
+                f"Embedding sequence length mismatch: {embeds_g.shape} vs {embeds_l.shape}"
+            )
+
+            # 4. Independent Dual KV-Cache Prefill (Directive W1 & W2)
             out_g = self.model.language_model.model(
                 inputs_embeds=embeds_g,
                 use_cache=True,
@@ -635,6 +697,21 @@ class VinternNEVFEAdapter:
             )
             past_key_values_l = out_l.past_key_values
             logits_l = self.model.language_model.lm_head(out_l.last_hidden_state[:, -1:, :])[0, 0, :]
+
+            # Assert dual KV-cache sequence length invariance (Directive W2)
+            def _get_kv_len(pkv):
+                if hasattr(pkv, "get_seq_length"):
+                    return pkv.get_seq_length()
+                if hasattr(pkv, "key_cache") and len(pkv.key_cache) > 0:
+                    return pkv.key_cache[0].shape[-2]
+                if isinstance(pkv, (tuple, list)) and len(pkv) > 0 and isinstance(pkv[0], (tuple, list)):
+                    return pkv[0][0].shape[-2]
+                return None
+
+            s_g = _get_kv_len(past_key_values_g)
+            s_l = _get_kv_len(past_key_values_l)
+            if s_g is not None and s_l is not None:
+                assert s_g == s_l, f"Dual KV-cache sequence length mismatch: S_G={s_g} vs S_L={s_l}"
 
             # 5. Query token mask
             vocab_size = logits_g.shape[-1]

@@ -291,6 +291,26 @@ def compute_question_conditioned_spatial_window(
     return float(x_min), float(y_min), float(x_max), float(y_max)
 
 
+def compute_normalized_entropy_lse(
+    logits: torch.Tensor,
+    eps: float = 1e-12,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Computes Shannon entropy in nats and normalized entropy in [0, 1] on FP32 logits
+    via the dual-form Log-Sum-Exp identity (Directive W3):
+        H(p) = logsumexp(z) - sum(p * z)
+    """
+    z = logits.float()
+    vocab_size = z.shape[-1]
+    log_vocab = max(float(math.log(max(vocab_size, 2))), 1e-6)
+    lse = torch.logsumexp(z, dim=-1, keepdim=True)
+    p = F.softmax(z, dim=-1)
+    expected_z = torch.sum(p * z, dim=-1, keepdim=True)
+    entropy_nats = torch.clamp(lse - expected_z, min=0.0)
+    norm_entropy = torch.clamp(entropy_nats / log_vocab, 0.0, 1.0)
+    return entropy_nats, norm_entropy
+
+
 def compute_dynamic_contrastive_temperature(
     logits_l: torch.Tensor,
     logits_g: torch.Tensor,
@@ -298,10 +318,11 @@ def compute_dynamic_contrastive_temperature(
     alpha_cal: float = 0.40,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
-    Standardized Low-Contrast Text Index (LCTI) and Bounded Dynamic Temperature (Directive 2 - Formulation A).
+    Standardized Low-Contrast Text Index (LCTI) and Bounded Dynamic Temperature (Directive 2 & Iteration 12 Directive W3).
 
-    Formulation A (Theorems 11 & 12):
-        Xi_t = (D_JS(p_L || p_G) / log 2) * (H(p_L) / log |V|) in [0, 1]
+    Formulation (Theorems 11 & 12, Directive W3):
+        H_hat_t <= min(H_hat(p_L), H_hat(p_G), H_hat(m)) via dual-form Log-Sum-Exp identity
+        Xi_t = (D_JS(p_L || p_G) / log 2) * H_hat_t in [0, 1]
         tau_t = 1.0 / (1.0 + alpha_cal * Xi_t) in [0.714, 1.00] with alpha_cal = 0.40
 
     Computed in FP32 with eps=1e-12 and torch.nan_to_num to guarantee numerical stability.
@@ -320,15 +341,26 @@ def compute_dynamic_contrastive_temperature(
     p_l = F.softmax(logits_l.float(), dim=-1)
     p_g = F.softmax(logits_g.float(), dim=-1)
 
-    # 1. Normalized Shannon Entropy in [0, 1]
+    # 1. Normalized Shannon Entropy in [0, 1] via dual-form Log-Sum-Exp identity (Directive W3)
     vocab_size = logits_l.shape[-1]
     log_vocab = max(float(math.log(max(vocab_size, 2))), 1e-6)
-    entropy_l = -torch.sum(torch.nan_to_num(p_l * torch.log(torch.clamp(p_l, min=eps)), nan=0.0), dim=-1, keepdim=True)
-    norm_entropy = torch.clamp(entropy_l / log_vocab, 0.0, 1.0)
 
-    # 2. Normalized Jensen-Shannon Divergence in [0, 1]
+    # Compute entropy for both streams using LSE identity
+    _, norm_entropy_l = compute_normalized_entropy_lse(logits_l, eps=eps)
+    _, norm_entropy_g = compute_normalized_entropy_lse(logits_g, eps=eps)
+
+    # Mixture distribution m = 0.5 * (p_l + p_g)
     m = 0.5 * (p_l + p_g)
     log_m = torch.log(torch.clamp(m, min=eps))
+    entropy_m = -torch.sum(torch.nan_to_num(m * log_m, nan=0.0), dim=-1, keepdim=True)
+    norm_entropy_m = torch.clamp(entropy_m / log_vocab, 0.0, 1.0)
+
+    # Directive W3 & Adversarial Challenge 4:
+    # Ensure H_hat_t <= min(H_hat(p_L), H_hat(p_G)), guaranteeing that when either stream
+    # reaches high-confidence completion (e.g. p_G(EOS) -> 1), entropy contracts to 0.
+    norm_entropy = torch.minimum(norm_entropy_m, torch.minimum(norm_entropy_l, norm_entropy_g))
+
+    # 2. Normalized Jensen-Shannon Divergence in [0, 1]
     kl_l = torch.sum(p_l * (torch.log(torch.clamp(p_l, min=eps)) - log_m), dim=-1, keepdim=True)
     kl_g = torch.sum(p_g * (torch.log(torch.clamp(p_g, min=eps)) - log_m), dim=-1, keepdim=True)
     d_js = 0.5 * (kl_l + kl_g)
@@ -341,17 +373,45 @@ def compute_dynamic_contrastive_temperature(
     return tau_t, norm_entropy, norm_divergence
 
 
+def compute_entropy_continuation_horizon(
+    norm_entropy: torch.Tensor,
+    norm_divergence: torch.Tensor,
+) -> torch.Tensor:
+    """
+    Computes Entropy-Calibrated Dynamic Continuation Horizon gamma_t (Directive W3).
+
+    Formula:
+        gamma_t = H_hat_t * (1 - Xi_t^div) in [0.0, 1.0]
+
+    Args:
+        norm_entropy: Normalized predictive entropy H_hat_t in [0, 1] [B, 1].
+        norm_divergence: Normalized JS divergence Xi_t^div in [0, 1] [B, 1].
+
+    Returns:
+        gamma_t: Adaptive continuation horizon in [0.0, 1.0] [B, 1].
+    """
+    gamma = norm_entropy * (1.0 - norm_divergence)
+    return torch.clamp(gamma, 0.0, 1.0)
+
+
+# Directive W3 alias
+_compute_continuation_horizon = compute_entropy_continuation_horizon
+
+
 def compute_optical_continuation_saliency(
     log_p_l_cal: torch.Tensor,
     log_p_g: torch.Tensor,
     eos_token_ids: Optional[Sequence[int]] = None,
+    continuation_gate: Optional[torch.Tensor] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     r"""
-    Computes Optical Continuation Saliency Omega_t and Calibrated Stopping Expectation (Theorem 17).
+    Computes Optical Continuation Saliency Omega_t and Calibrated Stopping Expectation (Theorem 17, Directive W3).
 
     Formulas:
         S_t(v) = ReLU(log_p_l_cal(v) - log_p_g(v))
         Omega_t = max_{v in V \ T_EOS} S_t(v)
+        If continuation_gate is provided (Directive W3):
+            tilde_Omega_t = continuation_gate * Omega_t
         S_bar_t = sum_{w in V} p_g(w) * S_t(w)
         should_continue = Omega_t > S_bar_t
 
@@ -359,6 +419,7 @@ def compute_optical_continuation_saliency(
         log_p_l_cal: Calibrated focal log-probabilities [B, K] or [K].
         log_p_g: Global log-probabilities [B, K] or [K].
         eos_token_ids: Sequence of EOS token IDs.
+        continuation_gate: Optional adaptive continuation horizon gamma_t [B, 1].
 
     Returns:
         omega_t: Maximum non-EOS optical evidence boost [B, 1].
@@ -369,6 +430,8 @@ def compute_optical_continuation_saliency(
     if orig_1d:
         log_p_l_cal = log_p_l_cal.unsqueeze(0)
         log_p_g = log_p_g.unsqueeze(0)
+        if continuation_gate is not None and continuation_gate.dim() == 1:
+            continuation_gate = continuation_gate.unsqueeze(0)
 
     sharp_potential = torch.relu(log_p_l_cal - log_p_g)  # [B, K]
 
@@ -381,6 +444,10 @@ def compute_optical_continuation_saliency(
             content_sharp[:, eos_list] = -1e9
 
     omega_t = torch.max(content_sharp, dim=-1, keepdim=True).values  # [B, 1]
+
+    # Modulate optical continuation saliency by adaptive continuation gate (Directive W3)
+    if continuation_gate is not None:
+        omega_t = continuation_gate * omega_t
 
     # Ambient expectation under global predictive distribution
     p_g = torch.exp(log_p_g)
@@ -698,6 +765,129 @@ def compute_candidate_support_mask(
     return tensor_values >= (max_val - cutoff)
 
 
+def pool_question_guided_focal_tokens(
+    visual_tokens: torch.Tensor,
+    grid: Tuple[int, int],
+    question_embeddings: Optional[torch.Tensor] = None,
+    target_grid_size: int = 16,
+    temperature_cross: float = 0.1,
+    eps: float = 1e-6,
+) -> torch.Tensor:
+    """
+    Locality-Preserving Question-Guided Spatial Cross-Attention Pooling (LP-Q-CrossAttn Pooling, Directive W1).
+    Condenses K * 256 focal tokens into strictly 256 tokens in R^{256 x D} with 0 trainable parameters.
+
+    Args:
+        visual_tokens: Focal visual patch embeddings [1, P_L, D] or [P_L, D], P_L = K * 256.
+        grid: Sub-tile grid (gx, gy) in {(1, 1), (2, 1), (1, 2)}.
+        question_embeddings: Optional question token embeddings [1, T, D] or [T, D].
+        target_grid_size: Canonical square lattice side length (default 16 for 256 tokens).
+        temperature_cross: Cross-modal affinity softmax temperature (default 0.1).
+        eps: Numerical stability constant.
+
+    Returns:
+        v_pooled: Condensed visual tokens of shape [1, 256, D] or [256, D].
+    """
+    orig_dim = visual_tokens.dim()
+    if orig_dim == 3:
+        if visual_tokens.shape[0] != 1:
+            raise ValueError(f"Expected batch size 1, got {visual_tokens.shape}")
+        v_l = visual_tokens.squeeze(0)
+    elif orig_dim == 2:
+        v_l = visual_tokens
+    else:
+        raise ValueError(f"Expected 2D or 3D tensor, got shape {visual_tokens.shape}")
+
+    P_L, D = v_l.shape
+    gx, gy = grid
+    K = gx * gy
+    canonical_tokens = target_grid_size * target_grid_size
+
+    # 1. Exact Identity Fallback for K = 1
+    if K == 1 or P_L == canonical_tokens:
+        return visual_tokens
+
+    orig_dtype = visual_tokens.dtype
+    device = visual_tokens.device
+    v = v_l.float()
+
+    # 2. Assemble 2D Physical Lattice
+    H_L = target_grid_size * gy
+    W_L = target_grid_size * gx
+    assert P_L == H_L * W_L, f"Token count mismatch: P_L={P_L} vs H_L*W_L={H_L*W_L}"
+
+    if (gx, gy) == (2, 1):
+        tile_0 = v[:canonical_tokens, :].reshape(target_grid_size, target_grid_size, D)
+        tile_1 = v[canonical_tokens:, :].reshape(target_grid_size, target_grid_size, D)
+        lattice = torch.cat([tile_0, tile_1], dim=1)  # [16, 32, D]
+    elif (gx, gy) == (1, 2):
+        tile_0 = v[:canonical_tokens, :].reshape(target_grid_size, target_grid_size, D)
+        tile_1 = v[canonical_tokens:, :].reshape(target_grid_size, target_grid_size, D)
+        lattice = torch.cat([tile_0, tile_1], dim=0)  # [32, 16, D]
+    else:
+        lattice = v.reshape(H_L, W_L, D)
+
+    # 3. Canonical Spatial Query Grid Q_0 in R^{256 x D}
+    lat_perm = lattice.permute(2, 0, 1).unsqueeze(0)  # [1, D, H_L, W_L]
+    q0_2d = F.adaptive_avg_pool2d(lat_perm, (target_grid_size, target_grid_size))  # [1, D, 16, 16]
+    Q_0 = q0_2d.squeeze(0).permute(1, 2, 0).reshape(canonical_tokens, D)  # [256, D]
+
+    # 4. Question Context Guidance Vector q_text
+    if question_embeddings is not None and question_embeddings.numel() > 0:
+        q_emb = question_embeddings
+        if q_emb.dim() == 3:
+            q_emb = q_emb.squeeze(0)
+        e = q_emb.float().to(device)
+
+        # Cross-modal affinity
+        v_norm = v / (torch.norm(v, p=2, dim=-1, keepdim=True) + eps)
+        e_norm = e / (torch.norm(e, p=2, dim=-1, keepdim=True) + eps)
+        S = torch.matmul(v_norm, e_norm.t())  # [P_L, T]
+        A_Q = F.softmax(S / float(temperature_cross), dim=0)  # [P_L, T]
+
+        omega = torch.var(A_Q, dim=0, unbiased=False)  # [T]
+        total_omega = torch.sum(omega)
+        if total_omega > eps:
+            omega_norm = omega / (total_omega + eps)
+            q_text = torch.matmul(omega_norm, e)  # [D]
+            q_dir = q_text / (torch.norm(q_text, p=2, dim=-1, keepdim=True) + eps)
+            q_norm_scale = torch.norm(Q_0, p=2, dim=-1, keepdim=True)  # [256, 1]
+            Q = Q_0 + q_norm_scale * q_dir.unsqueeze(0)  # [256, D]
+        else:
+            Q = Q_0
+    else:
+        Q = Q_0
+
+    # 5. Locality-Preserving Gaussian Prior
+    coords_q = (torch.arange(target_grid_size, device=device, dtype=torch.float32) + 0.5) / float(target_grid_size)
+    grid_y_q, grid_x_q = torch.meshgrid(coords_q, coords_q, indexing="ij")
+    u_q = grid_x_q.reshape(-1)  # [256]
+    v_q = grid_y_q.reshape(-1)  # [256]
+
+    coords_x_k = (torch.arange(W_L, device=device, dtype=torch.float32) + 0.5) / float(W_L)
+    coords_y_k = (torch.arange(H_L, device=device, dtype=torch.float32) + 0.5) / float(H_L)
+    grid_y_k, grid_x_k = torch.meshgrid(coords_y_k, coords_x_k, indexing="ij")
+    u_k = grid_x_k.reshape(-1)  # [P_L]
+    v_k = grid_y_k.reshape(-1)  # [P_L]
+
+    dist_sq = (u_q.unsqueeze(1) - u_k.unsqueeze(0)) ** 2 + (v_q.unsqueeze(1) - v_k.unsqueeze(0)) ** 2  # [256, P_L]
+    sigma_spatial = 1.0 / float(target_grid_size)  # 1/16 = 0.0625
+    bias_spatial = - dist_sq / (2.0 * sigma_spatial * sigma_spatial)  # [256, P_L]
+
+    # 6. Attention Logits, Softmax & Pooling
+    scale = 1.0 / math.sqrt(float(D))
+    logits_attn = torch.matmul(Q, v.t()) * scale  # [256, P_L]
+    logits_total = logits_attn + bias_spatial  # [256, P_L]
+
+    attn_weights = F.softmax(logits_total, dim=-1)  # [256, P_L]
+    v_pooled = torch.matmul(attn_weights, v)  # [256, D]
+
+    if orig_dim == 3:
+        v_pooled = v_pooled.unsqueeze(0)
+
+    return v_pooled.to(dtype=orig_dtype)
+
+
 def nevfe_step_logits(
     logits_l: Optional[torch.Tensor] = None,
     logits_g: Optional[torch.Tensor] = None,
@@ -800,13 +990,11 @@ def nevfe_step_logits(
         # Boltzmann logit scaling (pre-softmax logit temperature division)
         log_p_l_cal = F.log_softmax(ll / tau_t, dim=-1)
 
-        # 2. Dynamic Continuation Base Anchor (Directive W6: CHO / DSDD)
-        if step_idx <= 2:
-            sigma_h = 0.0
-        else:
-            sigma_h = min(1.0, float(step_idx - 2) / 2.0)
-
-        gamma_t = sigma_h * (1.0 - norm_divergence)  # [B, 1] in [0, 1]
+        # 2. Dynamic Continuation Base Anchor (Directive W3: Mixture-Entropy CHO)
+        gamma_t = compute_entropy_continuation_horizon(
+            norm_entropy=norm_entropy,
+            norm_divergence=norm_divergence,
+        )  # [B, 1] in [0, 1]
         base_potential = (1.0 - gamma_t) * log_p_g + gamma_t * log_p_l_cal  # [B, K]
 
         # 3. Rectified Contrastive Sharpening for Content Tokens
@@ -820,14 +1008,16 @@ def nevfe_step_logits(
         steered_potential = base_potential + lambda_t * sharp_potential
         coupling_tensor = lambda_t
 
-        # 4. Symmetrically Calibrated Contrastive Termination for EOS Tokens (Directive W4)
+        # 4. Symmetrically Calibrated Contrastive Termination for EOS Tokens (Directive W3)
+        # p_term(t) is gated by gamma_t to permit instant stopping on short entities
         if eos_token_ids is not None:
             K = steered_potential.shape[-1]
             eos_list = [int(eid) for eid in eos_token_ids if int(eid) < K]
             if eos_list:
                 log_pg_eos = log_p_g[:, eos_list]
                 log_pl_eos = log_p_l_cal[:, eos_list]
-                term_penalty = torch.relu(log_pg_eos - log_pl_eos)
+                raw_term_penalty = torch.relu(log_pg_eos - log_pl_eos)
+                term_penalty = gamma_t * raw_term_penalty
                 steered_potential[:, eos_list] = base_potential[:, eos_list] - lambda_t * term_penalty
 
         # 5. Anti-Refusal Prior Attenuation via Optical Grounding Index (Step <= 2)
@@ -846,6 +1036,7 @@ def nevfe_step_logits(
             log_p_l_cal=log_p_l_cal,
             log_p_g=log_p_g,
             eos_token_ids=eos_token_ids,
+            continuation_gate=gamma_t,
         )
 
     # 7. Query-Orthogonal Potential Barrier (Step <= barrier_horizon)
@@ -992,6 +1183,21 @@ class NEVFEEngine:
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Compute standardized LCTI and dynamic contrastive temperature (Directive 3)."""
         return compute_dynamic_contrastive_temperature(logits_l, logits_g)
+
+    def pool_focal_tokens(
+        self,
+        visual_tokens: torch.Tensor,
+        grid: Tuple[int, int],
+        question_embeddings: Optional[torch.Tensor] = None,
+        target_grid_size: int = 16,
+    ) -> torch.Tensor:
+        """Directive W1: Pool focal tokens via LP-Q-CrossAttn Pooling."""
+        return pool_question_guided_focal_tokens(
+            visual_tokens=visual_tokens,
+            grid=grid,
+            question_embeddings=question_embeddings,
+            target_grid_size=target_grid_size,
+        )
 
     def decode_step(
         self,
