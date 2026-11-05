@@ -6,6 +6,7 @@ Preserves native 256-token 16x16 visual grid geometry while providing 3.33x opti
 Enforces 1:1 isotropic square pixel cropping with symmetric border padding to eliminate font squashing.
 """
 
+import math
 from typing import Dict, List, Optional, Tuple
 from PIL import Image
 import torch
@@ -18,11 +19,78 @@ from src.nevfe.core.engine import (
     compute_question_conditioned_spatial_window,
     compute_otsu_threshold,
     compute_visual_token_saliency_and_mask,
+    evaluate_semantic_stopping,
 )
 
 
 CANONICAL_PROMPT_TEMPLATE = "Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question}"
 PROMPT_INSTRUCTION = "Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: "
+
+
+def select_admissible_aspect_ratio_grid(
+    w_box: float,
+    h_box: float,
+) -> Tuple[int, int]:
+    """
+    Continuous log-aspect-ratio loss minimization over admissible grids (Theorem 16, Directive W5).
+    Admissible grids: (1, 1), (2, 1), (1, 2).
+    """
+    ar = max(1e-6, float(w_box)) / max(1.0, float(h_box))
+    candidates = [(1, 1), (2, 1), (1, 2)]
+
+    best_grid = min(
+        candidates,
+        key=lambda g: abs(math.log(ar) - math.log(g[0] / g[1]))
+    )
+    return best_grid
+
+
+def extract_anisotropic_focal_tiles(
+    image: Image.Image,
+    crop_box: Tuple[int, int, int, int],
+    grid: Tuple[int, int],
+    target_tile_size: int = 448,
+) -> List[Image.Image]:
+    """
+    Extracts gx * gy square sub-tiles from crop_box preserving aspect ratio (Theorem 16, Directive W5).
+    Each sub-tile is resized to target_tile_size x target_tile_size without anisotropic squashing.
+    """
+    gx, gy = grid
+    x0, y0, x1, y1 = crop_box
+    bw = max(2, x1 - x0)
+    bh = max(2, y1 - y0)
+
+    crop = image.crop(crop_box)
+
+    tiles = []
+    tile_w = bw / float(gx)
+    tile_h = bh / float(gy)
+
+    for j in range(gy):
+        for i in range(gx):
+            sub_x0 = int(round(i * tile_w))
+            sub_y0 = int(round(j * tile_h))
+            sub_x1 = int(round((i + 1) * tile_w))
+            sub_y1 = int(round((j + 1) * tile_h))
+
+            sub_x0 = max(0, min(crop.width - 1, sub_x0))
+            sub_y0 = max(0, min(crop.height - 1, sub_y0))
+            sub_x1 = max(sub_x0 + 1, min(crop.width, sub_x1))
+            sub_y1 = max(sub_y0 + 1, min(crop.height, sub_y1))
+
+            sub_tile = crop.crop((sub_x0, sub_y0, sub_x1, sub_y1))
+
+            # Pad to square if slight rounding discrepancy
+            sw, sh = sub_tile.size
+            if sw != sh:
+                max_s = max(sw, sh)
+                padded = Image.new("RGB", (max_s, max_s), (128, 128, 128))
+                padded.paste(sub_tile, ((max_s - sw) // 2, (max_s - sh) // 2))
+                sub_tile = padded
+
+            tiles.append(sub_tile.resize((target_tile_size, target_tile_size), Image.Resampling.BICUBIC))
+
+    return tiles
 
 
 def _find_closest_aspect_ratio(
@@ -183,6 +251,7 @@ class VinternNEVFEAdapter:
 
         self.max_dynamic_patch = getattr(getattr(model, "config", None), "max_dynamic_patch", 6)
         self.num_image_token = getattr(model, "num_image_token", 256)
+        self.image_size = getattr(getattr(model, "config", None), "image_size", 448)
         self.system_message = getattr(model, "system_message", "Bạn là một trợ lý AI hữu ích.")
 
         # Caching dictionaries for image-level reuse across questions
@@ -293,25 +362,15 @@ class VinternNEVFEAdapter:
 
         norm_window = (x_min, y_min, x_max, y_max)
 
-        # 3. Denormalize to pixel coordinates with 1:1 Isotropic Square Bounding Box (Directive 2)
-        box_x0 = x_min * W
-        box_y0 = y_min * H
-        box_x1 = x_max * W
-        box_y1 = y_max * H
+        # 3. Denormalize to pixel coordinates for Anisotropic Multi-Crop Tiling (Directive W5)
+        box_x0 = max(0, int(round(x_min * W)))
+        box_y0 = max(0, int(round(y_min * H)))
+        box_x1 = min(W, int(round(x_max * W)))
+        box_y1 = min(H, int(round(y_max * H)))
 
-        cx = 0.5 * (box_x0 + box_x1)
-        cy = 0.5 * (box_y0 + box_y1)
-        half_side = 0.5 * max(box_x1 - box_x0, box_y1 - box_y0)
-
-        sq_x0 = max(0, int(round(cx - half_side)))
-        sq_y0 = max(0, int(round(cy - half_side)))
-        sq_x1 = min(W, int(round(cx + half_side)))
-        sq_y1 = min(H, int(round(cy + half_side)))
-
-        # Coordinate clamping safeguard against non-positive dimension
-        sq_x1 = max(sq_x0 + 1, sq_x1)
-        sq_y1 = max(sq_y0 + 1, sq_y1)
-        pixel_box = (sq_x0, sq_y0, sq_x1, sq_y1)
+        box_x1 = max(box_x0 + 2, box_x1)
+        box_y1 = max(box_y0 + 2, box_y1)
+        pixel_box = (box_x0, box_y0, box_x1, box_y1)
 
         # Invalidate V_L if crop box changed
         if pixel_box != self._last_crop_box:
@@ -324,19 +383,21 @@ class VinternNEVFEAdapter:
         return v_g, pixel_box, norm_window
 
     # =========================================================================
-    # STAGE 2: Local Optical Zoom Focal Token Extraction (Native 256 Tokens)
+    # STAGE 2: Local Optical Zoom Focal Token Extraction (AMCT: K * 256 Tokens)
     # =========================================================================
     def extract_stage2_focal_features(
         self,
         image: Image.Image,
         crop_box: Tuple[int, int, int, int],
+        use_amct: bool = True,
     ) -> torch.Tensor:
         """
-        Stage 2: Crop image using 1:1 square box (with symmetric padding if border exceeded),
-        resize to 448x448, and extract exactly 256 focal visual tokens V_L with Fisher-Saliency modulation.
+        Stage 2: Anisotropic Multi-Crop Tiling (AMCT - Theorem 16, Directive W5).
+        Extracts gx * gy square sub-tiles from crop_box with (gx, gy) in {(1, 1), (2, 1), (1, 2)},
+        resizes each sub-tile to 448x448, and extracts K * 256 focal visual tokens V_L with Fisher-Saliency modulation.
 
         Returns:
-            v_l_mod: Modulated focal visual tokens [1, 256, 896]
+            v_l_mod: Modulated focal visual tokens [1, K * 256, 896], where K in {1, 2}.
         """
         img_key = self._make_image_key(image)
         if (
@@ -355,26 +416,36 @@ class VinternNEVFEAdapter:
             self._last_spatial_window = None
             self._cached_vit_embeds = None
 
-        crop = image.crop(crop_box)
-        cw, ch = crop.size
-        # Symmetric 1:1 padding if crop hits image boundary (Directive 2)
-        if cw != ch:
-            max_side = max(cw, ch)
-            padded_crop = Image.new("RGB", (max_side, max_side), (128, 128, 128))
-            padded_crop.paste(crop, ((max_side - cw) // 2, (max_side - ch) // 2))
-            crop = padded_crop
+        if use_amct:
+            w_box = max(2, crop_box[2] - crop_box[0])
+            h_box = max(2, crop_box[3] - crop_box[1])
+            grid = select_admissible_aspect_ratio_grid(w_box, h_box)
+            tiles = extract_anisotropic_focal_tiles(image, crop_box, grid, target_tile_size=self.image_size)
+        else:
+            crop = image.crop(crop_box)
+            cw, ch = crop.size
+            if cw != ch:
+                max_side = max(cw, ch)
+                padded_crop = Image.new("RGB", (max_side, max_side), (128, 128, 128))
+                padded_crop.paste(crop, ((max_side - cw) // 2, (max_side - ch) // 2))
+                crop = padded_crop
+            tiles = [crop.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)]
 
-        pixel_values_l = self.transform(crop).unsqueeze(0).to(
-            device=self.device, dtype=torch.bfloat16
-        )
-        with torch.no_grad():
-            v_l_raw = self.model.extract_feature(pixel_values_l)  # [1, 256, 896]
-        del pixel_values_l
+        tile_mods = []
+        for tile in tiles:
+            pixel_values_k = self.transform(tile).unsqueeze(0).to(
+                device=self.device, dtype=torch.bfloat16
+            )
+            with torch.no_grad():
+                v_k_raw = self.model.extract_feature(pixel_values_k)  # [1, 256, 896]
+            del pixel_values_k
 
-        # Modulate patches via continuous Fisher-Saliency
-        v_l_mod = self.engine.modulate_patches(v_l_raw[0]).unsqueeze(0).to(
-            dtype=v_l_raw.dtype, device=self.device
-        )
+            v_k_mod = self.engine.modulate_patches(v_k_raw[0]).unsqueeze(0).to(
+                dtype=v_k_raw.dtype, device=self.device
+            )
+            tile_mods.append(v_k_mod)
+
+        v_l_mod = torch.cat(tile_mods, dim=1) if len(tile_mods) > 1 else tile_mods[0]
 
         self._cached_v_l = v_l_mod
         self._last_crop_box = crop_box
@@ -382,7 +453,7 @@ class VinternNEVFEAdapter:
         return v_l_mod
 
     # =========================================================================
-    # Embedding Construction: Strictly 256 Tokens (Native 16x16 Grid)
+    # Embedding Construction: Single-Tile (256) or Multi-Tile (K * 256) Tokens
     # =========================================================================
     def build_multimodal_embeds(
         self,
@@ -391,21 +462,22 @@ class VinternNEVFEAdapter:
         user_prompt: Optional[str] = None,
     ) -> torch.Tensor:
         """
-        Construct input embeddings for standard 256-token single-tile stream.
-        vit_embeds: [1, 256, 896] or [256, 896].
-        Strictly preserves canonical 256 visual tokens inside <img><IMG_CONTEXT>*256</img>.
+        Construct input embeddings for standard single-tile or multi-tile stream (Directive W1 & W5).
+        vit_embeds: [1, num_tokens, 896] or [num_tokens, 896], where num_tokens is a multiple of 256.
+        Strictly preserves canonical visual tokens inside <img><IMG_CONTEXT>*num_tokens</img>.
         """
         if vit_embeds.dim() == 2:
             vit_embeds = vit_embeds.unsqueeze(0)
 
-        assert vit_embeds.shape[0] == 1 and vit_embeds.shape[1] == self.num_image_token, (
-            f"Expected [1, {self.num_image_token}, D], got {vit_embeds.shape}"
+        num_tokens = vit_embeds.shape[1]
+        assert num_tokens % self.num_image_token == 0, (
+            f"Expected multiple of {self.num_image_token}, got {num_tokens}"
         )
 
         prefix_str = (
             f"<|im_start|>system\n{self.system_message}<|im_end|>\n"
             "<|im_start|>user\n"
-            "<img>" + ("<IMG_CONTEXT>" * self.num_image_token) + "</img>\n"
+            "<img>" + ("<IMG_CONTEXT>" * num_tokens) + "</img>\n"
         )
         if user_prompt is None:
             user_prompt = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
@@ -531,40 +603,40 @@ class VinternNEVFEAdapter:
         max_new_tokens: int = 64,
     ) -> str:
         """
-        Decoupled Dual-Stream Batched B=2 Forward Pass Generation (Directive 1 & 3).
-        Batches Global Stream V_G and Focal Stream V_L into B=2 dimension,
-        achieving 2.04x speedup over sequential execution while preserving 100% 2D RoPE phase alignment.
+        Decoupled Dual-Stream Generation with Independent Dual KV-Caches (Directives W1–W6).
+        Stream G (Global 256 tokens) and Stream L (Focal AMCT K*256 tokens, K in {1, 2}).
         """
         with torch.no_grad():
-            # 1. Stage 1: Window extraction & Global features V_G (Directive 1 & 2)
+            # 1. Stage 1: Window extraction & Global features V_G
             v_g, pixel_box, _ = self.compute_stage1_window(image, question=question)
 
-            # 2. Stage 2: Focal feature extraction V_L (256 tokens)
-            v_l = self.extract_stage2_focal_features(image, pixel_box)
+            # 2. Stage 2: Focal feature extraction V_L (AMCT: K * 256 tokens, K in {1, 2})
+            v_l = self.extract_stage2_focal_features(image, pixel_box, use_amct=True)
 
-            # 3. Canonical natural prompt framing & Stream Embeddings (Directive 1)
-            # Revert FSG completely: pass intact raw v_l directly into build_multimodal_embeds (Theorems 10 & 11)
+            # 3. Canonical natural prompt framing & Stream Embeddings
             prompt_text = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
             embeds_g = self.build_multimodal_embeds(v_g, question, user_prompt=prompt_text)
             embeds_l = self.build_multimodal_embeds(v_l, question, user_prompt=prompt_text)
 
-            # 4. Batch along dimension 0: [2, seq_len, D]
-            # Batch 0: Global Stream (logits_g)
-            # Batch 1: Focal Stream (logits_l)
-            inputs_embeds = torch.cat([embeds_g, embeds_l], dim=0)
-
-            # 5. Prefill in single forward pass (B=2)
-            out = self.model.language_model.model(
-                inputs_embeds=inputs_embeds,
+            # 4. Independent Dual KV-Cache Prefill (Directive W1)
+            # Separate forward passes prevent tensor shape mismatch crashes when K=2 (512 vs 256 tokens)
+            out_g = self.model.language_model.model(
+                inputs_embeds=embeds_g,
                 use_cache=True,
                 return_dict=True,
             )
-            past_key_values = out.past_key_values
-            logits = self.model.language_model.lm_head(out.last_hidden_state[:, -1:, :])  # [2, 1, vocab_size]
-            logits_g = logits[0, 0, :]  # Global stream
-            logits_l = logits[1, 0, :]  # Focal crop stream
+            past_key_values_g = out_g.past_key_values
+            logits_g = self.model.language_model.lm_head(out_g.last_hidden_state[:, -1:, :])[0, 0, :]
 
-            # 6. Comprehensive Prompt & Instruction Masking (Directive 3)
+            out_l = self.model.language_model.model(
+                inputs_embeds=embeds_l,
+                use_cache=True,
+                return_dict=True,
+            )
+            past_key_values_l = out_l.past_key_values
+            logits_l = self.model.language_model.lm_head(out_l.last_hidden_state[:, -1:, :])[0, 0, :]
+
+            # 5. Query token mask
             vocab_size = logits_g.shape[-1]
             q_mask = build_query_token_mask(prompt_text, self.tokenizer, vocab_size, self.device)
 
@@ -578,14 +650,8 @@ class VinternNEVFEAdapter:
             generated_ids: List[int] = []
 
             for step in range(1, max_new_tokens + 1):
-                # Directive 1: Dual-Stream Semantic Stopping Invariance (Formulation B)
-                # Terminate immediately if uncorrupted global stream signals EOS
-                if int(torch.argmax(logits_g, dim=-1).item()) in eos_token_ids:
-                    break
-
-                # Steering Operator: Rectified Contrastive Sharpening with Entropy Coupling (Directive 2)
-                # Mask out EOS tokens from steered competition so potential only guides non-EOS content tokens
-                next_tok_tensor, _, _, _ = self.engine.decode_step(
+                # Steering Operator (Theorems 16-18, Directives W3, W4, W6)
+                next_tok_tensor, steered_logits, _, _ = self.engine.decode_step(
                     logits_l=logits_l,
                     logits_g=logits_g,
                     q_mask=q_mask,
@@ -594,7 +660,18 @@ class VinternNEVFEAdapter:
                 )
                 next_id = int(next_tok_tensor.item())
 
-                if next_id in eos_token_ids:
+                # Calibrated Consensus Stopping (Directive W3: replaces premature line 583 break)
+                omega_t, s_bar_t = self.engine.get_last_continuation_saliency()
+                stop_decision = evaluate_semantic_stopping(
+                    logits_g=logits_g,
+                    logits_l=logits_l,
+                    steered_tokens=next_tok_tensor,
+                    omega_t=omega_t,
+                    s_bar_t=s_bar_t,
+                    eos_token_ids=eos_token_ids,
+                )
+
+                if bool(stop_decision.item()) if isinstance(stop_decision, torch.Tensor) else bool(stop_decision):
                     break
 
                 generated_ids.append(next_id)
@@ -602,22 +679,29 @@ class VinternNEVFEAdapter:
                 if step == max_new_tokens:
                     break
 
-                # Advance both streams synchronously with duplicated next token [2, 1, D]
-                next_tok = torch.tensor([[next_id], [next_id]], dtype=torch.long, device=self.device)
-                next_emb = embed_layer(next_tok)  # Shape: [2, 1, D]
+                # Advance both streams synchronously via independent KV-caches (Directive W1)
+                next_tok = torch.tensor([[next_id]], dtype=torch.long, device=self.device)
+                next_emb = embed_layer(next_tok)  # [1, 1, D]
 
-                out = self.model.language_model.model(
+                out_g = self.model.language_model.model(
                     inputs_embeds=next_emb,
-                    past_key_values=past_key_values,
+                    past_key_values=past_key_values_g,
                     use_cache=True,
                     return_dict=True,
                 )
-                past_key_values = out.past_key_values
-                logits = self.model.language_model.lm_head(out.last_hidden_state[:, -1:, :])
-                logits_g = logits[0, 0, :]
-                logits_l = logits[1, 0, :]
+                past_key_values_g = out_g.past_key_values
+                logits_g = self.model.language_model.lm_head(out_g.last_hidden_state[:, -1:, :])[0, 0, :]
 
-            del past_key_values, out
+                out_l = self.model.language_model.model(
+                    inputs_embeds=next_emb,
+                    past_key_values=past_key_values_l,
+                    use_cache=True,
+                    return_dict=True,
+                )
+                past_key_values_l = out_l.past_key_values
+                logits_l = self.model.language_model.lm_head(out_l.last_hidden_state[:, -1:, :])[0, 0, :]
+
+            del past_key_values_g, past_key_values_l, out_g, out_l
             pred_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
             return pred_text
 

@@ -341,6 +341,138 @@ def compute_dynamic_contrastive_temperature(
     return tau_t, norm_entropy, norm_divergence
 
 
+def compute_optical_continuation_saliency(
+    log_p_l_cal: torch.Tensor,
+    log_p_g: torch.Tensor,
+    eos_token_ids: Optional[Sequence[int]] = None,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    r"""
+    Computes Optical Continuation Saliency Omega_t and Calibrated Stopping Expectation (Theorem 17).
+
+    Formulas:
+        S_t(v) = ReLU(log_p_l_cal(v) - log_p_g(v))
+        Omega_t = max_{v in V \ T_EOS} S_t(v)
+        S_bar_t = sum_{w in V} p_g(w) * S_t(w)
+        should_continue = Omega_t > S_bar_t
+
+    Args:
+        log_p_l_cal: Calibrated focal log-probabilities [B, K] or [K].
+        log_p_g: Global log-probabilities [B, K] or [K].
+        eos_token_ids: Sequence of EOS token IDs.
+
+    Returns:
+        omega_t: Maximum non-EOS optical evidence boost [B, 1].
+        s_bar_t: Expected ambient optical contrastive gain [B, 1].
+        should_continue: Boolean tensor [B, 1] (True if Omega_t > S_bar_t).
+    """
+    orig_1d = (log_p_l_cal.dim() == 1)
+    if orig_1d:
+        log_p_l_cal = log_p_l_cal.unsqueeze(0)
+        log_p_g = log_p_g.unsqueeze(0)
+
+    sharp_potential = torch.relu(log_p_l_cal - log_p_g)  # [B, K]
+
+    # Mask EOS tokens from continuation saliency computation
+    content_sharp = sharp_potential.clone()
+    if eos_token_ids is not None:
+        K = content_sharp.shape[-1]
+        eos_list = [int(eid) for eid in eos_token_ids if int(eid) < K]
+        if eos_list:
+            content_sharp[:, eos_list] = -1e9
+
+    omega_t = torch.max(content_sharp, dim=-1, keepdim=True).values  # [B, 1]
+
+    # Ambient expectation under global predictive distribution
+    p_g = torch.exp(log_p_g)
+    s_bar_t = torch.sum(p_g * sharp_potential, dim=-1, keepdim=True)  # [B, 1]
+
+    should_continue = omega_t > s_bar_t  # [B, 1]
+
+    if orig_1d:
+        return omega_t.squeeze(0), s_bar_t.squeeze(0), should_continue.squeeze(0)
+    return omega_t, s_bar_t, should_continue
+
+
+def evaluate_semantic_stopping(
+    logits_g: torch.Tensor,
+    logits_l: Optional[torch.Tensor] = None,
+    steered_tokens: Optional[torch.Tensor] = None,
+    omega_t: Optional[torch.Tensor] = None,
+    s_bar_t: Optional[torch.Tensor] = None,
+    eos_token_ids: Optional[Sequence[int]] = None,
+) -> torch.Tensor:
+    """
+    Evaluates Theorem 17 Calibrated Dual-Stream Consensus Stopping Functional:
+        Stop if:
+          1) argmax(steered_tokens) in T_EOS, OR
+          2) (argmax(logits_g) in T_EOS and omega_t <= s_bar_t), OR
+          3) (argmax(logits_l) in T_EOS and argmax(logits_g) in T_EOS and omega_t <= s_bar_t)
+
+    Args:
+        logits_g: Global stream logits [B, K] or [K].
+        logits_l: Optional focal stream logits [B, K] or [K].
+        steered_tokens: Optional selected tokens [B] or scalar tensor.
+        omega_t: Optical continuation saliency [B, 1] or [1].
+        s_bar_t: Ambient expectation [B, 1] or [1].
+        eos_token_ids: Sequence of EOS token IDs.
+
+    Returns:
+        stop_predicate: Boolean tensor [B] or scalar boolean tensor.
+    """
+    if eos_token_ids is None or len(eos_token_ids) == 0:
+        device = logits_g.device
+        if logits_g.dim() == 1:
+            return torch.tensor(False, device=device)
+        return torch.zeros(logits_g.shape[0], dtype=torch.bool, device=device)
+
+    orig_1d = (logits_g.dim() == 1)
+    if orig_1d:
+        logits_g = logits_g.unsqueeze(0)
+        if logits_l is not None and logits_l.dim() == 1:
+            logits_l = logits_l.unsqueeze(0)
+        if steered_tokens is not None and steered_tokens.dim() == 0:
+            steered_tokens = steered_tokens.unsqueeze(0)
+        if omega_t is not None and omega_t.dim() == 1:
+            omega_t = omega_t.unsqueeze(0)
+        if s_bar_t is not None and s_bar_t.dim() == 1:
+            s_bar_t = s_bar_t.unsqueeze(0)
+
+    device = logits_g.device
+    eos_tensor = torch.tensor(list(eos_token_ids), device=device, dtype=torch.long)
+
+    top_g = torch.argmax(logits_g, dim=-1)  # [B]
+    is_g_eos = torch.isin(top_g, eos_tensor)  # [B]
+
+    # Condition 1: steered ensemble explicitly chose EOS
+    if steered_tokens is not None:
+        steered_is_eos = torch.isin(steered_tokens.to(device=device, dtype=torch.long), eos_tensor)
+    else:
+        steered_is_eos = torch.zeros_like(is_g_eos)
+
+    # Condition 2: optical evidence exhausted (omega_t <= s_bar_t)
+    if omega_t is not None and s_bar_t is not None:
+        is_optical_exhausted = (omega_t.squeeze(-1) <= s_bar_t.squeeze(-1))
+    else:
+        is_optical_exhausted = torch.ones_like(is_g_eos)
+
+    # Condition 3: dual stream agreement
+    if logits_l is not None:
+        top_l = torch.argmax(logits_l, dim=-1)
+        is_l_eos = torch.isin(top_l, eos_tensor)
+        dual_eos_consensus = is_g_eos & is_l_eos & is_optical_exhausted
+    else:
+        dual_eos_consensus = torch.zeros_like(is_g_eos)
+
+    # Global wants to stop AND optical evidence is exhausted
+    global_exhausted_stop = is_g_eos & is_optical_exhausted
+
+    stop_predicate = steered_is_eos | dual_eos_consensus | global_exhausted_stop
+
+    if orig_1d:
+        return stop_predicate.squeeze(0)
+    return stop_predicate
+
+
 def compute_otsu_threshold(
     m_sal: torch.Tensor,
     min_keep: int = 16,
@@ -580,35 +712,28 @@ def nevfe_step_logits(
     logits_zero: Optional[torch.Tensor] = None,
     return_effective_coupling: Optional[bool] = None,
     eos_token_ids: Optional[Sequence[int]] = None,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    return_continuation_saliency: bool = False,
+) -> Tuple:
     """
-    Decoupled Dual-Stream Rectified Contrastive Sharpening with Normalized Entropy Coupling (Directive 2).
+    Decoupled Dual-Stream Rectified Contrastive Sharpening with Dynamic Continuation Base Anchor (Directives W4 & W6).
 
     Mathematical Foundations:
     1. Normalized Log-Probabilities:
        log_p_g = log_softmax(logits_g)
-       log_p_l = log_softmax(logits_l)
-    2. Rectified Contrastive Sharpening (Theorem 3):
-       sharp_potential = relu(log_p_l - log_p_g)
-       Unconditionally preserves out-of-crop text: when log_p_l <= log_p_g, sharp_potential == 0,
-       guaranteeing z_t^*(v) = log_p_g without negative extinction.
-    3. Normalized Shannon Entropy Coupling:
-       p_l = exp(log_p_l)
-       entropy_l = -sum(nan_to_num(p_l * log_p_l, nan=0.0))
-       norm_entropy = clamp(entropy_l / log(|V|), 0.0, 1.0)
-       lambda_t = lambda_param * (1.0 + norm_entropy)  in [lambda_0, 2*lambda_0]
-    4. Steered Potential:
-       steered_potential = log_p_g + lambda_t * sharp_potential
-    5. Query-Orthogonal Potential Barrier (Directive 1 & 3):
-       If q_mask active, mu_param > 0 and step_idx <= barrier_horizon:
-           barrier = mu_param * (barrier_decay ** (step_idx - 1))
-           steered_potential = where(q_mask, steered_potential - barrier, steered_potential)
-    6. Gibbs-Boltzmann Steered Distribution & Free-Energy Support Truncation (FEST):
-       scaled_potential = beta_param * steered_potential
-       log_q_star = log_softmax(scaled_potential)
-       V_supp = {v : log_q_star(v) >= max log_q_star - H(q^*)}
-       steered_logits = where(support_mask, scaled_potential, -1e9)
-       next_tokens = argmax(steered_logits)
+       log_p_l_cal = log_softmax(logits_l / tau_t)
+    2. Dynamic Continuation Base Anchor (Theorem 17, Directive W6):
+       gamma_t = sigma_H(t) * (1 - Xi_t^div)
+       base_potential = (1 - gamma_t) * log_p_g + gamma_t * log_p_l_cal
+    3. Rectified Contrastive Sharpening:
+       sharp_potential = relu(log_p_l_cal - log_p_g)
+       lambda_t = lambda_param * (1.0 + norm_entropy)
+       steered_potential = base_potential + lambda_t * sharp_potential
+    4. Symmetrically Calibrated Contrastive Termination (Theorem 17, Directive W4):
+       For EOS: term_penalty = relu(log_p_g(EOS) - log_p_l_cal(EOS))
+       steered_potential(EOS) = base_potential(EOS) - lambda_t * term_penalty
+    5. Query-Orthogonal Potential Barrier & Anti-Refusal OGI.
+    6. Gibbs-Boltzmann Steered Distribution & Free-Energy Support Truncation (FEST).
+       EOS unmasked so argmax(steered) can naturally emit EOS.
 
     Args:
         logits_l: Focal crop multimodal stream logits [B, K] or [K].
@@ -623,12 +748,15 @@ def nevfe_step_logits(
         logits_plus: Backward-compatibility alias for logits_l.
         logits_zero: Backward-compatibility alias for logits_g.
         return_effective_coupling: If True, returns dynamic lambda_t; if False, returns base lambda_param.
+        eos_token_ids: Sequence of EOS token IDs.
+        return_continuation_saliency: If True, returns (next_tokens, steered_logits, coupling, entropy, omega_t, s_bar_t).
 
     Returns:
         next_tokens: Selected token index tensor [B] (argmax of steered variational distribution).
         steered_logits: Full steered variational logit tensor [B, K].
         coupling_tensor: Visual evidence coupling tensor [B, 1].
         entropy_nats: Shannon entropy of steered distribution in nats [B, 1].
+        (Optional) omega_t, s_bar_t if return_continuation_saliency is True.
     """
     if logits_l is not None and logits_g is not None:
         is_legacy = False
@@ -661,43 +789,66 @@ def nevfe_step_logits(
         pointwise_vmi = log_p_plus - log_p_zero
         steered_potential = log_p_plus + float(lambda_param) * pointwise_vmi
         coupling_tensor = torch.full((ll.shape[0], 1), float(lambda_param), device=ll.device)
+        omega_t = torch.zeros((ll.shape[0], 1), device=ll.device)
+        s_bar_t = torch.zeros((ll.shape[0], 1), device=ll.device)
     else:
-        # Iteration 10: Refusal-Free Calibrated Multi-Scale QO-VFE (Theorems 10–15, Directives 2 & 3)
-        # 1. Standardized Low-Contrast Text Index & Bounded Dynamic Temperature (Directive 2)
+        # Iteration 11: Multi-Resolution Adaptive Patch Fusion & Continuation Horizon Operator (Theorems 16–18)
+        # 1. Standardized Low-Contrast Text Index & Bounded Dynamic Temperature
         tau_t, norm_entropy, norm_divergence = compute_dynamic_contrastive_temperature(ll, lg)
 
         log_p_g = F.log_softmax(lg, dim=-1)
-        # Boltzmann logit scaling (Directive 2 - pre-softmax logit temperature division)
+        # Boltzmann logit scaling (pre-softmax logit temperature division)
         log_p_l_cal = F.log_softmax(ll / tau_t, dim=-1)
 
-        # 2. Rectified Contrastive Sharpening with Calibrated Optical Evidence (Theorems 1 & 8)
+        # 2. Dynamic Continuation Base Anchor (Directive W6: CHO / DSDD)
+        if step_idx <= 2:
+            sigma_h = 0.0
+        else:
+            sigma_h = min(1.0, float(step_idx - 2) / 2.0)
+
+        gamma_t = sigma_h * (1.0 - norm_divergence)  # [B, 1] in [0, 1]
+        base_potential = (1.0 - gamma_t) * log_p_g + gamma_t * log_p_l_cal  # [B, K]
+
+        # 3. Rectified Contrastive Sharpening for Content Tokens
         delta_log = log_p_l_cal - log_p_g
         sharp_potential = torch.relu(delta_log)
 
-        # 3. Normalized Shannon Entropy Coupling (Directive 2)
-        lambda_t = float(lambda_param) * (1.0 + norm_entropy)
+        # Normalized Shannon Entropy Coupling
+        lambda_t = float(lambda_param) * (1.0 + norm_entropy)  # [B, 1]
 
-        # 4. Steered Potential (Theorem 3)
-        steered_potential = log_p_g + lambda_t * sharp_potential
+        # Steered potential initialization
+        steered_potential = base_potential + lambda_t * sharp_potential
         coupling_tensor = lambda_t
 
-        # 5. Anti-Refusal Prior Attenuation via Optical Grounding Index (Theorems 13 & 14 - Directive 3)
+        # 4. Symmetrically Calibrated Contrastive Termination for EOS Tokens (Directive W4)
+        if eos_token_ids is not None:
+            K = steered_potential.shape[-1]
+            eos_list = [int(eid) for eid in eos_token_ids if int(eid) < K]
+            if eos_list:
+                log_pg_eos = log_p_g[:, eos_list]
+                log_pl_eos = log_p_l_cal[:, eos_list]
+                term_penalty = torch.relu(log_pg_eos - log_pl_eos)
+                steered_potential[:, eos_list] = base_potential[:, eos_list] - lambda_t * term_penalty
+
+        # 5. Anti-Refusal Prior Attenuation via Optical Grounding Index (Step <= 2)
         if mu_param > 0 and step_idx <= 2:
             barrier_val = float(mu_param) * (float(barrier_decay) ** (step_idx - 1))
-
-            # Optical Grounding Index (OGI)
             abs_delta = torch.abs(delta_log)
             max_abs_delta = torch.max(abs_delta, dim=-1, keepdim=True).values.clamp(min=1e-6)
             ogi = abs_delta / max_abs_delta  # [B, K] in [0, 1]
 
-            # Non-optical tokens (zero or negative zoom differential)
             non_opt_mask = (delta_log <= 0).float()
-
-            # Attenuate scale-insensitive, non-grounded prior attractors
             refusal_penalty = barrier_val * (1.0 - ogi) * non_opt_mask
             steered_potential = steered_potential - refusal_penalty
 
-    # 4. Query-Orthogonal Potential Barrier (Directive 1 & 3)
+        # 6. Compute Optical Continuation Saliency and Stopping Expectation (Directive W3)
+        omega_t, s_bar_t, _ = compute_optical_continuation_saliency(
+            log_p_l_cal=log_p_l_cal,
+            log_p_g=log_p_g,
+            eos_token_ids=eos_token_ids,
+        )
+
+    # 7. Query-Orthogonal Potential Barrier (Step <= barrier_horizon)
     if q_mask is not None and mu_param > 0 and step_idx <= barrier_horizon:
         barrier = float(mu_param) * (float(barrier_decay) ** (step_idx - 1))
         q_mask_t = q_mask.to(device=steered_potential.device, dtype=torch.bool)
@@ -709,28 +860,26 @@ def nevfe_step_logits(
             steered_potential,
         )
 
-    # 5. Gibbs-Boltzmann Steered Distribution log q_t^*(v)
+    # 8. Gibbs-Boltzmann Steered Distribution log q_t^*(v)
     scaled_potential = float(beta_param) * steered_potential
     log_q_star = F.log_softmax(scaled_potential, dim=-1)
     q_star = torch.exp(log_q_star)
 
-    # 6. Thermodynamic Shannon Entropy of Steered Ensemble in Nats
+    # 9. Thermodynamic Shannon Entropy of Steered Ensemble in Nats
     entropy_nats = compute_unnormalized_entropy(q_star, log_q_star)
 
-    # 7. Free-Energy Support Truncation (FEST) Candidate Support Mask
+    # 10. Free-Energy Support Truncation (FEST) Candidate Support Mask
     support_mask = compute_free_energy_support_mask(log_q_star, entropy_nats)
 
-    # 8. Masked Variational Logits
+    # 11. Masked Variational Logits (Directive W4: EOS is unmasked, no -1e9 clamping!)
     steered_logits = torch.where(
         support_mask,
         scaled_potential,
         torch.full_like(scaled_potential, -1e9),
     )
-    if eos_token_ids is not None:
-        eos_list = [int(eid) for eid in eos_token_ids]
-        if eos_list:
-            steered_logits[:, eos_list] = -1e9
+
     next_tokens = torch.argmax(steered_logits, dim=-1)
+
     if is_legacy:
         coupling_tensor = torch.full((ll.shape[0], 1), float(lambda_param), device=ll.device)
     else:
@@ -744,7 +893,11 @@ def nevfe_step_logits(
         steered_logits = steered_logits.squeeze(0)
         coupling_tensor = coupling_tensor.squeeze(0)
         entropy_nats = entropy_nats.squeeze(0)
+        omega_t = omega_t.squeeze(0)
+        s_bar_t = s_bar_t.squeeze(0)
 
+    if return_continuation_saliency:
+        return next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t
     return next_tokens, steered_logits, coupling_tensor, entropy_nats
 
 
@@ -780,6 +933,8 @@ class NEVFEEngine:
         self.barrier_horizon = int(barrier_horizon)
         self.k_sigma = float(k_sigma)
         self.min_span = float(min_span)
+        self._last_omega_t: Optional[torch.Tensor] = None
+        self._last_s_bar_t: Optional[torch.Tensor] = None
 
     def modulate_patches(self, visual_tokens: torch.Tensor) -> torch.Tensor:
         """Modulate visual patch embeddings via Fisher-Saliency energy."""
@@ -850,7 +1005,7 @@ class NEVFEEngine:
         eos_token_ids: Optional[Sequence[int]] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Execute single-step Decoupled Dual-Stream Contrastive Steering (D-DS-CS)."""
-        return nevfe_step_logits(
+        res = nevfe_step_logits(
             logits_l=logits_l,
             logits_g=logits_g,
             lambda_param=self.lambda_param,
@@ -863,5 +1018,31 @@ class NEVFEEngine:
             logits_plus=logits_plus,
             logits_zero=logits_zero,
             return_effective_coupling=return_effective_coupling,
+            eos_token_ids=eos_token_ids,
+            return_continuation_saliency=True,
+        )
+        next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t = res
+        self._last_omega_t = omega_t
+        self._last_s_bar_t = s_bar_t
+        return next_tokens, steered_logits, coupling_tensor, entropy_nats
+
+    def get_last_continuation_saliency(self) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+        """Return the most recent (omega_t, s_bar_t) computed during decode_step."""
+        return self._last_omega_t, self._last_s_bar_t
+
+    def evaluate_stopping(
+        self,
+        logits_g: torch.Tensor,
+        logits_l: Optional[torch.Tensor] = None,
+        steered_tokens: Optional[torch.Tensor] = None,
+        eos_token_ids: Optional[Sequence[int]] = None,
+    ) -> torch.Tensor:
+        """Evaluate consensus stopping using last computed continuation saliency."""
+        return evaluate_semantic_stopping(
+            logits_g=logits_g,
+            logits_l=logits_l,
+            steered_tokens=steered_tokens,
+            omega_t=self._last_omega_t,
+            s_bar_t=self._last_s_bar_t,
             eos_token_ids=eos_token_ids,
         )
