@@ -264,9 +264,14 @@ class VinternNEVFEAdapter:
 
         W, H = image.size
 
-        # 2. Compute spatial window (question-conditioned if question provided, else pure Fisher)
         if norm_q:
-            q_ids = self.tokenizer.encode(norm_q, add_special_tokens=False, return_tensors="pt").to(self.device)
+            raw_ids = self.tokenizer.encode(norm_q, add_special_tokens=False)
+            if isinstance(raw_ids, torch.Tensor):
+                q_ids = raw_ids.to(self.device)
+            else:
+                q_ids = torch.tensor(raw_ids, dtype=torch.long, device=self.device)
+            if q_ids.ndim == 1:
+                q_ids = q_ids.unsqueeze(0)
             with torch.no_grad():
                 q_embeds = self.model.language_model.get_input_embeddings()(q_ids)  # [1, T, D]
             x_min, y_min, x_max, y_max = compute_question_conditioned_spatial_window(
