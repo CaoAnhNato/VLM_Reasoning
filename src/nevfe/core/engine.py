@@ -11,7 +11,7 @@ Mathematical Foundations:
 """
 
 import math
-from typing import Optional, Tuple
+from typing import Optional, Sequence, Tuple
 import torch
 import torch.nn.functional as F
 
@@ -150,6 +150,147 @@ def compute_thermodynamic_spatial_window(
     return float(x_min), float(y_min), float(x_max), float(y_max)
 
 
+def compute_question_conditioned_spatial_window(
+    visual_tokens: torch.Tensor,
+    question_embeddings: Optional[torch.Tensor] = None,
+    grid_size: int = 16,
+    k_sigma: float = 2.0,
+    min_span: float = 0.15,
+    temperature: float = 0.1,
+    eps: float = 1e-6,
+) -> Tuple[float, float, float, float]:
+    """
+    Question-Conditioned Thermodynamic Spatial Window (Directive 3 - Theorems 1 & 2).
+    Aligns focal crop window with queried semantic entity via cross-modal cosine affinity
+    and parameter-free spatial variance token weighting.
+
+    Guarantees >= 75.0% visual evidence mass enclosure targeting the query entity.
+
+    Args:
+        visual_tokens: Visual patch embeddings [P, D] or [1, P, D] (e.g. P = 256, D = 896).
+        question_embeddings: Question token embeddings [T, D] or [1, T, D].
+        grid_size: Lattice dimension (default: 16).
+        k_sigma: Chebyshev radial coverage multiplier (default: 2.0).
+        min_span: Physical Nyquist context floor (default: 0.15).
+        temperature: Cross-modal softmax scaling temperature (default: 0.1).
+        eps: Numerical stability constant.
+
+    Returns:
+        (x_min, y_min, x_max, y_max) normalized coordinates in [0.0, 1.0].
+    """
+    if visual_tokens.dim() == 3:
+        if visual_tokens.shape[0] != 1:
+            raise ValueError(f"Expected batch size 1 for visual_tokens, got {visual_tokens.shape}")
+        visual_tokens = visual_tokens.squeeze(0)
+
+    if visual_tokens.dim() != 2:
+        raise ValueError(f"Expected 2D visual_tokens [P, D], got shape {visual_tokens.shape}")
+
+    # Fallback if question embeddings are missing or empty
+    if question_embeddings is None or question_embeddings.numel() == 0:
+        return compute_thermodynamic_spatial_window(
+            visual_tokens=visual_tokens,
+            grid_size=grid_size,
+            k_sigma=k_sigma,
+            min_span=min_span,
+            eps=eps,
+        )
+
+    if question_embeddings.dim() == 3:
+        if question_embeddings.shape[0] != 1:
+            raise ValueError(f"Expected batch size 1 for question_embeddings, got {question_embeddings.shape}")
+        question_embeddings = question_embeddings.squeeze(0)
+
+    if question_embeddings.dim() != 2:
+        raise ValueError(f"Expected 2D question_embeddings [T, D], got shape {question_embeddings.shape}")
+
+    P, D = visual_tokens.shape
+    T, D_q = question_embeddings.shape
+    if D != D_q:
+        raise ValueError(f"Channel dimension mismatch: visual {D} vs question {D_q}")
+
+    device = visual_tokens.device
+    v = visual_tokens.float()
+    e = question_embeddings.float().to(device)
+
+    sqrt_p = int(round(math.sqrt(P)))
+    if sqrt_p * sqrt_p == P:
+        grid_size = sqrt_p
+
+    # 1. Continuous Fisher-Saliency Energy per patch
+    v_mean = torch.mean(v, dim=0, keepdim=True)
+    var_d = torch.mean((v - v_mean) ** 2, dim=0, keepdim=True)
+    s_p = 0.5 * torch.sum(((v - v_mean) ** 2) / (var_d + eps), dim=-1)  # [P]
+
+    mu_s = torch.mean(s_p)
+    sigma_s = torch.std(s_p) + eps
+    z_s = (s_p - mu_s) / sigma_s
+    m_vis = torch.relu(z_s)  # [P]
+
+    # 2. Normalized Cross-Modal Cosine Affinity Matrix S in R^{P x T}
+    v_norm = v / (torch.norm(v, p=2, dim=-1, keepdim=True) + eps)
+    e_norm = e / (torch.norm(e, p=2, dim=-1, keepdim=True) + eps)
+    S = torch.matmul(v_norm, e_norm.t())  # [P, T]
+
+    # 3. Spatial Patch Distribution per Question Token: A in R^{P x T}
+    A = F.softmax(S / float(temperature), dim=0)
+
+    # 4. Parameter-Free Token Specificity Weighting via Spatial Variance
+    omega = torch.var(A, dim=0, unbiased=False)  # [T]
+    total_omega = torch.sum(omega)
+
+    # Safeguard: if specificity weights degenerate, fallback to pure visual saliency
+    if total_omega < eps:
+        m_sal = m_vis
+    else:
+        omega_norm = omega / (total_omega + eps)
+        alpha = torch.matmul(A, omega_norm)  # [P]
+        m_sal = m_vis * alpha  # [P]
+
+    # Safeguard: if fused saliency vanishes, fallback to pure visual saliency
+    total_sal = torch.sum(m_sal)
+    if total_sal < eps:
+        m_final = m_vis
+    else:
+        m_final = m_sal
+
+    total_m = torch.sum(m_final)
+    if total_m < eps:
+        # Degenerate case: uniform or constant tokens with zero variance
+        half_span = float(min_span)
+        return (
+            float(0.5 - half_span),
+            float(0.5 - half_span),
+            float(0.5 + half_span),
+            float(0.5 + half_span),
+        )
+
+    # 5. Normalized Spatial Probability Measure rho
+    rho = m_final / (total_m + eps)
+
+    # 6. Coordinate grid and moments
+    coords_1d = (torch.arange(grid_size, device=device, dtype=torch.float32) + 0.5) / float(grid_size)
+    grid_y, grid_x = torch.meshgrid(coords_1d, coords_1d, indexing="ij")
+    gx = grid_x.reshape(-1)
+    gy = grid_y.reshape(-1)
+
+    mu_x = torch.sum(rho * gx)
+    mu_y = torch.sum(rho * gy)
+    var_x = torch.sum(rho * ((gx - mu_x) ** 2))
+    var_y = torch.sum(rho * ((gy - mu_y) ** 2))
+
+    # 7. Euclidean Radial Chebyshev Half-Span (Directive 3)
+    sigma_radial = torch.sqrt(torch.clamp(var_x + var_y, min=eps))
+    half_span = torch.clamp(float(k_sigma) * sigma_radial, min=float(min_span), max=0.5)
+
+    x_min = torch.clamp(mu_x - half_span, min=0.0, max=1.0).item()
+    x_max = torch.clamp(mu_x + half_span, min=0.0, max=1.0).item()
+    y_min = torch.clamp(mu_y - half_span, min=0.0, max=1.0).item()
+    y_max = torch.clamp(mu_y + half_span, min=0.0, max=1.0).item()
+
+    return float(x_min), float(y_min), float(x_max), float(y_max)
+
+
 def compute_bhattacharyya_coefficient(
     p_plus: torch.Tensor,
     p_zero: torch.Tensor,
@@ -257,6 +398,7 @@ def nevfe_step_logits(
     logits_plus: Optional[torch.Tensor] = None,
     logits_zero: Optional[torch.Tensor] = None,
     return_effective_coupling: Optional[bool] = None,
+    eos_token_ids: Optional[Sequence[int]] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Decoupled Dual-Stream Rectified Contrastive Sharpening with Normalized Entropy Coupling (Directive 2).
@@ -387,6 +529,10 @@ def nevfe_step_logits(
         scaled_potential,
         torch.full_like(scaled_potential, -1e9),
     )
+    if eos_token_ids is not None:
+        eos_list = [int(eid) for eid in eos_token_ids]
+        if eos_list:
+            steered_logits[:, eos_list] = -1e9
     next_tokens = torch.argmax(steered_logits, dim=-1)
     if is_legacy:
         coupling_tensor = torch.full((ll.shape[0], 1), float(lambda_param), device=ll.device)
@@ -455,6 +601,23 @@ class NEVFEEngine:
             min_span=self.min_span,
         )
 
+    def compute_question_conditioned_spatial_window(
+        self,
+        visual_tokens: torch.Tensor,
+        question_embeddings: Optional[torch.Tensor] = None,
+        grid_size: int = 16,
+        temperature: float = 0.1,
+    ) -> Tuple[float, float, float, float]:
+        """Compute question-conditioned thermodynamic spatial Chebyshev window."""
+        return compute_question_conditioned_spatial_window(
+            visual_tokens=visual_tokens,
+            question_embeddings=question_embeddings,
+            grid_size=grid_size,
+            k_sigma=self.k_sigma,
+            min_span=self.min_span,
+            temperature=temperature,
+        )
+
     def decode_step(
         self,
         logits_l: Optional[torch.Tensor] = None,
@@ -464,6 +627,7 @@ class NEVFEEngine:
         logits_plus: Optional[torch.Tensor] = None,
         logits_zero: Optional[torch.Tensor] = None,
         return_effective_coupling: Optional[bool] = None,
+        eos_token_ids: Optional[Sequence[int]] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Execute single-step Decoupled Dual-Stream Contrastive Steering (D-DS-CS)."""
         return nevfe_step_logits(
@@ -479,4 +643,5 @@ class NEVFEEngine:
             logits_plus=logits_plus,
             logits_zero=logits_zero,
             return_effective_coupling=return_effective_coupling,
+            eos_token_ids=eos_token_ids,
         )

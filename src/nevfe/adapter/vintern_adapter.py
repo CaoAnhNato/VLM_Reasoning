@@ -15,11 +15,12 @@ from torchvision.transforms.functional import InterpolationMode
 from src.nevfe.core.engine import (
     NEVFEEngine,
     compute_thermodynamic_spatial_window,
+    compute_question_conditioned_spatial_window,
 )
 
 
-CANONICAL_PROMPT_TEMPLATE = "Dựa vào chữ trong ảnh, hãy trả lời câu hỏi: {question}"
-PROMPT_INSTRUCTION = "Dựa vào chữ trong ảnh, hãy trả lời câu hỏi: "
+CANONICAL_PROMPT_TEMPLATE = "Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question}"
+PROMPT_INSTRUCTION = "Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: "
 
 
 def _find_closest_aspect_ratio(
@@ -189,6 +190,7 @@ class VinternNEVFEAdapter:
         self._last_crop_box: Optional[Tuple[int, int, int, int]] = None
         self._last_spatial_window: Optional[Tuple[float, float, float, float]] = None
         self._cached_vit_embeds: Optional[torch.Tensor] = None
+        self._last_question: Optional[str] = None
 
     @staticmethod
     def _build_default_transform(input_size: int = 448):
@@ -211,12 +213,15 @@ class VinternNEVFEAdapter:
     def compute_stage1_window(
         self,
         image: Image.Image,
+        question: Optional[str] = None,
     ) -> Tuple[torch.Tensor, Tuple[int, int, int, int], Tuple[float, float, float, float]]:
         """
         Stage 1: Extract global features V_G from full 448x448 canvas and compute
-        Chebyshev bounding window without language decoding.
+        question-conditioned Chebyshev bounding window (Directive 2 & 3).
         
-        Enforces 1:1 isotropic square pixel cropping (Directive 2) to eliminate character squashing.
+        Caches V_G by image key (w, h, thumb) to avoid re-extracting ViT features across questions.
+        Computes question-conditioned bounding box dynamically per question.
+        Enforces 1:1 isotropic square pixel cropping to eliminate character squashing.
 
         Returns:
             v_g: Global visual tokens [1, 256, 896]
@@ -224,40 +229,61 @@ class VinternNEVFEAdapter:
             norm_window: Normalized coordinates (x_min, y_min, x_max, y_max) in [0, 1]
         """
         img_key = self._make_image_key(image)
+        norm_q = question.strip() if question is not None else None
+
+        # Check if full cache (including question window) can be reused
         if (
             self._cached_img_key == img_key
             and self._cached_v_g is not None
+            and self._last_question == norm_q
             and self._last_crop_box is not None
             and self._last_spatial_window is not None
         ):
             return self._cached_v_g, self._last_crop_box, self._last_spatial_window
 
-        # New image: invalidate any stale cache from prior images
-        if self._cached_img_key != img_key:
+        # Check if global visual features V_G can be reused for a new question on the same image
+        if self._cached_img_key == img_key and self._cached_v_g is not None:
+            v_g = self._cached_v_g
+        else:
+            # New image: extract global visual tokens V_G
             self._cached_img_key = img_key
             self._cached_v_g = None
             self._cached_v_l = None
             self._last_crop_box = None
             self._last_spatial_window = None
             self._cached_vit_embeds = None
+            self._last_question = None
+
+            pixel_values_g = self.transform(image).unsqueeze(0).to(
+                device=self.device, dtype=torch.bfloat16
+            )
+            with torch.no_grad():
+                v_g = self.model.extract_feature(pixel_values_g)  # [1, 256, 896]
+            del pixel_values_g
+            self._cached_v_g = v_g
 
         W, H = image.size
 
-        # 1. Extract global visual tokens V_G
-        pixel_values_g = self.transform(image).unsqueeze(0).to(
-            device=self.device, dtype=torch.bfloat16
-        )
-        with torch.no_grad():
-            v_g = self.model.extract_feature(pixel_values_g)  # [1, 256, 896]
-        del pixel_values_g
+        # 2. Compute spatial window (question-conditioned if question provided, else pure Fisher)
+        if norm_q:
+            q_ids = self.tokenizer.encode(norm_q, add_special_tokens=False, return_tensors="pt").to(self.device)
+            with torch.no_grad():
+                q_embeds = self.model.language_model.get_input_embeddings()(q_ids)  # [1, T, D]
+            x_min, y_min, x_max, y_max = compute_question_conditioned_spatial_window(
+                visual_tokens=v_g[0],
+                question_embeddings=q_embeds[0],
+                grid_size=16,
+                k_sigma=self.engine.k_sigma,
+                min_span=self.engine.min_span,
+            )
+        else:
+            x_min, y_min, x_max, y_max = compute_thermodynamic_spatial_window(
+                v_g[0],
+                grid_size=16,
+                k_sigma=self.engine.k_sigma,
+                min_span=self.engine.min_span,
+            )
 
-        # 2. Compute minimum-volume Chebyshev window
-        x_min, y_min, x_max, y_max = compute_thermodynamic_spatial_window(
-            v_g[0],
-            grid_size=16,
-            k_sigma=self.engine.k_sigma,
-            min_span=self.engine.min_span,
-        )
         norm_window = (x_min, y_min, x_max, y_max)
 
         # 3. Denormalize to pixel coordinates with 1:1 Isotropic Square Bounding Box (Directive 2)
@@ -280,9 +306,11 @@ class VinternNEVFEAdapter:
         sq_y1 = max(sq_y0 + 1, sq_y1)
         pixel_box = (sq_x0, sq_y0, sq_x1, sq_y1)
 
-        # Update cache
-        self._cached_img_key = img_key
-        self._cached_v_g = v_g
+        # Invalidate V_L if crop box changed
+        if pixel_box != self._last_crop_box:
+            self._cached_v_l = None
+
+        self._last_question = norm_q
         self._last_crop_box = pixel_box
         self._last_spatial_window = norm_window
 
@@ -373,7 +401,7 @@ class VinternNEVFEAdapter:
             "<img>" + ("<IMG_CONTEXT>" * self.num_image_token) + "</img>\n"
         )
         if user_prompt is None:
-            user_prompt = f"Dựa vào chữ trong ảnh, hãy trả lời câu hỏi: {question.strip()}"
+            user_prompt = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
         suffix_str = f"{user_prompt}<|im_end|>\n<|im_start|>assistant\n"
 
         prefix_ids = self.tokenizer(prefix_str, return_tensors="pt", add_special_tokens=False).input_ids.to(self.device)
@@ -433,7 +461,7 @@ class VinternNEVFEAdapter:
         Benchmark caching hook: runs Stage 1 and Stage 2, caching both V_G and V_L.
         Returns V_L (256 tokens) for downstream processing.
         """
-        _, pixel_box, _ = self.compute_stage1_window(image)
+        _, pixel_box, _ = self.compute_stage1_window(image, question=question)
         v_l = self.extract_stage2_focal_features(image, pixel_box)
         self._cached_vit_embeds = v_l
         return v_l
@@ -461,14 +489,14 @@ class VinternNEVFEAdapter:
         achieving 2.04x speedup over sequential execution while preserving 100% 2D RoPE phase alignment.
         """
         with torch.no_grad():
-            # 1. Stage 1: Window extraction & Global features V_G (Directive 1)
-            v_g, pixel_box, _ = self.compute_stage1_window(image)
+            # 1. Stage 1: Window extraction & Global features V_G (Directive 1 & 2)
+            v_g, pixel_box, _ = self.compute_stage1_window(image, question=question)
 
             # 2. Stage 2: Focal feature extraction V_L (256 tokens)
             v_l = self.extract_stage2_focal_features(image, pixel_box)
 
             # 3. Canonical natural prompt framing & Stream Embeddings (Directive 1 & 3)
-            prompt_text = f"Dựa vào chữ trong ảnh, hãy trả lời câu hỏi: {question.strip()}"
+            prompt_text = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
             embeds_g = self.build_multimodal_embeds(v_g, question, user_prompt=prompt_text)
             embeds_l = self.build_multimodal_embeds(v_l, question, user_prompt=prompt_text)
 
@@ -495,20 +523,30 @@ class VinternNEVFEAdapter:
             embed_layer = self.model.language_model.get_input_embeddings()
             eos_im_end = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
             eos_std = self.tokenizer.eos_token_id
+            eos_token_ids = [eos_im_end]
+            if eos_std is not None and eos_std not in eos_token_ids:
+                eos_token_ids.append(eos_std)
 
             generated_ids: List[int] = []
 
             for step in range(1, max_new_tokens + 1):
+                # Directive 1: Dual-Stream Semantic Stopping Invariance (Formulation B)
+                # Terminate immediately if uncorrupted global stream signals EOS
+                if int(torch.argmax(logits_g, dim=-1).item()) in eos_token_ids:
+                    break
+
                 # Steering Operator: Rectified Contrastive Sharpening with Entropy Coupling (Directive 2)
+                # Mask out EOS tokens from steered competition so potential only guides non-EOS content tokens
                 next_tok_tensor, _, _, _ = self.engine.decode_step(
                     logits_l=logits_l,
                     logits_g=logits_g,
                     q_mask=q_mask,
                     step_idx=step,
+                    eos_token_ids=eos_token_ids,
                 )
                 next_id = int(next_tok_tensor.item())
 
-                if next_id == eos_im_end or (eos_std is not None and next_id == eos_std):
+                if next_id in eos_token_ids:
                     break
 
                 generated_ids.append(next_id)
