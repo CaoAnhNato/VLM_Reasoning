@@ -73,8 +73,8 @@
 |---|------|-------|-------------|--------|
 | Iter-10 | RFC-MS-QO-VFE | FSG Reversion, Bounded DTEC, OGI Prior Attenuation, Dual-Stream Stopping | none | **DONE** (Refusals 5.40%, EM 15.88%, F1 40.21%, Sub 35.19%; Audit: CLEAN, Gate: FAIL <70%) |
 | Iter-11 | MRAPF-CHO | Anisotropic Multi-Crop Tiling (AMCT) unit squares, dual KV-caches, CHO step ramp | Iter-10 | **DONE** (+70 new EMs; Refusal 5.48%, EM 12.19%, F1 33.51%, Sub 23.90%; Audit: CLEAN, Gate: FAIL <70%) |
-| Iter-13 | QAG-Pooling & RR-DEH | Query-Agnostic Gradient Saliency Pooling ($K \times 256 \to 256$) & Refusal-Resistant Dynamic Continuation Horizon | Iter-12 | **DONE** (Refusals 8.02% [-74%], EM 4.75%, F1 21.43%, Sub 12.27%, ANLS 16.55%; Audit: CLEAN, Gate: FAIL <70%) |
-| Iter-14 | Carrier Suppression Barrier & Lossless Residual Fusion | Initial Token Carrier Barrier ($t \le 3$) & Lossless Multi-Tile Residual Fusion | Iter-13 | **PLANNED** |
+| Iter-14 | Carrier Suppression Barrier & Lossless Residual Fusion | Initial Token Carrier Barrier ($t \le 3$) & Lossless Multi-Tile Residual Fusion | Iter-13 | **DONE** (EM 9.08% [+91%], F1 29.71% [+39%], Sub 18.90% [+54%], ANLS 25.13% [+52%], Refusals 6.46%; Audit: CLEAN, Gate: FAIL <70%) |
+| Iter-15 | Entity Termination Clamp & Crisp Semantic Stopping | Optical Contrast Exhaustion Gate & Crisp Stopping to eliminate tail continuation | Iter-14 | **PLANNED** |
 
 ---
 

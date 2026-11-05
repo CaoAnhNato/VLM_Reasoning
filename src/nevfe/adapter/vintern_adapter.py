@@ -674,19 +674,25 @@ class VinternNEVFEAdapter:
                 eos_token_ids.append(eos_std)
 
             generated_ids: List[int] = []
+            in_entity_state: bool = False
 
             for step in range(1, max_new_tokens + 1):
-                # Steering Operator (Theorems 16-18, Directives W3, W4, W6)
+                # Steering Operator with Dynamic State-Gated Barrier (Directive W4)
                 next_tok_tensor, steered_logits, _, _ = self.engine.decode_step(
                     logits_l=logits_l,
                     logits_g=logits_g,
                     q_mask=q_mask,
                     step_idx=step,
                     eos_token_ids=eos_token_ids,
+                    in_entity_state=in_entity_state,
                 )
                 next_id = int(next_tok_tensor.item())
 
-                # Calibrated Consensus Stopping (Directive W3: replaces premature line 583 break)
+                # Transition in_entity_state = True when first grounded entity token is emitted
+                if not in_entity_state and self.engine.is_last_token_grounded():
+                    in_entity_state = True
+
+                # Autonomous Optical Stopping Gate (Directive W3, Theorem 30)
                 omega_t, s_bar_t = self.engine.get_last_continuation_saliency()
                 stop_decision = evaluate_semantic_stopping(
                     logits_g=logits_g,
@@ -695,6 +701,7 @@ class VinternNEVFEAdapter:
                     omega_t=omega_t,
                     s_bar_t=s_bar_t,
                     eos_token_ids=eos_token_ids,
+                    step_idx=step,
                 )
 
                 if bool(stop_decision.item()) if isinstance(stop_decision, torch.Tensor) else bool(stop_decision):

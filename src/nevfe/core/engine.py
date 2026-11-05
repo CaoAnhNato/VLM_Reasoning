@@ -470,9 +470,10 @@ def compute_refusal_resistant_continuation_horizon(
     else:
         chi_term = torch.ones_like(omega_t)
 
-    # 3. Decoupled RR-DEH Formulation (Directive W3 Area Chair Meta-Review):
+    # 3. Iteration 15 Optically Gated Horizon (Theorem 30, Directive W1):
+    # Psi_t acts as a multiplicative gate. If Psi_t == 0, gamma_star collapses identically to 0.0!
     effective_continuation = torch.maximum(psi_t, norm_entropy * (1.0 - norm_divergence))
-    gamma_star = torch.clamp(effective_continuation * chi_term, 0.0, 1.0)
+    gamma_star = torch.clamp(psi_t * effective_continuation * chi_term, 0.0, 1.0)
 
     if orig_1d:
         return gamma_star.squeeze(0), psi_t.squeeze(0), chi_term.squeeze(0)
@@ -546,13 +547,15 @@ def evaluate_semantic_stopping(
     omega_t: Optional[torch.Tensor] = None,
     s_bar_t: Optional[torch.Tensor] = None,
     eos_token_ids: Optional[Sequence[int]] = None,
+    step_idx: Optional[int] = None,
 ) -> torch.Tensor:
     """
-    Evaluates Theorem 17 Calibrated Dual-Stream Consensus Stopping Functional:
-        Stop if:
-          1) argmax(steered_tokens) in T_EOS, OR
-          2) (argmax(logits_g) in T_EOS and omega_t <= s_bar_t), OR
-          3) (argmax(logits_l) in T_EOS and argmax(logits_g) in T_EOS and omega_t <= s_bar_t)
+    Iteration 15: Crisp Semantic Stopping Gate (Theorems 29 & 30, Directive W3).
+    Releases crisp EOS without regex or stopwords when:
+      1) Steered ensemble explicitly chose EOS, OR
+      2) Global stream chose EOS and optical evidence is exhausted, OR
+      3) Dual streams agree on EOS and optical evidence is exhausted, OR
+      4) Step >= 2 AND optical evidence is exhausted (omega_t <= s_bar_t).
 
     Args:
         logits_g: Global stream logits [B, K] or [K].
@@ -561,6 +564,7 @@ def evaluate_semantic_stopping(
         omega_t: Optical continuation saliency [B, 1] or [1].
         s_bar_t: Ambient expectation [B, 1] or [1].
         eos_token_ids: Sequence of EOS token IDs.
+        step_idx: 1-indexed autoregressive decoding step index.
 
     Returns:
         stop_predicate: Boolean tensor [B] or scalar boolean tensor.
@@ -612,7 +616,14 @@ def evaluate_semantic_stopping(
     # Global wants to stop AND optical evidence is exhausted
     global_exhausted_stop = is_g_eos & is_optical_exhausted
 
-    stop_predicate = steered_is_eos | dual_eos_consensus | global_exhausted_stop
+    # Condition 4 (Iteration 15 Crisp Stopping Gate, Theorem 30, Directive W3):
+    # At step >= 2, if optical evidence is exhausted, stop immediately without requiring is_g_eos!
+    if step_idx is not None and step_idx >= 2 and omega_t is not None and s_bar_t is not None:
+        crisp_exhaustion_stop = is_optical_exhausted
+    else:
+        crisp_exhaustion_stop = torch.zeros_like(is_g_eos)
+
+    stop_predicate = steered_is_eos | dual_eos_consensus | global_exhausted_stop | crisp_exhaustion_stop
 
     if orig_1d:
         return stop_predicate.squeeze(0)
@@ -1112,6 +1123,8 @@ def nevfe_step_logits(
     return_effective_coupling: Optional[bool] = None,
     eos_token_ids: Optional[Sequence[int]] = None,
     return_continuation_saliency: bool = False,
+    in_entity_state: Optional[bool] = None,
+    return_grounding_status: bool = False,
 ) -> Tuple:
     """
     Decoupled Dual-Stream Rectified Contrastive Sharpening with Dynamic Continuation Base Anchor (Directives W4 & W6).
@@ -1243,13 +1256,19 @@ def nevfe_step_logits(
                 steered_potential[:, eos_list] = base_potential[:, eos_list] - lambda_t * term_penalty
 
         # =====================================================================
-        # 6. Initial Token Carrier & Prior Attenuation Barrier (Theorems 26-28)
-        # Replaces fragile binary non_opt_mask with continuous Optical Grounding Deficit
+        # 6. Symmetrical Bilateral Clamping (Theorems 26-30, Directives W2 & W4)
         # =====================================================================
-        if mu_param > 0 and step_idx <= barrier_horizon:
-            # Dyadic temporal relaxation factor: delta_t in {1.0, 0.5, 0.25} for t in {1, 2, 3}
-            delta_t = float(barrier_decay) ** (step_idx - 1)
+        # 6a. Head Preamble Barrier (Directive W4: Dynamic State-Gated)
+        apply_head_barrier = False
+        if mu_param > 0:
+            if in_entity_state is not None:
+                apply_head_barrier = not in_entity_state
+                delta_t = 1.0  # Maintain full strength mu_param without premature decay
+            else:
+                apply_head_barrier = (step_idx <= barrier_horizon)
+                delta_t = float(barrier_decay) ** (step_idx - 1)
 
+        if apply_head_barrier:
             # Relative Optical Grounding Index OGI_t(v) in [0.0, 1.0]
             # Scale-invariant normalization against peak optical evidence Omega_t
             ogi = torch.clamp(sharp_potential / (omega_t + 1e-6), 0.0, 1.0)
@@ -1263,17 +1282,38 @@ def nevfe_step_logits(
             barrier_carrier = float(mu_param) * delta_t * psi_t * grounding_deficit
             steered_potential = steered_potential - barrier_carrier
 
-    # 7. Query-Orthogonal Potential Barrier (Step <= barrier_horizon)
-    if q_mask is not None and mu_param > 0 and step_idx <= barrier_horizon:
-        barrier = float(mu_param) * (float(barrier_decay) ** (step_idx - 1))
-        q_mask_t = q_mask.to(device=steered_potential.device, dtype=torch.bool)
-        if q_mask_t.dim() == 1 and steered_potential.dim() == 2:
-            q_mask_t = q_mask_t.unsqueeze(0)
-        steered_potential = torch.where(
-            q_mask_t,
-            steered_potential - barrier,
-            steered_potential,
-        )
+        # 6b. Tail Termination Clamp (Directive W2, Theorem 30)
+        # Suppresses ungrounded descriptive tails when psi_t -> 0 at t >= 2
+        if mu_param > 0 and step_idx >= 2:
+            K = steered_potential.shape[-1]
+            non_eos_mask = torch.ones((steered_potential.shape[0], K), dtype=torch.bool, device=steered_potential.device)
+            if eos_token_ids is not None:
+                eos_list = [int(eid) for eid in eos_token_ids if int(eid) < K]
+                if eos_list:
+                    non_eos_mask[:, eos_list] = False
+            # Tail penalty: mu_param * (1 - psi_t) applied exclusively to non-EOS tokens
+            tail_penalty = float(mu_param) * (1.0 - psi_t) * non_eos_mask.float()
+            steered_potential = steered_potential - tail_penalty
+
+    # 7. Query-Orthogonal Potential Barrier (Directive W4: Dynamic State-Gated)
+    if q_mask is not None and mu_param > 0:
+        apply_q_barrier = False
+        if in_entity_state is not None:
+            apply_q_barrier = not in_entity_state
+            barrier = float(mu_param)
+        else:
+            apply_q_barrier = (step_idx <= barrier_horizon)
+            barrier = float(mu_param) * (float(barrier_decay) ** (step_idx - 1))
+
+        if apply_q_barrier:
+            q_mask_t = q_mask.to(device=steered_potential.device, dtype=torch.bool)
+            if q_mask_t.dim() == 1 and steered_potential.dim() == 2:
+                q_mask_t = q_mask_t.unsqueeze(0)
+            steered_potential = torch.where(
+                q_mask_t,
+                steered_potential - barrier,
+                steered_potential,
+            )
 
     # 8. Gibbs-Boltzmann Steered Distribution log q_t^*(v)
     scaled_potential = float(beta_param) * steered_potential
@@ -1297,11 +1337,27 @@ def nevfe_step_logits(
 
     if is_legacy:
         coupling_tensor = torch.full((ll.shape[0], 1), float(lambda_param), device=ll.device)
+        is_grounded = torch.zeros(ll.shape[0], dtype=torch.bool, device=ll.device)
     else:
         if return_effective_coupling is False:
-            coupling_tensor = torch.full_like(norm_entropy, float(lambda_param))
+            coupling_tensor = torch.full_like(norm_entropy_l, float(lambda_param))
         else:
             coupling_tensor = lambda_t
+
+        # Evaluate optical grounding status of selected tokens (Directive W4)
+        tok_idx = next_tokens.unsqueeze(-1)
+        tok_delta = sharp_potential.gather(-1, tok_idx).squeeze(-1)  # [B]
+        tok_s_bar = s_bar_t.squeeze(-1)  # [B]
+        tok_omega = omega_t.squeeze(-1)  # [B]
+        tok_ogi = torch.clamp(tok_delta / (tok_omega + 1e-6), 0.0, 1.0)
+        is_grounded = (tok_delta > tok_s_bar) | (tok_ogi >= 0.5)
+        if eos_token_ids is not None:
+            K_eos = steered_logits.shape[-1]
+            eos_valid = [int(eid) for eid in eos_token_ids if int(eid) < K_eos]
+            if eos_valid:
+                eos_t = torch.tensor(eos_valid, device=next_tokens.device, dtype=torch.long)
+                is_eos = torch.isin(next_tokens, eos_t)
+                is_grounded = is_grounded & (~is_eos)
 
     if is_1d:
         next_tokens = next_tokens.squeeze(0)
@@ -1310,9 +1366,14 @@ def nevfe_step_logits(
         entropy_nats = entropy_nats.squeeze(0)
         omega_t = omega_t.squeeze(0)
         s_bar_t = s_bar_t.squeeze(0)
+        is_grounded = is_grounded.squeeze(0)
 
     if return_continuation_saliency:
+        if return_grounding_status:
+            return next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded
         return next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t
+    if return_grounding_status:
+        return next_tokens, steered_logits, coupling_tensor, entropy_nats, is_grounded
     return next_tokens, steered_logits, coupling_tensor, entropy_nats
 
 
@@ -1432,6 +1493,7 @@ class NEVFEEngine:
         logits_zero: Optional[torch.Tensor] = None,
         return_effective_coupling: Optional[bool] = None,
         eos_token_ids: Optional[Sequence[int]] = None,
+        in_entity_state: Optional[bool] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Execute single-step Decoupled Dual-Stream Contrastive Steering (D-DS-CS)."""
         res = nevfe_step_logits(
@@ -1448,16 +1510,27 @@ class NEVFEEngine:
             logits_zero=logits_zero,
             return_effective_coupling=return_effective_coupling,
             eos_token_ids=eos_token_ids,
+            in_entity_state=in_entity_state,
             return_continuation_saliency=True,
+            return_grounding_status=True,
         )
-        next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t = res
+        next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded = res
         self._last_omega_t = omega_t
         self._last_s_bar_t = s_bar_t
+        self._last_is_grounded = is_grounded
         return next_tokens, steered_logits, coupling_tensor, entropy_nats
 
     def get_last_continuation_saliency(self) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
         """Return the most recent (omega_t, s_bar_t) computed during decode_step."""
         return self._last_omega_t, self._last_s_bar_t
+
+    def is_last_token_grounded(self) -> bool:
+        """Return whether the most recently selected token is an optically grounded entity token (Directive W4)."""
+        if not hasattr(self, "_last_is_grounded") or self._last_is_grounded is None:
+            return False
+        if isinstance(self._last_is_grounded, torch.Tensor):
+            return bool(self._last_is_grounded.any().item())
+        return bool(self._last_is_grounded)
 
     def evaluate_stopping(
         self,
@@ -1465,6 +1538,7 @@ class NEVFEEngine:
         logits_l: Optional[torch.Tensor] = None,
         steered_tokens: Optional[torch.Tensor] = None,
         eos_token_ids: Optional[Sequence[int]] = None,
+        step_idx: Optional[int] = None,
     ) -> torch.Tensor:
         """Evaluate consensus stopping using last computed continuation saliency."""
         return evaluate_semantic_stopping(
@@ -1474,4 +1548,5 @@ class NEVFEEngine:
             omega_t=self._last_omega_t,
             s_bar_t=self._last_s_bar_t,
             eos_token_ids=eos_token_ids,
+            step_idx=step_idx,
         )
