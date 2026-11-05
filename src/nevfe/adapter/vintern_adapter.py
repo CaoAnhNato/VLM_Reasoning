@@ -16,6 +16,8 @@ from src.nevfe.core.engine import (
     NEVFEEngine,
     compute_thermodynamic_spatial_window,
     compute_question_conditioned_spatial_window,
+    compute_otsu_threshold,
+    compute_visual_token_saliency_and_mask,
 )
 
 
@@ -479,6 +481,46 @@ class VinternNEVFEAdapter:
         """Alias for extract_vit_embeds preserving backwards compatibility."""
         return self.extract_vit_embeds(image, question=question)
 
+    def apply_feature_space_nullification(
+        self,
+        visual_tokens: torch.Tensor,
+        question_embeddings: Optional[torch.Tensor] = None,
+        min_keep: int = 16,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Apply Feature-Space Mean-Field Nullification (FSG) via Otsu Saliency Bisection (Directive 2).
+        Replaces non-salient background tokens with the spatial mean-field vector v_mean.
+
+        Guarantees background tokens carry zero localized variance into past_key_values,
+        permanently eliminating attention sinks across all autoregressive steps while preserving
+        100% 1D RoPE geometry and uniform B=2 batching.
+
+        Args:
+            visual_tokens: Patch embeddings [1, 256, D] or [256, D].
+            question_embeddings: Optional question token embeddings [1, T, D] or [T, D].
+            min_keep: Minimum salient patch floor (default 16).
+
+        Returns:
+            v_sparsified: Nullified visual tokens with identical shape and dtype.
+            keep_mask: Boolean tensor [256] (True=salient, False=nullified).
+        """
+        is_3d = (visual_tokens.dim() == 3)
+        v = visual_tokens[0] if is_3d else visual_tokens
+
+        _, keep_mask = compute_visual_token_saliency_and_mask(
+            visual_tokens=v,
+            question_embeddings=question_embeddings,
+            min_keep=min_keep,
+        )
+
+        v_mean = v.mean(dim=0, keepdim=True)  # [1, D]
+        bg_mask = ~keep_mask  # [256]
+        v_fsg = v.clone()
+        v_fsg[bg_mask] = v_mean
+
+        v_sparsified = v_fsg.unsqueeze(0) if is_3d else v_fsg
+        return v_sparsified, keep_mask
+
     # =========================================================================
     # STAGE 3: Decoupled Dual-Stream Autoregressive Generation
     # =========================================================================
@@ -500,10 +542,27 @@ class VinternNEVFEAdapter:
             # 2. Stage 2: Focal feature extraction V_L (256 tokens)
             v_l = self.extract_stage2_focal_features(image, pixel_box)
 
-            # 3. Canonical natural prompt framing & Stream Embeddings (Directive 1 & 3)
+            # 3. Feature-Space Mean-Field Nullification (FSG) with Otsu Saliency Bisection (Directive 2)
+            norm_q = question.strip() if question is not None else ""
+            raw_ids = self.tokenizer.encode(norm_q, add_special_tokens=False)
+            if isinstance(raw_ids, torch.Tensor):
+                q_ids = raw_ids.to(self.device)
+            else:
+                q_ids = torch.tensor(raw_ids, dtype=torch.long, device=self.device)
+            if q_ids.ndim == 1:
+                q_ids = q_ids.unsqueeze(0)
+            q_embeds = self.model.language_model.get_input_embeddings()(q_ids)
+
+            v_l_sparsified, _ = self.apply_feature_space_nullification(
+                visual_tokens=v_l,
+                question_embeddings=q_embeds[0],
+                min_keep=16,
+            )
+
+            # 4. Canonical natural prompt framing & Stream Embeddings (Directive 1 & 3)
             prompt_text = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
             embeds_g = self.build_multimodal_embeds(v_g, question, user_prompt=prompt_text)
-            embeds_l = self.build_multimodal_embeds(v_l, question, user_prompt=prompt_text)
+            embeds_l = self.build_multimodal_embeds(v_l_sparsified, question, user_prompt=prompt_text)
 
             # 4. Batch along dimension 0: [2, seq_len, D]
             # Batch 0: Global Stream (logits_g)

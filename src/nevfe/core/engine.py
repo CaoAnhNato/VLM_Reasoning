@@ -291,6 +291,185 @@ def compute_question_conditioned_spatial_window(
     return float(x_min), float(y_min), float(x_max), float(y_max)
 
 
+def compute_dynamic_contrastive_temperature(
+    logits_l: torch.Tensor,
+    logits_g: torch.Tensor,
+    eps: float = 1e-12,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Standardized Low-Contrast Text Index (LCTI) and Rational Dynamic Temperature (Directive 3 - Theorems 1 & 8).
+
+    Formulation:
+        Xi_t = (D_JS(p_L || p_G) / log 2) * (H(p_L) / log |V|) in [0, 1]
+        tau_t = 1.0 / (1.0 + Xi_t) in [0.50, 1.00]
+
+    Computed in FP32 with eps=1e-12 and torch.nan_to_num to guarantee numerical stability.
+
+    Args:
+        logits_l: Focal crop multimodal stream logits [..., K].
+        logits_g: Global context stream logits [..., K].
+        eps: Epsilon floor for probability clamping.
+
+    Returns:
+        tau_t: Dynamic temperature tensor in [0.50, 1.00] with shape [..., 1].
+        norm_entropy: Normalized Shannon entropy in [0, 1] with shape [..., 1].
+        norm_divergence: Normalized Jensen-Shannon divergence in [0, 1] with shape [..., 1].
+    """
+    p_l = F.softmax(logits_l.float(), dim=-1)
+    p_g = F.softmax(logits_g.float(), dim=-1)
+
+    # 1. Normalized Shannon Entropy in [0, 1]
+    vocab_size = logits_l.shape[-1]
+    log_vocab = max(float(math.log(max(vocab_size, 2))), 1e-6)
+    entropy_l = -torch.sum(torch.nan_to_num(p_l * torch.log(torch.clamp(p_l, min=eps)), nan=0.0), dim=-1, keepdim=True)
+    norm_entropy = torch.clamp(entropy_l / log_vocab, 0.0, 1.0)
+
+    # 2. Normalized Jensen-Shannon Divergence in [0, 1]
+    m = 0.5 * (p_l + p_g)
+    log_m = torch.log(torch.clamp(m, min=eps))
+    kl_l = torch.sum(p_l * (torch.log(torch.clamp(p_l, min=eps)) - log_m), dim=-1, keepdim=True)
+    kl_g = torch.sum(p_g * (torch.log(torch.clamp(p_g, min=eps)) - log_m), dim=-1, keepdim=True)
+    d_js = 0.5 * (kl_l + kl_g)
+    log2 = 0.6931471805599453
+    norm_divergence = torch.clamp(d_js / log2, 0.0, 1.0)
+
+    # 3. LCTI & Dynamic Temperature in [0.50, 1.00]
+    xi_t = norm_divergence * norm_entropy
+    tau_t = 1.0 / (1.0 + xi_t)
+    return tau_t, norm_entropy, norm_divergence
+
+
+def compute_otsu_threshold(
+    m_sal: torch.Tensor,
+    min_keep: int = 16,
+) -> Tuple[torch.Tensor, float]:
+    """
+    Parameter-free Otsu maximum inter-class variance thresholding on patch saliency (Theorems 3 & 7).
+    Enforces minimal Nyquist floor min_keep (default 16 for 4x4 ViT patch floor).
+    Runs in O(P) with exactly 0 continuous hyperparameters.
+
+    Args:
+        m_sal: 1D tensor of patch saliency scores [P].
+        min_keep: Minimum number of salient patches to retain (default 16).
+
+    Returns:
+        keep_mask: Boolean mask [P] (True=salient text, False=background).
+        theta_star: Computed threshold value.
+    """
+    orig_shape = m_sal.shape
+    m_flat = m_sal.flatten().float()
+    P = m_flat.numel()
+
+    # Degenerate case: all saliency identical or zero
+    if torch.max(m_flat) - torch.min(m_flat) < 1e-9:
+        keep_mask = torch.ones(P, dtype=torch.bool, device=m_sal.device)
+        return keep_mask.reshape(orig_shape), float(m_flat[0].item())
+
+    sorted_vals, sorted_indices = torch.sort(m_flat)
+
+    # Prefix cumulative sums
+    cum_sum = torch.cumsum(sorted_vals, dim=0)
+    total_sum = cum_sum[-1]
+
+    k = torch.arange(1, P, device=m_sal.device, dtype=torch.float32)
+    w_b = k / float(P)
+    w_t = 1.0 - w_b
+
+    mu_b = cum_sum[:-1] / k
+    mu_t = (total_sum - cum_sum[:-1]) / (float(P) - k)
+
+    sigma_b_sq = w_b * w_t * ((mu_b - mu_t) ** 2)
+    best_idx = int(torch.argmax(sigma_b_sq).item())
+    theta_star = float(sorted_vals[best_idx].item())
+
+    keep_mask = m_flat > theta_star
+
+    # Enforce Nyquist floor min_keep
+    if int(torch.sum(keep_mask).item()) < min_keep:
+        topk_indices = sorted_indices[-min_keep:]
+        keep_mask = torch.zeros(P, dtype=torch.bool, device=m_sal.device)
+        keep_mask[topk_indices] = True
+        theta_star = float(sorted_vals[-min_keep].item())
+
+    return keep_mask.reshape(orig_shape), theta_star
+
+
+def compute_visual_token_saliency_and_mask(
+    visual_tokens: torch.Tensor,
+    question_embeddings: Optional[torch.Tensor] = None,
+    min_keep: int = 16,
+    temperature: float = 0.1,
+    eps: float = 1e-6,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Compute unified information-theoretic patch saliency and Otsu bisection mask (Directive 2).
+    Combines Continuous Fisher-Saliency Energy with Question Cross-Modal Affinity.
+
+    Args:
+        visual_tokens: Patch embeddings [P, D] or [1, P, D] (e.g. P = 256, D = 896).
+        question_embeddings: Optional question token embeddings [T, D] or [1, T, D].
+        min_keep: Minimum patch count floor (default 16).
+        temperature: Cross-modal softmax scaling temperature (default 0.1).
+        eps: Numerical stability constant.
+
+    Returns:
+        m_sal: Fused saliency scores [P].
+        keep_mask: Boolean keep mask [P] (True=salient text, False=background).
+    """
+    if visual_tokens.dim() == 3:
+        if visual_tokens.shape[0] != 1:
+            raise ValueError(f"Expected batch size 1 for visual_tokens, got {visual_tokens.shape}")
+        visual_tokens = visual_tokens.squeeze(0)
+    if visual_tokens.dim() != 2:
+        raise ValueError(f"Expected 2D visual_tokens [P, D], got shape {visual_tokens.shape}")
+
+    P, D = visual_tokens.shape
+    v = visual_tokens.float()
+
+    # 1. Continuous Fisher-Saliency Energy per patch
+    v_mean = torch.mean(v, dim=0, keepdim=True)
+    var_d = torch.mean((v - v_mean) ** 2, dim=0, keepdim=True)
+    s_p = 0.5 * torch.sum(((v - v_mean) ** 2) / (var_d + eps), dim=-1)  # [P]
+
+    mu_s = torch.mean(s_p)
+    sigma_s = torch.std(s_p) + eps
+    z_s = (s_p - mu_s) / sigma_s
+    m_vis = torch.relu(z_s)  # [P]
+
+    # If question embeddings missing or empty, fallback cleanly to pure visual Fisher saliency
+    if question_embeddings is None or question_embeddings.numel() == 0:
+        m_sal = m_vis
+    else:
+        q = question_embeddings
+        if q.dim() == 3:
+            q = q.squeeze(0)
+        e = q.float().to(visual_tokens.device)
+
+        # 2. Normalized Cross-Modal Cosine Affinity Matrix S in R^{P x T}
+        v_norm = v / (torch.norm(v, p=2, dim=-1, keepdim=True) + eps)
+        e_norm = e / (torch.norm(e, p=2, dim=-1, keepdim=True) + eps)
+        S = torch.matmul(v_norm, e_norm.t())  # [P, T]
+
+        # 3. Spatial Patch Distribution per Question Token: A in R^{P x T}
+        A = F.softmax(S / float(temperature), dim=0)
+
+        # 4. Parameter-Free Token Specificity Weighting via Spatial Variance
+        omega = torch.var(A, dim=0, unbiased=False)  # [T]
+        total_omega = torch.sum(omega)
+
+        if total_omega < eps:
+            m_sal = m_vis
+        else:
+            omega_norm = omega / (total_omega + eps)
+            alpha = torch.matmul(A, omega_norm)  # [P]
+            m_sal = m_vis * alpha  # [P]
+            if torch.sum(m_sal) < eps:
+                m_sal = m_vis
+
+    keep_mask, _ = compute_otsu_threshold(m_sal, min_keep=min_keep)
+    return m_sal, keep_mask
+
+
 def compute_bhattacharyya_coefficient(
     p_plus: torch.Tensor,
     p_zero: torch.Tensor,
@@ -481,22 +660,21 @@ def nevfe_step_logits(
         steered_potential = log_p_plus + float(lambda_param) * pointwise_vmi
         coupling_tensor = torch.full((ll.shape[0], 1), float(lambda_param), device=ll.device)
     else:
-        # Iteration 7: Decoupled Dual-Stream Rectified Contrastive Sharpening (Directive 2 - Theorem 3)
+        # Iteration 9: Decoupled Dual-Stream Boltzmann Scaling with Dynamic Contrastive Temperature (Directive 1 & 3)
+        # 1. Standardized Low-Contrast Text Index & Dynamic Temperature (Directive 3)
+        tau_t, norm_entropy, norm_divergence = compute_dynamic_contrastive_temperature(ll, lg)
+
         log_p_g = F.log_softmax(lg, dim=-1)
-        log_p_l = F.log_softmax(ll, dim=-1)
+        # CORRECT Boltzmann logit scaling (Directive 1 - pre-softmax logit temperature division)
+        log_p_l_cal = F.log_softmax(ll / tau_t, dim=-1)
 
-        # 1. Rectified Contrastive Sharpening (Theorem 3)
-        sharp_potential = torch.relu(log_p_l - log_p_g)
+        # 2. Rectified Contrastive Sharpening with Calibrated Optical Evidence (Theorems 1 & 8)
+        sharp_potential = torch.relu(log_p_l_cal - log_p_g)
 
-        # 2. Normalized Shannon Entropy Coupling (Directive 2)
-        p_l = torch.exp(log_p_l)
-        entropy_l = -torch.sum(torch.nan_to_num(p_l * log_p_l, nan=0.0, neginf=0.0, posinf=0.0), dim=-1, keepdim=True)
-        vocab_size = log_p_l.shape[-1]
-        log_vocab = max(float(math.log(max(vocab_size, 2))), 1e-6)
-        norm_entropy = torch.clamp(entropy_l / log_vocab, 0.0, 1.0)
+        # 3. Normalized Shannon Entropy Coupling (Directive 2)
         lambda_t = float(lambda_param) * (1.0 + norm_entropy)
 
-        # 3. Steered Potential (Theorem 3)
+        # 4. Steered Potential (Theorem 3)
         steered_potential = log_p_g + lambda_t * sharp_potential
         coupling_tensor = lambda_t
 
@@ -617,6 +795,29 @@ class NEVFEEngine:
             min_span=self.min_span,
             temperature=temperature,
         )
+
+    def compute_saliency_and_mask(
+        self,
+        visual_tokens: torch.Tensor,
+        question_embeddings: Optional[torch.Tensor] = None,
+        min_keep: int = 16,
+        temperature: float = 0.1,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Compute information-theoretic patch saliency and Otsu bisection mask (Directive 2)."""
+        return compute_visual_token_saliency_and_mask(
+            visual_tokens=visual_tokens,
+            question_embeddings=question_embeddings,
+            min_keep=min_keep,
+            temperature=temperature,
+        )
+
+    def compute_dynamic_temperature(
+        self,
+        logits_l: torch.Tensor,
+        logits_g: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Compute standardized LCTI and dynamic contrastive temperature (Directive 3)."""
+        return compute_dynamic_contrastive_temperature(logits_l, logits_g)
 
     def decode_step(
         self,
