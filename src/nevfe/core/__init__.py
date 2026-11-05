@@ -12,6 +12,8 @@ from src.nevfe.core.engine import (
     compute_candidate_support_mask,
     compute_free_energy_support_mask,
     nevfe_step_logits,
+    pool_query_agnostic_gradient_tokens,
+    compute_refusal_resistant_continuation_horizon,
 )
 
 __all__ = [
@@ -23,4 +25,6 @@ __all__ = [
     "compute_candidate_support_mask",
     "compute_free_energy_support_mask",
     "nevfe_step_logits",
+    "pool_query_agnostic_gradient_tokens",
+    "compute_refusal_resistant_continuation_horizon",
 ]

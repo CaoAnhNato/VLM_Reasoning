@@ -310,8 +310,8 @@ class TestNEVFEEngineFEST(unittest.TestCase):
         lz_supp = lz.clone()
         lp_supp[5] = 10.0
         lz_supp[5] = 10.0
-        _, logits_t1_mask, _, _ = nevfe_step_logits(lp_supp, lz_supp, lambda_param=1.0, beta_param=1.0, mu_param=3.0, q_mask=q_mask, step_idx=1)
-        _, logits_t1_nomask, _, _ = nevfe_step_logits(lp_supp, lz_supp, lambda_param=1.0, beta_param=1.0, mu_param=3.0, q_mask=None, step_idx=1)
+        _, logits_t1_mask, _, _ = nevfe_step_logits(logits_plus=lp_supp, logits_zero=lz_supp, lambda_param=1.0, beta_param=1.0, mu_param=3.0, q_mask=q_mask, step_idx=1)
+        _, logits_t1_nomask, _, _ = nevfe_step_logits(logits_plus=lp_supp, logits_zero=lz_supp, lambda_param=1.0, beta_param=1.0, mu_param=3.0, q_mask=None, step_idx=1)
         diff_masked = (logits_t1_nomask[5] - logits_t1_mask[5]).item()
         self.assertAlmostEqual(diff_masked, 3.0, places=4, msg="Barrier at step 1 on masked token must equal exactly 3.0 nats")
 

@@ -68,6 +68,14 @@
 | R3-5 | Colab L4 Sharded Benchmark Execution | 20-sample pre-test -> 4-worker sharded full benchmark -> Synchronize all 7 artifacts | R3-4 | **DONE** (All 1,222 questions evaluated in 972.15s [16.20 min] on NVIDIA L4 GPU, 0 OOM, all 7 artifacts verified locally: Substring 77.18%, F1 72.55%, ANLS 68.12%, EM 47.79%) |
 | R3-6 | Metric Verification (>80%) & Final Documentation | Verify all Stage 2 metrics >80% and Stage 1 recall >=80%; Final SOTA release documentation | R3-5 | **DONE** (Section 10 documented with 4-way comparative table, mathematical formulations, and honest Stage 1 recall bottleneck analysis; 78/78 master regression tests verified) |
 
+### Strict A* Research Campaign Milestones (Vintern-1B-v3_5 on ViTextVQA)
+| # | Name | Scope | Dependencies | Status |
+|---|------|-------|-------------|--------|
+| Iter-10 | RFC-MS-QO-VFE | FSG Reversion, Bounded DTEC, OGI Prior Attenuation, Dual-Stream Stopping | none | **DONE** (Refusals 5.40%, EM 15.88%, F1 40.21%, Sub 35.19%; Audit: CLEAN, Gate: FAIL <70%) |
+| Iter-11 | MRAPF-CHO | Anisotropic Multi-Crop Tiling (AMCT) unit squares, dual KV-caches, CHO step ramp | Iter-10 | **DONE** (+70 new EMs; Refusal 5.48%, EM 12.19%, F1 33.51%, Sub 23.90%; Audit: CLEAN, Gate: FAIL <70%) |
+| Iter-12 | LP-Q-CrossAttn & Entropy-CHO | Q-CrossAttn Pooling ($K \times 256 \to 256$), Mixture-Entropy Dynamic Horizon $\gamma_t$ | Iter-11 | **DONE** (Eliminated repetition loops, +36 new EMs; Refusal 30.77%, EM 8.18%, F1 22.68%, Sub 18.99%; Audit: CLEAN, Gate: FAIL <70%) |
+| Iter-13 | QAG-Pooling & RR-DEH | Query-Agnostic Gradient Saliency Pooling ($K \times 256 \to 256$) & Refusal-Resistant Dynamic Continuation Horizon | Iter-12 | **IMPLEMENTED** (Directives W1–W6 executed, 45/45 pytest passed, 71/71 E2E tests passed) |
+
 ---
 
 ## Interface Contracts

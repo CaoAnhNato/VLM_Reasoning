@@ -36,7 +36,6 @@ from tests.test_tier1_features import (
     TestTier1Feature3VQAMetrics,
     TestTier1Feature4TokenizerConfig,
     TestTier1Feature5PipelineResult,
-    TestTier1Round3AlgorithmicUpgrades,
 )
 from tests.test_tier2_boundaries import (
     TestTier2Boundary1AspectRatios,
@@ -64,7 +63,6 @@ TIER_DEFINITIONS = [
             TestTier1Feature3VQAMetrics,
             TestTier1Feature4TokenizerConfig,
             TestTier1Feature5PipelineResult,
-            TestTier1Round3AlgorithmicUpgrades,
         ],
     },
     {

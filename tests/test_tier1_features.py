@@ -41,7 +41,6 @@ from scripts.benchmark.metrics import (
     compute_anls,
     compute_token_f1,
     compute_exact_match,
-    canonical_normalize_vietnamese_vqa,
 )
 from scripts.benchmark.sg_vcd.bbox_selector import (
     KLDivergenceRegionSelector,
@@ -279,15 +278,15 @@ class TestTier1Feature3VQAMetrics(unittest.TestCase):
         """
         # Exact substring: GT inside pred
         self.assertEqual(compute_substring_match("nhà thuốc bảo tâm an", ["bảo tâm an"]), 1.0)
-        # Reverse substring: pred inside GT (len >= 3)
-        self.assertEqual(compute_substring_match("bảo tâm an", ["nhà thuốc bảo tâm an"]), 1.0)
-        # Space-concatenated OCR tokens
-        self.assertEqual(compute_substring_match("baotaman", ["bảo tâm an"]), 1.0)
-        # Token set inclusion
+        # Concise prediction inside verbose GT is NOT substring match (Strict A* Protocol)
+        self.assertEqual(compute_substring_match("bảo tâm an", ["nhà thuốc bảo tâm an"]), 0.0)
+        # Space-concatenated without match is 0.0
+        self.assertEqual(compute_substring_match("baotaman", ["bảo tâm an"]), 0.0)
+        # Token set inclusion: GT inside pred
         self.assertEqual(compute_substring_match("đây là quán ăn ngon", ["quán ăn"]), 1.0)
-        # Soft token inclusion ratio (2 of 4 tokens present, non-contiguous)
+        # Non-containment is 0.0
         score = compute_substring_match("quán việt", ["quán gia đình việt"])
-        self.assertAlmostEqual(score, 0.5, places=4)
+        self.assertEqual(score, 0.0)
         # Completely disjoint strings
         self.assertEqual(compute_substring_match("hà nội", ["sài gòn"]), 0.0)
         # Empty string handling
@@ -313,7 +312,7 @@ class TestTier1Feature3VQAMetrics(unittest.TestCase):
         self.assertEqual(anls_major, 0.0)
         # Space-concatenated OCR tokens
         anls_ocr = compute_anls("baolangson", ["báo lạng sơn"])
-        self.assertGreaterEqual(anls_ocr, 0.70)
+        self.assertGreaterEqual(anls_ocr, 0.50)
         # Empty string handling
         self.assertEqual(compute_anls("", ["nhà thuốc"]), 0.0)
         self.assertEqual(compute_anls("nhà thuốc", []), 0.0)

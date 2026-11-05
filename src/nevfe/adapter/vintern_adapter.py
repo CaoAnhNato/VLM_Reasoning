@@ -20,6 +20,7 @@ from src.nevfe.core.engine import (
     compute_otsu_threshold,
     compute_visual_token_saliency_and_mask,
     evaluate_semantic_stopping,
+    pool_query_agnostic_gradient_tokens,
     pool_question_guided_focal_tokens,
 )
 
@@ -394,10 +395,10 @@ class VinternNEVFEAdapter:
         use_amct: bool = True,
     ) -> torch.Tensor:
         """
-        Stage 2: Anisotropic Multi-Crop Tiling with LP-Q-CrossAttn Pooling (Theorems 16 & 19, Directives W1 & W2).
+        Stage 2: Anisotropic Multi-Crop Tiling with QAG-Pooling (Theorems 23 & 25, Directives W1 & W2).
         Extracts gx * gy square sub-tiles from crop_box with (gx, gy) in {(1, 1), (2, 1), (1, 2)},
         extracts K * 256 focal visual tokens with Fisher-Saliency modulation, and condenses K * 256 -> 256 tokens
-        via Locality-Preserving Question-Guided Cross-Attention Pooling when K > 1.
+        via Query-Agnostic Gradient Saliency Pooling (QAG-Pooling) when K > 1.
 
         Returns:
             v_l_mod: Invariant focal visual tokens strictly [1, 256, 896].
@@ -407,7 +408,6 @@ class VinternNEVFEAdapter:
             self._cached_img_key == img_key
             and self._cached_v_l is not None
             and self._last_crop_box == crop_box
-            and question_embeddings is None
         ):
             return self._cached_v_l
 
@@ -450,13 +450,12 @@ class VinternNEVFEAdapter:
             )
             tile_mods.append(v_k_mod)
 
-        # Condense K * 256 -> strictly 256 tokens via LP-Q-CrossAttn Pooling (Directives W1 & W2)
+        # Condense K * 256 -> strictly 256 tokens via QAG-Pooling (Directives W1 & W2)
         if use_amct and len(tile_mods) > 1:
             v_l_cat = torch.cat(tile_mods, dim=1)  # [1, 512, 896]
-            v_l_mod = pool_question_guided_focal_tokens(
+            v_l_mod = pool_query_agnostic_gradient_tokens(
                 visual_tokens=v_l_cat,
                 grid=grid,
-                question_embeddings=question_embeddings,
             )  # strictly [1, 256, 896]
         else:
             v_l_mod = tile_mods[0]  # [1, 256, 896]
@@ -568,20 +567,8 @@ class VinternNEVFEAdapter:
         Returns V_L (strictly 256 tokens) for downstream processing.
         """
         _, pixel_box, _ = self.compute_stage1_window(image, question=question)
-        q_embeds = None
-        if question:
-            norm_q = question.strip()
-            raw_ids = self.tokenizer.encode(norm_q, add_special_tokens=False)
-            if isinstance(raw_ids, torch.Tensor):
-                q_ids = raw_ids.to(self.device)
-            else:
-                q_ids = torch.tensor(raw_ids, dtype=torch.long, device=self.device)
-            if q_ids.ndim == 1:
-                q_ids = q_ids.unsqueeze(0)
-            with torch.no_grad():
-                q_embeds = self.model.language_model.get_input_embeddings()(q_ids)
         v_l = self.extract_stage2_focal_features(
-            image, pixel_box, question_embeddings=q_embeds, use_amct=True
+            image, pixel_box, use_amct=True
         )
         self._cached_vit_embeds = v_l
         return v_l
@@ -652,23 +639,9 @@ class VinternNEVFEAdapter:
             # 1. Stage 1: Window extraction & Global features V_G
             v_g, pixel_box, _ = self.compute_stage1_window(image, question=question)
 
-            # Compute question embeddings if available for Q-CrossAttn pooling (Directive W1)
-            q_embeds = None
-            if question:
-                norm_q = question.strip()
-                raw_ids = self.tokenizer.encode(norm_q, add_special_tokens=False)
-                if isinstance(raw_ids, torch.Tensor):
-                    q_ids = raw_ids.to(self.device)
-                else:
-                    q_ids = torch.tensor(raw_ids, dtype=torch.long, device=self.device)
-                if q_ids.ndim == 1:
-                    q_ids = q_ids.unsqueeze(0)
-                embed_layer = self.model.language_model.get_input_embeddings()
-                q_embeds = embed_layer(q_ids)
-
             # 2. Stage 2: Focal feature extraction V_L (condensed strictly to 256 tokens, Directives W1 & W2)
             v_l = self.extract_stage2_focal_features(
-                image, pixel_box, question_embeddings=q_embeds, use_amct=True
+                image, pixel_box, use_amct=True
             )
 
             # 3. Canonical natural prompt framing & Stream Embeddings (Directive W2)
