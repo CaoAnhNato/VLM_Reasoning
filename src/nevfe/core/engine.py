@@ -62,6 +62,95 @@ def modulate_patch_embeddings(
     return v_modulated.to(dtype=orig_dtype)
 
 
+def adaptive_tensor_stroke_dilation(
+    image_tensor: torch.Tensor,
+    magnification: float,
+    kappa_0: float = 0.5,
+    eps: float = 1e-6,
+) -> torch.Tensor:
+    r"""
+    Continuous Morphological Shock Scale-Space Stroke Dilation (Theorem 32, Directive W2).
+    Implemented 100% via fundamental PyTorch tensor ops (F.conv2d, torch.tanh, torch.clamp).
+    Strictly 0 heuristics, 0 regex, polarity-symmetric, 0 background noise amplification.
+
+    Args:
+        image_tensor: Float tensor of shape [B, 3, H, W] or [3, H, W] in range [0.0, 1.0].
+        magnification: Optical zoom scale factor M = 448 / s.
+        kappa_0: Parameter-free base amplitude (default 0.5).
+        eps: Numerical stability constant.
+
+    Returns:
+        dilated_tensor: Float tensor with identical shape clamped in [0.0, 1.0].
+    """
+    if magnification <= 1.05:
+        return image_tensor
+
+    orig_dim = image_tensor.dim()
+    if orig_dim == 3:
+        image_tensor = image_tensor.unsqueeze(0)
+    elif orig_dim != 4:
+        raise ValueError(f"Expected 3D [3, H, W] or 4D [B, 3, H, W] image tensor, got shape {image_tensor.shape}")
+
+    device = image_tensor.device
+    dtype = image_tensor.dtype
+
+    # Ensure float32 for stable convolution & numerical precision
+    x = image_tensor.float()
+
+    # 1. Luminance extraction Y = 0.2989 R + 0.5870 G + 0.1140 B
+    luma_weights = torch.tensor([0.2989, 0.5870, 0.1140], device=device, dtype=torch.float32).view(1, 3, 1, 1)
+    Y = torch.sum(x * luma_weights, dim=1, keepdim=True)  # [B, 1, H, W]
+
+    # 2. Isotropic Discrete Laplacian Kernel (8-connected)
+    k_lap = torch.tensor([
+        [1.0,  1.0, 1.0],
+        [1.0, -8.0, 1.0],
+        [1.0,  1.0, 1.0]
+    ], device=device, dtype=torch.float32).view(1, 1, 3, 3) / 8.0
+
+    # 3. Directional Central Difference Gradient Kernels
+    k_dx = torch.tensor([
+        [0.0, 0.0, 0.0],
+        [-0.5, 0.0, 0.5],
+        [0.0, 0.0, 0.0]
+    ], device=device, dtype=torch.float32).view(1, 1, 3, 3)
+
+    k_dy = torch.tensor([
+        [0.0, -0.5, 0.0],
+        [0.0,  0.0, 0.0],
+        [0.0,  0.5, 0.0]
+    ], device=device, dtype=torch.float32).view(1, 1, 3, 3)
+
+    # 4. Reflective circular padding for boundary invariance
+    Y_pad = F.pad(Y, (1, 1, 1, 1), mode="reflect")
+    lap = F.conv2d(Y_pad, k_lap)      # [B, 1, H, W]
+    gx = F.conv2d(Y_pad, k_dx)        # [B, 1, H, W]
+    gy = F.conv2d(Y_pad, k_dy)        # [B, 1, H, W]
+
+    grad_mag = torch.sqrt(torch.clamp(gx * gx + gy * gy, min=0.0))  # [B, 1, H, W]
+
+    # 5. Continuous Scale & Polarity Invariant Shock Dilation Update
+    # Symmetrically handles dark-on-light and light-on-dark strokes
+    sigma_lap = torch.std(lap, dim=(-2, -1), keepdim=True) + eps
+    shock_dir = torch.tanh(lap / sigma_lap)  # [B, 1, H, W] in [-1, 1]
+
+    # Salience gating: zero out flat background regions where grad_mag -> 0
+    max_grad = torch.amax(grad_mag, dim=(-2, -1), keepdim=True)
+    grad_gate = torch.where(max_grad > 1e-4, grad_mag / (max_grad + eps), torch.zeros_like(grad_mag))
+
+    # Magnification scaling factor: smoothly activates when M > 1.0
+    kappa_m = float(kappa_0) * math.tanh(max(0.0, float(magnification) - 1.0))
+
+    # Delta applied to all 3 RGB channels symmetrically
+    delta = - kappa_m * (shock_dir * grad_gate)  # [B, 1, H, W]
+    dilated = torch.clamp(x + delta, 0.0, 1.0).to(dtype=dtype)
+
+    if orig_dim == 3:
+        dilated = dilated.squeeze(0)
+
+    return dilated
+
+
 def compute_thermodynamic_spatial_window(
     visual_tokens: torch.Tensor,
     grid_size: int = 16,
@@ -1125,6 +1214,9 @@ def nevfe_step_logits(
     return_continuation_saliency: bool = False,
     in_entity_state: Optional[bool] = None,
     return_grounding_status: bool = False,
+    prev_token_id: Optional[int] = None,
+    space_token_id: int = 220,
+    digit_token_ids: Optional[Sequence[int]] = None,
 ) -> Tuple:
     """
     Decoupled Dual-Stream Rectified Contrastive Sharpening with Dynamic Continuation Base Anchor (Directives W4 & W6).
@@ -1256,54 +1348,63 @@ def nevfe_step_logits(
                 steered_potential[:, eos_list] = base_potential[:, eos_list] - lambda_t * term_penalty
 
         # =====================================================================
-        # 6. Symmetrical Bilateral Clamping (Theorems 26-30, Directives W2 & W4)
+        # 6. Tripartite Symmetrical Clamping Engine (Theorem 33, Directive W3)
         # =====================================================================
-        # 6a. Head Preamble Barrier (Directive W4: Dynamic State-Gated)
-        apply_head_barrier = False
         if mu_param > 0:
-            if in_entity_state is not None:
-                apply_head_barrier = not in_entity_state
-                delta_t = 1.0  # Maintain full strength mu_param without premature decay
-            else:
-                apply_head_barrier = (step_idx <= barrier_horizon)
-                delta_t = float(barrier_decay) ** (step_idx - 1)
-
-        if apply_head_barrier:
-            # Relative Optical Grounding Index OGI_t(v) in [0.0, 1.0]
-            # Scale-invariant normalization against peak optical evidence Omega_t
-            ogi = torch.clamp(sharp_potential / (omega_t + 1e-6), 0.0, 1.0)
-
-            # Continuous Optical Grounding Deficit D_t(v) in [0.0, 1.0]
-            # Evaluates to 0.0 for peak entity tokens; evaluates to ~1.0 for carrier preambles
-            grounding_deficit = 1.0 - ogi
-
-            # Parameter-free Carrier Preamble Suppression Barrier (Theorems 26-28)
-            # Imposes up to mu_param nats penalty on ungrounded conversational tokens
-            barrier_carrier = float(mu_param) * delta_t * psi_t * grounding_deficit
-            steered_potential = steered_potential - barrier_carrier
-
-        # 6b. Tail Termination Clamp (Directive W2, Theorem 30)
-        # Suppresses ungrounded descriptive tails when psi_t -> 0 at t >= 2
-        if mu_param > 0 and step_idx >= 2:
             K = steered_potential.shape[-1]
-            non_eos_mask = torch.ones((steered_potential.shape[0], K), dtype=torch.bool, device=steered_potential.device)
-            if eos_token_ids is not None:
-                eos_list = [int(eid) for eid in eos_token_ids if int(eid) < K]
-                if eos_list:
-                    non_eos_mask[:, eos_list] = False
-            # Tail penalty: mu_param * (1 - psi_t) applied exclusively to non-EOS tokens
-            tail_penalty = float(mu_param) * (1.0 - psi_t) * non_eos_mask.float()
-            steered_potential = steered_potential - tail_penalty
+            device = steered_potential.device
+            B = steered_potential.shape[0]
+
+            # 6a. Persistent Head Carrier Barrier (Directive W3, Theorem 33)
+            # Persistent for t <= barrier_horizon without fragile in_entity_state boolean deactivation;
+            # Scaled by dyadic decay delta_t = (0.5)^(step_idx - 1)
+            apply_head_barrier = (step_idx <= barrier_horizon) or (in_entity_state is False)
+            if apply_head_barrier:
+                if step_idx <= barrier_horizon:
+                    delta_t = float(barrier_decay) ** (step_idx - 1)
+                else:
+                    delta_t = 1.0
+
+                # Relative Optical Grounding Index OGI_t(v) in [0.0, 1.0]
+                ogi = torch.clamp(sharp_potential / (omega_t + 1e-6), 0.0, 1.0)
+                grounding_deficit = 1.0 - ogi
+                barrier_carrier = float(mu_param) * delta_t * psi_t * grounding_deficit
+                steered_potential = steered_potential - barrier_carrier
+
+            # 6b. Continuous Numerical Cohesion Clamp (Directive W3, Theorem 33 Part 1)
+            # Blocks ungrounded BPE whitespace splitting (token 220) between numerical digits
+            if digit_token_ids is None:
+                digit_token_ids = list(range(15, 25))
+
+            is_prev_digit = (prev_token_id is not None and prev_token_id in digit_token_ids)
+            if step_idx >= 2 and is_prev_digit and space_token_id < K:
+                valid_digit_ids = [int(did) for did in digit_token_ids if int(did) < K]
+                if valid_digit_ids:
+                    digit_tensor = torch.tensor(valid_digit_ids, device=device, dtype=torch.long)
+                    sharp_num = sharp_potential[:, digit_tensor]
+                    omega_num = torch.max(sharp_num, dim=-1, keepdim=True).values  # [B, 1]
+                    has_num_evidence = (omega_num > s_bar_t)  # [B, 1]
+                    if has_num_evidence.any():
+                        cohesion_penalty = float(mu_param) * psi_t * has_num_evidence.float()  # [B, 1]
+                        steered_potential[:, space_token_id] = (
+                            steered_potential[:, space_token_id] - cohesion_penalty.squeeze(-1)
+                        )
+
+            # 6c. Tail Termination Clamp (Directive W3, Theorem 30)
+            # Suppresses ungrounded descriptive tails when psi_t -> 0 at t >= 2
+            if step_idx >= 2:
+                non_eos_mask = torch.ones((B, K), dtype=torch.bool, device=device)
+                if eos_token_ids is not None:
+                    eos_list = [int(eid) for eid in eos_token_ids if int(eid) < K]
+                    if eos_list:
+                        non_eos_mask[:, eos_list] = False
+                tail_penalty = float(mu_param) * (1.0 - psi_t) * non_eos_mask.float()
+                steered_potential = steered_potential - tail_penalty
 
     # 7. Query-Orthogonal Potential Barrier (Directive W4: Dynamic State-Gated)
     if q_mask is not None and mu_param > 0:
-        apply_q_barrier = False
-        if in_entity_state is not None:
-            apply_q_barrier = not in_entity_state
-            barrier = float(mu_param)
-        else:
-            apply_q_barrier = (step_idx <= barrier_horizon)
-            barrier = float(mu_param) * (float(barrier_decay) ** (step_idx - 1))
+        apply_q_barrier = (step_idx <= barrier_horizon) if in_entity_state is None else (not in_entity_state)
+        barrier = float(mu_param) * (float(barrier_decay) ** (step_idx - 1)) if in_entity_state is None else float(mu_param)
 
         if apply_q_barrier:
             q_mask_t = q_mask.to(device=steered_potential.device, dtype=torch.bool)
@@ -1494,6 +1595,9 @@ class NEVFEEngine:
         return_effective_coupling: Optional[bool] = None,
         eos_token_ids: Optional[Sequence[int]] = None,
         in_entity_state: Optional[bool] = None,
+        prev_token_id: Optional[int] = None,
+        space_token_id: int = 220,
+        digit_token_ids: Optional[Sequence[int]] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Execute single-step Decoupled Dual-Stream Contrastive Steering (D-DS-CS)."""
         res = nevfe_step_logits(
@@ -1513,6 +1617,9 @@ class NEVFEEngine:
             in_entity_state=in_entity_state,
             return_continuation_saliency=True,
             return_grounding_status=True,
+            prev_token_id=prev_token_id,
+            space_token_id=space_token_id,
+            digit_token_ids=digit_token_ids,
         )
         next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded = res
         self._last_omega_t = omega_t

@@ -22,6 +22,7 @@ from src.nevfe.core.engine import (
     evaluate_semantic_stopping,
     pool_query_agnostic_gradient_tokens,
     pool_question_guided_focal_tokens,
+    adaptive_tensor_stroke_dilation,
 )
 
 
@@ -393,15 +394,20 @@ class VinternNEVFEAdapter:
         crop_box: Tuple[int, int, int, int],
         question_embeddings: Optional[torch.Tensor] = None,
         use_amct: bool = True,
+        question: Optional[str] = None,
+        theta_zoom: float = 0.65,
+        use_hierarchical_zoom: bool = True,
     ) -> torch.Tensor:
         """
-        Stage 2: Anisotropic Multi-Crop Tiling with QAG-Pooling (Theorems 23 & 25, Directives W1 & W2).
-        Extracts gx * gy square sub-tiles from crop_box with (gx, gy) in {(1, 1), (2, 1), (1, 2)},
-        extracts K * 256 focal visual tokens with Fisher-Saliency modulation, and condenses K * 256 -> 256 tokens
-        via Query-Agnostic Gradient Saliency Pooling (QAG-Pooling) when K > 1.
+        Stage 2: Hierarchical Multi-Scale Focal Window Extraction (Theorem 32, Directive W1).
+        Extracts Level 1 coarse focal window B^(1) -> V^(1) [1, 256, D].
+        Conditions Level 2 sub-box B^(2) on question embeddings on V^(1).
+        If rho_sub < theta_zoom (0.65), crops B^(2) from native high-res image -> V^(2) [1, 256, D]
+        and concatenates losslessly: V_L = [V^(1); V^(2)] [1, 512, D].
+        Else: V_L = V^(1) [1, 256, D].
 
         Returns:
-            v_l_mod: Invariant focal visual tokens strictly [1, 256, 896].
+            v_l_mod: Invariant focal visual tokens strictly with shape [1, 256, 896] or [1, 512, 896].
         """
         img_key = self._make_image_key(image)
         if (
@@ -420,46 +426,150 @@ class VinternNEVFEAdapter:
             self._last_spatial_window = None
             self._cached_vit_embeds = None
 
-        if use_amct:
+        if use_hierarchical_zoom:
+            # 1. Level 1 Coarse Focal Window B^(1)
+            crop1 = image.crop(crop_box)
+            cw, ch = crop1.size
+            if cw != ch:
+                max_side = max(cw, ch)
+                padded_crop = Image.new("RGB", (max_side, max_side), (128, 128, 128))
+                padded_crop.paste(crop1, ((max_side - cw) // 2, (max_side - ch) // 2))
+                crop1 = padded_crop
+            s1 = max(cw, ch)
+            m1 = 448.0 / max(1.0, float(s1))
+            tile1 = crop1.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)
+
+            pixel_values_1 = self.transform(tile1).unsqueeze(0).to(
+                device=self.device, dtype=torch.float32
+            )
+            pixel_values_1 = adaptive_tensor_stroke_dilation(pixel_values_1, magnification=m1)
+            with torch.no_grad():
+                v1_raw = self.model.extract_feature(pixel_values_1.to(torch.bfloat16))  # [1, 256, 896]
+            del pixel_values_1
+
+            v1_mod = self.engine.modulate_patches(v1_raw[0]).unsqueeze(0).to(
+                dtype=v1_raw.dtype, device=self.device
+            )
+
+            # 2. Condition Level 2 Sub-box Window B^(2) on question embeddings
+            q_embeds = question_embeddings
+            if q_embeds is None:
+                q_text = question if question is not None else self._last_question
+                if q_text and hasattr(self, "tokenizer") and self.tokenizer is not None and hasattr(self, "model") and self.model is not None:
+                    try:
+                        raw_ids = self.tokenizer.encode(q_text.strip(), add_special_tokens=False)
+                        if raw_ids:
+                            q_ids = torch.tensor(raw_ids, dtype=torch.long, device=self.device).unsqueeze(0)
+                            with torch.no_grad():
+                                q_embeds = self.model.language_model.get_input_embeddings()(q_ids)
+                    except Exception:
+                        q_embeds = None
+
+            u_min, v_min, u_max, v_max = compute_question_conditioned_spatial_window(
+                visual_tokens=v1_mod[0],
+                question_embeddings=q_embeds[0] if (q_embeds is not None and isinstance(q_embeds, torch.Tensor) and q_embeds.numel() > 0) else None,
+                grid_size=16,
+                k_sigma=self.engine.k_sigma,
+                min_span=self.engine.min_span,
+            )
+
+            delta_u = u_max - u_min
+            delta_v = v_max - v_min
+            rho_sub = max(delta_u, delta_v)
+
+            if rho_sub < theta_zoom:
+                W, H = image.size
+                bx0, by0, bx1, by1 = crop_box
+                bw = max(2, bx1 - bx0)
+                bh = max(2, by1 - by0)
+
+                sub_x0 = max(0, min(W - 2, int(round(bx0 + u_min * bw))))
+                sub_y0 = max(0, min(H - 2, int(round(by0 + v_min * bh))))
+                sub_x1 = max(sub_x0 + 2, min(W, int(round(bx0 + u_max * bw))))
+                sub_y1 = max(sub_y0 + 2, min(H, int(round(by0 + v_max * bh))))
+                box2_pixel = (sub_x0, sub_y0, sub_x1, sub_y1)
+
+                crop2 = image.crop(box2_pixel)
+                cw2, ch2 = crop2.size
+                if cw2 != ch2:
+                    max_side2 = max(cw2, ch2)
+                    padded_crop2 = Image.new("RGB", (max_side2, max_side2), (128, 128, 128))
+                    padded_crop2.paste(crop2, ((max_side2 - cw2) // 2, (max_side2 - ch2) // 2))
+                    crop2 = padded_crop2
+                s2 = max(cw2, ch2)
+                m2 = 448.0 / max(1.0, float(s2))
+                tile2 = crop2.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)
+
+                pixel_values_2 = self.transform(tile2).unsqueeze(0).to(
+                    device=self.device, dtype=torch.float32
+                )
+                pixel_values_2 = adaptive_tensor_stroke_dilation(pixel_values_2, magnification=m2)
+                with torch.no_grad():
+                    v2_raw = self.model.extract_feature(pixel_values_2.to(torch.bfloat16))  # [1, 256, 896]
+                del pixel_values_2
+
+                v2_mod = self.engine.modulate_patches(v2_raw[0]).unsqueeze(0).to(
+                    dtype=v2_raw.dtype, device=self.device
+                )
+
+                # Concatenate losslessly: V_L = [V^(1); V^(2)] in R^(1 x 512 x D) (Theorem 32)
+                v_l_mod = torch.cat([v1_mod, v2_mod], dim=1)
+                self._last_level2_box = box2_pixel
+            else:
+                v_l_mod = v1_mod
+                self._last_level2_box = None
+        else:
             w_box = max(2, crop_box[2] - crop_box[0])
             h_box = max(2, crop_box[3] - crop_box[1])
             grid = select_admissible_aspect_ratio_grid(w_box, h_box)
             tiles = extract_anisotropic_focal_tiles(image, crop_box, grid, target_tile_size=self.image_size)
-        else:
-            grid = (1, 1)
-            crop = image.crop(crop_box)
-            cw, ch = crop.size
-            if cw != ch:
-                max_side = max(cw, ch)
-                padded_crop = Image.new("RGB", (max_side, max_side), (128, 128, 128))
-                padded_crop.paste(crop, ((max_side - cw) // 2, (max_side - ch) // 2))
-                crop = padded_crop
-            tiles = [crop.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)]
 
-        tile_mods = []
-        for tile in tiles:
-            pixel_values_k = self.transform(tile).unsqueeze(0).to(
-                device=self.device, dtype=torch.bfloat16
-            )
-            with torch.no_grad():
-                v_k_raw = self.model.extract_feature(pixel_values_k)  # [1, 256, 896]
-            del pixel_values_k
+            tile_mods = []
+            for tile in tiles:
+                pixel_values_k = self.transform(tile).unsqueeze(0).to(
+                    device=self.device, dtype=torch.bfloat16
+                )
+                with torch.no_grad():
+                    v_k_raw = self.model.extract_feature(pixel_values_k)  # [1, 256, 896]
+                del pixel_values_k
 
-            v_k_mod = self.engine.modulate_patches(v_k_raw[0]).unsqueeze(0).to(
-                dtype=v_k_raw.dtype, device=self.device
-            )
-            tile_mods.append(v_k_mod)
+                v_k_mod = self.engine.modulate_patches(v_k_raw[0]).unsqueeze(0).to(
+                    dtype=v_k_raw.dtype, device=self.device
+                )
+                tile_mods.append(v_k_mod)
 
-        # Preserve uncompressed K * 256 tokens without spatial downsampling (Theorem 27)
-        if use_amct and len(tile_mods) > 1:
-            v_l_mod = torch.cat(tile_mods, dim=1)  # strictly [1, 512, 896]
-        else:
-            v_l_mod = tile_mods[0]  # [1, 256, 896]
+            # Preserve uncompressed K * 256 tokens without spatial downsampling (Theorem 27)
+            if use_amct and len(tile_mods) > 1:
+                v_l_mod = torch.cat(tile_mods, dim=1)  # strictly [1, 512, 896]
+            else:
+                v_l_mod = tile_mods[0]  # [1, 256, 896]
+            self._last_level2_box = None
 
         self._cached_v_l = v_l_mod
         self._last_crop_box = crop_box
         self._cached_vit_embeds = v_l_mod
         return v_l_mod
+
+    def extract_hierarchical_multiscale_features(
+        self,
+        image: Image.Image,
+        question: str,
+        theta_zoom: float = 0.65,
+    ) -> Tuple[torch.Tensor, Tuple[int, int, int, int], Optional[Tuple[int, int, int, int]]]:
+        """
+        Hierarchical Multi-Scale Focal Window Extraction (Theorem 32, Directive W1).
+        Two-tier recursive Chebyshev windowing returning (v_l, box1_pixel, box2_pixel).
+        """
+        v_g, box1_pixel, _ = self.compute_stage1_window(image, question=question)
+        v_l = self.extract_stage2_focal_features(
+            image=image,
+            crop_box=box1_pixel,
+            question=question,
+            theta_zoom=theta_zoom,
+            use_hierarchical_zoom=True,
+        )
+        box2_pixel = getattr(self, "_last_level2_box", None)
+        return v_l, box1_pixel, box2_pixel
 
     # =========================================================================
     # Embedding Construction: Single-Tile (256) or Multi-Tile (K * 256) Tokens
@@ -564,7 +674,7 @@ class VinternNEVFEAdapter:
         """
         _, pixel_box, _ = self.compute_stage1_window(image, question=question)
         v_l = self.extract_stage2_focal_features(
-            image, pixel_box, use_amct=True
+            image, pixel_box, question=question, use_hierarchical_zoom=True
         )
         self._cached_vit_embeds = v_l
         return v_l
@@ -635,9 +745,9 @@ class VinternNEVFEAdapter:
             # 1. Stage 1: Window extraction & Global features V_G
             v_g, pixel_box, _ = self.compute_stage1_window(image, question=question)
 
-            # 2. Stage 2: Focal feature extraction V_L (256 or 512 tokens, Directives W2-W4)
+            # 2. Stage 2: Hierarchical Multi-Scale Focal Feature Extraction V_L (Directive W1, Theorem 32)
             v_l = self.extract_stage2_focal_features(
-                image, pixel_box, use_amct=True
+                image, pixel_box, question=question, use_hierarchical_zoom=True
             )
 
             # 3. Canonical natural prompt framing & Stream Embeddings (Directives W2-W4)
@@ -662,7 +772,7 @@ class VinternNEVFEAdapter:
             past_key_values_l = out_l.past_key_values
             logits_l = self.model.language_model.lm_head(out_l.last_hidden_state[:, -1:, :])[0, 0, :]
 
-            # 5. Query token mask
+            # 5. Query token mask & Dynamic Token Resolution (Directive W4)
             vocab_size = logits_g.shape[-1]
             q_mask = build_query_token_mask(prompt_text, self.tokenizer, vocab_size, self.device)
 
@@ -673,24 +783,29 @@ class VinternNEVFEAdapter:
             if eos_std is not None and eos_std not in eos_token_ids:
                 eos_token_ids.append(eos_std)
 
+            space_token_id = self.tokenizer.convert_tokens_to_ids(" ")
+            if space_token_id is None:
+                space_token_id = 220
+            digit_token_ids = [self.tokenizer.convert_tokens_to_ids(str(d)) for d in range(10)]
+            if any(did is None for did in digit_token_ids):
+                digit_token_ids = list(range(15, 25))
+
             generated_ids: List[int] = []
-            in_entity_state: bool = False
+            prev_token_id: Optional[int] = None
 
             for step in range(1, max_new_tokens + 1):
-                # Steering Operator with Dynamic State-Gated Barrier (Directive W4)
+                # Steering Operator with Tripartite Clamping Engine (Theorem 33, Directives W3 & W4)
                 next_tok_tensor, steered_logits, _, _ = self.engine.decode_step(
                     logits_l=logits_l,
                     logits_g=logits_g,
                     q_mask=q_mask,
                     step_idx=step,
                     eos_token_ids=eos_token_ids,
-                    in_entity_state=in_entity_state,
+                    prev_token_id=prev_token_id,
+                    space_token_id=space_token_id,
+                    digit_token_ids=digit_token_ids,
                 )
                 next_id = int(next_tok_tensor.item())
-
-                # Transition in_entity_state = True when first grounded entity token is emitted
-                if not in_entity_state and self.engine.is_last_token_grounded():
-                    in_entity_state = True
 
                 # Autonomous Optical Stopping Gate (Directive W3, Theorem 30)
                 omega_t, s_bar_t = self.engine.get_last_continuation_saliency()
@@ -708,6 +823,7 @@ class VinternNEVFEAdapter:
                     break
 
                 generated_ids.append(next_id)
+                prev_token_id = next_id
 
                 if step == max_new_tokens:
                     break

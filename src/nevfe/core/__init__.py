@@ -14,6 +14,7 @@ from src.nevfe.core.engine import (
     nevfe_step_logits,
     pool_query_agnostic_gradient_tokens,
     compute_refusal_resistant_continuation_horizon,
+    adaptive_tensor_stroke_dilation,
 )
 
 __all__ = [
@@ -27,4 +28,5 @@ __all__ = [
     "nevfe_step_logits",
     "pool_query_agnostic_gradient_tokens",
     "compute_refusal_resistant_continuation_horizon",
+    "adaptive_tensor_stroke_dilation",
 ]
