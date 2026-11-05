@@ -450,13 +450,9 @@ class VinternNEVFEAdapter:
             )
             tile_mods.append(v_k_mod)
 
-        # Condense K * 256 -> strictly 256 tokens via QAG-Pooling (Directives W1 & W2)
+        # Preserve uncompressed K * 256 tokens without spatial downsampling (Theorem 27)
         if use_amct and len(tile_mods) > 1:
-            v_l_cat = torch.cat(tile_mods, dim=1)  # [1, 512, 896]
-            v_l_mod = pool_query_agnostic_gradient_tokens(
-                visual_tokens=v_l_cat,
-                grid=grid,
-            )  # strictly [1, 256, 896]
+            v_l_mod = torch.cat(tile_mods, dim=1)  # strictly [1, 512, 896]
         else:
             v_l_mod = tile_mods[0]  # [1, 256, 896]
 
@@ -476,15 +472,15 @@ class VinternNEVFEAdapter:
     ) -> torch.Tensor:
         """
         Construct input embeddings for standard single-tile stream (Directives W1 & W2).
-        vit_embeds: [1, num_tokens, 896] or [num_tokens, 896], where num_tokens == 256.
-        Strictly preserves canonical visual tokens inside <img><IMG_CONTEXT>*256</img>.
+        vit_embeds: [1, num_tokens, 896] or [num_tokens, 896], where num_tokens in {256, 512}.
+        Preserves visual tokens inside <img><IMG_CONTEXT>*num_tokens</img>.
         """
         if vit_embeds.dim() == 2:
             vit_embeds = vit_embeds.unsqueeze(0)
 
         num_tokens = vit_embeds.shape[1]
-        assert num_tokens == self.num_image_token, (
-            f"Expected strictly {self.num_image_token} visual tokens (Directive W2 invariance), got {num_tokens}"
+        assert num_tokens in {self.num_image_token, 2 * self.num_image_token}, (
+            f"Expected {self.num_image_token} or {2 * self.num_image_token} visual tokens, got {num_tokens}"
         )
 
         prefix_str = (
@@ -631,30 +627,25 @@ class VinternNEVFEAdapter:
         max_new_tokens: int = 64,
     ) -> str:
         """
-        Decoupled Dual-Stream Generation with Sequence Length Invariance (Directives W1–W6).
-        Stream G (Global 256 tokens) and Stream L (Condensed Focal 256 tokens, K in {1, 2}).
-        Dual KV-caches have identical sequence lengths (S_G = S_L = 266).
+        Decoupled Dual-Stream Generation with Independent Dual KV-Caches (Theorems 26-28).
+        Stream G (Global 256 tokens) and Stream L (Focal 256 or 512 tokens, K in {1, 2}).
+        Dual KV-caches execute independently with S_G = 266 and S_L in {266, 522}.
         """
         with torch.no_grad():
             # 1. Stage 1: Window extraction & Global features V_G
             v_g, pixel_box, _ = self.compute_stage1_window(image, question=question)
 
-            # 2. Stage 2: Focal feature extraction V_L (condensed strictly to 256 tokens, Directives W1 & W2)
+            # 2. Stage 2: Focal feature extraction V_L (256 or 512 tokens, Directives W2-W4)
             v_l = self.extract_stage2_focal_features(
                 image, pixel_box, use_amct=True
             )
 
-            # 3. Canonical natural prompt framing & Stream Embeddings (Directive W2)
+            # 3. Canonical natural prompt framing & Stream Embeddings (Directives W2-W4)
             prompt_text = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
             embeds_g = self.prepare_inputs(v_g, question, user_prompt=prompt_text)
             embeds_l = self.prepare_inputs(v_l, question, user_prompt=prompt_text)
 
-            # Assert sequence length invariance (Directive W2)
-            assert embeds_g.shape == embeds_l.shape, (
-                f"Embedding sequence length mismatch: {embeds_g.shape} vs {embeds_l.shape}"
-            )
-
-            # 4. Independent Dual KV-Cache Prefill (Directive W1 & W2)
+            # 4. Independent Dual KV-Cache Prefill (Theorems 26-28)
             out_g = self.model.language_model.model(
                 inputs_embeds=embeds_g,
                 use_cache=True,
@@ -670,21 +661,6 @@ class VinternNEVFEAdapter:
             )
             past_key_values_l = out_l.past_key_values
             logits_l = self.model.language_model.lm_head(out_l.last_hidden_state[:, -1:, :])[0, 0, :]
-
-            # Assert dual KV-cache sequence length invariance (Directive W2)
-            def _get_kv_len(pkv):
-                if hasattr(pkv, "get_seq_length"):
-                    return pkv.get_seq_length()
-                if hasattr(pkv, "key_cache") and len(pkv.key_cache) > 0:
-                    return pkv.key_cache[0].shape[-2]
-                if isinstance(pkv, (tuple, list)) and len(pkv) > 0 and isinstance(pkv[0], (tuple, list)):
-                    return pkv[0][0].shape[-2]
-                return None
-
-            s_g = _get_kv_len(past_key_values_g)
-            s_l = _get_kv_len(past_key_values_l)
-            if s_g is not None and s_l is not None:
-                assert s_g == s_l, f"Dual KV-cache sequence length mismatch: S_G={s_g} vs S_L={s_l}"
 
             # 5. Query token mask
             vocab_size = logits_g.shape[-1]

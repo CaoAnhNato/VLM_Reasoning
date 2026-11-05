@@ -1242,15 +1242,26 @@ def nevfe_step_logits(
                 term_penalty = gamma_t * raw_term_penalty
                 steered_potential[:, eos_list] = base_potential[:, eos_list] - lambda_t * term_penalty
 
-        # 6. Anti-Refusal Prior Attenuation via Optical Grounding Index (Directive W4, Step <= barrier_horizon)
+        # =====================================================================
+        # 6. Initial Token Carrier & Prior Attenuation Barrier (Theorems 26-28)
+        # Replaces fragile binary non_opt_mask with continuous Optical Grounding Deficit
+        # =====================================================================
         if mu_param > 0 and step_idx <= barrier_horizon:
-            barrier_val = float(mu_param) * (float(barrier_decay) ** (step_idx - 1))
-            # OGI scaled by ambient contrast expectation bar_S_t (Directive W4)
-            ogi = torch.clamp(torch.relu(delta_log) / (s_bar_t + 1e-6), 0.0, 1.0)
+            # Dyadic temporal relaxation factor: delta_t in {1.0, 0.5, 0.25} for t in {1, 2, 3}
+            delta_t = float(barrier_decay) ** (step_idx - 1)
 
-            non_opt_mask = (delta_log <= 0).float()
-            refusal_penalty = barrier_val * (1.0 - ogi) * non_opt_mask
-            steered_potential = steered_potential - refusal_penalty
+            # Relative Optical Grounding Index OGI_t(v) in [0.0, 1.0]
+            # Scale-invariant normalization against peak optical evidence Omega_t
+            ogi = torch.clamp(sharp_potential / (omega_t + 1e-6), 0.0, 1.0)
+
+            # Continuous Optical Grounding Deficit D_t(v) in [0.0, 1.0]
+            # Evaluates to 0.0 for peak entity tokens; evaluates to ~1.0 for carrier preambles
+            grounding_deficit = 1.0 - ogi
+
+            # Parameter-free Carrier Preamble Suppression Barrier (Theorems 26-28)
+            # Imposes up to mu_param nats penalty on ungrounded conversational tokens
+            barrier_carrier = float(mu_param) * delta_t * psi_t * grounding_deficit
+            steered_potential = steered_potential - barrier_carrier
 
     # 7. Query-Orthogonal Potential Barrier (Step <= barrier_horizon)
     if q_mask is not None and mu_param > 0 and step_idx <= barrier_horizon:

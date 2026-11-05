@@ -73,8 +73,8 @@
 |---|------|-------|-------------|--------|
 | Iter-10 | RFC-MS-QO-VFE | FSG Reversion, Bounded DTEC, OGI Prior Attenuation, Dual-Stream Stopping | none | **DONE** (Refusals 5.40%, EM 15.88%, F1 40.21%, Sub 35.19%; Audit: CLEAN, Gate: FAIL <70%) |
 | Iter-11 | MRAPF-CHO | Anisotropic Multi-Crop Tiling (AMCT) unit squares, dual KV-caches, CHO step ramp | Iter-10 | **DONE** (+70 new EMs; Refusal 5.48%, EM 12.19%, F1 33.51%, Sub 23.90%; Audit: CLEAN, Gate: FAIL <70%) |
-| Iter-12 | LP-Q-CrossAttn & Entropy-CHO | Q-CrossAttn Pooling ($K \times 256 \to 256$), Mixture-Entropy Dynamic Horizon $\gamma_t$ | Iter-11 | **DONE** (Eliminated repetition loops, +36 new EMs; Refusal 30.77%, EM 8.18%, F1 22.68%, Sub 18.99%; Audit: CLEAN, Gate: FAIL <70%) |
-| Iter-13 | QAG-Pooling & RR-DEH | Query-Agnostic Gradient Saliency Pooling ($K \times 256 \to 256$) & Refusal-Resistant Dynamic Continuation Horizon | Iter-12 | **IMPLEMENTED** (Directives W1–W6 executed, 45/45 pytest passed, 71/71 E2E tests passed) |
+| Iter-13 | QAG-Pooling & RR-DEH | Query-Agnostic Gradient Saliency Pooling ($K \times 256 \to 256$) & Refusal-Resistant Dynamic Continuation Horizon | Iter-12 | **DONE** (Refusals 8.02% [-74%], EM 4.75%, F1 21.43%, Sub 12.27%, ANLS 16.55%; Audit: CLEAN, Gate: FAIL <70%) |
+| Iter-14 | Carrier Suppression Barrier & Lossless Residual Fusion | Initial Token Carrier Barrier ($t \le 3$) & Lossless Multi-Tile Residual Fusion | Iter-13 | **PLANNED** |
 
 ---
 
