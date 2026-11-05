@@ -27,6 +27,8 @@ from src.nevfe.core.engine import (
     pool_query_agnostic_gradient_tokens,
     pool_question_guided_focal_tokens,
     adaptive_tensor_stroke_dilation,
+    compute_question_conditioned_cross_attention_saliency,
+    compute_query_grounded_lexical_bias,
 )
 
 
@@ -311,6 +313,23 @@ class VinternNEVFEAdapter:
             beta_param=beta_param,
             mu_param=mu_param,
         )
+
+        # Directive W3: Cache dynamic alphanumeric vocabulary V_alnum for the 62 ASCII primitives
+        if self.tokenizer is not None and hasattr(self.tokenizer, "convert_tokens_to_ids"):
+            ascii_chars = (
+                [str(d) for d in range(10)]
+                + [chr(c) for c in range(ord("A"), ord("Z") + 1)]
+                + [chr(c) for c in range(ord("a"), ord("z") + 1)]
+            )
+            alnum_ids = [self.tokenizer.convert_tokens_to_ids(c) for c in ascii_chars]
+            self.alnum_token_ids = [
+                int(aid)
+                for aid in alnum_ids
+                if aid is not None and aid != getattr(self.tokenizer, "unk_token_id", None)
+            ]
+        else:
+            self.alnum_token_ids = []
+        self.engine.alnum_token_ids = self.alnum_token_ids
 
         self.max_dynamic_patch = getattr(getattr(model, "config", None), "max_dynamic_patch", 6)
         self.num_image_token = getattr(model, "num_image_token", 256)
@@ -916,6 +935,45 @@ class VinternNEVFEAdapter:
             if eos_std is not None and eos_std not in eos_token_ids:
                 eos_token_ids.append(eos_std)
 
+            # Directive W1 (Theorem 38 Q-CASS): Compute query-conditioned saliency & lexical bias
+            q_ids = self.tokenizer.encode(question, add_special_tokens=False, return_tensors="pt").to(self.device)
+            q_embeds = embed_layer(q_ids)
+            norm_layer = getattr(self.model.language_model.model, "norm", None)
+            s_qcass, _ = compute_question_conditioned_cross_attention_saliency(v_l, q_embeds)
+            log_p_qcass = compute_query_grounded_lexical_bias(
+                visual_tokens=v_l,
+                s_qcass=s_qcass,
+                lm_head=self.model.language_model.lm_head,
+                norm_layer=norm_layer,
+            )
+
+            def compute_stroke_projection(h_l_hidden: torch.Tensor, h_g_hidden: torch.Tensor) -> torch.Tensor:
+                """Directive W2: Differential Visual Stroke Projection (Theorem 39)."""
+                D_h = h_l_hidden.shape[-1]
+                v_l_flat = v_l.squeeze(0) if (v_l.dim() == 3 and v_l.shape[0] == 1) else v_l  # [P_L, D]
+                v_g_flat = v_g.squeeze(0) if (v_g.dim() == 3 and v_g.shape[0] == 1) else v_g  # [P_G, D]
+                a_l = F.softmax(torch.matmul(h_l_hidden.squeeze(0), v_l_flat.t()) / math.sqrt(D_h), dim=-1)  # [1, P_L]
+                a_g = F.softmax(torch.matmul(h_g_hidden.squeeze(0), v_g_flat.t()) / math.sqrt(D_h), dim=-1)  # [1, P_G]
+                c_l = torch.matmul(a_l, v_l_flat)  # [1, D]
+                c_g = torch.matmul(a_g, v_g_flat)  # [1, D]
+                delta_c = c_l - c_g  # [1, D]
+
+                if norm_layer is not None:
+                    try:
+                        n_dtype = next(norm_layer.parameters()).dtype if hasattr(norm_layer, "parameters") and list(norm_layer.parameters()) else delta_c.dtype
+                    except Exception:
+                        n_dtype = delta_c.dtype
+                    delta_c_norm = norm_layer(delta_c.unsqueeze(0).to(dtype=n_dtype))
+                else:
+                    rms = torch.sqrt(torch.mean(delta_c ** 2, dim=-1, keepdim=True) + 1e-6)
+                    delta_c_norm = (delta_c / rms).unsqueeze(0)
+
+                if hasattr(self.model.language_model.lm_head, "weight") and self.model.language_model.lm_head.weight is not None:
+                    h_dtype = self.model.language_model.lm_head.weight.dtype
+                    delta_c_norm = delta_c_norm.to(dtype=h_dtype)
+                z_stroke = self.model.language_model.lm_head(delta_c_norm)[0, 0, :]
+                return z_stroke
+
             space_token_id = self.tokenizer.convert_tokens_to_ids(" ")
             if space_token_id is None:
                 space_token_id = 220
@@ -937,9 +995,16 @@ class VinternNEVFEAdapter:
             prev_token_id: Optional[int] = None
 
             for step in range(1, max_new_tokens + 1):
-                # Steering Operator with Tripartite Clamping Engine (Theorem 33, Directives W3 & W4)
+                # Directive W2: Resynthesize focal logits with differential visual stroke projection
+                z_t_stroke = compute_stroke_projection(
+                    out_l.last_hidden_state[:, -1:, :],
+                    out_g.last_hidden_state[:, -1:, :],
+                )
+                z_tilde_l = logits_l + z_t_stroke
+
+                # Steering Operator with Tripartite Clamping Engine (Theorem 33, Directives W1, W3 & W4)
                 next_tok_tensor, steered_logits, _, _ = self.engine.decode_step(
-                    logits_l=logits_l,
+                    logits_l=z_tilde_l,
                     logits_g=logits_g,
                     q_mask=q_mask,
                     step_idx=step,
@@ -948,6 +1013,8 @@ class VinternNEVFEAdapter:
                     space_token_id=space_token_id,
                     digit_token_ids=digit_token_ids,
                     separator_token_ids=separator_token_ids,
+                    alnum_token_ids=self.alnum_token_ids,
+                    log_p_qcass=log_p_qcass,
                 )
                 next_id = int(next_tok_tensor.item())
 
@@ -955,7 +1022,7 @@ class VinternNEVFEAdapter:
                 omega_t, s_bar_t = self.engine.get_last_continuation_saliency()
                 stop_decision = evaluate_semantic_stopping(
                     logits_g=logits_g,
-                    logits_l=logits_l,
+                    logits_l=z_tilde_l,
                     steered_tokens=next_tok_tensor,
                     omega_t=omega_t,
                     s_bar_t=s_bar_t,

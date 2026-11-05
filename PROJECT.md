@@ -76,6 +76,7 @@
 | Iter-14 | Carrier Suppression Barrier & Lossless Residual Fusion | Initial Token Carrier Barrier ($t \le 3$) & Lossless Multi-Tile Residual Fusion | Iter-13 | **DONE** (EM 9.08% [+91%], F1 29.71% [+39%], Sub 18.90% [+54%], ANLS 25.13% [+52%], Refusals 6.46%; Audit: CLEAN, Gate: FAIL <70%) |
 | Iter-15 | Entity Termination Clamp & Crisp Semantic Stopping | Optical Contrast Exhaustion Gate & Crisp Stopping to eliminate tail continuation | Iter-14 | **DONE** (EM 8.92%, F1 30.03%, Sub 19.31%, ANLS 25.75%, Refusals 7.04%; Audit: CLEAN, Gate: FAIL <70%) |
 | Iter-16 | Unified Tripartite Architecture | Dynamic Recursive Chebyshev Windowing, Continuous Shock Scale-Space Dilation, Tripartite Symmetrical Clamping | Iter-15 | **DONE** (EM 9.17% [112 EMs], F1 29.13%, Sub 19.72%, ANLS 24.68%, Refusals 8.18%; Audit: CLEAN, Gate: FAIL <70%) |
+| Iter-17 | Dispersion-Normalized Dilation & Continuation Grace Horizon | Scale-space gradient dispersion $\sigma_\nabla$, native symmetric crop expansion with edge-border replicate, decoupled carrier barrier, epistemic continuation grace horizon $\mathcal{G}_t$ | Iter-16 | **DONE** (EM 9.74% [119 EMs, +6.2%], Sub 22.01% [+11.6%], F1 30.57% [+4.9%], ANLS 26.02% [+5.4%], Refusals 7.77% [-5.0%]; Audit: CLEAN, Gate: FAIL <70%) |
 
 ---
 

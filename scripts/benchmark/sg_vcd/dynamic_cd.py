@@ -112,6 +112,8 @@ class DynamicContrastiveDecoder:
         h_bar_eos: float = 1.80,
         tau_h_eos: float = 0.40,
         delta_peak_min: float = 0.50,
+        lambda_diac: float = 0.10,
+        mu_diac: float = 1.0,
     ):
         """
         Args:
@@ -135,6 +137,8 @@ class DynamicContrastiveDecoder:
             h_bar_eos: DCEB predictive entropy midpoint threshold (1.80 nats)
             tau_h_eos: DCEB predictive entropy logistic sigmoid scale (0.40)
             delta_peak_min: DCEB minimum historical peak contrast floor (0.50)
+            lambda_diac: Theorem 40 Bounded Rényi Reference Mixture weight (default 0.10)
+            mu_diac: Theorem 40 Visual Curvature Gating exponent (default 1.0)
         """
         self.alpha_0 = float(alpha_0)
         self.beta_0 = float(beta_0)
@@ -156,6 +160,8 @@ class DynamicContrastiveDecoder:
         self.h_bar_eos = float(h_bar_eos)
         self.tau_h_eos = float(tau_h_eos)
         self.delta_peak_min = float(delta_peak_min)
+        self.lambda_diac = float(lambda_diac)
+        self.mu_diac = float(mu_diac)
         self._current_step0_d_js: Optional[float] = None
         self._peak_delta_z: float = 0.0
 
@@ -209,7 +215,11 @@ class DynamicContrastiveDecoder:
         max_p_pos = p_pos.max(dim=-1, keepdim=True).values
         apc_mask = p_pos >= (beta_t * max_p_pos)
 
-        delta_z = torch.relu(pos_logits - neg_logits)
+        # Theorem 40: Diacritic-Preserving Bounded Rényi Reference Mixture & Visual Curvature Gating
+        p_ref = (1.0 - self.lambda_diac) * p_neg + self.lambda_diac * p_pos
+        bounded_delta_log = torch.relu(log_p_pos - torch.log(p_ref.clamp(min=1e-12)))
+        visual_curvature = torch.pow(p_pos / (max_p_pos + 1e-12), self.mu_diac)
+        delta_z = visual_curvature * bounded_delta_log
         max_delta_z = delta_z.max(dim=-1, keepdim=True).values
         has_contrast = max_delta_z > 1e-6
         contrast_mask = (delta_z >= (self.theta_c * max_delta_z)) & has_contrast

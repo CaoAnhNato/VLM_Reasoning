@@ -383,6 +383,151 @@ def compute_question_conditioned_spatial_window(
     return float(x_min), float(y_min), float(x_max), float(y_max)
 
 
+def compute_question_conditioned_cross_attention_saliency(
+    visual_tokens: torch.Tensor,
+    question_embeddings: torch.Tensor,
+    temperature: float = 0.1,
+    eps: float = 1e-6,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Question-Conditioned Cross-Attention Saliency Steering (Q-CASS, Theorem 38, Directive W1).
+
+    Computes closed-form query-conditioned spatial saliency S_QCASS in [P]
+    and query token specificity weights omega_hat in [T] via spatial KL divergence.
+
+    Args:
+        visual_tokens: Visual patch embeddings [P, D] or [1, P, D] (P in {256, 512}, D=896).
+        question_embeddings: Question token embeddings [T, D] or [1, T, D].
+        temperature: Cross-modal attention temperature constant (default: 0.1).
+        eps: Numerical stability constant.
+
+    Returns:
+        s_qcass: Normalized spatial saliency distribution [P] (sum_u s_qcass(u) = 1.0).
+        omega_hat: Normalized query token specificity weights [T] (sum_j omega_hat(j) = 1.0).
+    """
+    v = visual_tokens
+    if v.dim() == 3:
+        if v.shape[0] != 1:
+            raise ValueError(f"Expected batch size 1 for 3D visual_tokens, got {v.shape}")
+        v = v.squeeze(0)
+    if v.dim() != 2:
+        raise ValueError(f"Expected visual_tokens of dimension 2 or 3, got shape {visual_tokens.shape}")
+
+    e = question_embeddings
+    if e.dim() == 3:
+        if e.shape[0] != 1:
+            raise ValueError(f"Expected batch size 1 for 3D question_embeddings, got {e.shape}")
+        e = e.squeeze(0)
+    if e.dim() != 2:
+        raise ValueError(f"Expected question_embeddings of dimension 2 or 3, got shape {question_embeddings.shape}")
+
+    P, D_v = v.shape
+    T, D_e = e.shape
+    if D_v != D_e:
+        raise ValueError(f"Channel dimension mismatch: visual {D_v} vs question {D_e}")
+
+    device = v.device
+    v_f = v.float()
+    e_f = e.float().to(device)
+
+    # 1. Normalized cosine similarity S_{u, j} in [-1, 1]
+    v_norm = v_f / (torch.norm(v_f, p=2, dim=-1, keepdim=True) + eps)
+    e_norm = e_f / (torch.norm(e_f, p=2, dim=-1, keepdim=True) + eps)
+    S = torch.matmul(v_norm, e_norm.t())  # [P, T]
+
+    # 2. Attention distribution A = softmax(S / temperature, dim=patch_dim)
+    A = F.softmax(S / float(temperature), dim=0)  # [P, T]
+
+    # 3. Spatial KL divergence specificity: omega_j = sum_u A_{u,j} * log(P * A_{u,j})
+    P_A = torch.clamp(float(P) * A, min=eps)
+    omega_j = torch.sum(A * torch.log(P_A), dim=0)  # [T]
+    omega_j = torch.clamp(omega_j, min=0.0)
+
+    # 4. Specificity weights: fallback if total divergence is negligible (< 1e-4)
+    total_omega = torch.sum(omega_j)
+    if total_omega < 1e-4:
+        omega_hat = torch.full_like(omega_j, 1.0 / max(1, T))
+    else:
+        omega_hat = omega_j / total_omega
+
+    # 5. Saliency field: S_QCASS(u) = sum_j omega_hat_j * A_{u, j}
+    s_qcass = torch.matmul(A, omega_hat)  # [P]
+    total_s = torch.sum(s_qcass)
+    s_qcass = s_qcass / (total_s if total_s > eps else 1.0)
+
+    return s_qcass, omega_hat
+
+
+def compute_query_grounded_lexical_bias(
+    visual_tokens: torch.Tensor,
+    s_qcass: torch.Tensor,
+    lm_head: Union[torch.nn.Module, Any],
+    norm_layer: Optional[Union[torch.nn.Module, Any]] = None,
+    temperature: float = 1.0,
+    eps: float = 1e-6,
+) -> torch.Tensor:
+    """
+    Convex-Hull Lexical Vocabulary Prototype Biasing (Theorem 38, Directive W1).
+
+    Computes convex prototype v_qcass = sum_u S_QCASS(u) * v_u in R^D,
+    applies norm_layer (or RMS normalization), projects through lm_head,
+    and returns log_p_qcass in R^[1, V].
+
+    Args:
+        visual_tokens: Visual patch embeddings [P, D] or [1, P, D].
+        s_qcass: Saliency field tensor [P] or [1, P].
+        lm_head: Language model unembedding projection layer.
+        norm_layer: Optional RMSNorm or LayerNorm normalization module.
+        temperature: Lexical softmax scaling temperature (default 1.0).
+        eps: Numerical stability constant.
+
+    Returns:
+        log_p_qcass: Log-probability distribution over vocabulary of shape [1, V].
+    """
+    v = visual_tokens
+    if v.dim() == 3:
+        if v.shape[0] != 1:
+            raise ValueError(f"Expected batch size 1 for 3D visual_tokens, got {v.shape}")
+        v = v.squeeze(0)
+    if v.dim() != 2:
+        raise ValueError(f"Expected visual_tokens of dimension 2 or 3, got shape {visual_tokens.shape}")
+
+    s = s_qcass.squeeze().float()
+    if s.dim() != 1 or s.shape[0] != v.shape[0]:
+        raise ValueError(f"Shape mismatch: visual patches {v.shape[0]} vs saliency {s.shape}")
+
+    s_weights = (s / (torch.sum(s) + eps)).unsqueeze(-1)  # [P, 1]
+    v_f = v.float()
+    v_qcass = torch.sum(s_weights * v_f, dim=0, keepdim=True)  # [1, D]
+
+    # Pre-condition with RMSNorm or LayerNorm (Finding 1)
+    if norm_layer is not None:
+        try:
+            norm_dtype = next(norm_layer.parameters()).dtype if hasattr(norm_layer, 'parameters') and list(norm_layer.parameters()) else v.dtype
+        except Exception:
+            norm_dtype = v.dtype
+        v_norm = norm_layer(v_qcass.to(dtype=norm_dtype))
+    else:
+        rms = torch.sqrt(torch.mean(v_qcass ** 2, dim=-1, keepdim=True) + eps)
+        v_norm = v_qcass / rms
+
+    # Project through lm_head
+    if hasattr(lm_head, 'weight') and lm_head.weight is not None:
+        head_dtype = lm_head.weight.dtype
+        v_norm = v_norm.to(dtype=head_dtype)
+
+    z_qcass = lm_head(v_norm)  # [1, V] or [V]
+    if z_qcass.dim() > 2:
+        z_qcass = z_qcass.squeeze(0)
+    if z_qcass.dim() == 1:
+        z_qcass = z_qcass.unsqueeze(0)
+
+    log_p_qcass = F.log_softmax(z_qcass.float() / float(temperature), dim=-1)
+    return log_p_qcass
+
+
+
+
 def compute_box_iou(
     box_a: Tuple[float, float, float, float],
     box_b: Tuple[float, float, float, float],
@@ -1647,6 +1792,13 @@ def nevfe_step_logits(
     prev_epistemic_certainty: Optional[Union[float, torch.Tensor]] = None,
     num_separators_emitted: int = 0,
     return_epistemic_certainty: bool = False,
+    # Iteration 19 Directives W1-W4 Parameters:
+    log_p_qcass: Optional[torch.Tensor] = None,
+    mu_q: Optional[float] = None,
+    logits_stroke: Optional[torch.Tensor] = None,
+    alnum_token_ids: Optional[Sequence[int]] = None,
+    lambda_diac: float = 0.10,
+    mu_diac: float = 1.0,
 ) -> Tuple:
     """
     Decoupled Dual-Stream Rectified Contrastive Sharpening with Dynamic Continuation Base Anchor (Directives W4 & W6).
@@ -1715,6 +1867,14 @@ def nevfe_step_logits(
     # Cast to float32 for high numerical precision in log_softmax / exp / sqrt
     ll = logits_l.float()
     lg = logits_g.float()
+
+    # Directive W2: Differential Visual Stroke Projection Resynthesis (Theorem 39)
+    if logits_stroke is not None:
+        ls = logits_stroke.float().to(device=ll.device)
+        if ls.dim() == 1 and ll.dim() == 2:
+            ls = ls.unsqueeze(0)
+        ll = ll + ls
+
     epistemic_certainty: Optional[torch.Tensor] = None
 
     if is_legacy:
@@ -1757,15 +1917,30 @@ def nevfe_step_logits(
         )
         base_potential = (1.0 - gamma_t) * log_p_g + gamma_t * log_p_l_cal  # [B, K]
 
-        # 4. Rectified Contrastive Sharpening for Content Tokens
-        delta_log = log_p_l_cal - log_p_g
-        sharp_potential = torch.relu(delta_log)
+        # 4. Rectified Contrastive Sharpening with Diacritic-Preserving Operator (Theorem 40, Directive W4)
+        p_l_cal = torch.exp(log_p_l_cal)
+        p_g = torch.exp(log_p_g)
+        p_ref = (1.0 - float(lambda_diac)) * p_g + float(lambda_diac) * p_l_cal
+        bounded_delta_log = torch.relu(log_p_l_cal - torch.log(p_ref.clamp(min=1e-12)))
+        max_p_l = torch.max(p_l_cal, dim=-1, keepdim=True).values
+        visual_curvature = torch.pow(p_l_cal / (max_p_l + 1e-12), float(mu_diac))
+        sharp_potential = visual_curvature * bounded_delta_log
 
         # Optical Persistence Modulated Coupling (Theorem 24)
         lambda_t = float(lambda_param) * (1.0 + norm_entropy_l)  # [B, 1]
 
         # Steered potential initialization with termination-conditioned sharpening (Theorems 24 & 25)
         steered_potential = base_potential + lambda_t * sharp_potential * chi_term
+
+        # Directive W1: Query-Grounded Lexical Bias Potential (Theorem 38 Q-CASS)
+        if log_p_qcass is not None:
+            log_p_qcass_t = log_p_qcass.float().to(device=steered_potential.device)
+            if log_p_qcass_t.dim() == 1:
+                log_p_qcass_t = log_p_qcass_t.unsqueeze(0)
+            delta_lex = torch.relu(log_p_qcass_t - log_p_g)
+            effective_mu_q = float(mu_param if mu_q is None else mu_q)
+            steered_potential = steered_potential + effective_mu_q * delta_lex * chi_term
+
         coupling_tensor = lambda_t
 
         # 5. Symmetrically Calibrated Contrastive Termination for EOS Tokens (Directive W4)
@@ -1842,22 +2017,42 @@ def nevfe_step_logits(
                     carrier_decay = 1.0
 
                 # Relative Optical Grounding Index OGI_t(v) in [0.0, 1.0]
-                ogi = torch.clamp(sharp_potential / (omega_t + 1e-6), 0.0, 1.0)
+                sharp_content = sharp_potential.clone()
+                if eos_token_ids is not None:
+                    K_sc = sharp_content.shape[-1]
+                    eos_sc = [int(eid) for eid in eos_token_ids if int(eid) < K_sc]
+                    if eos_sc:
+                        sharp_content[:, eos_sc] = 0.0
+                omega_sharp = torch.max(sharp_content, dim=-1, keepdim=True).values
+                ogi = torch.clamp(sharp_potential / (omega_sharp + 1e-6), 0.0, 1.0)
                 grounding_deficit = 1.0 - ogi
                 barrier_carrier = float(mu_param) * carrier_decay * grounding_deficit
                 steered_potential = steered_potential - barrier_carrier
 
-            # 6b. Continuous Numerical & Separator Cohesion Clamps (Directive W6, Theorems 33 & 37)
-            # Blocks ungrounded BPE whitespace splitting (token 220) between numerical digits
-            # and after orthographic separators under active optical contrast.
+            # 6b. Continuous Numerical, Separator & Alphanumeric Cohesion Clamps (Directives W3 & W6, Theorems 33, 37, 39)
+            # Blocks ungrounded BPE whitespace splitting (token 220) between numerical digits,
+            # alphanumeric primitives, and after orthographic separators under active optical contrast.
             if digit_token_ids is None:
                 digit_token_ids = list(range(15, 25))
 
             is_prev_digit = (prev_token_id is not None and prev_token_id in digit_token_ids)
             is_prev_sep_for_cohesion = (prev_token_id is not None and prev_token_id in separator_token_ids)
+            is_prev_alnum = (prev_token_id is not None and alnum_token_ids is not None and prev_token_id in alnum_token_ids)
 
             if step_idx >= 2 and space_token_id < K:
-                if is_prev_digit:
+                if is_prev_alnum:
+                    valid_alnum_ids = [int(aid) for aid in alnum_token_ids if int(aid) < K]
+                    if valid_alnum_ids:
+                        alnum_tensor = torch.tensor(valid_alnum_ids, device=device, dtype=torch.long)
+                        sharp_alnum = sharp_potential[:, alnum_tensor]
+                        omega_alnum = torch.max(sharp_alnum, dim=-1, keepdim=True).values  # [B, 1]
+                        has_alnum_evidence = (omega_alnum > s_bar_t)  # [B, 1]
+                        if has_alnum_evidence.any():
+                            cohesion_penalty = float(mu_param) * psi_t * has_alnum_evidence.float()  # [B, 1]
+                            steered_potential[:, space_token_id] = (
+                                steered_potential[:, space_token_id] - cohesion_penalty.squeeze(-1)
+                            )
+                elif is_prev_digit:
                     valid_digit_ids = [int(did) for did in digit_token_ids if int(did) < K]
                     if valid_digit_ids:
                         digit_tensor = torch.tensor(valid_digit_ids, device=device, dtype=torch.long)
@@ -2000,6 +2195,9 @@ class NEVFEEngine:
         barrier_horizon: int = 3,
         k_sigma: float = 2.0,
         min_span: float = 0.15,
+        lambda_diac: float = 0.10,
+        mu_diac: float = 1.0,
+        alnum_token_ids: Optional[Sequence[int]] = None,
     ):
         if not (0.1 <= lambda_param <= 1.5):
             raise ValueError(f"lambda_param must be in [0.1, 1.5], got {lambda_param}")
@@ -2015,6 +2213,9 @@ class NEVFEEngine:
         self.barrier_horizon = int(barrier_horizon)
         self.k_sigma = float(k_sigma)
         self.min_span = float(min_span)
+        self.lambda_diac = float(lambda_diac)
+        self.mu_diac = float(mu_diac)
+        self.alnum_token_ids = list(alnum_token_ids) if alnum_token_ids is not None else None
         self._last_omega_t: Optional[torch.Tensor] = None
         self._last_s_bar_t: Optional[torch.Tensor] = None
         self._last_is_grounded: Optional[torch.Tensor] = None
@@ -2151,6 +2352,12 @@ class NEVFEEngine:
         prev_prev_token_id: Optional[int] = None,
         prev_epistemic_certainty: Optional[Union[float, torch.Tensor]] = None,
         num_separators_emitted: Optional[int] = None,
+        log_p_qcass: Optional[torch.Tensor] = None,
+        mu_q: Optional[float] = None,
+        logits_stroke: Optional[torch.Tensor] = None,
+        alnum_token_ids: Optional[Sequence[int]] = None,
+        lambda_diac: Optional[float] = None,
+        mu_diac: Optional[float] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Execute single-step Decoupled Dual-Stream Contrastive Steering (D-DS-CS)."""
         if step_idx == 1:
@@ -2163,6 +2370,9 @@ class NEVFEEngine:
         eff_prev_prev_tok = prev_prev_token_id if prev_prev_token_id is not None else self._prev_prev_token_id
         eff_prev_epistemic = prev_epistemic_certainty if prev_epistemic_certainty is not None else self._last_epistemic_certainty
         eff_num_sep = num_separators_emitted if num_separators_emitted is not None else self._num_separators_emitted
+        eff_alnum = alnum_token_ids if alnum_token_ids is not None else self.alnum_token_ids
+        eff_lambda_diac = lambda_diac if lambda_diac is not None else self.lambda_diac
+        eff_mu_diac = mu_diac if mu_diac is not None else self.mu_diac
 
         res = nevfe_step_logits(
             logits_l=logits_l,
@@ -2190,6 +2400,12 @@ class NEVFEEngine:
             prev_epistemic_certainty=eff_prev_epistemic,
             num_separators_emitted=eff_num_sep,
             return_epistemic_certainty=True,
+            log_p_qcass=log_p_qcass,
+            mu_q=mu_q,
+            logits_stroke=logits_stroke,
+            alnum_token_ids=eff_alnum,
+            lambda_diac=eff_lambda_diac,
+            mu_diac=eff_mu_diac,
         )
         next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded, grace_horizon, epistemic_certainty = res
         self._last_omega_t = omega_t
@@ -2252,4 +2468,34 @@ class NEVFEEngine:
             eos_token_ids=eos_token_ids,
             step_idx=step_idx,
             grace_horizon=getattr(self, "_last_grace_horizon", None),
+        )
+
+    def compute_qcass_saliency(
+        self,
+        visual_tokens: torch.Tensor,
+        question_embeddings: torch.Tensor,
+        temperature: float = 0.1,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Compute Question-Conditioned Cross-Attention Saliency (Theorem 38, Directive W1)."""
+        return compute_question_conditioned_cross_attention_saliency(
+            visual_tokens=visual_tokens,
+            question_embeddings=question_embeddings,
+            temperature=temperature,
+        )
+
+    def compute_lexical_bias(
+        self,
+        visual_tokens: torch.Tensor,
+        s_qcass: torch.Tensor,
+        lm_head: Union[torch.nn.Module, Any],
+        norm_layer: Optional[Union[torch.nn.Module, Any]] = None,
+        temperature: float = 1.0,
+    ) -> torch.Tensor:
+        """Compute Convex-Hull Lexical Vocabulary Prototype Biasing (Theorem 38, Directive W1)."""
+        return compute_query_grounded_lexical_bias(
+            visual_tokens=visual_tokens,
+            s_qcass=s_qcass,
+            lm_head=lm_head,
+            norm_layer=norm_layer,
+            temperature=temperature,
         )
