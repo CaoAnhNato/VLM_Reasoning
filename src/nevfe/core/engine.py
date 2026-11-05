@@ -526,6 +526,79 @@ def compute_query_grounded_lexical_bias(
     return log_p_qcass
 
 
+def apply_saliency_modulated_gating(
+    visual_tokens: torch.Tensor,
+    s_qcass: torch.Tensor,
+    lambda_gate: float,
+    mu_steer: float = 0.2,
+    eps: float = 1e-6,
+) -> torch.Tensor:
+    """
+    Theorem 42: Standardized Question-Conditioned Saliency Gating Operator.
+    Modulates visual patch tokens in representation space strictly before LLM prefill.
+    Includes Area Chair dynamic range modulation to guarantee strict identity fallback on uniform queries.
+
+    Args:
+        visual_tokens: Visual patch embeddings [P, D] or [1, P, D] where P in {256, 512}, D=896.
+        s_qcass: Saliency field tensor [P] or [1, P] on the probability simplex Delta^{P-1}.
+        lambda_gate: Continuous gating strength hyperparameter in [0.2, 0.6] (0.5 * lambda_param).
+        mu_steer: Prototype steering strength constant (default 0.2).
+        eps: Numerical stability constant.
+
+    Returns:
+        Modulated visual patch embeddings with identical shape and dtype.
+    """
+    orig_shape = visual_tokens.shape
+    orig_dtype = visual_tokens.dtype
+    orig_device = visual_tokens.device
+
+    v = visual_tokens
+    if v.dim() == 3:
+        if v.shape[0] != 1:
+            raise ValueError(f"Expected batch size 1 for 3D visual_tokens, got {v.shape}")
+        v = v.squeeze(0)
+    if v.dim() != 2:
+        raise ValueError(f"Expected visual_tokens of dimension 2 or 3, got shape {visual_tokens.shape}")
+
+    P, D = v.shape
+    s = s_qcass.squeeze().float().to(device=orig_device)
+    if s.dim() != 1 or s.shape[0] != P:
+        raise ValueError(f"Shape mismatch: visual patches {P} vs saliency {s.shape}")
+
+    # Ensure s is normalized on simplex sum(s) == 1.0
+    total_s = torch.sum(s)
+    if total_s > eps and abs(float(total_s) - 1.0) > 1e-3:
+        s = s / total_s
+
+    # Standardized spatial saliency score z_QCASS
+    mu_s = 1.0 / float(P)
+    sigma_s = torch.sqrt(torch.mean((s - mu_s) ** 2) + eps)
+    z_qcass = (s - mu_s) / sigma_s  # [P]
+
+    # Bounded Energy Scaling phi(u) in [1 - lambda_gate, 1 + lambda_gate]
+    phi = 1.0 + float(lambda_gate) * torch.tanh(z_qcass)  # [P]
+
+    # Dynamic Range Modulation (Area Chair remediation for uniform query identity fallback)
+    s_max = torch.max(s)
+    s_min = torch.min(s)
+    delta_range = (s_max - s_min) / (s_max + eps)
+
+    # Saliency Prototype: v_sal = sum_{k=1}^P S(k) * v_k in R^D
+    v_f = v.float()
+    s_weights = (s / (torch.sum(s) + eps)).unsqueeze(-1)  # [P, 1]
+    v_sal = torch.sum(s_weights * v_f, dim=0, keepdim=True)  # [1, D]
+
+    # Saliency Steering Weight psi(u) with Dynamic Range Modulation
+    psi = float(mu_steer) * delta_range * (s / (s_max + eps))  # [P]
+
+    # Dual-component gating: v_tilde_u = phi(u) * v_u + psi(u) * v_sal
+    v_tilde = phi.unsqueeze(-1) * v_f + psi.unsqueeze(-1) * v_sal  # [P, D]
+
+    v_out = v_tilde.to(dtype=orig_dtype)
+    if len(orig_shape) == 3:
+        v_out = v_out.unsqueeze(0)
+
+    return v_out
 
 
 def compute_box_iou(
