@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from PIL import Image
 import torch
+import torch.nn.functional as F
 import torchvision.transforms as T
 from torchvision.transforms.functional import InterpolationMode
 
