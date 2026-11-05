@@ -295,13 +295,14 @@ def compute_dynamic_contrastive_temperature(
     logits_l: torch.Tensor,
     logits_g: torch.Tensor,
     eps: float = 1e-12,
+    alpha_cal: float = 0.40,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
-    Standardized Low-Contrast Text Index (LCTI) and Rational Dynamic Temperature (Directive 3 - Theorems 1 & 8).
+    Standardized Low-Contrast Text Index (LCTI) and Bounded Dynamic Temperature (Directive 2 - Formulation A).
 
-    Formulation:
+    Formulation A (Theorems 11 & 12):
         Xi_t = (D_JS(p_L || p_G) / log 2) * (H(p_L) / log |V|) in [0, 1]
-        tau_t = 1.0 / (1.0 + Xi_t) in [0.50, 1.00]
+        tau_t = 1.0 / (1.0 + alpha_cal * Xi_t) in [0.714, 1.00] with alpha_cal = 0.40
 
     Computed in FP32 with eps=1e-12 and torch.nan_to_num to guarantee numerical stability.
 
@@ -309,9 +310,10 @@ def compute_dynamic_contrastive_temperature(
         logits_l: Focal crop multimodal stream logits [..., K].
         logits_g: Global context stream logits [..., K].
         eps: Epsilon floor for probability clamping.
+        alpha_cal: Calibration scaling factor (default 0.40).
 
     Returns:
-        tau_t: Dynamic temperature tensor in [0.50, 1.00] with shape [..., 1].
+        tau_t: Dynamic temperature tensor in [0.714, 1.00] with shape [..., 1].
         norm_entropy: Normalized Shannon entropy in [0, 1] with shape [..., 1].
         norm_divergence: Normalized Jensen-Shannon divergence in [0, 1] with shape [..., 1].
     """
@@ -333,9 +335,9 @@ def compute_dynamic_contrastive_temperature(
     log2 = 0.6931471805599453
     norm_divergence = torch.clamp(d_js / log2, 0.0, 1.0)
 
-    # 3. LCTI & Dynamic Temperature in [0.50, 1.00]
+    # 3. LCTI & Bounded Dynamic Temperature in [0.714, 1.00] (Formulation A, alpha_cal = 0.40)
     xi_t = norm_divergence * norm_entropy
-    tau_t = 1.0 / (1.0 + xi_t)
+    tau_t = 1.0 / (1.0 + float(alpha_cal) * xi_t)
     return tau_t, norm_entropy, norm_divergence
 
 
@@ -660,16 +662,17 @@ def nevfe_step_logits(
         steered_potential = log_p_plus + float(lambda_param) * pointwise_vmi
         coupling_tensor = torch.full((ll.shape[0], 1), float(lambda_param), device=ll.device)
     else:
-        # Iteration 9: Decoupled Dual-Stream Boltzmann Scaling with Dynamic Contrastive Temperature (Directive 1 & 3)
-        # 1. Standardized Low-Contrast Text Index & Dynamic Temperature (Directive 3)
+        # Iteration 10: Refusal-Free Calibrated Multi-Scale QO-VFE (Theorems 10–15, Directives 2 & 3)
+        # 1. Standardized Low-Contrast Text Index & Bounded Dynamic Temperature (Directive 2)
         tau_t, norm_entropy, norm_divergence = compute_dynamic_contrastive_temperature(ll, lg)
 
         log_p_g = F.log_softmax(lg, dim=-1)
-        # CORRECT Boltzmann logit scaling (Directive 1 - pre-softmax logit temperature division)
+        # Boltzmann logit scaling (Directive 2 - pre-softmax logit temperature division)
         log_p_l_cal = F.log_softmax(ll / tau_t, dim=-1)
 
         # 2. Rectified Contrastive Sharpening with Calibrated Optical Evidence (Theorems 1 & 8)
-        sharp_potential = torch.relu(log_p_l_cal - log_p_g)
+        delta_log = log_p_l_cal - log_p_g
+        sharp_potential = torch.relu(delta_log)
 
         # 3. Normalized Shannon Entropy Coupling (Directive 2)
         lambda_t = float(lambda_param) * (1.0 + norm_entropy)
@@ -677,6 +680,22 @@ def nevfe_step_logits(
         # 4. Steered Potential (Theorem 3)
         steered_potential = log_p_g + lambda_t * sharp_potential
         coupling_tensor = lambda_t
+
+        # 5. Anti-Refusal Prior Attenuation via Optical Grounding Index (Theorems 13 & 14 - Directive 3)
+        if mu_param > 0 and step_idx <= 2:
+            barrier_val = float(mu_param) * (float(barrier_decay) ** (step_idx - 1))
+
+            # Optical Grounding Index (OGI)
+            abs_delta = torch.abs(delta_log)
+            max_abs_delta = torch.max(abs_delta, dim=-1, keepdim=True).values.clamp(min=1e-6)
+            ogi = abs_delta / max_abs_delta  # [B, K] in [0, 1]
+
+            # Non-optical tokens (zero or negative zoom differential)
+            non_opt_mask = (delta_log <= 0).float()
+
+            # Attenuate scale-insensitive, non-grounded prior attractors
+            refusal_penalty = barrier_val * (1.0 - ogi) * non_opt_mask
+            steered_potential = steered_potential - refusal_penalty
 
     # 4. Query-Orthogonal Potential Barrier (Directive 1 & 3)
     if q_mask is not None and mu_param > 0 and step_idx <= barrier_horizon:

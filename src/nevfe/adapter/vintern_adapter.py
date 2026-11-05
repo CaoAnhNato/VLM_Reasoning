@@ -542,27 +542,11 @@ class VinternNEVFEAdapter:
             # 2. Stage 2: Focal feature extraction V_L (256 tokens)
             v_l = self.extract_stage2_focal_features(image, pixel_box)
 
-            # 3. Feature-Space Mean-Field Nullification (FSG) with Otsu Saliency Bisection (Directive 2)
-            norm_q = question.strip() if question is not None else ""
-            raw_ids = self.tokenizer.encode(norm_q, add_special_tokens=False)
-            if isinstance(raw_ids, torch.Tensor):
-                q_ids = raw_ids.to(self.device)
-            else:
-                q_ids = torch.tensor(raw_ids, dtype=torch.long, device=self.device)
-            if q_ids.ndim == 1:
-                q_ids = q_ids.unsqueeze(0)
-            q_embeds = self.model.language_model.get_input_embeddings()(q_ids)
-
-            v_l_sparsified, _ = self.apply_feature_space_nullification(
-                visual_tokens=v_l,
-                question_embeddings=q_embeds[0],
-                min_keep=16,
-            )
-
-            # 4. Canonical natural prompt framing & Stream Embeddings (Directive 1 & 3)
+            # 3. Canonical natural prompt framing & Stream Embeddings (Directive 1)
+            # Revert FSG completely: pass intact raw v_l directly into build_multimodal_embeds (Theorems 10 & 11)
             prompt_text = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
             embeds_g = self.build_multimodal_embeds(v_g, question, user_prompt=prompt_text)
-            embeds_l = self.build_multimodal_embeds(v_l_sparsified, question, user_prompt=prompt_text)
+            embeds_l = self.build_multimodal_embeds(v_l, question, user_prompt=prompt_text)
 
             # 4. Batch along dimension 0: [2, seq_len, D]
             # Batch 0: Global Stream (logits_g)
