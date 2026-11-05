@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Vintern-1B-v3_5 Adapter for NE-VFE Trajectory Steering.
-
-Handles:
-- Dynamic Aspect-Ratio Tiling & Visual Patch Feature Extraction.
-- Continuous Fisher-Saliency Patch Energy Modulation on visual tokens.
-- Dual-Stream Autoregressive Decoding:
-  * Stream 1 (p_t^+): Multimodal prompt with modulated visual tokens.
-  * Stream 2 (p_t^0): Pure text-only unconditioned prompt with ZERO visual markers (Directive 5).
-- Synchronized KV-cache progression across both streams.
-- Zero regex, zero stopwords, strictly <= 2 hyperparameters (lambda, beta).
+Decoupled Multi-Scale Query-Orthogonal Variational Free Energy Adapter for Vintern-1B.
+Strictly <= 2 global hyperparameters (lambda_param, mu_param), zero regex, zero stopwords.
+Preserves native 256-token 16x16 visual grid geometry while providing 3.33x optical zoom.
+Enforces 1:1 isotropic square pixel cropping with symmetric border padding to eliminate font squashing.
 """
 
 from typing import Dict, List, Optional, Tuple
@@ -147,7 +141,13 @@ def build_query_token_mask(
 
 class VinternNEVFEAdapter:
     """
-    Vintern-1B-v3_5 VLM Adapter driving QO-VFE Trajectory Steering with MFVR.
+    Decoupled Multi-Scale Query-Orthogonal Variational Free Energy Adapter.
+
+    Architecture (Route A):
+    - Stage 1: Computes minimum-volume Chebyshev bounding box [x0, y0, x1, y1] on global 448x448 canvas.
+               Isotropically scales to 1:1 pixel square with symmetric border padding to prevent character squashing.
+    - Stage 2: Extracts high-resolution focal crop and projects exactly 256 visual tokens V_L.
+    - Generation: Decodes autoregressively using strictly 256 visual tokens in native 16x16 RoPE geometry.
     """
     def __init__(
         self,
@@ -158,11 +158,13 @@ class VinternNEVFEAdapter:
         lambda_param: float = 1.0,
         beta_param: float = 1.0,
         mu_param: float = 4.0,
+        decoupled_mode: str = "focal_mfvr",  # "focal_mfvr" (default) or "focal_contrastive"
     ):
         self.model = model
         self.tokenizer = tokenizer
         self.device = device
         self.transform = transform or self._build_default_transform(input_size=448)
+        self.decoupled_mode = decoupled_mode
 
         self.engine = NEVFEEngine(
             lambda_param=lambda_param,
@@ -174,11 +176,13 @@ class VinternNEVFEAdapter:
         self.num_image_token = getattr(model, "num_image_token", 256)
         self.system_message = getattr(model, "system_message", "Bạn là một trợ lý AI hữu ích.")
 
-        # Cache for visual features per image
+        # Caching dictionaries for image-level reuse across questions
         self._cached_img_key: Optional[Tuple[int, int, bytes]] = None
-        self._cached_vit_embeds: Optional[torch.Tensor] = None
+        self._cached_v_g: Optional[torch.Tensor] = None
+        self._cached_v_l: Optional[torch.Tensor] = None
         self._last_crop_box: Optional[Tuple[int, int, int, int]] = None
         self._last_spatial_window: Optional[Tuple[float, float, float, float]] = None
+        self._cached_vit_embeds: Optional[torch.Tensor] = None
 
     @staticmethod
     def _build_default_transform(input_size: int = 448):
@@ -195,26 +199,45 @@ class VinternNEVFEAdapter:
         thumb = image.resize((16, 16), Image.Resampling.NEAREST).convert("RGB")
         return (w, h, thumb.tobytes())
 
-    def extract_vit_embeds(
+    # =========================================================================
+    # STAGE 1: Fast Visual Saliency & Chebyshev Thermodynamic Spatial Window
+    # =========================================================================
+    def compute_stage1_window(
         self,
         image: Image.Image,
-        question: Optional[str] = None,
-    ) -> torch.Tensor:
+    ) -> Tuple[torch.Tensor, Tuple[int, int, int, int], Tuple[float, float, float, float]]:
         """
-        Extract dual-scale visual features from InternViT-300M (Directive 2):
-        1. Global scene tile V_G (full canvas downsampled to 448x448) -> [1, 256, 896].
-        2. Thermodynamic Chebyshev spatial bounding window computed from V_G.
-        3. Local focal crop V_L (optical magnification resized to 448x448) -> [1, 256, 896].
-        4. Stack into dual-tile representation V in R^{2 x 256 x 896}.
-        5. Modulate flattened patches [512, 896] via continuous Fisher-Saliency energy.
+        Stage 1: Extract global features V_G from full 448x448 canvas and compute
+        Chebyshev bounding window without language decoding.
+        
+        Enforces 1:1 isotropic square pixel cropping (Directive 2) to eliminate character squashing.
+
+        Returns:
+            v_g: Global visual tokens [1, 256, 896]
+            pixel_box: Bounding box (x0, y0, x1, y1) in image pixel coordinates
+            norm_window: Normalized coordinates (x_min, y_min, x_max, y_max) in [0, 1]
         """
         img_key = self._make_image_key(image)
-        if self._cached_img_key == img_key and self._cached_vit_embeds is not None:
-            return self._cached_vit_embeds
+        if (
+            self._cached_img_key == img_key
+            and self._cached_v_g is not None
+            and self._last_crop_box is not None
+            and self._last_spatial_window is not None
+        ):
+            return self._cached_v_g, self._last_crop_box, self._last_spatial_window
+
+        # New image: invalidate any stale cache from prior images
+        if self._cached_img_key != img_key:
+            self._cached_img_key = img_key
+            self._cached_v_g = None
+            self._cached_v_l = None
+            self._last_crop_box = None
+            self._last_spatial_window = None
+            self._cached_vit_embeds = None
 
         W, H = image.size
 
-        # a) Extract global features V_G from full image
+        # 1. Extract global visual tokens V_G
         pixel_values_g = self.transform(image).unsqueeze(0).to(
             device=self.device, dtype=torch.bfloat16
         )
@@ -222,72 +245,128 @@ class VinternNEVFEAdapter:
             v_g = self.model.extract_feature(pixel_values_g)  # [1, 256, 896]
         del pixel_values_g
 
-        # b) Compute Chebyshev crop window from V_G using compute_thermodynamic_spatial_window
+        # 2. Compute minimum-volume Chebyshev window
         x_min, y_min, x_max, y_max = compute_thermodynamic_spatial_window(
             v_g[0],
             grid_size=16,
             k_sigma=self.engine.k_sigma,
             min_span=self.engine.min_span,
         )
-        self._last_spatial_window = (x_min, y_min, x_max, y_max)
+        norm_window = (x_min, y_min, x_max, y_max)
 
-        # c) Crop PIL image to [x_min, y_min, x_max, y_max] and resize to 448x448
-        x0 = max(0, min(W - 1, int(round(x_min * W))))
-        y0 = max(0, min(H - 1, int(round(y_min * H))))
-        x1 = max(x0 + 1, min(W, int(round(x_max * W))))
-        y1 = max(y0 + 1, min(H, int(round(y_max * H))))
-        self._last_crop_box = (x0, y0, x1, y1)
+        # 3. Denormalize to pixel coordinates with 1:1 Isotropic Square Bounding Box (Directive 2)
+        box_x0 = x_min * W
+        box_y0 = y_min * H
+        box_x1 = x_max * W
+        box_y1 = y_max * H
 
-        focal_crop = image.crop((x0, y0, x1, y1))
-        pixel_values_l = self.transform(focal_crop).unsqueeze(0).to(
-            device=self.device, dtype=torch.bfloat16
-        )
+        cx = 0.5 * (box_x0 + box_x1)
+        cy = 0.5 * (box_y0 + box_y1)
+        half_side = 0.5 * max(box_x1 - box_x0, box_y1 - box_y0)
 
-        # d) Extract focal features V_L
-        with torch.no_grad():
-            v_l = self.model.extract_feature(pixel_values_l)  # [1, 256, 896]
-        del pixel_values_l
+        sq_x0 = max(0, int(round(cx - half_side)))
+        sq_y0 = max(0, int(round(cy - half_side)))
+        sq_x1 = min(W, int(round(cx + half_side)))
+        sq_y1 = min(H, int(round(cy + half_side)))
 
-        # e) Stack into V in R^{2 x 256 x 896}
-        v_raw = torch.cat([v_g, v_l], dim=0)  # [2, 256, 896]
+        # Coordinate clamping safeguard against non-positive dimension
+        sq_x1 = max(sq_x0 + 1, sq_x1)
+        sq_y1 = max(sq_y0 + 1, sq_y1)
+        pixel_box = (sq_x0, sq_y0, sq_x1, sq_y1)
 
-        # Modulate flattened patches [512, 896] using self.engine.modulate_patches(flat_v)
-        n_tiles, n_tokens, d_dim = v_raw.shape
-        flat_v = v_raw.reshape(n_tiles * n_tokens, d_dim)
-        modulated_flat = self.engine.modulate_patches(flat_v)
-        modulated_vit = modulated_flat.reshape(n_tiles, n_tokens, d_dim).to(
-            dtype=v_raw.dtype, device=self.device
-        )
-
+        # Update cache
         self._cached_img_key = img_key
-        self._cached_vit_embeds = modulated_vit
-        return modulated_vit
+        self._cached_v_g = v_g
+        self._last_crop_box = pixel_box
+        self._last_spatial_window = norm_window
 
-    def extract_and_modulate_visual_features(
+        return v_g, pixel_box, norm_window
+
+    # =========================================================================
+    # STAGE 2: Local Optical Zoom Focal Token Extraction (Native 256 Tokens)
+    # =========================================================================
+    def extract_stage2_focal_features(
         self,
         image: Image.Image,
-        question: Optional[str] = None,
+        crop_box: Tuple[int, int, int, int],
     ) -> torch.Tensor:
-        """Alias for extract_vit_embeds preserving backwards compatibility."""
-        return self.extract_vit_embeds(image, question=question)
+        """
+        Stage 2: Crop image using 1:1 square box (with symmetric padding if border exceeded),
+        resize to 448x448, and extract exactly 256 focal visual tokens V_L with Fisher-Saliency modulation.
 
+        Returns:
+            v_l_mod: Modulated focal visual tokens [1, 256, 896]
+        """
+        img_key = self._make_image_key(image)
+        if (
+            self._cached_img_key == img_key
+            and self._cached_v_l is not None
+            and self._last_crop_box == crop_box
+        ):
+            return self._cached_v_l
+
+        # If called directly with a new image, invalidate stale caches
+        if self._cached_img_key != img_key:
+            self._cached_img_key = img_key
+            self._cached_v_g = None
+            self._cached_v_l = None
+            self._last_crop_box = crop_box
+            self._last_spatial_window = None
+            self._cached_vit_embeds = None
+
+        crop = image.crop(crop_box)
+        cw, ch = crop.size
+        # Symmetric 1:1 padding if crop hits image boundary (Directive 2)
+        if cw != ch:
+            max_side = max(cw, ch)
+            padded_crop = Image.new("RGB", (max_side, max_side), (128, 128, 128))
+            padded_crop.paste(crop, ((max_side - cw) // 2, (max_side - ch) // 2))
+            crop = padded_crop
+
+        pixel_values_l = self.transform(crop).unsqueeze(0).to(
+            device=self.device, dtype=torch.bfloat16
+        )
+        with torch.no_grad():
+            v_l_raw = self.model.extract_feature(pixel_values_l)  # [1, 256, 896]
+        del pixel_values_l
+
+        # Modulate patches via continuous Fisher-Saliency
+        v_l_mod = self.engine.modulate_patches(v_l_raw[0]).unsqueeze(0).to(
+            dtype=v_l_raw.dtype, device=self.device
+        )
+
+        self._cached_v_l = v_l_mod
+        self._last_crop_box = crop_box
+        self._cached_vit_embeds = v_l_mod
+        return v_l_mod
+
+    # =========================================================================
+    # Embedding Construction: Strictly 256 Tokens (Native 16x16 Grid)
+    # =========================================================================
     def build_multimodal_embeds(
         self,
         vit_embeds: torch.Tensor,
         question: str,
     ) -> torch.Tensor:
         """
-        Construct input embeddings for multimodal stream (p_t^+).
+        Construct input embeddings for standard 256-token single-tile stream.
+        vit_embeds: [1, 256, 896] or [256, 896].
+        Strictly preserves canonical 256 visual tokens inside <img><IMG_CONTEXT>*256</img>.
         """
-        n_tiles = vit_embeds.shape[0]
-        total_img_tokens = n_tiles * self.num_image_token
+        if vit_embeds.dim() == 2:
+            vit_embeds = vit_embeds.unsqueeze(0)
+
+        assert vit_embeds.shape[0] == 1 and vit_embeds.shape[1] == self.num_image_token, (
+            f"Expected [1, {self.num_image_token}, D], got {vit_embeds.shape}"
+        )
 
         prefix_str = (
             f"<|im_start|>system\n{self.system_message}<|im_end|>\n"
             "<|im_start|>user\n"
-            "<img>" + ("<IMG_CONTEXT>" * total_img_tokens) + "</img>\n"
+            "<img>" + ("<IMG_CONTEXT>" * self.num_image_token) + "</img>\n"
         )
-        suffix_str = f"{PROMPT_INSTRUCTION}{question.strip()}<|im_end|>\n<|im_start|>assistant\n"
+        # Recency Prompt Framing without regex or stopwords (Directive 4)
+        suffix_str = f"{question.strip()}\nTrả lời ngắn gọn: <|im_end|>\n<|im_start|>assistant\n"
 
         prefix_ids = self.tokenizer(prefix_str, return_tensors="pt", add_special_tokens=False).input_ids.to(self.device)
         suffix_ids = self.tokenizer(suffix_str, return_tensors="pt", add_special_tokens=False).input_ids.to(self.device)
@@ -302,9 +381,7 @@ class VinternNEVFEAdapter:
         vis_start = int(vis_indices[0].item())
         vis_end = int(vis_indices[-1].item()) + 1
 
-        flat_vit = vit_embeds.reshape(-1, vit_embeds.shape[-1]).to(prefix_embeds.dtype)
-        prefix_embeds[0, vis_start:vis_end, :] = flat_vit
-
+        prefix_embeds[0, vis_start:vis_end, :] = vit_embeds[0].to(prefix_embeds.dtype)
         return torch.cat([prefix_embeds, suffix_embeds], dim=1)
 
     def build_mfvr_embeds(
@@ -314,22 +391,12 @@ class VinternNEVFEAdapter:
     ) -> torch.Tensor:
         """
         Construct input embeddings for Mean-Field Visual Reference (MFVR) stream (p_t^0).
-
-        Evaluates the spatial centroid across all tiles and patch tokens:
-            v_mean = (1 / P) \\sum_{p=1}^P v_p
-        and broadcasts it across all P visual token positions:
-            V^0 = v_mean \\mathbf{1}^\\top \\in \\mathbb{R}^{P \\times D}
-
-        Guarantees:
-        - Exact structural and positional alignment (|E^0| = |E^+|).
-        - Persona Retention: VLM remains in VQA answer mode (I_1(preamble) ~ 0).
-        - High-Frequency Oblivion: Spatial character strokes destroyed (I_1(entity) >> 0).
-        - Zero extra hyperparameters, zero regex, zero stopwords.
+        Computes spatial centroid v_mean = (1/256) sum v_p and broadcasts to [1, 256, D].
         """
-        # vit_embeds: [N_tiles, 256, D]
-        # Compute spatial centroid across tiles (dim=0) and patch tokens (dim=1)
-        v_mean = vit_embeds.mean(dim=(0, 1), keepdim=True) # [1, 1, D]
-        vit_embeds_zero = v_mean.expand_as(vit_embeds) # [N_tiles, 256, D]
+        if vit_embeds.dim() == 2:
+            vit_embeds = vit_embeds.unsqueeze(0)
+        v_mean = vit_embeds.mean(dim=1, keepdim=True)  # [1, 1, D]
+        vit_embeds_zero = v_mean.expand_as(vit_embeds)  # [1, 256, D]
         return self.build_multimodal_embeds(vit_embeds_zero, question)
 
     def build_text_only_embeds(self, question: str) -> torch.Tensor:
@@ -339,13 +406,41 @@ class VinternNEVFEAdapter:
         """
         prompt_str = (
             f"<|im_start|>system\n{self.system_message}<|im_end|>\n"
-            f"<|im_start|>user\n{PROMPT_INSTRUCTION}{question.strip()}<|im_end|>\n"
+            f"<|im_start|>user\n{question.strip()}\nTrả lời ngắn gọn: <|im_end|>\n"
             "<|im_start|>assistant\n"
         )
         prompt_ids = self.tokenizer(prompt_str, return_tensors="pt", add_special_tokens=False).input_ids.to(self.device)
         embed_layer = self.model.language_model.get_input_embeddings()
         return embed_layer(prompt_ids)
 
+    # =========================================================================
+    # Backward Compatibility Hooks for Benchmark Runner & Pipeline
+    # =========================================================================
+    def extract_vit_embeds(
+        self,
+        image: Image.Image,
+        question: Optional[str] = None,
+    ) -> torch.Tensor:
+        """
+        Benchmark caching hook: runs Stage 1 and Stage 2, caching both V_G and V_L.
+        Returns V_L (256 tokens) for downstream processing.
+        """
+        _, pixel_box, _ = self.compute_stage1_window(image)
+        v_l = self.extract_stage2_focal_features(image, pixel_box)
+        self._cached_vit_embeds = v_l
+        return v_l
+
+    def extract_and_modulate_visual_features(
+        self,
+        image: Image.Image,
+        question: Optional[str] = None,
+    ) -> torch.Tensor:
+        """Alias for extract_vit_embeds preserving backwards compatibility."""
+        return self.extract_vit_embeds(image, question=question)
+
+    # =========================================================================
+    # STAGE 3: Decoupled Dual-Stream Autoregressive Generation
+    # =========================================================================
     def generate(
         self,
         image: Image.Image,
@@ -353,45 +448,66 @@ class VinternNEVFEAdapter:
         max_new_tokens: int = 64,
     ) -> str:
         """
-        Dual-Stream Autoregressive Generation with NE-VFE Trajectory Steering and MFVR Reference.
+        Decoupled generation executing across two parallel synchronized streams:
+        - Mode A (Default: "focal_mfvr"):
+            Stream 1 (p_t^+): Focal V_L (256 tokens)
+            Stream 2 (p_t^0): Mean-Field Visual Reference centroid MFVR(V_L) (256 tokens)
+        - Mode B ("focal_contrastive"):
+            Stream 1 (p_t^+): Focal V_L (256 tokens)
+            Stream 2 (p_t^0): Global context V_G (256 tokens)
         """
         with torch.no_grad():
-            vit_embeds = self.extract_vit_embeds(image, question=question)
+            # 1. Stage 1: Window extraction
+            v_g, pixel_box, _ = self.compute_stage1_window(image)
 
-            multimodal_embeds = self.build_multimodal_embeds(vit_embeds, question)
-            # Mean-Field Visual Reference (MFVR) stream embeddings
-            mfvr_embeds = self.build_mfvr_embeds(vit_embeds, question)
+            # 2. Stage 2: Focal feature extraction
+            v_l = self.extract_stage2_focal_features(image, pixel_box)
+
+            # 3. Stream Embedding Construction
+            # Multimodal Focal Stream (p_t^+)
+            embeds_plus = self.build_multimodal_embeds(v_l, question)
+
+            # Reference Prior Stream (p_t^0)
+            if self.decoupled_mode == "focal_contrastive":
+                # Multi-Scale Contrastive: Global view as prior stream
+                v_g_mod = self.engine.modulate_patches(v_g[0]).unsqueeze(0).to(
+                    dtype=v_g.dtype, device=self.device
+                )
+                embeds_zero = self.build_multimodal_embeds(v_g_mod, question)
+            else:
+                # Default: MFVR Centroid Reference (Directive 3)
+                embeds_zero = self.build_mfvr_embeds(v_l, question)
 
             embed_layer = self.model.language_model.get_input_embeddings()
             eos_im_end = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
             eos_std = self.tokenizer.eos_token_id
 
-            # Prefill multimodal branch (p_t^+)
+            # Prefill Stream 1 (p_t^+)
             out_plus = self.model.language_model.model(
-                inputs_embeds=multimodal_embeds,
+                inputs_embeds=embeds_plus,
                 use_cache=True,
                 return_dict=True,
             )
             kv_plus = out_plus.past_key_values
             logits_plus = self.model.language_model.lm_head(out_plus.last_hidden_state[:, -1:, :])[:, -1, :]
 
-            # Prefill Mean-Field Visual Reference unconditioned branch (p_t^0)
+            # Prefill Stream 2 (p_t^0)
             out_zero = self.model.language_model.model(
-                inputs_embeds=mfvr_embeds,
+                inputs_embeds=embeds_zero,
                 use_cache=True,
                 return_dict=True,
             )
             kv_zero = out_zero.past_key_values
             logits_zero = self.model.language_model.lm_head(out_zero.last_hidden_state[:, -1:, :])[:, -1, :]
 
-            # Construct Query Indicator Tensor m_Q once before decoding loop (Directive 2 & 3)
+            # Construct Casing-Invariant Query Indicator Tensor m_Q
             vocab_size = logits_plus.shape[-1]
             q_mask = build_query_token_mask(question, self.tokenizer, vocab_size, self.device)
 
             generated_ids: List[int] = []
 
             for step in range(1, max_new_tokens + 1):
-                # Query-Orthogonal Variational Free Energy Single-Step Steering Operator
+                # Single-Step QO-VFE Variational Trajectory Steering Operator
                 next_tok_tensor, _, _, _ = self.engine.decode_step(
                     logits_plus, logits_zero, q_mask=q_mask, step_idx=step
                 )
