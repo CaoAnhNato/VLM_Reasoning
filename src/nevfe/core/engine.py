@@ -245,8 +245,8 @@ def compute_candidate_support_mask(
 
 
 def nevfe_step_logits(
-    logits_plus: torch.Tensor,
-    logits_zero: torch.Tensor,
+    logits_l: Optional[torch.Tensor] = None,
+    logits_g: Optional[torch.Tensor] = None,
     lambda_param: float = 1.0,
     beta_param: float = 1.0,
     mu_param: float = 4.0,
@@ -254,32 +254,52 @@ def nevfe_step_logits(
     step_idx: int = 1,
     barrier_decay: float = 0.5,
     barrier_horizon: int = 3,
+    logits_plus: Optional[torch.Tensor] = None,
+    logits_zero: Optional[torch.Tensor] = None,
+    return_effective_coupling: Optional[bool] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
-    Single-Step QO-VFE Variational Trajectory Steering Operator.
+    Decoupled Dual-Stream Rectified Contrastive Sharpening with Normalized Entropy Coupling (Directive 2).
 
-    Workflow:
-    1. Fisher-Rao Bhattacharyya Coefficient for information-geometric manifold tracking.
-    2. Direct Visual Coupling Potential: z_t^*(v) = log p^+ + lambda * (log p^+ - log p^0).
-    3. Query-Orthogonal Potential Barrier (Directive 1):
-       If q_mask is active, mu_param > 0 and step_idx <= barrier_horizon:
+    Mathematical Foundations:
+    1. Normalized Log-Probabilities:
+       log_p_g = log_softmax(logits_g)
+       log_p_l = log_softmax(logits_l)
+    2. Rectified Contrastive Sharpening (Theorem 3):
+       sharp_potential = relu(log_p_l - log_p_g)
+       Unconditionally preserves out-of-crop text: when log_p_l <= log_p_g, sharp_potential == 0,
+       guaranteeing z_t^*(v) = log_p_g without negative extinction.
+    3. Normalized Shannon Entropy Coupling:
+       p_l = exp(log_p_l)
+       entropy_l = -sum(nan_to_num(p_l * log_p_l, nan=0.0))
+       norm_entropy = clamp(entropy_l / log(|V|), 0.0, 1.0)
+       lambda_t = lambda_param * (1.0 + norm_entropy)  in [lambda_0, 2*lambda_0]
+    4. Steered Potential:
+       steered_potential = log_p_g + lambda_t * sharp_potential
+    5. Query-Orthogonal Potential Barrier (Directive 1 & 3):
+       If q_mask active, mu_param > 0 and step_idx <= barrier_horizon:
            barrier = mu_param * (barrier_decay ** (step_idx - 1))
-           z_t^*(v) = z_t^*(v) - barrier for v in Q
-    4. Gibbs-Boltzmann Steered Distribution: log q_t^* = log_softmax(beta * z_t^*).
-    5. Thermodynamic Shannon Entropy of Steered Ensemble: H(q_t^*).
-    6. Free-Energy Support Truncation (FEST): mask tokens where log q_t^* < max log q_t^* - H(q_t^*).
-    7. Steered Logits and Argmax Selection.
+           steered_potential = where(q_mask, steered_potential - barrier, steered_potential)
+    6. Gibbs-Boltzmann Steered Distribution & Free-Energy Support Truncation (FEST):
+       scaled_potential = beta_param * steered_potential
+       log_q_star = log_softmax(scaled_potential)
+       V_supp = {v : log_q_star(v) >= max log_q_star - H(q^*)}
+       steered_logits = where(support_mask, scaled_potential, -1e9)
+       next_tokens = argmax(steered_logits)
 
     Args:
-        logits_plus: Multimodal logits [B, K] or [K].
-        logits_zero: Unconditioned linguistic logits [B, K] or [K].
-        lambda_param: Visual evidence coupling constant in [0.1, 1.5] (default 1.0).
+        logits_l: Focal crop multimodal stream logits [B, K] or [K].
+        logits_g: Global context stream logits [B, K] or [K].
+        lambda_param: Base visual evidence coupling constant (Global Hyperparameter 1, default 1.0).
         beta_param: Thermodynamic precision / inverse temperature in [0.5, 5.0] (default 1.0).
-        mu_param: Query-orthogonal potential barrier height in [0.0, 10.0] (default 3.0).
-        q_mask: Optional boolean tensor [K] or [B, K] indicating tokens present in the question prompt.
+        mu_param: Query-orthogonal potential barrier height in [0.0, 10.0] (default 4.0).
+        q_mask: Optional boolean tensor [K] or [B, K] indicating tokens present in prompt.
         step_idx: 1-indexed autoregressive decoding step.
         barrier_decay: Dyadic decay rate for transient barrier (default 0.5).
         barrier_horizon: Maximum decoding step index where barrier remains active (default 3).
+        logits_plus: Backward-compatibility alias for logits_l.
+        logits_zero: Backward-compatibility alias for logits_g.
+        return_effective_coupling: If True, returns dynamic lambda_t; if False, returns base lambda_param.
 
     Returns:
         next_tokens: Selected token index tensor [B] (argmax of steered variational distribution).
@@ -287,30 +307,58 @@ def nevfe_step_logits(
         coupling_tensor: Visual evidence coupling tensor [B, 1].
         entropy_nats: Shannon entropy of steered distribution in nats [B, 1].
     """
-    is_1d = (logits_plus.dim() == 1)
+    if logits_l is not None and logits_g is not None:
+        is_legacy = False
+    elif logits_plus is not None and logits_zero is not None:
+        logits_l = logits_plus
+        logits_g = logits_zero
+        is_legacy = True
+    elif logits_l is not None and logits_zero is not None:
+        logits_g = logits_zero
+        is_legacy = False
+    elif logits_plus is not None and logits_g is not None:
+        logits_l = logits_plus
+        is_legacy = False
+    else:
+        raise ValueError("Must provide either (logits_l, logits_g) or (logits_plus, logits_zero)")
+
+    is_1d = (logits_l.dim() == 1)
     if is_1d:
-        logits_plus = logits_plus.unsqueeze(0)
-        logits_zero = logits_zero.unsqueeze(0)
+        logits_l = logits_l.unsqueeze(0)
+        logits_g = logits_g.unsqueeze(0)
 
     # Cast to float32 for high numerical precision in log_softmax / exp / sqrt
-    lp = logits_plus.float()
-    lz = logits_zero.float()
+    ll = logits_l.float()
+    lg = logits_g.float()
 
-    log_p_plus = F.log_softmax(lp, dim=-1)
-    log_p_zero = F.log_softmax(lz, dim=-1)
+    if is_legacy:
+        # Legacy Iteration 6: Direct Visual Coupling against Reference Prior
+        log_p_plus = F.log_softmax(ll, dim=-1)
+        log_p_zero = F.log_softmax(lg, dim=-1)
+        pointwise_vmi = log_p_plus - log_p_zero
+        steered_potential = log_p_plus + float(lambda_param) * pointwise_vmi
+        coupling_tensor = torch.full((ll.shape[0], 1), float(lambda_param), device=ll.device)
+    else:
+        # Iteration 7: Decoupled Dual-Stream Rectified Contrastive Sharpening (Directive 2 - Theorem 3)
+        log_p_g = F.log_softmax(lg, dim=-1)
+        log_p_l = F.log_softmax(ll, dim=-1)
 
-    p_plus = torch.exp(log_p_plus)
-    p_zero = torch.exp(log_p_zero)
+        # 1. Rectified Contrastive Sharpening (Theorem 3)
+        sharp_potential = torch.relu(log_p_l - log_p_g)
 
-    # 1. Fisher-Rao Bhattacharyya Coefficient (computed for manifold diagnostics)
-    bc = compute_bhattacharyya_coefficient(p_plus, p_zero)
-    coupling_tensor = torch.full_like(bc, float(lambda_param))
+        # 2. Normalized Shannon Entropy Coupling (Directive 2)
+        p_l = torch.exp(log_p_l)
+        entropy_l = -torch.sum(torch.nan_to_num(p_l * log_p_l, nan=0.0, neginf=0.0, posinf=0.0), dim=-1, keepdim=True)
+        vocab_size = log_p_l.shape[-1]
+        log_vocab = max(float(math.log(max(vocab_size, 2))), 1e-6)
+        norm_entropy = torch.clamp(entropy_l / log_vocab, 0.0, 1.0)
+        lambda_t = float(lambda_param) * (1.0 + norm_entropy)
 
-    # 2. Direct Visual Coupling Potential: z_t^*(v) = log p^+ + lambda * (log p^+ - log p^0)
-    pointwise_vmi = log_p_plus - log_p_zero
-    steered_potential = log_p_plus + float(lambda_param) * pointwise_vmi
+        # 3. Steered Potential (Theorem 3)
+        steered_potential = log_p_g + lambda_t * sharp_potential
+        coupling_tensor = lambda_t
 
-    # 3. Query-Orthogonal Potential Barrier (Directive 1)
+    # 4. Query-Orthogonal Potential Barrier (Directive 1 & 3)
     if q_mask is not None and mu_param > 0 and step_idx <= barrier_horizon:
         barrier = float(mu_param) * (float(barrier_decay) ** (step_idx - 1))
         q_mask_t = q_mask.to(device=steered_potential.device, dtype=torch.bool)
@@ -322,24 +370,31 @@ def nevfe_step_logits(
             steered_potential,
         )
 
-    # 4. Gibbs-Boltzmann Steered Distribution log q_t^*(v)
+    # 5. Gibbs-Boltzmann Steered Distribution log q_t^*(v)
     scaled_potential = float(beta_param) * steered_potential
     log_q_star = F.log_softmax(scaled_potential, dim=-1)
     q_star = torch.exp(log_q_star)
 
-    # 5. Thermodynamic Shannon Entropy of Steered Ensemble in Nats
+    # 6. Thermodynamic Shannon Entropy of Steered Ensemble in Nats
     entropy_nats = compute_unnormalized_entropy(q_star, log_q_star)
 
-    # 6. Free-Energy Support Truncation (FEST) Candidate Support Mask
+    # 7. Free-Energy Support Truncation (FEST) Candidate Support Mask
     support_mask = compute_free_energy_support_mask(log_q_star, entropy_nats)
 
-    # 7. Masked Variational Logits
+    # 8. Masked Variational Logits
     steered_logits = torch.where(
         support_mask,
         scaled_potential,
         torch.full_like(scaled_potential, -1e9),
     )
     next_tokens = torch.argmax(steered_logits, dim=-1)
+    if is_legacy:
+        coupling_tensor = torch.full((ll.shape[0], 1), float(lambda_param), device=ll.device)
+    else:
+        if return_effective_coupling is False:
+            coupling_tensor = torch.full_like(norm_entropy, float(lambda_param))
+        else:
+            coupling_tensor = lambda_t
 
     if is_1d:
         next_tokens = next_tokens.squeeze(0)
@@ -402,15 +457,18 @@ class NEVFEEngine:
 
     def decode_step(
         self,
-        logits_plus: torch.Tensor,
-        logits_zero: torch.Tensor,
+        logits_l: Optional[torch.Tensor] = None,
+        logits_g: Optional[torch.Tensor] = None,
         q_mask: Optional[torch.Tensor] = None,
         step_idx: int = 1,
+        logits_plus: Optional[torch.Tensor] = None,
+        logits_zero: Optional[torch.Tensor] = None,
+        return_effective_coupling: Optional[bool] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Execute single-step query-orthogonal variational trajectory steering."""
+        """Execute single-step Decoupled Dual-Stream Contrastive Steering (D-DS-CS)."""
         return nevfe_step_logits(
-            logits_plus=logits_plus,
-            logits_zero=logits_zero,
+            logits_l=logits_l,
+            logits_g=logits_g,
             lambda_param=self.lambda_param,
             beta_param=self.beta_param,
             mu_param=self.mu_param,
@@ -418,4 +476,7 @@ class NEVFEEngine:
             step_idx=step_idx,
             barrier_decay=self.barrier_decay,
             barrier_horizon=self.barrier_horizon,
+            logits_plus=logits_plus,
+            logits_zero=logits_zero,
+            return_effective_coupling=return_effective_coupling,
         )
