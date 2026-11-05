@@ -8,6 +8,7 @@ Enforces 1:1 isotropic square pixel cropping with symmetric border padding to el
 
 import math
 from typing import Dict, List, Optional, Tuple
+import numpy as np
 from PIL import Image
 import torch
 import torchvision.transforms as T
@@ -48,6 +49,67 @@ def select_admissible_aspect_ratio_grid(
     return best_grid
 
 
+def pad_image_edge_replicate(crop: Image.Image) -> Image.Image:
+    """
+    Pad rectangular crop to square using edge-border replication (Directive W2, Lemma 2).
+    Eliminates artificial step edges that quench interior text strokes.
+    """
+    cw, ch = crop.size
+    if cw == ch:
+        return crop
+    max_side = max(cw, ch)
+    pad_left = (max_side - cw) // 2
+    pad_right = max_side - cw - pad_left
+    pad_top = (max_side - ch) // 2
+    pad_bottom = max_side - ch - pad_top
+
+    arr = np.array(crop)
+    if arr.ndim == 3:
+        padded_arr = np.pad(arr, ((pad_top, pad_bottom), (pad_left, pad_right), (0, 0)), mode="edge")
+    else:
+        padded_arr = np.pad(arr, ((pad_top, pad_bottom), (pad_left, pad_right)), mode="edge")
+    return Image.fromarray(padded_arr)
+
+
+def extract_symmetric_square_crop(image: Image.Image, box: Tuple[int, int, int, int]) -> Image.Image:
+    """
+    Directive W2 (Boundary Seam Elimination, Theorem 32-Ext):
+    Symmetric crop expansion on native image [0, W] x [0, H] with edge-border replicate fallback,
+    completely eliminating static (128, 128, 128) gray padding seams and boundary step edges.
+    """
+    W, H = image.size
+    bx0, by0, bx1, by1 = box
+    cw = max(1, bx1 - bx0)
+    ch = max(1, by1 - by0)
+    max_side = max(cw, ch)
+    cx = (bx0 + bx1) / 2.0
+    cy = (by0 + by1) / 2.0
+
+    # Expand box symmetrically centered on (cx, cy) to target square side max_side
+    sx0 = int(round(cx - max_side / 2.0))
+    sy0 = int(round(cy - max_side / 2.0))
+    sx1 = sx0 + max_side
+    sy1 = sy0 + max_side
+
+    # Shift into image boundaries [0, W] x [0, H] preserving span if possible
+    if sx0 < 0:
+        sx1 = min(W, sx1 - sx0)
+        sx0 = 0
+    if sx1 > W:
+        sx0 = max(0, sx0 - (sx1 - W))
+        sx1 = W
+
+    if sy0 < 0:
+        sy1 = min(H, sy1 - sy0)
+        sy0 = 0
+    if sy1 > H:
+        sy0 = max(0, sy0 - (sy1 - H))
+        sy1 = H
+
+    crop = image.crop((sx0, sy0, sx1, sy1))
+    return pad_image_edge_replicate(crop)
+
+
 def extract_anisotropic_focal_tiles(
     image: Image.Image,
     crop_box: Tuple[int, int, int, int],
@@ -83,13 +145,8 @@ def extract_anisotropic_focal_tiles(
 
             sub_tile = crop.crop((sub_x0, sub_y0, sub_x1, sub_y1))
 
-            # Pad to square if slight rounding discrepancy
-            sw, sh = sub_tile.size
-            if sw != sh:
-                max_s = max(sw, sh)
-                padded = Image.new("RGB", (max_s, max_s), (128, 128, 128))
-                padded.paste(sub_tile, ((max_s - sw) // 2, (max_s - sh) // 2))
-                sub_tile = padded
+            # Pad to square if slight rounding discrepancy using edge replicate padding
+            sub_tile = pad_image_edge_replicate(sub_tile)
 
             tiles.append(sub_tile.resize((target_tile_size, target_tile_size), Image.Resampling.BICUBIC))
 
@@ -428,14 +485,9 @@ class VinternNEVFEAdapter:
 
         if use_hierarchical_zoom:
             # 1. Level 1 Coarse Focal Window B^(1)
-            crop1 = image.crop(crop_box)
-            cw, ch = crop1.size
-            if cw != ch:
-                max_side = max(cw, ch)
-                padded_crop = Image.new("RGB", (max_side, max_side), (128, 128, 128))
-                padded_crop.paste(crop1, ((max_side - cw) // 2, (max_side - ch) // 2))
-                crop1 = padded_crop
-            s1 = max(cw, ch)
+            # Directive W2: Symmetric crop expansion on native image [0, W] x [0, H] eliminating gray padding seams
+            crop1 = extract_symmetric_square_crop(image, crop_box)
+            s1 = max(crop1.size)
             m1 = 448.0 / max(1.0, float(s1))
             tile1 = crop1.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)
 
@@ -489,14 +541,9 @@ class VinternNEVFEAdapter:
                 sub_y1 = max(sub_y0 + 2, min(H, int(round(by0 + v_max * bh))))
                 box2_pixel = (sub_x0, sub_y0, sub_x1, sub_y1)
 
-                crop2 = image.crop(box2_pixel)
-                cw2, ch2 = crop2.size
-                if cw2 != ch2:
-                    max_side2 = max(cw2, ch2)
-                    padded_crop2 = Image.new("RGB", (max_side2, max_side2), (128, 128, 128))
-                    padded_crop2.paste(crop2, ((max_side2 - cw2) // 2, (max_side2 - ch2) // 2))
-                    crop2 = padded_crop2
-                s2 = max(cw2, ch2)
+                # Directive W2: Symmetric crop expansion on native image [0, W] x [0, H] eliminating gray padding seams
+                crop2 = extract_symmetric_square_crop(image, box2_pixel)
+                s2 = max(crop2.size)
                 m2 = 448.0 / max(1.0, float(s2))
                 tile2 = crop2.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)
 
@@ -807,7 +854,7 @@ class VinternNEVFEAdapter:
                 )
                 next_id = int(next_tok_tensor.item())
 
-                # Autonomous Optical Stopping Gate (Directive W3, Theorem 30)
+                # Autonomous Optical Stopping Gate (Theorem 34, Directive W5)
                 omega_t, s_bar_t = self.engine.get_last_continuation_saliency()
                 stop_decision = evaluate_semantic_stopping(
                     logits_g=logits_g,
@@ -817,6 +864,7 @@ class VinternNEVFEAdapter:
                     s_bar_t=s_bar_t,
                     eos_token_ids=eos_token_ids,
                     step_idx=step,
+                    grace_horizon=self.engine.get_last_grace_horizon(),
                 )
 
                 if bool(stop_decision.item()) if isinstance(stop_decision, torch.Tensor) else bool(stop_decision):

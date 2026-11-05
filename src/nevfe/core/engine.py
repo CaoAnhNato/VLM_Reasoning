@@ -134,9 +134,10 @@ def adaptive_tensor_stroke_dilation(
     sigma_lap = torch.std(lap, dim=(-2, -1), keepdim=True) + eps
     shock_dir = torch.tanh(lap / sigma_lap)  # [B, 1, H, W] in [-1, 1]
 
-    # Salience gating: zero out flat background regions where grad_mag -> 0
-    max_grad = torch.amax(grad_mag, dim=(-2, -1), keepdim=True)
-    grad_gate = torch.where(max_grad > 1e-4, grad_mag / (max_grad + eps), torch.zeros_like(grad_mag))
+    # Salience gating: dispersion-normalized scale-space gradient gating (Directive W1, Theorem 32-Ext)
+    # Replaces global supremum normalization to prevent quenching faint text strokes in crops with strong borders
+    sigma_grad = torch.std(grad_mag, dim=(-2, -1), keepdim=True) + eps
+    grad_gate = torch.where(sigma_grad > 1e-4, torch.tanh(grad_mag / sigma_grad), torch.zeros_like(grad_mag))
 
     # Magnification scaling factor: smoothly activates when M > 1.0
     kappa_m = float(kappa_0) * math.tanh(max(0.0, float(magnification) - 1.0))
@@ -394,7 +395,9 @@ def compute_normalized_entropy_lse(
     log_vocab = max(float(math.log(max(vocab_size, 2))), 1e-6)
     lse = torch.logsumexp(z, dim=-1, keepdim=True)
     p = F.softmax(z, dim=-1)
-    expected_z = torch.sum(p * z, dim=-1, keepdim=True)
+    # Directive W7 (Area Chair Fix): Sanitize 0.0 * (-inf) = NaN singularity
+    p_z = torch.nan_to_num(p * z, nan=0.0, posinf=0.0, neginf=0.0)
+    expected_z = torch.sum(p_z, dim=-1, keepdim=True)
     entropy_nats = torch.clamp(lse - expected_z, min=0.0)
     norm_entropy = torch.clamp(entropy_nats / log_vocab, 0.0, 1.0)
     return entropy_nats, norm_entropy
@@ -637,14 +640,15 @@ def evaluate_semantic_stopping(
     s_bar_t: Optional[torch.Tensor] = None,
     eos_token_ids: Optional[Sequence[int]] = None,
     step_idx: Optional[int] = None,
+    grace_horizon: Optional[torch.Tensor] = None,
 ) -> torch.Tensor:
     """
-    Iteration 15: Crisp Semantic Stopping Gate (Theorems 29 & 30, Directive W3).
+    Iteration 17: Calibrated Crisp Semantic Stopping Gate (Theorem 34, Directive W5).
     Releases crisp EOS without regex or stopwords when:
       1) Steered ensemble explicitly chose EOS, OR
       2) Global stream chose EOS and optical evidence is exhausted, OR
       3) Dual streams agree on EOS and optical evidence is exhausted, OR
-      4) Step >= 2 AND optical evidence is exhausted (omega_t <= s_bar_t).
+      4) Step >= 2 AND optical evidence is exhausted AND grace_horizon <= 0.30.
 
     Args:
         logits_g: Global stream logits [B, K] or [K].
@@ -654,6 +658,7 @@ def evaluate_semantic_stopping(
         s_bar_t: Ambient expectation [B, 1] or [1].
         eos_token_ids: Sequence of EOS token IDs.
         step_idx: 1-indexed autoregressive decoding step index.
+        grace_horizon: Optional epistemic continuation grace buffer [B, 1] or [1].
 
     Returns:
         stop_predicate: Boolean tensor [B] or scalar boolean tensor.
@@ -675,6 +680,8 @@ def evaluate_semantic_stopping(
             omega_t = omega_t.unsqueeze(0)
         if s_bar_t is not None and s_bar_t.dim() == 1:
             s_bar_t = s_bar_t.unsqueeze(0)
+        if grace_horizon is not None and grace_horizon.dim() == 1:
+            grace_horizon = grace_horizon.unsqueeze(0)
 
     device = logits_g.device
     eos_tensor = torch.tensor(list(eos_token_ids), device=device, dtype=torch.long)
@@ -705,10 +712,19 @@ def evaluate_semantic_stopping(
     # Global wants to stop AND optical evidence is exhausted
     global_exhausted_stop = is_g_eos & is_optical_exhausted
 
-    # Condition 4 (Iteration 15 Crisp Stopping Gate, Theorem 30, Directive W3):
-    # At step >= 2, if optical evidence is exhausted, stop immediately without requiring is_g_eos!
-    if step_idx is not None and step_idx >= 2 and omega_t is not None and s_bar_t is not None:
-        crisp_exhaustion_stop = is_optical_exhausted
+    # Condition 4 (Theorem 34 Part 4, Directive W5: Calibrated crisp exhaustion stop):
+    # At step >= 2, if optical evidence is exhausted AND grace horizon <= 0.30, stop immediately.
+    if step_idx is not None and step_idx >= 2 and omega_t is not None and s_bar_t is not None and is_optical_exhausted.any():
+        if grace_horizon is not None:
+            if grace_horizon.dim() == 0:
+                grace_exhausted = (grace_horizon <= 0.30).expand_as(is_optical_exhausted)
+            elif grace_horizon.dim() == 2:
+                grace_exhausted = (grace_horizon.squeeze(-1) <= 0.30)
+            else:
+                grace_exhausted = (grace_horizon <= 0.30)
+        else:
+            grace_exhausted = torch.ones_like(is_optical_exhausted)
+        crisp_exhaustion_stop = is_optical_exhausted & grace_exhausted
     else:
         crisp_exhaustion_stop = torch.zeros_like(is_g_eos)
 
@@ -1217,6 +1233,7 @@ def nevfe_step_logits(
     prev_token_id: Optional[int] = None,
     space_token_id: int = 220,
     digit_token_ids: Optional[Sequence[int]] = None,
+    return_grace_horizon: bool = False,
 ) -> Tuple:
     """
     Decoupled Dual-Stream Rectified Contrastive Sharpening with Dynamic Continuation Base Anchor (Directives W4 & W6).
@@ -1295,6 +1312,7 @@ def nevfe_step_logits(
         coupling_tensor = torch.full((ll.shape[0], 1), float(lambda_param), device=ll.device)
         omega_t = torch.zeros((ll.shape[0], 1), device=ll.device)
         s_bar_t = torch.zeros((ll.shape[0], 1), device=ll.device)
+        grace_horizon = torch.ones((ll.shape[0], 1), device=ll.device)
     else:
         # Iteration 13: Refusal-Resistant Dynamic Continuation Horizon (RR-DEH, Directives W3 & W4)
         # 1. Standardized Low-Contrast Text Index & Bounded Dynamic Temperature (use focal entropy directly)
@@ -1347,17 +1365,38 @@ def nevfe_step_logits(
                 term_penalty = gamma_t * raw_term_penalty
                 steered_potential[:, eos_list] = base_potential[:, eos_list] - lambda_t * term_penalty
 
+        # Directive W4 (Theorem 34 Continuation Grace Horizon):
+        # Epistemic continuation certainty E_t = (1 - H_G) * chi_term from global predictive distribution p_G
+        _, norm_entropy_g = compute_normalized_entropy_lse(lg)  # [B, 1] in [0.0, 1.0]
+        K_vocab = lg.shape[-1]
+        probs_g = F.softmax(lg, dim=-1)
+        if eos_token_ids is not None:
+            eos_valid_g = [int(eid) for eid in eos_token_ids if int(eid) < K_vocab]
+            if eos_valid_g:
+                eos_tensor_g = torch.tensor(eos_valid_g, device=lg.device, dtype=torch.long)
+                p_eos_g = probs_g[:, eos_tensor_g].sum(dim=-1, keepdim=True)
+                chi_term_g = torch.clamp(1.0 - p_eos_g, 0.0, 1.0)
+            else:
+                chi_term_g = torch.ones((lg.shape[0], 1), device=lg.device)
+        else:
+            chi_term_g = torch.ones((lg.shape[0], 1), device=lg.device)
+
+        epistemic_certainty = (1.0 - norm_entropy_g) * chi_term_g  # [B, 1] in [0.0, 1.0]
+        decay_factor = math.exp(-max(0, step_idx - 2) / 4.0)
+        grace_horizon = torch.clamp(epistemic_certainty * decay_factor, 0.0, 1.0)  # [B, 1]
+
         # =====================================================================
-        # 6. Tripartite Symmetrical Clamping Engine (Theorem 33, Directive W3)
+        # 6. Tripartite Symmetrical Clamping Engine (Theorems 33 & 34, Directives W3, W4, W6)
         # =====================================================================
         if mu_param > 0:
             K = steered_potential.shape[-1]
             device = steered_potential.device
             B = steered_potential.shape[0]
 
-            # 6a. Persistent Head Carrier Barrier (Directive W3, Theorem 33)
+            # 6a. Persistent Head Carrier Barrier (Directive W3, Theorem 34 Decoupled Preamble Barrier)
             # Persistent for t <= barrier_horizon without fragile in_entity_state boolean deactivation;
-            # Scaled by dyadic decay delta_t = (0.5)^(step_idx - 1)
+            # Scaled by dyadic decay delta_t = (0.5)^(step_idx - 1);
+            # Decoupled from psi_t: ungrounded conversational tokens receive full dyadic penalty even when initial optical contrast is diffuse
             apply_head_barrier = (step_idx <= barrier_horizon) or (in_entity_state is False)
             if apply_head_barrier:
                 if step_idx <= barrier_horizon:
@@ -1368,10 +1407,10 @@ def nevfe_step_logits(
                 # Relative Optical Grounding Index OGI_t(v) in [0.0, 1.0]
                 ogi = torch.clamp(sharp_potential / (omega_t + 1e-6), 0.0, 1.0)
                 grounding_deficit = 1.0 - ogi
-                barrier_carrier = float(mu_param) * delta_t * psi_t * grounding_deficit
+                barrier_carrier = float(mu_param) * delta_t * grounding_deficit
                 steered_potential = steered_potential - barrier_carrier
 
-            # 6b. Continuous Numerical Cohesion Clamp (Directive W3, Theorem 33 Part 1)
+            # 6b. Continuous Numerical Cohesion Clamp (Directive W6, Theorem 33 Part 1)
             # Blocks ungrounded BPE whitespace splitting (token 220) between numerical digits
             if digit_token_ids is None:
                 digit_token_ids = list(range(15, 25))
@@ -1390,15 +1429,17 @@ def nevfe_step_logits(
                             steered_potential[:, space_token_id] - cohesion_penalty.squeeze(-1)
                         )
 
-            # 6c. Tail Termination Clamp (Directive W3, Theorem 30)
-            # Suppresses ungrounded descriptive tails when psi_t -> 0 at t >= 2
+            # 6c. Tail Termination Clamp (Directive W4, Theorem 34 Continuation Grace Horizon)
+            # Modulated by Continuation Grace Horizon G_t to preserve valid multi-word entity completions:
+            # effective_tail_drag = (1.0 - psi_t) * (1.0 - grace_horizon)
             if step_idx >= 2:
                 non_eos_mask = torch.ones((B, K), dtype=torch.bool, device=device)
                 if eos_token_ids is not None:
                     eos_list = [int(eid) for eid in eos_token_ids if int(eid) < K]
                     if eos_list:
                         non_eos_mask[:, eos_list] = False
-                tail_penalty = float(mu_param) * (1.0 - psi_t) * non_eos_mask.float()
+                effective_tail_drag = (1.0 - psi_t) * (1.0 - grace_horizon)
+                tail_penalty = float(mu_param) * effective_tail_drag * non_eos_mask.float()
                 steered_potential = steered_potential - tail_penalty
 
     # 7. Query-Orthogonal Potential Barrier (Directive W4: Dynamic State-Gated)
@@ -1468,13 +1509,23 @@ def nevfe_step_logits(
         omega_t = omega_t.squeeze(0)
         s_bar_t = s_bar_t.squeeze(0)
         is_grounded = is_grounded.squeeze(0)
+        if grace_horizon is not None:
+            grace_horizon = grace_horizon.squeeze(0)
 
     if return_continuation_saliency:
         if return_grounding_status:
+            if return_grace_horizon:
+                return next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded, grace_horizon
             return next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded
+        if return_grace_horizon:
+            return next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, grace_horizon
         return next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t
     if return_grounding_status:
+        if return_grace_horizon:
+            return next_tokens, steered_logits, coupling_tensor, entropy_nats, is_grounded, grace_horizon
         return next_tokens, steered_logits, coupling_tensor, entropy_nats, is_grounded
+    if return_grace_horizon:
+        return next_tokens, steered_logits, coupling_tensor, entropy_nats, grace_horizon
     return next_tokens, steered_logits, coupling_tensor, entropy_nats
 
 
@@ -1512,6 +1563,8 @@ class NEVFEEngine:
         self.min_span = float(min_span)
         self._last_omega_t: Optional[torch.Tensor] = None
         self._last_s_bar_t: Optional[torch.Tensor] = None
+        self._last_is_grounded: Optional[torch.Tensor] = None
+        self._last_grace_horizon: Optional[torch.Tensor] = None
 
     def modulate_patches(self, visual_tokens: torch.Tensor) -> torch.Tensor:
         """Modulate visual patch embeddings via Fisher-Saliency energy."""
@@ -1620,16 +1673,22 @@ class NEVFEEngine:
             prev_token_id=prev_token_id,
             space_token_id=space_token_id,
             digit_token_ids=digit_token_ids,
+            return_grace_horizon=True,
         )
-        next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded = res
+        next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded, grace_horizon = res
         self._last_omega_t = omega_t
         self._last_s_bar_t = s_bar_t
         self._last_is_grounded = is_grounded
+        self._last_grace_horizon = grace_horizon
         return next_tokens, steered_logits, coupling_tensor, entropy_nats
 
     def get_last_continuation_saliency(self) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
         """Return the most recent (omega_t, s_bar_t) computed during decode_step."""
         return self._last_omega_t, self._last_s_bar_t
+
+    def get_last_grace_horizon(self) -> Optional[torch.Tensor]:
+        """Return the most recent grace horizon computed during decode_step (Directive W4)."""
+        return getattr(self, "_last_grace_horizon", None)
 
     def is_last_token_grounded(self) -> bool:
         """Return whether the most recently selected token is an optically grounded entity token (Directive W4)."""
@@ -1647,7 +1706,7 @@ class NEVFEEngine:
         eos_token_ids: Optional[Sequence[int]] = None,
         step_idx: Optional[int] = None,
     ) -> torch.Tensor:
-        """Evaluate consensus stopping using last computed continuation saliency."""
+        """Evaluate consensus stopping using last computed continuation saliency and grace horizon (Directive W5)."""
         return evaluate_semantic_stopping(
             logits_g=logits_g,
             logits_l=logits_l,
@@ -1656,4 +1715,5 @@ class NEVFEEngine:
             s_bar_t=self._last_s_bar_t,
             eos_token_ids=eos_token_ids,
             step_idx=step_idx,
+            grace_horizon=getattr(self, "_last_grace_horizon", None),
         )
