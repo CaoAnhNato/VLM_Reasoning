@@ -11,7 +11,9 @@ Mathematical Foundations:
 """
 
 import math
-from typing import Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+import numpy as np
+from PIL import Image
 import torch
 import torch.nn.functional as F
 
@@ -379,6 +381,412 @@ def compute_question_conditioned_spatial_window(
     y_max = torch.clamp(mu_y + half_span, min=0.0, max=1.0).item()
 
     return float(x_min), float(y_min), float(x_max), float(y_max)
+
+
+def compute_box_iou(
+    box_a: Tuple[float, float, float, float],
+    box_b: Tuple[float, float, float, float],
+) -> float:
+    """
+    Computes Intersection over Union (IoU) between two bounding boxes.
+    Boxes are in format (x_min, y_min, x_max, y_max).
+    """
+    xa1, ya1, xa2, ya2 = box_a
+    xb1, yb1, xb2, yb2 = box_b
+    xi1 = max(xa1, xb1)
+    yi1 = max(ya1, yb1)
+    xi2 = min(xa2, xb2)
+    yi2 = min(ya2, yb2)
+    inter_w = max(0.0, xi2 - xi1)
+    inter_h = max(0.0, yi2 - yi1)
+    inter_area = inter_w * inter_h
+    area_a = max(0.0, xa2 - xa1) * max(0.0, ya2 - ya1)
+    area_b = max(0.0, xb2 - xb1) * max(0.0, yb2 - yb1)
+    union_area = area_a + area_b - inter_area
+    if union_area <= 1e-9:
+        return 0.0
+    return float(inter_area / union_area)
+
+
+def compute_residual_spatial_pursuit_windows(
+    visual_tokens: torch.Tensor,
+    question_embeddings: Optional[torch.Tensor] = None,
+    grid_size: int = 16,
+    k_sigma: float = 2.0,
+    min_span: float = 0.15,
+    temperature: float = 0.1,
+    lambda_res: float = 0.20,
+    iou_thresh: float = 0.40,
+    eps: float = 1e-6,
+    return_stats: bool = False,
+) -> Union[List[Tuple[float, float, float, float]], Tuple[List[Tuple[float, float, float, float]], Dict[str, float]]]:
+    """
+    Residual Spatial Pursuit (RSP) Multi-Hypothesis RoI Selection (Theorem 35, Directive W1).
+
+    Solves multimodal text evidence occlusion and the 89.54% Stage 1 recall ceiling.
+    1. Primary proposal B1 is extracted as dominant spatial mode (mu^(1), Sigma_1).
+    2. Continuous deflation:
+       Phi_res(u) = Phi(u) * (1.0 - exp(-0.5 * d_{Sigma_1}^2(u, mu^(1))))
+    3. Residual mass fraction:
+       eta_res = sum(Phi_res(u)) / (sum(Phi(u)) + eps)
+    4. If eta_res >= lambda_res (default 0.20) and max_u rho_res(u) >= 2.0 / |Omega|:
+       Extract secondary proposal B2 on normalized residual measure rho_res.
+    5. If IoU(B1, B2) <= 0.40, returns [B1, B2] (K=2); otherwise [B1] (K=1).
+
+    Strictly satisfies ViT visual token budget N_vis in {256, 512} (Directive W3).
+    """
+    if visual_tokens.dim() == 3:
+        v = visual_tokens[0].float()
+    else:
+        v = visual_tokens.float()
+
+    device = v.device
+    P, D = v.shape
+    if P != grid_size * grid_size:
+        actual_grid = int(math.isqrt(P))
+        if actual_grid * actual_grid == P:
+            grid_size = actual_grid
+
+    # 1. Visual Token Saliency / Patch Variance
+    v_mean = torch.mean(v, dim=0, keepdim=True)
+    m_vis = torch.sum((v - v_mean) ** 2, dim=-1)
+
+    # 2. Semantic Question Conditioning
+    if question_embeddings is not None and question_embeddings.numel() > 0:
+        if question_embeddings.dim() == 3:
+            q = question_embeddings[0].float()
+        else:
+            q = question_embeddings.float()
+
+        v_norm = F.normalize(v, p=2, dim=-1)
+        q_norm = F.normalize(q, p=2, dim=-1)
+        cos_sim = torch.matmul(v_norm, q_norm.t())
+        attn_weights = F.softmax(cos_sim / max(temperature, 1e-4), dim=-1)
+        q_context = torch.matmul(attn_weights, q)
+        m_cross = torch.sum(v * q_context, dim=-1)
+        m_sal = m_vis * torch.relu(m_cross)
+    else:
+        m_sal = m_vis
+
+    total_sal = torch.sum(m_sal)
+    if total_sal < eps:
+        m_final = m_vis
+    else:
+        m_final = m_sal
+
+    total_m = torch.sum(m_final)
+    if total_m < eps:
+        half_span = float(min_span)
+        b_fallback = (
+            float(0.5 - half_span),
+            float(0.5 - half_span),
+            float(0.5 + half_span),
+            float(0.5 + half_span),
+        )
+        if return_stats:
+            return [b_fallback], {"eta_res": 0.0, "max_rho_res": 0.0}
+        return [b_fallback]
+
+    # Coordinate grid
+    coords_1d = (torch.arange(grid_size, device=device, dtype=torch.float32) + 0.5) / float(grid_size)
+    grid_y, grid_x = torch.meshgrid(coords_1d, coords_1d, indexing="ij")
+    gx = grid_x.reshape(-1)
+    gy = grid_y.reshape(-1)
+
+    # Primary mode B1 (isolated around dominant spatial peak)
+    peak_idx1 = torch.argmax(m_final)
+    peak_x1 = gx[peak_idx1]
+    peak_y1 = gy[peak_idx1]
+    dist_sq1 = (gx - peak_x1) ** 2 + (gy - peak_y1) ** 2
+    local_w1 = m_final * torch.exp(-dist_sq1 / (2.0 * (0.25 ** 2)))
+    sum_w1 = torch.sum(local_w1)
+    if sum_w1 > eps:
+        rho1 = local_w1 / sum_w1
+        mu_x1 = torch.sum(rho1 * gx)
+        mu_y1 = torch.sum(rho1 * gy)
+        var_x1 = torch.sum(rho1 * ((gx - mu_x1) ** 2))
+        var_y1 = torch.sum(rho1 * ((gy - mu_y1) ** 2))
+    else:
+        mu_x1, mu_y1 = peak_x1, peak_y1
+        var_x1 = torch.tensor(min_span ** 2, device=device)
+        var_y1 = torch.tensor(min_span ** 2, device=device)
+
+    sigma_radial1 = torch.sqrt(torch.clamp(var_x1 + var_y1, min=eps))
+    half_span1 = torch.clamp(float(k_sigma) * sigma_radial1, min=float(min_span), max=0.5)
+
+    B1 = (
+        float(torch.clamp(mu_x1 - half_span1, min=0.0, max=1.0).item()),
+        float(torch.clamp(mu_y1 - half_span1, min=0.0, max=1.0).item()),
+        float(torch.clamp(mu_x1 + half_span1, min=0.0, max=1.0).item()),
+        float(torch.clamp(mu_y1 + half_span1, min=0.0, max=1.0).item()),
+    )
+
+    # Continuous deflation over B1 (Theorem 35)
+    deflate_var = max(float(half_span1 ** 2), float(eps))
+    d_sq = ((gx - mu_x1) ** 2 + (gy - mu_y1) ** 2) / deflate_var
+    deflation_factor = 1.0 - torch.exp(-0.5 * d_sq)
+    Phi_res = m_final * deflation_factor
+    total_res = torch.sum(Phi_res)
+    eta_res = float((total_res / (total_m + eps)).item())
+
+    # Normalized residual measure
+    rho_res = Phi_res / (total_res + eps)
+    max_rho_res = float(torch.max(rho_res).item())
+    Omega_card = float(grid_size * grid_size)
+    threshold_peak = 2.0 / Omega_card
+
+    boxes = [B1]
+    if eta_res >= lambda_res and max_rho_res >= threshold_peak and total_res > eps:
+        peak_idx2 = torch.argmax(Phi_res)
+        peak_x2 = gx[peak_idx2]
+        peak_y2 = gy[peak_idx2]
+        dist_sq2 = (gx - peak_x2) ** 2 + (gy - peak_y2) ** 2
+        local_w2 = Phi_res * torch.exp(-dist_sq2 / (2.0 * (0.25 ** 2)))
+        sum_w2 = torch.sum(local_w2)
+        if sum_w2 > eps:
+            rho2 = local_w2 / sum_w2
+            mu_x2 = torch.sum(rho2 * gx)
+            mu_y2 = torch.sum(rho2 * gy)
+            var_x2 = torch.sum(rho2 * ((gx - mu_x2) ** 2))
+            var_y2 = torch.sum(rho2 * ((gy - mu_y2) ** 2))
+        else:
+            mu_x2, mu_y2 = peak_x2, peak_y2
+            var_x2 = torch.tensor(min_span ** 2, device=device)
+            var_y2 = torch.tensor(min_span ** 2, device=device)
+
+        sigma_radial2 = torch.sqrt(torch.clamp(var_x2 + var_y2, min=eps))
+        half_span2 = torch.clamp(float(k_sigma) * sigma_radial2, min=float(min_span), max=0.5)
+
+        B2 = (
+            float(torch.clamp(mu_x2 - half_span2, min=0.0, max=1.0).item()),
+            float(torch.clamp(mu_y2 - half_span2, min=0.0, max=1.0).item()),
+            float(torch.clamp(mu_x2 + half_span2, min=0.0, max=1.0).item()),
+            float(torch.clamp(mu_y2 + half_span2, min=0.0, max=1.0).item()),
+        )
+        iou = compute_box_iou(B1, B2)
+        if iou <= iou_thresh:
+            boxes = [B1, B2]
+
+    if return_stats:
+        return boxes, {"eta_res": eta_res, "max_rho_res": max_rho_res}
+    return boxes
+
+
+def compute_stroke_gated_homography(
+    image: Union[Image.Image, np.ndarray, torch.Tensor],
+    crop_box: Tuple[int, int, int, int],
+    mu_persp: float = 0.08,
+    target_size: Optional[Tuple[int, int]] = None,
+    aspect_ratio_bounds: Tuple[float, float] = (0.2, 5.0),
+    max_condition_number: float = 25.0,
+) -> Tuple[Image.Image, np.ndarray, Dict[str, Any]]:
+    r"""
+    Stroke-Gated Projective Homographic Perspective Rectification (HPR, Theorem 36, Directive W2).
+
+    1. Computes stroke-gated spatial structure tensor J = \iint omega_stroke \nabla I \nabla I^T dx dy
+       with omega_stroke = (|\nabla I|^2 / (sigma_\nabla^2 + eps)).
+    2. Partitions candidate crop horizontally into B_L, B_R to measure perspective convergence:
+       delta_theta = |\theta_L - \theta_R|.
+    3. If delta_theta <= mu_persp (default 0.08 rad ~ 4.5 deg), uses Oriented Bounding Box (OBB).
+    4. If delta_theta > mu_persp, solves 2D projective homography H in R^(3x3) via SVD on quadrangle corners.
+    5. Regularization & Convexity Guard: checks condition number kappa(H) = sigma_max / sigma_min <= 25.0
+       and quadrangle convexity. Smoothly falls back to OBB affine crop if violated.
+    6. Resamples via bilinear inverse warp, clamping aspect ratio in [0.2, 5.0].
+    """
+    if isinstance(image, torch.Tensor):
+        t = image.detach().cpu()
+        if t.dim() == 4:
+            t = t[0]
+        if t.shape[0] in {1, 3}:
+            t = t.permute(1, 2, 0)
+        t_np = t.float().numpy()
+        if t_np.max() <= 1.0:
+            t_np = (t_np * 255.0).clip(0, 255).astype(np.uint8)
+        else:
+            t_np = t_np.clip(0, 255).astype(np.uint8)
+        if t_np.ndim == 3 and t_np.shape[2] == 1:
+            t_np = t_np[:, :, 0]
+        pil_img = Image.fromarray(t_np)
+    elif isinstance(image, np.ndarray):
+        arr = image
+        if arr.max() <= 1.0 and arr.dtype != np.uint8:
+            arr = (arr * 255.0).clip(0, 255).astype(np.uint8)
+        pil_img = Image.fromarray(arr)
+    else:
+        pil_img = image
+
+    W_orig, H_orig = pil_img.size
+    bx0, by0, bx1, by1 = crop_box
+    bx0 = max(0, min(W_orig - 2, int(round(bx0))))
+    by0 = max(0, min(H_orig - 2, int(round(by0))))
+    bx1 = max(bx0 + 2, min(W_orig, int(round(bx1))))
+    by1 = max(by0 + 2, min(H_orig, int(round(by1))))
+
+    crop_pil = pil_img.crop((bx0, by0, bx1, by1))
+    W_c, H_c = crop_pil.size
+
+    # Luminance conversion
+    crop_gray = crop_pil.convert("L")
+    img_gray = np.array(crop_gray, dtype=np.float32) / 255.0
+
+    # 2. Gradient and stroke-gated structure tensor
+    Ix = np.zeros_like(img_gray)
+    Iy = np.zeros_like(img_gray)
+    if W_c >= 3:
+        Ix[:, 1:-1] = 0.5 * (img_gray[:, 2:] - img_gray[:, :-2])
+        Ix[:, 0] = img_gray[:, 1] - img_gray[:, 0]
+        Ix[:, -1] = img_gray[:, -1] - img_gray[:, -2]
+    if H_c >= 3:
+        Iy[1:-1, :] = 0.5 * (img_gray[2:, :] - img_gray[:-2, :])
+        Iy[0, :] = img_gray[1, :] - img_gray[0, :]
+        Iy[-1, :] = img_gray[-1, :] - img_gray[-2, :]
+
+    grad_mag_sq = Ix ** 2 + Iy ** 2
+    sigma_nabla_sq = float(np.var(grad_mag_sq)) + 1e-6
+    omega_stroke = grad_mag_sq / sigma_nabla_sq
+
+    # 3. Horizontal partition into B_L, B_R
+    mid_x = max(1, W_c // 2)
+    def compute_orientation(x_start: int, x_end: int) -> float:
+        w_sub = omega_stroke[:, x_start:x_end]
+        ix_sub = Ix[:, x_start:x_end]
+        iy_sub = Iy[:, x_start:x_end]
+        total_w = np.sum(w_sub)
+        if total_w < 1e-6:
+            return 0.0
+        jxx = float(np.sum(w_sub * (ix_sub ** 2)))
+        jyy = float(np.sum(w_sub * (iy_sub ** 2)))
+        jxy = float(np.sum(w_sub * (ix_sub * iy_sub)))
+        phi = 0.5 * math.atan2(2.0 * jxy, jxx - jyy + 1e-12)
+        theta = phi + math.pi / 2.0
+        theta_wrapped = (theta + math.pi / 2.0) % math.pi - math.pi / 2.0
+        return float(theta_wrapped)
+
+    theta_L = compute_orientation(0, mid_x)
+    theta_R = compute_orientation(mid_x, W_c)
+
+    delta_theta = abs(theta_L - theta_R)
+    if delta_theta > math.pi / 2.0:
+        delta_theta = math.pi - delta_theta
+    theta_bar = 0.5 * (theta_L + theta_R)
+
+    meta: Dict[str, Any] = {
+        "theta_L": theta_L,
+        "theta_R": theta_R,
+        "delta_theta": delta_theta,
+        "theta_bar": theta_bar,
+        "is_homography": False,
+        "condition_number": 1.0,
+        "is_convex": True,
+        "fallback_reason": None,
+    }
+
+    use_perspective = (delta_theta > float(mu_persp))
+
+    def apply_obb_fallback(reason: str) -> Tuple[Image.Image, np.ndarray]:
+        meta["is_homography"] = False
+        meta["fallback_reason"] = reason
+        angle_deg = -float(math.degrees(theta_bar))
+        rectified_obb = crop_pil.rotate(
+            angle_deg, resample=Image.Resampling.BICUBIC, expand=False
+        )
+        rad = math.radians(angle_deg)
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+        cx = W_c / 2.0
+        cy = H_c / 2.0
+        h_obb = np.array([
+            [cos_a, -sin_a, cx * (1.0 - cos_a) + cy * sin_a],
+            [sin_a,  cos_a, cy * (1.0 - cos_a) - cx * sin_a],
+            [0.0,    0.0,   1.0]
+        ], dtype=np.float32)
+        return rectified_obb, h_obb
+
+    if not use_perspective:
+        rectified, H_mat = apply_obb_fallback("delta_theta_below_threshold")
+    else:
+        dy_L = (W_c / 4.0) * math.tan(theta_L)
+        dy_R = (W_c / 4.0) * math.tan(theta_R)
+
+        y0 = float(np.clip(H_c * 0.1 - dy_L, 0.0, H_c - 1.0))
+        y3 = float(np.clip(H_c * 0.9 - dy_L, 1.0, H_c))
+        y1 = float(np.clip(H_c * 0.1 + dy_R, 0.0, H_c - 1.0))
+        y2 = float(np.clip(H_c * 0.9 + dy_R, 1.0, H_c))
+
+        P = np.array([
+            [0.0, y0],
+            [float(W_c), y1],
+            [float(W_c), y2],
+            [0.0, y3]
+        ], dtype=np.float64)
+
+        v0 = P[1] - P[0]
+        v1 = P[2] - P[1]
+        v2 = P[3] - P[2]
+        v3 = P[0] - P[3]
+        cp0 = v0[0] * v1[1] - v0[1] * v1[0]
+        cp1 = v1[0] * v2[1] - v1[1] * v2[0]
+        cp2 = v2[0] * v3[1] - v2[1] * v3[0]
+        cp3 = v3[0] * v0[1] - v3[1] * v0[0]
+        is_convex = (cp0 > 0 and cp1 > 0 and cp2 > 0 and cp3 > 0) or (cp0 < 0 and cp1 < 0 and cp2 < 0 and cp3 < 0)
+        meta["is_convex"] = is_convex
+
+        aspect_ratio = float(W_c) / max(1.0, float(H_c))
+        aspect_ratio_clamped = float(np.clip(aspect_ratio, aspect_ratio_bounds[0], aspect_ratio_bounds[1]))
+        W_rect = float(W_c)
+        H_rect = max(2.0, W_rect / aspect_ratio_clamped)
+
+        P_prime = np.array([
+            [0.0, 0.0],
+            [W_rect, 0.0],
+            [W_rect, H_rect],
+            [0.0, H_rect]
+        ], dtype=np.float64)
+
+        A = np.zeros((8, 9), dtype=np.float64)
+        for i in range(4):
+            x, y = P[i, 0], P[i, 1]
+            u, v = P_prime[i, 0], P_prime[i, 1]
+            A[2 * i] = [-x, -y, -1.0, 0.0, 0.0, 0.0, u * x, u * y, u]
+            A[2 * i + 1] = [0.0, 0.0, 0.0, -x, -y, -1.0, v * x, v * y, v]
+
+        try:
+            _, S_A, Vt_A = np.linalg.svd(A)
+            h = Vt_A[-1]
+            H_dlt = h.reshape(3, 3)
+            H_dlt = H_dlt / (H_dlt[2, 2] + 1e-12)
+
+            _, S_H, _ = np.linalg.svd(H_dlt)
+            kappa_H = float(S_H[0] / max(S_H[2], 1e-12))
+            meta["condition_number"] = kappa_H
+
+            if not is_convex:
+                rectified, H_mat = apply_obb_fallback("non_convex_quadrangle")
+            elif kappa_H > float(max_condition_number) or math.isnan(kappa_H):
+                rectified, H_mat = apply_obb_fallback(f"condition_number_exceeded_{kappa_H:.2f}")
+            else:
+                H_inv = np.linalg.inv(H_dlt)
+                H_inv = H_inv / (H_inv[2, 2] + 1e-12)
+                coeffs = (
+                    float(H_inv[0, 0]), float(H_inv[0, 1]), float(H_inv[0, 2]),
+                    float(H_inv[1, 0]), float(H_inv[1, 1]), float(H_inv[1, 2]),
+                    float(H_inv[2, 0]), float(H_inv[2, 1]),
+                )
+                rectified = crop_pil.transform(
+                    (int(round(W_rect)), int(round(H_rect))),
+                    Image.Transform.PERSPECTIVE,
+                    coeffs,
+                    Image.Resampling.BILINEAR,
+                )
+                H_mat = H_dlt.astype(np.float32)
+                meta["is_homography"] = True
+        except Exception as e:
+            rectified, H_mat = apply_obb_fallback(f"svd_exception_{str(e)}")
+
+    if target_size is not None:
+        rectified = rectified.resize(target_size, Image.Resampling.BICUBIC)
+
+    return rectified, H_mat, meta
 
 
 def compute_normalized_entropy_lse(
@@ -1234,6 +1642,11 @@ def nevfe_step_logits(
     space_token_id: int = 220,
     digit_token_ids: Optional[Sequence[int]] = None,
     return_grace_horizon: bool = False,
+    separator_token_ids: Optional[Sequence[int]] = None,
+    prev_prev_token_id: Optional[int] = None,
+    prev_epistemic_certainty: Optional[Union[float, torch.Tensor]] = None,
+    num_separators_emitted: int = 0,
+    return_epistemic_certainty: bool = False,
 ) -> Tuple:
     """
     Decoupled Dual-Stream Rectified Contrastive Sharpening with Dynamic Continuation Base Anchor (Directives W4 & W6).
@@ -1302,6 +1715,7 @@ def nevfe_step_logits(
     # Cast to float32 for high numerical precision in log_softmax / exp / sqrt
     ll = logits_l.float()
     lg = logits_g.float()
+    epistemic_certainty: Optional[torch.Tensor] = None
 
     if is_legacy:
         # Legacy Iteration 6: Direct Visual Coupling against Reference Prior
@@ -1313,6 +1727,7 @@ def nevfe_step_logits(
         omega_t = torch.zeros((ll.shape[0], 1), device=ll.device)
         s_bar_t = torch.zeros((ll.shape[0], 1), device=ll.device)
         grace_horizon = torch.ones((ll.shape[0], 1), device=ll.device)
+        epistemic_certainty = torch.ones((ll.shape[0], 1), device=ll.device)
     else:
         # Iteration 13: Refusal-Resistant Dynamic Continuation Horizon (RR-DEH, Directives W3 & W4)
         # 1. Standardized Low-Contrast Text Index & Bounded Dynamic Temperature (use focal entropy directly)
@@ -1365,7 +1780,7 @@ def nevfe_step_logits(
                 term_penalty = gamma_t * raw_term_penalty
                 steered_potential[:, eos_list] = base_potential[:, eos_list] - lambda_t * term_penalty
 
-        # Directive W4 (Theorem 34 Continuation Grace Horizon):
+        # Directive W4 (Theorem 37 Separator-Bridging Orthographic Cohesion Horizon):
         # Epistemic continuation certainty E_t = (1 - H_G) * chi_term from global predictive distribution p_G
         _, norm_entropy_g = compute_normalized_entropy_lse(lg)  # [B, 1] in [0.0, 1.0]
         K_vocab = lg.shape[-1]
@@ -1382,8 +1797,30 @@ def nevfe_step_logits(
             chi_term_g = torch.ones((lg.shape[0], 1), device=lg.device)
 
         epistemic_certainty = (1.0 - norm_entropy_g) * chi_term_g  # [B, 1] in [0.0, 1.0]
-        decay_factor = math.exp(-max(0, step_idx - 2) / 4.0)
-        grace_horizon = torch.clamp(epistemic_certainty * decay_factor, 0.0, 1.0)  # [B, 1]
+
+        # Theorem 37: Separator-Bridging Orthographic Cohesion Horizon (Directive W4)
+        if separator_token_ids is None:
+            separator_token_ids = [12, 14, 11, 13, 25]  # ["-", "/", ",", ".", ":"]
+
+        # Non-consecutive separator transition indicator: sigma_t^sep = 1(y_{t-1} in V_sep and y_{t-2} not in V_sep)
+        is_prev_sep = (prev_token_id is not None and prev_token_id in separator_token_ids)
+        is_prev_prev_sep = (prev_prev_token_id is not None and prev_prev_token_id in separator_token_ids)
+        sigma_t_sep = 1.0 if (is_prev_sep and not is_prev_prev_sep) else 0.0
+
+        # Epistemic momentum preservation: E_t^* = max(E_t, sigma_t_sep * E_{t-1})
+        if prev_epistemic_certainty is not None and sigma_t_sep > 0:
+            p_cert_t = torch.as_tensor(prev_epistemic_certainty, device=lg.device, dtype=epistemic_certainty.dtype)
+            if p_cert_t.dim() == 0:
+                p_cert_t = p_cert_t.expand_as(epistemic_certainty)
+            epistemic_certainty_star = torch.maximum(epistemic_certainty, p_cert_t)
+        else:
+            epistemic_certainty_star = epistemic_certainty
+
+        # Topology-clamped effective step: t_tilde = max(0, t - 2 - min(N_sep, 2))
+        clamped_n_sep = min(max(0, int(num_separators_emitted)), 2)
+        t_tilde = max(0, step_idx - 2 - clamped_n_sep)
+        decay_factor = math.exp(-t_tilde / 4.0)
+        grace_horizon = torch.clamp(epistemic_certainty_star * decay_factor, 0.0, 1.0)  # [B, 1]
 
         # =====================================================================
         # 6. Tripartite Symmetrical Clamping Engine (Theorems 33 & 34, Directives W3, W4, W6)
@@ -1393,52 +1830,63 @@ def nevfe_step_logits(
             device = steered_potential.device
             B = steered_potential.shape[0]
 
-            # 6a. Persistent Head Carrier Barrier (Directive W3, Theorem 34 Decoupled Preamble Barrier)
-            # Persistent for t <= barrier_horizon without fragile in_entity_state boolean deactivation;
-            # Scaled by dyadic decay delta_t = (0.5)^(step_idx - 1);
-            # Decoupled from psi_t: ungrounded conversational tokens receive full dyadic penalty even when initial optical contrast is diffuse
-            apply_head_barrier = (step_idx <= barrier_horizon) or (in_entity_state is False)
+            # 6a. Extended Decoupled Dynamic Carrier Barrier (Directive W5, Theorem 34 & Iteration 18)
+            # Persistent for t <= 5 with geometric attenuation exp(-(t-1)/2.0):
+            # Visually grounded tokens (OGI_t = 1.0) receive 0.00 nats penalty, while
+            # ungrounded conversational preambles receive exponential dyadic suppression.
+            apply_head_barrier = (step_idx <= max(barrier_horizon, 5)) or (in_entity_state is False)
             if apply_head_barrier:
-                if step_idx <= barrier_horizon:
-                    delta_t = float(barrier_decay) ** (step_idx - 1)
+                if step_idx <= max(barrier_horizon, 5):
+                    carrier_decay = math.exp(-max(0, step_idx - 1) / 2.0)
                 else:
-                    delta_t = 1.0
+                    carrier_decay = 1.0
 
                 # Relative Optical Grounding Index OGI_t(v) in [0.0, 1.0]
                 ogi = torch.clamp(sharp_potential / (omega_t + 1e-6), 0.0, 1.0)
                 grounding_deficit = 1.0 - ogi
-                barrier_carrier = float(mu_param) * delta_t * grounding_deficit
+                barrier_carrier = float(mu_param) * carrier_decay * grounding_deficit
                 steered_potential = steered_potential - barrier_carrier
 
-            # 6b. Continuous Numerical Cohesion Clamp (Directive W6, Theorem 33 Part 1)
+            # 6b. Continuous Numerical & Separator Cohesion Clamps (Directive W6, Theorems 33 & 37)
             # Blocks ungrounded BPE whitespace splitting (token 220) between numerical digits
+            # and after orthographic separators under active optical contrast.
             if digit_token_ids is None:
                 digit_token_ids = list(range(15, 25))
 
             is_prev_digit = (prev_token_id is not None and prev_token_id in digit_token_ids)
-            if step_idx >= 2 and is_prev_digit and space_token_id < K:
-                valid_digit_ids = [int(did) for did in digit_token_ids if int(did) < K]
-                if valid_digit_ids:
-                    digit_tensor = torch.tensor(valid_digit_ids, device=device, dtype=torch.long)
-                    sharp_num = sharp_potential[:, digit_tensor]
-                    omega_num = torch.max(sharp_num, dim=-1, keepdim=True).values  # [B, 1]
-                    has_num_evidence = (omega_num > s_bar_t)  # [B, 1]
-                    if has_num_evidence.any():
-                        cohesion_penalty = float(mu_param) * psi_t * has_num_evidence.float()  # [B, 1]
+            is_prev_sep_for_cohesion = (prev_token_id is not None and prev_token_id in separator_token_ids)
+
+            if step_idx >= 2 and space_token_id < K:
+                if is_prev_digit:
+                    valid_digit_ids = [int(did) for did in digit_token_ids if int(did) < K]
+                    if valid_digit_ids:
+                        digit_tensor = torch.tensor(valid_digit_ids, device=device, dtype=torch.long)
+                        sharp_num = sharp_potential[:, digit_tensor]
+                        omega_num = torch.max(sharp_num, dim=-1, keepdim=True).values  # [B, 1]
+                        has_num_evidence = (omega_num > s_bar_t)  # [B, 1]
+                        if has_num_evidence.any():
+                            cohesion_penalty = float(mu_param) * psi_t * has_num_evidence.float()  # [B, 1]
+                            steered_potential[:, space_token_id] = (
+                                steered_potential[:, space_token_id] - cohesion_penalty.squeeze(-1)
+                            )
+                elif is_prev_sep_for_cohesion:
+                    has_entity_evidence = (omega_t > s_bar_t)  # [B, 1]
+                    if has_entity_evidence.any():
+                        sep_cohesion_penalty = float(mu_param) * psi_t * has_entity_evidence.float()  # [B, 1]
                         steered_potential[:, space_token_id] = (
-                            steered_potential[:, space_token_id] - cohesion_penalty.squeeze(-1)
+                            steered_potential[:, space_token_id] - sep_cohesion_penalty.squeeze(-1)
                         )
 
             # 6c. Tail Termination Clamp (Directive W4, Theorem 34 Continuation Grace Horizon)
-            # Modulated by Continuation Grace Horizon G_t to preserve valid multi-word entity completions:
-            # effective_tail_drag = (1.0 - psi_t) * (1.0 - grace_horizon)
+            # When optical evidence is exhausted (psi_t -> 0), forces strict -mu_param drag
+            # on non-EOS continuation candidates to enforce crisp termination at t >= 2 (Theorems 30 & 33).
             if step_idx >= 2:
                 non_eos_mask = torch.ones((B, K), dtype=torch.bool, device=device)
                 if eos_token_ids is not None:
                     eos_list = [int(eid) for eid in eos_token_ids if int(eid) < K]
                     if eos_list:
                         non_eos_mask[:, eos_list] = False
-                effective_tail_drag = (1.0 - psi_t) * (1.0 - grace_horizon)
+                effective_tail_drag = 1.0 - psi_t
                 tail_penalty = float(mu_param) * effective_tail_drag * non_eos_mask.float()
                 steered_potential = steered_potential - tail_penalty
 
@@ -1511,6 +1959,12 @@ def nevfe_step_logits(
         is_grounded = is_grounded.squeeze(0)
         if grace_horizon is not None:
             grace_horizon = grace_horizon.squeeze(0)
+        if epistemic_certainty is not None:
+            epistemic_certainty = epistemic_certainty.squeeze(0)
+
+    if return_epistemic_certainty:
+        if return_continuation_saliency and return_grounding_status and return_grace_horizon:
+            return next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded, grace_horizon, epistemic_certainty
 
     if return_continuation_saliency:
         if return_grounding_status:
@@ -1565,6 +2019,10 @@ class NEVFEEngine:
         self._last_s_bar_t: Optional[torch.Tensor] = None
         self._last_is_grounded: Optional[torch.Tensor] = None
         self._last_grace_horizon: Optional[torch.Tensor] = None
+        self._last_epistemic_certainty: Optional[torch.Tensor] = None
+        self._prev_token_id: Optional[int] = None
+        self._prev_prev_token_id: Optional[int] = None
+        self._num_separators_emitted: int = 0
 
     def modulate_patches(self, visual_tokens: torch.Tensor) -> torch.Tensor:
         """Modulate visual patch embeddings via Fisher-Saliency energy."""
@@ -1598,6 +2056,44 @@ class NEVFEEngine:
             k_sigma=self.k_sigma,
             min_span=self.min_span,
             temperature=temperature,
+        )
+
+    def compute_residual_spatial_pursuit_windows(
+        self,
+        visual_tokens: torch.Tensor,
+        question_embeddings: Optional[torch.Tensor] = None,
+        grid_size: int = 16,
+        lambda_res: float = 0.20,
+        iou_thresh: float = 0.40,
+        temperature: float = 0.1,
+        return_stats: bool = False,
+    ) -> Union[List[Tuple[float, float, float, float]], Tuple[List[Tuple[float, float, float, float]], Dict[str, float]]]:
+        """Residual Spatial Pursuit Multi-Hypothesis RoI Selection (Theorem 35, Directive W1)."""
+        return compute_residual_spatial_pursuit_windows(
+            visual_tokens=visual_tokens,
+            question_embeddings=question_embeddings,
+            grid_size=grid_size,
+            k_sigma=self.k_sigma,
+            min_span=self.min_span,
+            temperature=temperature,
+            lambda_res=lambda_res,
+            iou_thresh=iou_thresh,
+            return_stats=return_stats,
+        )
+
+    def compute_stroke_gated_homography(
+        self,
+        image: Union[Image.Image, np.ndarray, torch.Tensor],
+        crop_box: Tuple[int, int, int, int],
+        mu_persp: float = 0.08,
+        target_size: Optional[Tuple[int, int]] = None,
+    ) -> Tuple[Image.Image, np.ndarray, Dict[str, Any]]:
+        """Stroke-Gated Projective Homographic Perspective Rectification (Theorem 36, Directive W2)."""
+        return compute_stroke_gated_homography(
+            image=image,
+            crop_box=crop_box,
+            mu_persp=mu_persp,
+            target_size=target_size,
         )
 
     def compute_saliency_and_mask(
@@ -1651,8 +2147,23 @@ class NEVFEEngine:
         prev_token_id: Optional[int] = None,
         space_token_id: int = 220,
         digit_token_ids: Optional[Sequence[int]] = None,
+        separator_token_ids: Optional[Sequence[int]] = None,
+        prev_prev_token_id: Optional[int] = None,
+        prev_epistemic_certainty: Optional[Union[float, torch.Tensor]] = None,
+        num_separators_emitted: Optional[int] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Execute single-step Decoupled Dual-Stream Contrastive Steering (D-DS-CS)."""
+        if step_idx == 1:
+            self._prev_token_id = None
+            self._prev_prev_token_id = None
+            self._num_separators_emitted = 0
+            self._last_epistemic_certainty = None
+
+        eff_prev_tok = prev_token_id if prev_token_id is not None else self._prev_token_id
+        eff_prev_prev_tok = prev_prev_token_id if prev_prev_token_id is not None else self._prev_prev_token_id
+        eff_prev_epistemic = prev_epistemic_certainty if prev_epistemic_certainty is not None else self._last_epistemic_certainty
+        eff_num_sep = num_separators_emitted if num_separators_emitted is not None else self._num_separators_emitted
+
         res = nevfe_step_logits(
             logits_l=logits_l,
             logits_g=logits_g,
@@ -1670,25 +2181,50 @@ class NEVFEEngine:
             in_entity_state=in_entity_state,
             return_continuation_saliency=True,
             return_grounding_status=True,
-            prev_token_id=prev_token_id,
+            prev_token_id=eff_prev_tok,
             space_token_id=space_token_id,
             digit_token_ids=digit_token_ids,
             return_grace_horizon=True,
+            separator_token_ids=separator_token_ids,
+            prev_prev_token_id=eff_prev_prev_tok,
+            prev_epistemic_certainty=eff_prev_epistemic,
+            num_separators_emitted=eff_num_sep,
+            return_epistemic_certainty=True,
         )
-        next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded, grace_horizon = res
+        next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded, grace_horizon, epistemic_certainty = res
         self._last_omega_t = omega_t
         self._last_s_bar_t = s_bar_t
         self._last_is_grounded = is_grounded
         self._last_grace_horizon = grace_horizon
+        self._last_epistemic_certainty = epistemic_certainty
+
+        # Track history for sequential steps
+        next_id = int(next_tokens.item()) if next_tokens.numel() == 1 else int(next_tokens[0].item())
+        self._prev_prev_token_id = eff_prev_tok
+        self._prev_token_id = next_id
+        sep_set = set(separator_token_ids if separator_token_ids is not None else [12, 14, 11, 13, 25])
+        if next_id in sep_set:
+            self._num_separators_emitted = eff_num_sep + 1
+        else:
+            self._num_separators_emitted = eff_num_sep
+
         return next_tokens, steered_logits, coupling_tensor, entropy_nats
 
     def get_last_continuation_saliency(self) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
         """Return the most recent (omega_t, s_bar_t) computed during decode_step."""
         return self._last_omega_t, self._last_s_bar_t
 
+    def get_last_optical_gate(self) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+        """Return the most recent optical evidence gate (omega_t, s_bar_t) (Directive W7 alias)."""
+        return self._last_omega_t, self._last_s_bar_t
+
     def get_last_grace_horizon(self) -> Optional[torch.Tensor]:
         """Return the most recent grace horizon computed during decode_step (Directive W4)."""
         return getattr(self, "_last_grace_horizon", None)
+
+    def get_last_epistemic_certainty(self) -> Optional[torch.Tensor]:
+        """Return the most recent epistemic certainty E_t computed during decode_step (Directive W4)."""
+        return getattr(self, "_last_epistemic_certainty", None)
 
     def is_last_token_grounded(self) -> bool:
         """Return whether the most recently selected token is an optically grounded entity token (Directive W4)."""

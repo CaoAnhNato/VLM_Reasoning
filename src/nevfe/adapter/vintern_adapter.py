@@ -18,6 +18,9 @@ from src.nevfe.core.engine import (
     NEVFEEngine,
     compute_thermodynamic_spatial_window,
     compute_question_conditioned_spatial_window,
+    compute_residual_spatial_pursuit_windows,
+    compute_stroke_gated_homography,
+    compute_box_iou,
     compute_otsu_threshold,
     compute_visual_token_saliency_and_mask,
     evaluate_semantic_stopping,
@@ -412,12 +415,27 @@ class VinternNEVFEAdapter:
                 k_sigma=self.engine.k_sigma,
                 min_span=self.engine.min_span,
             )
+            mh_windows = compute_residual_spatial_pursuit_windows(
+                visual_tokens=v_g[0],
+                question_embeddings=q_embeds[0],
+                grid_size=16,
+                k_sigma=self.engine.k_sigma,
+                min_span=self.engine.min_span,
+                lambda_res=0.20,
+            )
         else:
             x_min, y_min, x_max, y_max = compute_thermodynamic_spatial_window(
                 v_g[0],
                 grid_size=16,
                 k_sigma=self.engine.k_sigma,
                 min_span=self.engine.min_span,
+            )
+            mh_windows = compute_residual_spatial_pursuit_windows(
+                visual_tokens=v_g[0],
+                grid_size=16,
+                k_sigma=self.engine.k_sigma,
+                min_span=self.engine.min_span,
+                lambda_res=0.20,
             )
 
         norm_window = (x_min, y_min, x_max, y_max)
@@ -432,6 +450,15 @@ class VinternNEVFEAdapter:
         box_y1 = max(box_y0 + 2, box_y1)
         pixel_box = (box_x0, box_y0, box_x1, box_y1)
 
+        mh_pixel_boxes = []
+        for (w_x0, w_y0, w_x1, w_y1) in mh_windows:
+            px0 = max(0, int(round(w_x0 * W)))
+            py0 = max(0, int(round(w_y0 * H)))
+            px1 = min(W, int(round(w_x1 * W)))
+            py1 = min(H, int(round(w_y1 * H)))
+            mh_pixel_boxes.append((px0, py0, max(px0 + 2, px1), max(py0 + 2, py1)))
+        self._last_multihypothesis_boxes = mh_pixel_boxes
+
         # Invalidate V_L if crop box changed
         if pixel_box != self._last_crop_box:
             self._cached_v_l = None
@@ -441,6 +468,19 @@ class VinternNEVFEAdapter:
         self._last_spatial_window = norm_window
 
         return v_g, pixel_box, norm_window
+
+    def compute_stage1_multihypothesis_windows(
+        self,
+        image: Image.Image,
+        question: Optional[str] = None,
+        lambda_res: float = 0.20,
+    ) -> List[Tuple[int, int, int, int]]:
+        """
+        Stage 1 Multi-Hypothesis RoI Selection (Theorem 35, Directive W1).
+        Returns list of pixel bounding boxes [B1, B2] (K=2) or [B1] (K=1).
+        """
+        _, _, _ = self.compute_stage1_window(image, question=question)
+        return getattr(self, "_last_multihypothesis_boxes", [self._last_crop_box])
 
     # =========================================================================
     # STAGE 2: Local Optical Zoom Focal Token Extraction (AMCT: K * 256 Tokens)
@@ -454,6 +494,8 @@ class VinternNEVFEAdapter:
         question: Optional[str] = None,
         theta_zoom: float = 0.65,
         use_hierarchical_zoom: bool = True,
+        use_homography_rectification: bool = False,
+        multihypothesis_boxes: Optional[List[Tuple[int, int, int, int]]] = None,
     ) -> torch.Tensor:
         """
         Stage 2: Hierarchical Multi-Scale Focal Window Extraction (Theorem 32, Directive W1).
@@ -471,6 +513,7 @@ class VinternNEVFEAdapter:
             self._cached_img_key == img_key
             and self._cached_v_l is not None
             and self._last_crop_box == crop_box
+            and multihypothesis_boxes is None
         ):
             return self._cached_v_l
 
@@ -483,13 +526,56 @@ class VinternNEVFEAdapter:
             self._last_spatial_window = None
             self._cached_vit_embeds = None
 
+        if multihypothesis_boxes is not None and len(multihypothesis_boxes) >= 2:
+            # Multi-hypothesis RoIs B1, B2 (Theorem 35, Directive W1 & W3)
+            b1 = multihypothesis_boxes[0]
+            b2 = multihypothesis_boxes[1]
+            if use_homography_rectification:
+                tile1, _, _ = compute_stroke_gated_homography(image, b1, mu_persp=0.08, target_size=(self.image_size, self.image_size))
+                tile2, _, _ = compute_stroke_gated_homography(image, b2, mu_persp=0.08, target_size=(self.image_size, self.image_size))
+            else:
+                crop1 = extract_symmetric_square_crop(image, b1)
+                crop2 = extract_symmetric_square_crop(image, b2)
+                tile1 = crop1.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)
+                tile2 = crop2.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)
+
+            pixel_values_1 = self.transform(tile1).unsqueeze(0).to(device=self.device, dtype=torch.float32)
+            s1 = max(tile1.size)
+            m1 = 448.0 / max(1.0, float(s1))
+            pixel_values_1 = adaptive_tensor_stroke_dilation(pixel_values_1, magnification=m1)
+            with torch.no_grad():
+                v1_raw = self.model.extract_feature(pixel_values_1.to(torch.bfloat16))
+            del pixel_values_1
+            v1_mod = self.engine.modulate_patches(v1_raw[0]).unsqueeze(0).to(dtype=v1_raw.dtype, device=self.device)
+
+            pixel_values_2 = self.transform(tile2).unsqueeze(0).to(device=self.device, dtype=torch.float32)
+            s2 = max(tile2.size)
+            m2 = 448.0 / max(1.0, float(s2))
+            pixel_values_2 = adaptive_tensor_stroke_dilation(pixel_values_2, magnification=m2)
+            with torch.no_grad():
+                v2_raw = self.model.extract_feature(pixel_values_2.to(torch.bfloat16))
+            del pixel_values_2
+            v2_mod = self.engine.modulate_patches(v2_raw[0]).unsqueeze(0).to(dtype=v2_raw.dtype, device=self.device)
+
+            # Strictly 512 visual tokens (Directive W3)
+            v_l_mod = torch.cat([v1_mod, v2_mod], dim=1)
+            self._cached_v_l = v_l_mod
+            self._last_crop_box = crop_box
+            self._cached_vit_embeds = v_l_mod
+            return v_l_mod
+
         if use_hierarchical_zoom:
             # 1. Level 1 Coarse Focal Window B^(1)
             # Directive W2: Symmetric crop expansion on native image [0, W] x [0, H] eliminating gray padding seams
-            crop1 = extract_symmetric_square_crop(image, crop_box)
-            s1 = max(crop1.size)
-            m1 = 448.0 / max(1.0, float(s1))
-            tile1 = crop1.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)
+            if use_homography_rectification:
+                tile1, _, _ = compute_stroke_gated_homography(image, crop_box, mu_persp=0.08, target_size=(self.image_size, self.image_size))
+                s1 = max(tile1.size)
+                m1 = 448.0 / max(1.0, float(s1))
+            else:
+                crop1 = extract_symmetric_square_crop(image, crop_box)
+                s1 = max(crop1.size)
+                m1 = 448.0 / max(1.0, float(s1))
+                tile1 = crop1.resize((self.image_size, self.image_size), Image.Resampling.BICUBIC)
 
             pixel_values_1 = self.transform(tile1).unsqueeze(0).to(
                 device=self.device, dtype=torch.float32
@@ -837,6 +923,16 @@ class VinternNEVFEAdapter:
             if any(did is None for did in digit_token_ids):
                 digit_token_ids = list(range(15, 25))
 
+            # Directive W4: Dynamically resolve orthographic separator token IDs
+            sep_chars = ["-", "/", ",", ".", ":"]
+            separator_token_ids = []
+            for sc in sep_chars:
+                s_id = self.tokenizer.convert_tokens_to_ids(sc)
+                if s_id is not None and s_id != getattr(self.tokenizer, "unk_token_id", None):
+                    separator_token_ids.append(int(s_id))
+            if not separator_token_ids:
+                separator_token_ids = [12, 14, 11, 13, 25]
+
             generated_ids: List[int] = []
             prev_token_id: Optional[int] = None
 
@@ -851,6 +947,7 @@ class VinternNEVFEAdapter:
                     prev_token_id=prev_token_id,
                     space_token_id=space_token_id,
                     digit_token_ids=digit_token_ids,
+                    separator_token_ids=separator_token_ids,
                 )
                 next_id = int(next_tok_tensor.item())
 
