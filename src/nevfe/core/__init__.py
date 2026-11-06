@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-NE-VFE Core Mathematical Package.
+NE-VFE Core Mathematical Package: Mean-Field Contrastive Reference Decoding (MF-CD).
 """
 
 from src.nevfe.core.engine import (
     NEVFEEngine,
+    compute_mean_field_reference_embeddings,
+    mean_field_contrastive_step,
     modulate_patch_embeddings,
     compute_bhattacharyya_coefficient,
     compute_dynamic_coupling,
@@ -12,14 +14,12 @@ from src.nevfe.core.engine import (
     compute_candidate_support_mask,
     compute_free_energy_support_mask,
     nevfe_step_logits,
-    pool_query_agnostic_gradient_tokens,
-    compute_refusal_resistant_continuation_horizon,
-    adaptive_tensor_stroke_dilation,
-    evaluate_semantic_stopping,
 )
 
 __all__ = [
     "NEVFEEngine",
+    "compute_mean_field_reference_embeddings",
+    "mean_field_contrastive_step",
     "modulate_patch_embeddings",
     "compute_bhattacharyya_coefficient",
     "compute_dynamic_coupling",
@@ -27,8 +27,4 @@ __all__ = [
     "compute_candidate_support_mask",
     "compute_free_energy_support_mask",
     "nevfe_step_logits",
-    "pool_query_agnostic_gradient_tokens",
-    "compute_refusal_resistant_continuation_horizon",
-    "adaptive_tensor_stroke_dilation",
-    "evaluate_semantic_stopping",
 ]

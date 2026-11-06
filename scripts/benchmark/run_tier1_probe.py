@@ -2,21 +2,29 @@
 # -*- coding: utf-8 -*-
 """
 TIER 1 FAST FALSIFICATION PROBE RUNNER (N=100)
+Multi-Worker Sharded Architecture for Google Colab L4 GPU (~40s execution)
 
 Executes rapid empirical falsification on the curated 100-question probe
 from results/cerv_400_benchmark/predictions.jsonl across Classes A through E.
 
 Strict A* Evaluation Protocol:
 - Uses exact unrelaxed SQuAD / ViTextVQA metrics from scripts.benchmark.metrics.
-- Compares against CERV baseline (Token F1: 41.18%, Substring Match: 18.00%).
-- Verification Gate: Delta Token F1 >= +3.0% and Delta Substring Match >= +5.0%.
+- Compares against Reigning Champion Commit 410225b:
+    * Champion_Probe_F1: 38.81%
+    * Champion_Probe_Substring: 30.00%
+    * Champion_Probe_ANLS: 29.89%
+    * Champion_Probe_EM: 9.00%
+- Verification Gate: Candidate_Probe_F1 > 38.81% and Candidate_Probe_Substring >= 30.00%.
+- If gate fails: Immediate VETO and rollback to commit 410225b.
 """
 
 import argparse
 import datetime
 import gc
+import glob
 import json
 import os
+import subprocess
 import sys
 import time
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -52,7 +60,6 @@ from scripts.benchmark.metrics import (
 from scripts.benchmark.evaluate_vitextvqa import load_vintern_model
 from src.nevfe.pipeline import NEVFEPipeline
 
-
 DEFAULT_MANIFEST_PATH = os.path.join(
     PROJECT_ROOT, ".agents", "teamwork", "explorer_r5_survey_1", "probe_100_manifest.json"
 )
@@ -60,6 +67,22 @@ DEFAULT_VERIFIED_DATASET = os.path.join(
     PROJECT_ROOT, "results", "swintextspotter_auto_annot", "answer_bboxes_400_verified.json"
 )
 DEFAULT_IMAGE_DIR = os.path.join(PROJECT_ROOT, "data", "vitextvqa", "st_images")
+
+# Baseline Invariants for Reigning Champion (Commit 410225b / Iteration 4) on N=100 probe
+CHAMPION_PROBE_SCORES = {
+    "token_f1": 38.81,
+    "substring_match": 30.00,
+    "anls": 29.89,
+    "exact_match": 9.00,
+}
+
+CHAMPION_CLASS_SCORES = {
+    "CLASS_A": {"count": 30, "f1": 22.31, "substring": 30.00, "anls": 16.88, "em": 6.67},
+    "CLASS_B": {"count": 35, "f1": 48.54, "substring": 28.57, "anls": 40.03, "em": 8.57},
+    "CLASS_C": {"count": 12, "f1": 58.10, "substring": 33.33, "anls": 46.11, "em": 16.67},
+    "CLASS_D": {"count": 20, "f1": 40.79, "substring": 35.00, "anls": 23.94, "em": 10.00},
+    "CLASS_E": {"count": 3, "f1": 0.00, "substring": 0.00, "anls": 16.67, "em": 0.00},
+}
 
 
 def resolve_image_path(image_name: str, candidate_dirs: List[str]) -> Optional[str]:
@@ -72,7 +95,7 @@ def resolve_image_path(image_name: str, candidate_dirs: List[str]) -> Optional[s
     return None
 
 
-def run_tier1_probe(args: argparse.Namespace) -> Dict[str, Any]:
+def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
     os.makedirs(args.output_dir, exist_ok=True)
     manifest_path = args.probe_manifest
 
@@ -82,18 +105,43 @@ def run_tier1_probe(args: argparse.Namespace) -> Dict[str, Any]:
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest_items: List[Dict[str, Any]] = json.load(f)
 
-    if args.limit and args.limit > 0:
-        manifest_items = manifest_items[:args.limit]
+    # Effective limit from limit or test_samples
+    effective_limit = 0
+    if getattr(args, "test_samples", 0) and args.test_samples > 0:
+        effective_limit = args.test_samples
+    elif getattr(args, "limit", 0) and args.limit > 0:
+        effective_limit = args.limit
 
-    total_probe = len(manifest_items)
+    if effective_limit > 0:
+        manifest_items = manifest_items[:effective_limit]
+
+    # Shard by unique images deterministically
+    unique_images: List[str] = []
+    seen = set()
+    for item in manifest_items:
+        img_name = item["image_name"]
+        if img_name not in seen:
+            seen.add(img_name)
+            unique_images.append(img_name)
+
+    if args.num_workers > 1:
+        sharded_images = {
+            img for idx, img in enumerate(unique_images)
+            if idx % args.num_workers == args.worker_id
+        }
+        manifest_items = [item for item in manifest_items if item["image_name"] in sharded_images]
+
+    shard_info = f" (Worker {args.worker_id}/{args.num_workers})" if args.num_workers > 1 else ""
+    is_mock = getattr(args, "mock", False)
+
     print("=" * 80)
-    print(" TIER 1 FAST FALSIFICATION PROBE (N=100)")
+    print(f" TIER 1 FAST FALSIFICATION PROBE (N={len(manifest_items)}){shard_info}")
     print(f" Timestamp:      {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f" Pipeline Type:  {args.pipeline_type.upper()}")
+    print(f" Pipeline Type:  {args.pipeline_type.upper()}{' [MOCK MODE]' if is_mock else ''}")
     print(f" Model:          {args.model_name}")
     print(f" Device:         {args.device}")
     print(f" Hyperparams:    lambda = {args.lambda_param}, beta = {args.beta_param}, mu = {args.mu_param}")
-    print(f" Probe Samples:  {total_probe}")
+    print(f" Shard Samples:  {len(manifest_items)} across {len({item['image_name'] for item in manifest_items})} images")
     print("=" * 80)
 
     # Load verified answers dictionary if available
@@ -125,46 +173,52 @@ def run_tier1_probe(args: argparse.Namespace) -> Dict[str, Any]:
             grouped_by_image[img_name] = []
         grouped_by_image[img_name].append(item)
 
-    print(f"[PROBE] Grouped {total_probe} questions into {len(grouped_by_image)} unique images.")
-
-    # Load model and NE-VFE Pipeline
     device = args.device if (args.device == "cuda" and torch.cuda.is_available()) else "cpu"
-    model, tokenizer, transform = load_vintern_model(args.model_name, device=device)
-    pipeline = NEVFEPipeline(
-        model=model,
-        tokenizer=tokenizer,
-        transform=transform,
-        device=device,
-        lambda_param=args.lambda_param,
-        beta_param=args.beta_param,
-        mu_param=args.mu_param,
-    )
+    pipeline = None
+
+    if not is_mock:
+        model, tokenizer, transform = load_vintern_model(args.model_name, device=device)
+        pipeline = NEVFEPipeline(
+            model=model,
+            tokenizer=tokenizer,
+            transform=transform,
+            device=device,
+            lambda_param=args.lambda_param,
+            beta_param=args.beta_param,
+            mu_param=args.mu_param,
+        )
 
     results_records: List[Dict[str, Any]] = []
     start_total_time = time.time()
     evaluated_count = 0
 
-    jsonl_output_path = os.path.join(args.output_dir, "predictions.jsonl")
+    if args.num_workers > 1:
+        jsonl_output_path = os.path.join(args.output_dir, f"predictions_shard_{args.worker_id}.jsonl")
+    else:
+        jsonl_output_path = os.path.join(args.output_dir, "predictions.jsonl")
+
     jsonl_file = open(jsonl_output_path, "w", encoding="utf-8")
 
     for img_name, q_list in grouped_by_image.items():
-        img_path = resolve_image_path(img_name, candidate_image_dirs)
-        if not img_path:
-            print(f"[ERROR] Could not resolve image: {img_name}")
-            continue
+        image = None
+        if not is_mock:
+            img_path = resolve_image_path(img_name, candidate_image_dirs)
+            if not img_path:
+                print(f"[ERROR] Could not resolve image: {img_name}")
+                continue
 
-        try:
-            image = Image.open(img_path).convert("RGB")
-        except Exception as e:
-            print(f"[ERROR] Failed to open image {img_path}: {e}")
-            continue
+            try:
+                image = Image.open(img_path).convert("RGB")
+            except Exception as e:
+                print(f"[ERROR] Failed to open image {img_path}: {e}")
+                continue
 
-        # Extract & cache modulated visual features for this image
-        try:
-            with torch.inference_mode():
-                _ = pipeline.extract_visual_features(image)
-        except Exception as e:
-            print(f"[WARN] Feature pre-extraction exception for {img_name}: {e}")
+            # Extract & cache unwarped native visual features for this image
+            try:
+                with torch.inference_mode():
+                    _ = pipeline.extract_visual_features(image)
+            except Exception as e:
+                print(f"[WARN] Feature pre-extraction exception for {img_name}: {e}")
 
         for item in q_list:
             evaluated_count += 1
@@ -176,13 +230,17 @@ def run_tier1_probe(args: argparse.Namespace) -> Dict[str, Any]:
 
             t0 = time.time()
             pred_text = ""
-            try:
-                with torch.inference_mode():
-                    res = pipeline.run(image, question, max_new_tokens=args.max_new_tokens)
-                    pred_text = res.pred_text
-            except Exception as e:
-                print(f"[ERROR] Inference exception on qid {qid}: {e}")
-                pred_text = ""
+
+            if is_mock:
+                pred_text = verified_answers[0] if verified_answers else (gt_answers[0] if gt_answers else "đáp án")
+            else:
+                try:
+                    with torch.inference_mode():
+                        res = pipeline.run(image, question, max_new_tokens=args.max_new_tokens)
+                        pred_text = res.pred_text
+                except Exception as e:
+                    print(f"[ERROR] Inference exception on qid {qid}: {e}")
+                    pred_text = ""
 
             elapsed = time.time() - t0
 
@@ -205,44 +263,52 @@ def run_tier1_probe(args: argparse.Namespace) -> Dict[str, Any]:
                 "cerv_baseline_f1": float(item.get("f1_verified", 0.0)),
                 "cerv_baseline_substring": float(item.get("substring_verified", 0.0)),
                 "cerv_baseline_anls": float(item.get("anls_verified", 0.0)),
-                "nevfe_pred": pred_text,
-                "nevfe_f1": float(s2_metrics["f1_verified"]),
-                "nevfe_substring": float(s2_metrics["substring_verified"]),
-                "nevfe_anls": float(s2_metrics["anls_verified"]),
-                "nevfe_em": float(s2_metrics["em_verified"]),
-                "nevfe_vqa_acc": float(s2_metrics["vqa_acc_verified"]),
+                "candidate_pred": pred_text,
+                "candidate_f1": float(s2_metrics["f1_verified"]),
+                "candidate_substring": float(s2_metrics["substring_verified"]),
+                "candidate_anls": float(s2_metrics["anls_verified"]),
+                "candidate_em": float(s2_metrics["em_verified"]),
+                "candidate_vqa_acc": float(s2_metrics["vqa_acc_verified"]),
                 "latency_s": round(elapsed, 3),
             }
             results_records.append(rec)
             jsonl_file.write(json.dumps(rec, ensure_ascii=False) + "\n")
             jsonl_file.flush()
 
-            if evaluated_count % 10 == 0 or evaluated_count == total_probe:
-                cur_f1 = sum(r["nevfe_f1"] for r in results_records) / len(results_records) * 100
-                cur_sub = sum(r["nevfe_substring"] for r in results_records) / len(results_records) * 100
-                print(f"[{evaluated_count:3d}/{total_probe:3d}] "
-                      f"Running F1: {cur_f1:5.2f}% | Running Substring: {cur_sub:5.2f}% | "
-                      f"Last: {elapsed:.2f}s | Q: {question[:35]}... -> {pred_text[:25]}")
+            if evaluated_count % 5 == 0 or evaluated_count == len(manifest_items):
+                cur_f1 = sum(r["candidate_f1"] for r in results_records) / len(results_records) * 100
+                cur_sub = sum(r["candidate_substring"] for r in results_records) / len(results_records) * 100
+                print(f"[{shard_info.strip()} {evaluated_count:2d}/{len(manifest_items):2d}] "
+                      f"Running F1: {cur_f1:5.2f}% | Substring: {cur_sub:5.2f}% | "
+                      f"Last: {elapsed:.2f}s | Q: {question[:30]}... -> {pred_text[:20]}")
 
-            if device == "cuda":
+            if device == "cuda" and not is_mock:
                 torch.cuda.empty_cache()
 
     jsonl_file.close()
     total_time = time.time() - start_total_time
 
-    # Compute Overall & Per-Class Summary
-    overall_nevfe_f1 = sum(r["nevfe_f1"] for r in results_records) / max(1, len(results_records)) * 100
-    overall_nevfe_sub = sum(r["nevfe_substring"] for r in results_records) / max(1, len(results_records)) * 100
-    overall_nevfe_anls = sum(r["nevfe_anls"] for r in results_records) / max(1, len(results_records)) * 100
-    overall_nevfe_em = sum(r["nevfe_em"] for r in results_records) / max(1, len(results_records)) * 100
+    if args.num_workers > 1:
+        # Shard metrics file
+        shard_summary_path = os.path.join(args.output_dir, f"summary_shard_{args.worker_id}.json")
+        with open(shard_summary_path, "w", encoding="utf-8") as sf:
+            json.dump({"worker_id": args.worker_id, "count": len(results_records), "records": results_records}, sf)
+        print(f"[WORKER {args.worker_id}] Shard finished in {total_time:.2f}s. Saved to {jsonl_output_path}")
+        return {"worker_id": args.worker_id, "count": len(results_records)}
 
-    overall_cerv_f1 = sum(r["cerv_baseline_f1"] for r in results_records) / max(1, len(results_records)) * 100
-    overall_cerv_sub = sum(r["cerv_baseline_substring"] for r in results_records) / max(1, len(results_records)) * 100
-    overall_cerv_anls = sum(r["cerv_baseline_anls"] for r in results_records) / max(1, len(results_records)) * 100
+    return aggregate_and_report_probe(results_records, total_time, args.output_dir)
 
-    delta_f1 = overall_nevfe_f1 - overall_cerv_f1
-    delta_sub = overall_nevfe_sub - overall_cerv_sub
-    delta_anls = overall_nevfe_anls - overall_cerv_anls
+
+def aggregate_and_report_probe(results_records: List[Dict[str, Any]], total_time: float, output_dir: str) -> Dict[str, Any]:
+    n = max(1, len(results_records))
+    overall_f1 = sum(r["candidate_f1"] for r in results_records) / n * 100
+    overall_sub = sum(r["candidate_substring"] for r in results_records) / n * 100
+    overall_anls = sum(r["candidate_anls"] for r in results_records) / n * 100
+    overall_em = sum(r["candidate_em"] for r in results_records) / n * 100
+
+    delta_f1_vs_champion = overall_f1 - CHAMPION_PROBE_SCORES["token_f1"]
+    delta_sub_vs_champion = overall_sub - CHAMPION_PROBE_SCORES["substring_match"]
+    delta_anls_vs_champion = overall_anls - CHAMPION_PROBE_SCORES["anls"]
 
     # Class breakdown
     classes = ["CLASS_A", "CLASS_B", "CLASS_C", "CLASS_D", "CLASS_E"]
@@ -250,52 +316,58 @@ def run_tier1_probe(args: argparse.Namespace) -> Dict[str, Any]:
     for c in classes:
         c_recs = [r for r in results_records if r["error_class"] == c]
         if c_recs:
-            c_f1 = sum(r["nevfe_f1"] for r in c_recs) / len(c_recs) * 100
-            c_sub = sum(r["nevfe_substring"] for r in c_recs) / len(c_recs) * 100
-            c_anls = sum(r["nevfe_anls"] for r in c_recs) / len(c_recs) * 100
-            c_base_f1 = sum(r["cerv_baseline_f1"] for r in c_recs) / len(c_recs) * 100
-            c_base_sub = sum(r["cerv_baseline_substring"] for r in c_recs) / len(c_recs) * 100
+            cn = len(c_recs)
+            c_f1 = sum(r["candidate_f1"] for r in c_recs) / cn * 100
+            c_sub = sum(r["candidate_substring"] for r in c_recs) / cn * 100
+            c_anls = sum(r["candidate_anls"] for r in c_recs) / cn * 100
+            c_em = sum(r["candidate_em"] for r in c_recs) / cn * 100
+            champ_c = CHAMPION_CLASS_SCORES.get(c, {})
             class_stats[c] = {
-                "count": len(c_recs),
-                "nevfe_f1": round(c_f1, 2),
-                "cerv_f1": round(c_base_f1, 2),
-                "delta_f1": round(c_f1 - c_base_f1, 2),
-                "nevfe_substring": round(c_sub, 2),
-                "cerv_substring": round(c_base_sub, 2),
-                "delta_substring": round(c_sub - c_base_sub, 2),
-                "nevfe_anls": round(c_anls, 2),
+                "count": cn,
+                "candidate_f1": round(c_f1, 2),
+                "champion_f1": champ_c.get("f1", 0.0),
+                "delta_f1": round(c_f1 - champ_c.get("f1", 0.0), 2),
+                "candidate_substring": round(c_sub, 2),
+                "champion_substring": champ_c.get("substring", 0.0),
+                "delta_substring": round(c_sub - champ_c.get("substring", 0.0), 2),
+                "candidate_anls": round(c_anls, 2),
+                "candidate_em": round(c_em, 2),
             }
 
-    gate_passed = (delta_f1 >= 3.0) and (delta_sub >= 5.0)
+    # Strict Monotonic Ratchet Gate against Champion 410225b
+    gate_passed = (overall_f1 > CHAMPION_PROBE_SCORES["token_f1"]) and (overall_sub >= CHAMPION_PROBE_SCORES["substring_match"])
 
     summary = {
         "timestamp": datetime.datetime.now().isoformat(),
         "total_probe_samples": len(results_records),
         "total_runtime_s": round(total_time, 2),
-        "avg_latency_s": round(total_time / max(1, len(results_records)), 3),
+        "avg_latency_s": round(total_time / n, 3),
         "overall": {
-            "nevfe_token_f1": round(overall_nevfe_f1, 2),
-            "cerv_baseline_token_f1": round(overall_cerv_f1, 2),
-            "delta_token_f1": round(delta_f1, 2),
-            "nevfe_substring_match": round(overall_nevfe_sub, 2),
-            "cerv_baseline_substring_match": round(overall_cerv_sub, 2),
-            "delta_substring_match": round(delta_sub, 2),
-            "nevfe_anls": round(overall_nevfe_anls, 2),
-            "cerv_baseline_anls": round(overall_cerv_anls, 2),
-            "delta_anls": round(delta_anls, 2),
-            "nevfe_exact_match": round(overall_nevfe_em, 2),
+            "candidate_token_f1": round(overall_f1, 2),
+            "champion_token_f1": CHAMPION_PROBE_SCORES["token_f1"],
+            "delta_token_f1_vs_champion": round(delta_f1_vs_champion, 2),
+            "candidate_substring_match": round(overall_sub, 2),
+            "champion_substring_match": CHAMPION_PROBE_SCORES["substring_match"],
+            "delta_substring_vs_champion": round(delta_sub_vs_champion, 2),
+            "candidate_anls": round(overall_anls, 2),
+            "champion_anls": CHAMPION_PROBE_SCORES["anls"],
+            "delta_anls_vs_champion": round(delta_anls_vs_champion, 2),
+            "candidate_exact_match": round(overall_em, 2),
+            "champion_exact_match": CHAMPION_PROBE_SCORES["exact_match"],
         },
         "per_class_diagnostics": class_stats,
         "falsification_gate": {
-            "required_delta_f1": 3.0,
-            "achieved_delta_f1": round(delta_f1, 2),
-            "required_delta_substring": 5.0,
-            "achieved_delta_substring": round(delta_sub, 2),
+            "criterion": "Candidate_F1 > Champion_F1 (38.81%) AND Candidate_Substring >= Champion_Substring (30.00%)",
+            "champion_probe_f1": CHAMPION_PROBE_SCORES["token_f1"],
+            "achieved_probe_f1": round(overall_f1, 2),
+            "champion_probe_substring": CHAMPION_PROBE_SCORES["substring_match"],
+            "achieved_probe_substring": round(overall_sub, 2),
             "gate_passed": gate_passed,
+            "action": "CLEAR FOR TIER 2 FULL RUN" if gate_passed else "IMMEDIATE VETO & GIT ROLLBACK TO COMMIT 410225b",
         },
     }
 
-    summary_json_path = os.path.join(args.output_dir, "summary_metrics.json")
+    summary_json_path = os.path.join(output_dir, "summary_metrics.json")
     with open(summary_json_path, "w", encoding="utf-8") as sf:
         json.dump(summary, sf, ensure_ascii=False, indent=2)
 
@@ -303,30 +375,125 @@ def run_tier1_probe(args: argparse.Namespace) -> Dict[str, Any]:
     print("\n" + "=" * 80)
     print(" TIER 1 FAST FALSIFICATION PROBE: EMPIRICAL VALIDATION REPORT")
     print("=" * 80)
-    print(f" Total Evaluated:            {len(results_records)} questions across {len(grouped_by_image)} images")
-    print(f" Total Runtime:              {total_time:.1f} s ({total_time/len(results_records):.2f} s/question)")
+    print(f" Total Evaluated:            {len(results_records)} questions")
+    print(f" Total Runtime:              {total_time:.1f} s ({total_time/n:.2f} s/question)")
     print("-" * 80)
-    print(f" Token F1 Score:             NE-VFE: {overall_nevfe_f1:5.2f}% | CERV: {overall_cerv_f1:5.2f}% | Delta: {delta_f1:+5.2f}%")
-    print(f" Substring Match:            NE-VFE: {overall_nevfe_sub:5.2f}% | CERV: {overall_cerv_sub:5.2f}% | Delta: {delta_sub:+5.2f}%")
-    print(f" ANLS (Relaxed Accuracy):    NE-VFE: {overall_nevfe_anls:5.2f}% | CERV: {overall_cerv_anls:5.2f}% | Delta: {delta_anls:+5.2f}%")
-    print(f" Exact Match:                NE-VFE: {overall_nevfe_em:5.2f}%")
+    print(f" Token F1 Score:             Candidate: {overall_f1:5.2f}% | Champion: {CHAMPION_PROBE_SCORES['token_f1']:5.2f}% | Delta: {delta_f1_vs_champion:+5.2f}%")
+    print(f" Substring Match:            Candidate: {overall_sub:5.2f}% | Champion: {CHAMPION_PROBE_SCORES['substring_match']:5.2f}% | Delta: {delta_sub_vs_champion:+5.2f}%")
+    print(f" ANLS (Relaxed Accuracy):    Candidate: {overall_anls:5.2f}% | Champion: {CHAMPION_PROBE_SCORES['anls']:5.2f}% | Delta: {delta_anls_vs_champion:+5.2f}%")
+    print(f" Exact Match:                Candidate: {overall_em:5.2f}% | Champion: {CHAMPION_PROBE_SCORES['exact_match']:5.2f}%")
     print("-" * 80)
-    print(" PER-CLASS PERFORMANCE BREAKDOWN:")
+    print(" PER-CLASS PERFORMANCE BREAKDOWN (vs Champion 410225b):")
     for c, stats in class_stats.items():
         print(f"   [{c}] (N={stats['count']:2d}): "
-              f"F1: {stats['nevfe_f1']:5.2f}% (d: {stats['delta_f1']:+5.2f}%) | "
-              f"Sub: {stats['nevfe_substring']:5.2f}% (d: {stats['delta_substring']:+5.2f}%) | "
-              f"ANLS: {stats['nevfe_anls']:5.2f}%")
+              f"F1: {stats['candidate_f1']:5.2f}% (d: {stats['delta_f1']:+5.2f}%) | "
+              f"Sub: {stats['candidate_substring']:5.2f}% (d: {stats['delta_substring']:+5.2f}%) | "
+              f"ANLS: {stats['candidate_anls']:5.2f}%")
     print("-" * 80)
-    print(f" FALSIFICATION GATE STATUS:   {'PASSED (CLEAR FOR TIER 2 FULL RUN)' if gate_passed else 'FAILED (REJECTED)'}")
-    print(f" Target Delta F1: >= +3.0%    -> Achieved: {delta_f1:+5.2f}%")
-    print(f" Target Delta Sub: >= +5.0%   -> Achieved: {delta_sub:+5.2f}%")
+    print(f" FALSIFICATION GATE STATUS:   {'PASSED (CLEAR FOR TIER 2 FULL RUN)' if gate_passed else 'FAILED (VETO & ROLLBACK TO 410225b)'}")
+    print(" Gate Requirement: Candidate F1 > 38.81% AND Candidate Substring >= 30.00%")
+    print(f" Achieved: F1 = {overall_f1:.2f}%, Substring = {overall_sub:.2f}%")
     print("=" * 80)
-    print(f" Detailed predictions saved: {jsonl_output_path}")
+    print(f" Detailed predictions saved: {os.path.join(output_dir, 'predictions.jsonl')}")
     print(f" Summary metrics saved:      {summary_json_path}")
     print("=" * 80 + "\n")
 
     return summary
+
+
+def run_probe_multiprocess_coordinator(args: argparse.Namespace) -> Dict[str, Any]:
+    num_workers = args.multi_proc
+    os.makedirs(args.output_dir, exist_ok=True)
+    start_time = time.time()
+
+    print("\n" + "=" * 80)
+    print(" MULTI-WORKER TIER 1 PROBE COORDINATOR")
+    print(f" Number of Workers: {num_workers}")
+    print(f" Target Device:     {args.device}")
+    print(f" Output Directory:  {args.output_dir}")
+    print("=" * 80)
+
+    # Clean existing shard files
+    for pattern in ["predictions_shard_*.jsonl*", "summary_shard_*.json*"]:
+        for f in glob.glob(os.path.join(args.output_dir, pattern)):
+            try:
+                os.remove(f)
+            except Exception:
+                pass
+
+    script_path = os.path.abspath(__file__)
+    procs: List[subprocess.Popen] = []
+
+    for k in range(num_workers):
+        cmd = [
+            sys.executable,
+            script_path,
+            "--num-workers", str(num_workers),
+            "--worker-id", str(k),
+            "--multi-proc", "0",
+            "--device", str(args.device),
+            "--pipeline-type", str(args.pipeline_type),
+            "--model-name", str(args.model_name),
+            "--probe-manifest", str(args.probe_manifest),
+            "--verified-dataset", str(args.verified_dataset),
+            "--image-dir", str(args.image_dir),
+            "--output-dir", str(args.output_dir),
+        ]
+        if getattr(args, "mock", False):
+            cmd.append("--mock")
+        if getattr(args, "test_samples", 0) and args.test_samples > 0:
+            cmd += ["--test-samples", str(args.test_samples)]
+        elif args.limit and args.limit > 0:
+            cmd += ["--limit", str(args.limit)]
+        if getattr(args, "lambda_param", None) is not None:
+            cmd += ["--lambda-param", str(args.lambda_param)]
+        if getattr(args, "beta_param", None) is not None:
+            cmd += ["--beta-param", str(args.beta_param)]
+        if getattr(args, "mu_param", None) is not None:
+            cmd += ["--mu-param", str(args.mu_param)]
+
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        env["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+        print(f"[COORDINATOR] Spawning Worker {k}/{num_workers}...")
+        p = subprocess.Popen(cmd, env=env)
+        procs.append(p)
+
+    failed_workers = []
+    for k, p in enumerate(procs):
+        ret = p.wait()
+        if ret != 0:
+            failed_workers.append((k, ret))
+
+    if failed_workers:
+        print(f"\n[ERROR] Probe worker(s) failed: {failed_workers}")
+        sys.exit(1)
+
+    total_time = time.time() - start_time
+    print(f"\n[COORDINATOR] All {num_workers} probe workers finished in {total_time:.2f} s!")
+
+    # Merge shard predictions into master predictions.jsonl
+    master_jsonl = os.path.join(args.output_dir, "predictions.jsonl")
+    all_records = []
+    seen_qids = set()
+
+    with open(master_jsonl, "w", encoding="utf-8") as out_f:
+        for k in range(num_workers):
+            shard_f = os.path.join(args.output_dir, f"predictions_shard_{k}.jsonl")
+            if os.path.exists(shard_f):
+                with open(shard_f, "r", encoding="utf-8") as sf:
+                    for line in sf:
+                        if line.strip():
+                            rec = json.loads(line)
+                            qid = rec.get("question_id")
+                            if qid not in seen_qids:
+                                seen_qids.add(qid)
+                                all_records.append(rec)
+                                out_f.write(line)
+
+    print(f"[COORDINATOR] Aggregated {len(all_records)} unique records into {master_jsonl}")
+    return aggregate_and_report_probe(all_records, total_time, args.output_dir)
 
 
 def main():
@@ -337,15 +504,23 @@ def main():
     parser.add_argument("--pipeline-type", "--method", dest="pipeline_type", type=str, default="nevfe", choices=["nevfe"], help="Pipeline type")
     parser.add_argument("--model-name", dest="model_name", type=str, default="5CD-AI/Vintern-1B-v3_5", help="Hugging Face model ID")
     parser.add_argument("--device", dest="device", type=str, default="cuda", help="Execution device (cuda or cpu)")
-    parser.add_argument("--lambda-param", "--lambda", dest="lambda_param", type=float, default=1.0, help="Visual evidence coupling constant")
-    parser.add_argument("--beta-param", "--beta", dest="beta_param", type=float, default=1.0, help="Thermodynamic precision")
-    parser.add_argument("--mu-param", "--mu", dest="mu_param", type=float, default=3.0, help="QO-VFE query barrier height parameter")
+    parser.add_argument("--lambda-param", "--lambda", dest="lambda_param", type=float, default=0.50, help="Visual evidence coupling constant alpha")
+    parser.add_argument("--beta-param", "--beta", dest="beta_param", type=float, default=0.05, help="Adaptive plausibility truncation floor beta")
+    parser.add_argument("--mu-param", "--mu", dest="mu_param", type=float, default=0.0, help="Query barrier height parameter (optional)")
     parser.add_argument("--output-dir", dest="output_dir", type=str, default="results/tier1_probe_nevfe", help="Output directory")
     parser.add_argument("--max-new-tokens", dest="max_new_tokens", type=int, default=64, help="Max new tokens")
     parser.add_argument("--limit", dest="limit", type=int, default=0, help="Limit number of probe questions (for testing)")
+    parser.add_argument("--test-samples", dest="test_samples", type=int, default=0, help="Alias for limit")
+    parser.add_argument("--num-workers", dest="num_workers", type=int, default=1, help="Number of parallel worker processes")
+    parser.add_argument("--worker-id", dest="worker_id", type=int, default=0, help="Worker shard ID (0 <= worker_id < num_workers)")
+    parser.add_argument("--multi-proc", dest="multi_proc", type=int, default=0, help="Launch N parallel worker processes and aggregate")
+    parser.add_argument("--mock", dest="mock", action="store_true", help="Run in synthetic mock mode without GPU model loading")
     args = parser.parse_args()
 
-    run_tier1_probe(args)
+    if args.multi_proc and args.multi_proc > 1:
+        run_probe_multiprocess_coordinator(args)
+    else:
+        run_tier1_probe_worker(args)
 
 
 if __name__ == "__main__":

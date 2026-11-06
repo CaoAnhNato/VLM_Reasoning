@@ -1,5 +1,15 @@
 # Project: SG-VCD >80% Accuracy Upgrade Campaign
 
+## Reigning Champion & Baseline Invariants (User Directive 2026-11-06T02:14:00Z)
+- **Raw Unsteered Baseline**: `Vintern-1B-v3_5` (`Token F1 48.28%`, `Substring Match 36.80%`).
+- **All-Time Reigning Champion**: **Iteration 4 (`commit 410225b` / `9cf047a`, `results/nevfe_400_benchmark/`)**:
+  - `Token F1: 56.25%`, `Substring Match: 50.41%`, `ANLS: 48.05%`, `Exact Match: 25.86%`.
+  - Achieved cleanly under zero-heuristic Strict A* rules.
+- **Mandatory Rollback Rule**: Codebase `src/nevfe/` must be restored from Champion `commit 410225b` before Iteration 22 starts.
+- **Strict Monotonic Ratchet Rule**: Any iteration failing to beat Champion on both F1 (>56.25%) and Substring (>50.41%) must immediately git revert back to Champion and log dead end. NEVER stack on regressed code.
+- **Fast Falsification Gate**: 100-question Stratified Probe on Colab L4 GPU (`scripts/benchmark/run_tier1_probe.py`) mandatory before full benchmark.
+- **Permanent Ban on Pre-Prefill ViT Patch Warping**: All rescaling, gating, pooling, or power-law sharpening of `InternViT` visual patch embeddings prior to LLM Layer 0 is permanently banned.
+
 ## Architecture
 - **Target Model**: `5CD-AI/Vintern-1B-v3_5` (`InternViT-300M` visual backbone + `Qwen2.5-0.5B-Instruct` language model).
 - **Stage 1 (Spatial Grounding)**:
@@ -77,6 +87,11 @@
 | Iter-15 | Entity Termination Clamp & Crisp Semantic Stopping | Optical Contrast Exhaustion Gate & Crisp Stopping to eliminate tail continuation | Iter-14 | **DONE** (EM 8.92%, F1 30.03%, Sub 19.31%, ANLS 25.75%, Refusals 7.04%; Audit: CLEAN, Gate: FAIL <70%) |
 | Iter-16 | Unified Tripartite Architecture | Dynamic Recursive Chebyshev Windowing, Continuous Shock Scale-Space Dilation, Tripartite Symmetrical Clamping | Iter-15 | **DONE** (EM 9.17% [112 EMs], F1 29.13%, Sub 19.72%, ANLS 24.68%, Refusals 8.18%; Audit: CLEAN, Gate: FAIL <70%) |
 | Iter-17 | Dispersion-Normalized Dilation & Continuation Grace Horizon | Scale-space gradient dispersion $\sigma_\nabla$, native symmetric crop expansion with edge-border replicate, decoupled carrier barrier, epistemic continuation grace horizon $\mathcal{G}_t$ | Iter-16 | **DONE** (EM 9.74% [119 EMs, +6.2%], Sub 22.01% [+11.6%], F1 30.57% [+4.9%], ANLS 26.02% [+5.4%], Refusals 7.77% [-5.0%]; Audit: CLEAN, Gate: FAIL <70%) |
+| Iter-18 | Residual Spatial Pursuit & Stroke-Gated Homography | Spatial localization pursuit, separator cohesion horizon | Iter-17 | **DONE** (Recall 89.54%, Text Coverage 91.16%, F1 36.44%, Sub 31.51%; Audit: CLEAN, Gate: FAIL <70%) |
+| Iter-19 | Direct Visual Vector Vocabulary Projection | Direct lm_head visual projection (compute_stroke_projection) | Iter-18 | **FAILED** (Catastrophic collapse 0.00% F1; Audit: INTEGRITY VIOLATION, Gate: FAIL) |
+| Iter-20 | Standardized Saliency Gating & RoPE Invariance | Language submanifold invariance, pre-prefill saliency gating operator | Iter-19 | **DONE** (Recall 89.54%, Coverage 91.16%, F1 36.44%, Sub 31.51%, ANLS 27.66%, EM 12.44%, Latency 1.102s; Audit: CLEAN, Gate: FAIL <70%) |
+| Iter-21 | Tripartite Brevity Steering, Saliency Sharpening & Epistemic Stopping | Power-law saliency concentration $\mathcal{T}_\gamma$, query-orthogonal brevity steering $\mathcal{T}_{\text{brev}}$, Hill-kinetic epistemic stopping $\mathcal{E}_t$ | Iter-20 | **DONE** (Recall 89.54%, F1 19.57%, Sub 14.32%, ANLS 15.48%, EM 3.85%, Latency 1.888s; Audit: CLEAN, Gate: FAIL <70% -> Mandatory Rollback to Champion `commit 410225b`) |
+| Iter-22 | Rollback to Champion 410225b, Stratified Probe & Mean-Field Reference | Restore `src/nevfe/` to Champion `410225b`, calibrate 100-sample Stratified Probe on Colab L4, implement Mean-Field contrastive reference ($V^0 = \bar{v}\mathbf{1}^\top$ without subtracting readable global text $L_G$), enforce fast falsification accuracy gate | Iter-21 | **IN_PROGRESS** (Phase 0 DONE, Phase 1 ACCEPT 9.35/10, Phase 2 PASS: 71/71 e2e + 19 math + 11 pipeline adversarial, Phase 3 Active: Colab L4 Tier 1 Probe) |
 
 ---
 

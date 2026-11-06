@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Non-Equilibrium Variational Free Energy (NE-VFE) Inference Pipeline.
+Non-Equilibrium Variational Free Energy (NE-VFE) Inference Pipeline:
+Single-Mechanism Mean-Field Contrastive Reference Decoding (MF-CD).
 
 Provides end-to-end inference interface adhering to Strict A* Evaluation Protocol.
 """
@@ -29,7 +30,8 @@ class NEVFEResult:
 
 class NEVFEPipeline:
     """
-    End-to-End Query-Orthogonal Variational Free Energy (QO-VFE) Inference Pipeline.
+    End-to-End Mean-Field Contrastive Reference Decoding (MF-CD) Inference Pipeline.
+    Strictly 2 continuous parameters (lambda_param, beta_param).
     """
     def __init__(
         self,
@@ -37,9 +39,9 @@ class NEVFEPipeline:
         tokenizer,
         transform=None,
         device: str = "cuda",
-        lambda_param: float = 1.0,
-        beta_param: float = 1.0,
-        mu_param: float = 4.0,
+        lambda_param: float = 0.50,
+        beta_param: float = 0.05,
+        mu_param: float = 0.0,
     ):
         self.model = model
         self.tokenizer = tokenizer
@@ -60,8 +62,8 @@ class NEVFEPipeline:
         )
 
     def extract_visual_features(self, image: Image.Image) -> torch.Tensor:
-        """Extract and cache visual features for image-level reuse."""
-        return self.adapter.extract_vit_embeds(image)
+        """Extract and cache 100% native unwarped visual features for image-level reuse."""
+        return self.adapter.extract_visual_features(image)
 
     def run(
         self,
@@ -71,10 +73,10 @@ class NEVFEPipeline:
         **kwargs,
     ) -> NEVFEResult:
         """
-        Execute NE-VFE inference on (image, question).
+        Execute MF-CD inference on (image, question).
 
         Returns:
-            NEVFEResult with predicted answer text and Chebyshev crop bounding box.
+            NEVFEResult with predicted answer text and full-image bounding box.
         """
         t0 = time.time()
         w, h = image.size
@@ -86,12 +88,9 @@ class NEVFEPipeline:
         )
         elapsed = time.time() - t0
 
-        crop_box = getattr(self.adapter, "_last_crop_box", None)
-        stage1_bbox = list(crop_box) if crop_box is not None else [0, 0, w, h]
-
         return NEVFEResult(
             pred_text=pred_text,
-            stage1_bbox=stage1_bbox,
+            stage1_bbox=[0, 0, w, h],
             spatial_confidence=1.0,
             timing={"latency_s": elapsed},
             diagnostics={
