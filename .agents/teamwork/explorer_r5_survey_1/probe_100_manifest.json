@@ -1,0 +1,1634 @@
+[
+  {
+    "question_id": 4605,
+    "image_name": "1632.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.065,
+    "question": "trung tâm biểu diễn nghệ thuật trong bức hình tên gì ?",
+    "gt_answers": [
+      "lune hội an"
+    ],
+    "pred_answer": "Việt Nam",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.986
+  },
+  {
+    "question_id": 248,
+    "image_name": "68.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.067,
+    "question": "ở đây có bán điện thoại của hãng nào ?",
+    "gt_answers": [
+      "apple"
+    ],
+    "pred_answer": "Oppo",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.128
+  },
+  {
+    "question_id": 8190,
+    "image_name": "2790.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.094,
+    "question": "chi nhánh ở đoàn thị điểm có số nhà là bao nhiêu ?",
+    "gt_answers": [
+      "05"
+    ],
+    "pred_answer": "22",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.984
+  },
+  {
+    "question_id": 4854,
+    "image_name": "1705.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.156,
+    "question": "tấm bảng màu xanh gần gốc cây phượng bên phải con đường cấm làm gì ?",
+    "gt_answers": [
+      "phóng nhanh vượt ẩu"
+    ],
+    "pred_answer": "Cấm xe máy",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 0.656
+  },
+  {
+    "question_id": 3788,
+    "image_name": "1373.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.176,
+    "question": "quán đang mở có hai tấm bảng màu đỏ bán thứ gì ?",
+    "gt_answers": [
+      "bia phố cổ"
+    ],
+    "pred_answer": "đồ ăn",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.799
+  },
+  {
+    "question_id": 8281,
+    "image_name": "2816.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.179,
+    "question": "bộ sách cuốn theo chiều gió có bao nhiêu tập ?",
+    "gt_answers": [
+      "ba"
+    ],
+    "pred_answer": "ba tập",
+    "f1_verified": 0.6667,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.312
+  },
+  {
+    "question_id": 10237,
+    "image_name": "3426.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.185,
+    "question": "phố mai hắc đế có thể rẽ vào phố nào ?",
+    "gt_answers": [
+      "thái phiên"
+    ],
+    "pred_answer": "Phố Thái Phiên",
+    "f1_verified": 0.8,
+    "substring_verified": 1.0,
+    "anls_verified": 0.7143,
+    "latency_s": 1.089
+  },
+  {
+    "question_id": 3787,
+    "image_name": "1373.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.202,
+    "question": "mọi người đang ngồi ở phố gì ?",
+    "gt_answers": [
+      "tạ hiện"
+    ],
+    "pred_answer": "Phố Hàng Trà",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 0.659
+  },
+  {
+    "question_id": 10236,
+    "image_name": "3426.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.204,
+    "question": "nếu rẽ vào bên trái thì đi vào phố nào ?",
+    "gt_answers": [
+      "mai hắc đế"
+    ],
+    "pred_answer": "Phố Thái Phiên",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 0.424
+  },
+  {
+    "question_id": 3844,
+    "image_name": "1392.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.208,
+    "question": "bịch màu trắng màu cuối góc trái hàng cuối là bịch gì ?",
+    "gt_answers": [
+      "thơm sấy dẻo"
+    ],
+    "pred_answer": "Pineapple thơm say chua",
+    "f1_verified": 0.2857,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.662
+  },
+  {
+    "question_id": 5356,
+    "image_name": "1873.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.216,
+    "question": "những người đi bên trái còn được rẽ phải bao nhiêu giây nữa ?",
+    "gt_answers": [
+      "03"
+    ],
+    "pred_answer": "3 giây",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.136
+  },
+  {
+    "question_id": 11443,
+    "image_name": "3847.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.219,
+    "question": "ngoài việc ngăn cấm trải bạt trên bãi biển thì còn cấm gì nữa ?",
+    "gt_answers": [
+      "ăn uống"
+    ],
+    "pred_answer": "Cấm ăn uống trên bãi biển",
+    "f1_verified": 0.5,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 0.407
+  },
+  {
+    "question_id": 4725,
+    "image_name": "1671.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.233,
+    "question": "petmart có dịch vụ gì ?",
+    "gt_answers": [
+      "spa - tắm cắt tỉa lông cho chó & mèo"
+    ],
+    "pred_answer": "thú cưng",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.177
+  },
+  {
+    "question_id": 3875,
+    "image_name": "1401.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.262,
+    "question": "nơi này thuộc ấp mấy ?",
+    "gt_answers": [
+      "2"
+    ],
+    "pred_answer": "Ấp 2",
+    "f1_verified": 0.6667,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 0.993
+  },
+  {
+    "question_id": 5044,
+    "image_name": "1775.jpg",
+    "error_class": "CLASS_A",
+    "route": "fast_path",
+    "box_area_pct": 0.262,
+    "question": "để liên lạc cho chị tường thì ta phải gọi cho số nào ?",
+    "gt_answers": [
+      "0328 . 103 . 133"
+    ],
+    "pred_answer": "0394.266.204",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.644
+  },
+  {
+    "question_id": 2258,
+    "image_name": "854.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.03,
+    "question": "siêu thị bán nho mỹ giá bao nhiêu ?",
+    "gt_answers": [
+      "119 . 000"
+    ],
+    "pred_answer": "22.900 đồng",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.296
+  },
+  {
+    "question_id": 2255,
+    "image_name": "854.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.048,
+    "question": "siêu thị bán bí đỏ tròn giá bao nhiêu ?",
+    "gt_answers": [
+      "9 . 900"
+    ],
+    "pred_answer": "9.900 VNĐ",
+    "f1_verified": 0.8,
+    "substring_verified": 1.0,
+    "anls_verified": 0.5556,
+    "latency_s": 4.201
+  },
+  {
+    "question_id": 2253,
+    "image_name": "854.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.058,
+    "question": "giá bắp cái của siêu thị là bao nhiêu ?",
+    "gt_answers": [
+      "9 . 900"
+    ],
+    "pred_answer": "9.900 đồng",
+    "f1_verified": 0.8,
+    "substring_verified": 1.0,
+    "anls_verified": 0.5,
+    "latency_s": 4.374
+  },
+  {
+    "question_id": 8193,
+    "image_name": "2790.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.06,
+    "question": "giá để thêm full topping là bao nhiêu ?",
+    "gt_answers": [
+      "7k"
+    ],
+    "pred_answer": "6K",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.5,
+    "latency_s": 0.954
+  },
+  {
+    "question_id": 2350,
+    "image_name": "885.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.098,
+    "question": "nhà hàng phai phô vào cửa như thế nào ?",
+    "gt_answers": [
+      "miễn phí"
+    ],
+    "pred_answer": "với mái hiên màu đỏ và cửa sổ màu đỏ",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.846
+  },
+  {
+    "question_id": 3942,
+    "image_name": "1424.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.103,
+    "question": "các hộp bánh màu xanh dương có vỏ ngoài màu đỏ là bánh gì ?",
+    "gt_answers": [
+      "oreo"
+    ],
+    "pred_answer": "Bánh Oreo",
+    "f1_verified": 0.6667,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.62
+  },
+  {
+    "question_id": 9173,
+    "image_name": "3098.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.118,
+    "question": "số hiệu trên chiếc xe tăng bên trái bảo tàng là bao nhiêu ?",
+    "gt_answers": [
+      "960"
+    ],
+    "pred_answer": "607",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 0.606
+  },
+  {
+    "question_id": 387,
+    "image_name": "130.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.136,
+    "question": "ở đây có bán bánh gì ?",
+    "gt_answers": [
+      "cosy",
+      "coffee joy",
+      "phaner pie",
+      "AFC",
+      "ROYAL DANSK",
+      "tipo",
+      "cindy"
+    ],
+    "pred_answer": "Bánh Phaner Pie",
+    "f1_verified": 0.8,
+    "substring_verified": 1.0,
+    "anls_verified": 0.6667,
+    "latency_s": 2.265
+  },
+  {
+    "question_id": 4606,
+    "image_name": "1632.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.155,
+    "question": "lune hội an là gì ?",
+    "gt_answers": [
+      "trung tâm biểu diễn nghệ thuật"
+    ],
+    "pred_answer": "một hội thảo về nghệ thuật",
+    "f1_verified": 0.3333,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.372
+  },
+  {
+    "question_id": 247,
+    "image_name": "68.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.158,
+    "question": "ở đây có bán điện thoại nào ?",
+    "gt_answers": [
+      "galaxy note9"
+    ],
+    "pred_answer": "Oppo",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.164
+  },
+  {
+    "question_id": 2104,
+    "image_name": "811.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.16,
+    "question": "thị trường bán đùi ếch tươi giá bao nhiêu ?",
+    "gt_answers": [
+      "125 . 600 đ",
+      "125.600đ"
+    ],
+    "pred_answer": "118.000 đồng/kg",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.927
+  },
+  {
+    "question_id": 9459,
+    "image_name": "3183.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.163,
+    "question": "gel rửa tay khô có giá gốc bao nhiêu tiền ?",
+    "gt_answers": [
+      "79 . 900 đ",
+      "79.900đ"
+    ],
+    "pred_answer": "79.990 đồng",
+    "f1_verified": 0.4,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6364,
+    "latency_s": 3.055
+  },
+  {
+    "question_id": 8775,
+    "image_name": "2991.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.167,
+    "question": "ở đây có bán gì ?",
+    "gt_answers": [
+      "sườn xào chua ngọt",
+      "mì xào mềm",
+      "cơm hải sản",
+      "cơm gà xối mỡ"
+    ],
+    "pred_answer": "các món ăn",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.933
+  },
+  {
+    "question_id": 721,
+    "image_name": "246.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.175,
+    "question": "giá bán của các loại sản phẩm được khuyến mãi ?",
+    "gt_answers": [
+      "89 . 900 92 . 900",
+      "87.300, 92.900"
+    ],
+    "pred_answer": "87.300 - 99.000 đồng",
+    "f1_verified": 0.4444,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6111,
+    "latency_s": 2.991
+  },
+  {
+    "question_id": 2100,
+    "image_name": "811.jpg",
+    "error_class": "CLASS_A",
+    "route": "slow_path",
+    "box_area_pct": 0.194,
+    "question": "giá cá thu cắt khúc thị trường là bao nhiêu ?",
+    "gt_answers": [
+      "299 . 000 đ",
+      "299.000đ"
+    ],
+    "pred_answer": "215.000 đồng",
+    "f1_verified": 0.3333,
+    "substring_verified": 0.0,
+    "anls_verified": 0.5833,
+    "latency_s": 1.795
+  },
+  {
+    "question_id": 1008,
+    "image_name": "341.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 6.271,
+    "question": "chiếc thuyền đã làm điều gì ?",
+    "gt_answers": [
+      "chiếc thuyền đã đưa hàng triệu thí sinh 2k4 đi xa bờ"
+    ],
+    "pred_answer": "đưa hàng triệu thí sinh 2k4 đi xa bờ",
+    "f1_verified": 0.8571,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6923,
+    "latency_s": 3.022
+  },
+  {
+    "question_id": 1009,
+    "image_name": "341.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 7.379,
+    "question": "chiếc xe bò đã làm điều gì ?",
+    "gt_answers": [
+      "chiếc xe bò đã ship hàng triệu sĩ tử 2k5 ra chuồng gà"
+    ],
+    "pred_answer": "ship hàng triệu sĩ tử 2k5 ra chuồng gà",
+    "f1_verified": 0.8182,
+    "substring_verified": 0.0,
+    "anls_verified": 0.717,
+    "latency_s": 3.04
+  },
+  {
+    "question_id": 1429,
+    "image_name": "496.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 8.47,
+    "question": "chàng trai nói cô gái bỏ cái tay ra để làm gì ?",
+    "gt_answers": [
+      "anh mua quà 8 / 3 cho em liền"
+    ],
+    "pred_answer": "mua quà cho cô",
+    "f1_verified": 0.5,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.7
+  },
+  {
+    "question_id": 1430,
+    "image_name": "496.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 1.945,
+    "question": "chàng trai quên làm điều gì ?",
+    "gt_answers": [
+      "quên quà 8 / 3 và cái kết"
+    ],
+    "pred_answer": "quà 8/3 và cái kết",
+    "f1_verified": 0.9231,
+    "substring_verified": 0.0,
+    "anls_verified": 0.7826,
+    "latency_s": 3.24
+  },
+  {
+    "question_id": 1500,
+    "image_name": "518.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 5.628,
+    "question": "chàng trai chỉ làm sai mấy câi ?",
+    "gt_answers": [
+      "em chỉ làm sai 1 câu"
+    ],
+    "pred_answer": "1 câu",
+    "f1_verified": 0.5,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.687
+  },
+  {
+    "question_id": 2254,
+    "image_name": "854.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 0.03,
+    "question": "cà chua đà lạt được bán với giá bao nhiêu ?",
+    "gt_answers": [
+      "18 . 000"
+    ],
+    "pred_answer": "18",
+    "f1_verified": 0.6667,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.318
+  },
+  {
+    "question_id": 2486,
+    "image_name": "929.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 0.832,
+    "question": "vùng đỏ là vùng gì ?",
+    "gt_answers": [
+      "cấp 4 ( nguy cơ rất cao )"
+    ],
+    "pred_answer": "nguy cơ rất cao",
+    "f1_verified": 0.8,
+    "substring_verified": 0.0,
+    "anls_verified": 0.7143,
+    "latency_s": 1.723
+  },
+  {
+    "question_id": 3201,
+    "image_name": "1167.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 2.322,
+    "question": "paintmart là siêu thị như thế nào ?",
+    "gt_answers": [
+      "siêu thị sơn số 1 việt nam"
+    ],
+    "pred_answer": "sơn số 1 Việt Nam",
+    "f1_verified": 0.8333,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6538,
+    "latency_s": 3.574
+  },
+  {
+    "question_id": 3642,
+    "image_name": "1320.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 0.433,
+    "question": "hồng xiêm bán giá bao nhiêu một cân ?",
+    "gt_answers": [
+      "38900"
+    ],
+    "pred_answer": "48900",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.8,
+    "latency_s": 1.633
+  },
+  {
+    "question_id": 3644,
+    "image_name": "1320.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 0.433,
+    "question": "xoài cát bò bán giá bao nhiêu một cân ?",
+    "gt_answers": [
+      "46900"
+    ],
+    "pred_answer": "46900 đồng",
+    "f1_verified": 0.6667,
+    "substring_verified": 1.0,
+    "anls_verified": 0.5,
+    "latency_s": 2.214
+  },
+  {
+    "question_id": 3937,
+    "image_name": "1422.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 3.079,
+    "question": "địa chỉ của siêu thị này ở đâu ?",
+    "gt_answers": [
+      "285 - 297 - 299 lê đại hành , p . 13 , quận 11"
+    ],
+    "pred_answer": "295-297-299 Lê Đại Hành, P. 13, Quận 11",
+    "f1_verified": 0.9,
+    "substring_verified": 0.0,
+    "anls_verified": 0.9722,
+    "latency_s": 4.837
+  },
+  {
+    "question_id": 4304,
+    "image_name": "1539.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 1.71,
+    "question": "ở khu vực này cần chú ý điều gì ?",
+    "gt_answers": [
+      "mực nước trong hồ 40 - 80 cm trẻ em phải có người lớn đi cùng"
+    ],
+    "pred_answer": "phải có người lớn đi cùng",
+    "f1_verified": 0.5714,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.403
+  },
+  {
+    "question_id": 4590,
+    "image_name": "1629.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 1.746,
+    "question": "nguồn của bưc hình là gì ?",
+    "gt_answers": [
+      "kenh14 . vn"
+    ],
+    "pred_answer": "Kenh4.vn",
+    "f1_verified": 0.5,
+    "substring_verified": 0.0,
+    "anls_verified": 0.8889,
+    "latency_s": 1.875
+  },
+  {
+    "question_id": 4593,
+    "image_name": "1629.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 1.897,
+    "question": "địa điểm cách ly y tế này thuộc cơ quan nào ?",
+    "gt_answers": [
+      "bcđ phòng chống dịch covid - 19 phường hàng bồ"
+    ],
+    "pred_answer": "Phòng, chống dịch bệnh COVID-19",
+    "f1_verified": 0.6667,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.821
+  },
+  {
+    "question_id": 4662,
+    "image_name": "1652.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 3.775,
+    "question": "tên của quán ăn hàn quốc này là gì ?",
+    "gt_answers": [
+      "lava 2"
+    ],
+    "pred_answer": "2",
+    "f1_verified": 0.6667,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.657
+  },
+  {
+    "question_id": 75,
+    "image_name": "22.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 1.412,
+    "question": "nhà thuốc trong ảnh tên gì ?",
+    "gt_answers": [
+      "bảo tâm an"
+    ],
+    "pred_answer": "Bảo Tâm",
+    "f1_verified": 0.8,
+    "substring_verified": 0.0,
+    "anls_verified": 0.7,
+    "latency_s": 1.997
+  },
+  {
+    "question_id": 270,
+    "image_name": "77.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 2.836,
+    "question": "tên của quán coffee ?",
+    "gt_answers": [
+      "như nguyễn"
+    ],
+    "pred_answer": "Như Nguyễn Coffee",
+    "f1_verified": 0.8,
+    "substring_verified": 1.0,
+    "anls_verified": 0.5882,
+    "latency_s": 2.77
+  },
+  {
+    "question_id": 415,
+    "image_name": "141.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 0.569,
+    "question": "buổi lễ được diễn ra ở đâu ?",
+    "gt_answers": [
+      "ubnd quận cẩm lệ phòng gd & dt",
+      "ubnd quận cẩm lệ phòng gd & đt"
+    ],
+    "pred_answer": "tại UBND Quận Cẩm Lệ",
+    "f1_verified": 0.6667,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.567
+  },
+  {
+    "question_id": 428,
+    "image_name": "147.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 0.531,
+    "question": "wedsite cảu báo là gì ?",
+    "gt_answers": [
+      "www . kienthuc . net . vn"
+    ],
+    "pred_answer": "Kienthuc.net.vn",
+    "f1_verified": 0.8571,
+    "substring_verified": 0.0,
+    "anls_verified": 0.7895,
+    "latency_s": 1.066
+  },
+  {
+    "question_id": 655,
+    "image_name": "222.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 3.418,
+    "question": "tư vấn và kiểm tra sức khỏe trước hôn nhân là gì ?",
+    "gt_answers": [
+      "cơ sở hạnh phúc"
+    ],
+    "pred_answer": "Cơ sở xây đắp hạnh phúc",
+    "f1_verified": 0.8,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6522,
+    "latency_s": 1.902
+  },
+  {
+    "question_id": 735,
+    "image_name": "251.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 11.551,
+    "question": "nơi này có tên gì ?",
+    "gt_answers": [
+      "bach kim",
+      "bạch kim"
+    ],
+    "pred_answer": "Bachim",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.75,
+    "latency_s": 1.303
+  },
+  {
+    "question_id": 866,
+    "image_name": "296.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 2.264,
+    "question": "quán ăn này bán món gì ?",
+    "gt_answers": [
+      "bún quậy"
+    ],
+    "pred_answer": "Bún Quay",
+    "f1_verified": 0.5,
+    "substring_verified": 0.0,
+    "anls_verified": 0.875,
+    "latency_s": 2.882
+  },
+  {
+    "question_id": 868,
+    "image_name": "296.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 2.0,
+    "question": "quán ăn này đang trong dịp gì ?",
+    "gt_answers": [
+      "mừng khai trương"
+    ],
+    "pred_answer": "khai trương",
+    "f1_verified": 0.8,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6875,
+    "latency_s": 3.317
+  },
+  {
+    "question_id": 924,
+    "image_name": "311.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 6.758,
+    "question": "phượng và hải đang làm gì ?",
+    "gt_answers": [
+      "cùng nhau cất tiếng hót líu lo"
+    ],
+    "pred_answer": "Cùng nhau cất tiếng hò",
+    "f1_verified": 0.6667,
+    "substring_verified": 0.0,
+    "anls_verified": 0.7,
+    "latency_s": 1.5
+  },
+  {
+    "question_id": 949,
+    "image_name": "319.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 3.077,
+    "question": "bức ảnh có nguồn từ đâu ?",
+    "gt_answers": [
+      "facebook . com / trollbongda youtube . com / trollbongdaofficial",
+      "facebook.com/trollbongda và youtube.com/trollbongda official"
+    ],
+    "pred_answer": "facebook.com/trollbongda",
+    "f1_verified": 0.6667,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.148
+  },
+  {
+    "question_id": 964,
+    "image_name": "324.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 4.524,
+    "question": "mở tiệm spa nhưng ế quá là do gì ?",
+    "gt_answers": [
+      "do chủ spa chưa seeding kéo khách trong hội nhóm"
+    ],
+    "pred_answer": "chủ spa chưa seeding kéo khách trong hội nhóm",
+    "f1_verified": 0.9474,
+    "substring_verified": 0.0,
+    "anls_verified": 0.9375,
+    "latency_s": 4.098
+  },
+  {
+    "question_id": 1051,
+    "image_name": "362.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 4.059,
+    "question": "cậu ta sẽ là người đứng đầu ở đâu ?",
+    "gt_answers": [
+      "đại dương này"
+    ],
+    "pred_answer": "Đại dương",
+    "f1_verified": 0.8,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6923,
+    "latency_s": 1.312
+  },
+  {
+    "question_id": 1052,
+    "image_name": "362.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 3.887,
+    "question": "khi nào cậu ta sẽ đứng đầu đại dương này ?",
+    "gt_answers": [
+      "trong tương lai"
+    ],
+    "pred_answer": "tương lai",
+    "f1_verified": 0.8,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6,
+    "latency_s": 2.845
+  },
+  {
+    "question_id": 1058,
+    "image_name": "365.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 3.139,
+    "question": "bé gái nói gì ?",
+    "gt_answers": [
+      "đi đại đi anh",
+      "đi đại đi anh. em đang trốn mẹ đi chơi với anh mà, xin để bị bắt lại àh"
+    ],
+    "pred_answer": "Đi đại đi anh. em đang trốn mẹ đi chơi với anh mà. xin để bị bắt lại ân",
+    "f1_verified": 0.9474,
+    "substring_verified": 1.0,
+    "anls_verified": 0.971,
+    "latency_s": 2.424
+  },
+  {
+    "question_id": 1059,
+    "image_name": "365.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 0.856,
+    "question": "bé gái đang làm gì ?",
+    "gt_answers": [
+      "em đang trốn mẹ đi chơi với anh mà . xin để bị bắt lại àh",
+      "đang đi trốn mẹ"
+    ],
+    "pred_answer": "trốn mẹ đi chơi với anh",
+    "f1_verified": 0.6,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.349
+  },
+  {
+    "question_id": 1064,
+    "image_name": "368.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 6.518,
+    "question": "nồi lẩu thái siêu to , siêu cay của ai ?",
+    "gt_answers": [
+      "thầy park vlog"
+    ],
+    "pred_answer": "Thầy Park",
+    "f1_verified": 0.8,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6429,
+    "latency_s": 0.308
+  },
+  {
+    "question_id": 1121,
+    "image_name": "390.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 7.607,
+    "question": "gương ở đâu ?",
+    "gt_answers": [
+      "gương kia ngự ở trên tường"
+    ],
+    "pred_answer": "Trên tường",
+    "f1_verified": 0.5,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 0.474
+  },
+  {
+    "question_id": 1143,
+    "image_name": "398.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 3.947,
+    "question": "gần tết thì như thế nào ?",
+    "gt_answers": [
+      "gần tết rồi còn làm việc cái gì hả ? ?"
+    ],
+    "pred_answer": "rồi còn làm việc cái gì hả?",
+    "f1_verified": 0.875,
+    "substring_verified": 0.0,
+    "anls_verified": 0.7647,
+    "latency_s": 3.144
+  },
+  {
+    "question_id": 1146,
+    "image_name": "398.jpg",
+    "error_class": "CLASS_B",
+    "route": "slow_path",
+    "box_area_pct": 0.583,
+    "question": "bức ảnh có nguồn từ đâu ?",
+    "gt_answers": [
+      "thăngfly",
+      "thắng fly"
+    ],
+    "pred_answer": "Tháng Fly",
+    "f1_verified": 0.5,
+    "substring_verified": 0.0,
+    "anls_verified": 0.8889,
+    "latency_s": 1.833
+  },
+  {
+    "question_id": 1162,
+    "image_name": "406.jpg",
+    "error_class": "CLASS_B",
+    "route": "fast_path",
+    "box_area_pct": 2.296,
+    "question": "cậu bé đang chán ăn món gì ?",
+    "gt_answers": [
+      "chán ăn chè đậu đỏ rồi"
+    ],
+    "pred_answer": "chè đậu đỏ",
+    "f1_verified": 0.6667,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.83
+  },
+  {
+    "question_id": 665,
+    "image_name": "225.jpg",
+    "error_class": "CLASS_C",
+    "route": "slow_path",
+    "box_area_pct": 0.943,
+    "question": "tên của tiệm thuốc là gì ?",
+    "gt_answers": [
+      "mẫn minh sơn",
+      "mẫn sơn minh"
+    ],
+    "pred_answer": "có tên là \"Mẫn Sơn Minh\"",
+    "f1_verified": 0.6667,
+    "substring_verified": 1.0,
+    "anls_verified": 0.5455,
+    "latency_s": 2.53
+  },
+  {
+    "question_id": 1144,
+    "image_name": "398.jpg",
+    "error_class": "CLASS_C",
+    "route": "slow_path",
+    "box_area_pct": 4.345,
+    "question": "gần tết nên làm gì ?",
+    "gt_answers": [
+      "cầm 40 triệu về với gia đình ngay cho tôi ! !"
+    ],
+    "pred_answer": "Làm việc gì hả?",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.363
+  },
+  {
+    "question_id": 1227,
+    "image_name": "427.jpg",
+    "error_class": "CLASS_C",
+    "route": "slow_path",
+    "box_area_pct": 12.22,
+    "question": "ai hiện lên và nói ?",
+    "gt_answers": [
+      "bụt"
+    ],
+    "pred_answer": "Bụt hiện lên và nói",
+    "f1_verified": 0.3333,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.529
+  },
+  {
+    "question_id": 1752,
+    "image_name": "644.jpg",
+    "error_class": "CLASS_C",
+    "route": "slow_path",
+    "box_area_pct": 4.287,
+    "question": "cô gái hỏi chàng trai điều gì ?",
+    "gt_answers": [
+      "nhà anh có máy lạnh không ?",
+      "nhà anh có điều hòa không ?"
+    ],
+    "pred_answer": "Chàng trai hỏi cô gái điều gì?",
+    "f1_verified": 0.1538,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.391
+  },
+  {
+    "question_id": 1791,
+    "image_name": "670.jpg",
+    "error_class": "CLASS_C",
+    "route": "slow_path",
+    "box_area_pct": 7.245,
+    "question": "cầu thủ áo đỏ hỏi gì áo trắng ?",
+    "gt_answers": [
+      "năm nay bao nhiêu tuổi ?"
+    ],
+    "pred_answer": "Cầu thủ áo đỏ hỏi áo trắng \"Gì?\"",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.144
+  },
+  {
+    "question_id": 1854,
+    "image_name": "709.jpg",
+    "error_class": "CLASS_C",
+    "route": "fast_path",
+    "box_area_pct": 3.137,
+    "question": "nhân vật nữ bị so sánh bừng bừng như thế nào ?",
+    "gt_answers": [
+      "như . . . heo quay"
+    ],
+    "pred_answer": "... heo quay!",
+    "f1_verified": 0.8,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6667,
+    "latency_s": 2.352
+  },
+  {
+    "question_id": 2102,
+    "image_name": "811.jpg",
+    "error_class": "CLASS_C",
+    "route": "fast_path",
+    "box_area_pct": 0.343,
+    "question": "có bao nhiêu đùi ếch tươi trên 1 kg ?",
+    "gt_answers": [
+      "20 - 25 đùi"
+    ],
+    "pred_answer": "Có 2 đùi ếch tươi trên 1 kg",
+    "f1_verified": 0.1818,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.708
+  },
+  {
+    "question_id": 2223,
+    "image_name": "847.jpg",
+    "error_class": "CLASS_C",
+    "route": "slow_path",
+    "box_area_pct": 9.853,
+    "question": "khu du lịch sinh thái này tên gì ?",
+    "gt_answers": [
+      "thiên đàng"
+    ],
+    "pred_answer": "Khu du lịch sinh thái này tên là Khu du lịch sinh thái",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.935
+  },
+  {
+    "question_id": 2225,
+    "image_name": "847.jpg",
+    "error_class": "CLASS_C",
+    "route": "fast_path",
+    "box_area_pct": 0.794,
+    "question": "khu du lịch sinh thái này phục vụ khách như thế nào ?",
+    "gt_answers": [
+      "24 / 24"
+    ],
+    "pred_answer": "Khu du lịch sinh thái này phục vụ khách như thế nào?",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.207
+  },
+  {
+    "question_id": 2311,
+    "image_name": "874.jpg",
+    "error_class": "CLASS_C",
+    "route": "slow_path",
+    "box_area_pct": 4.037,
+    "question": "công ty psas việt nam là công ty gì ?",
+    "gt_answers": [
+      "tnhh"
+    ],
+    "pred_answer": "TNHH PSAS Việt Nam",
+    "f1_verified": 0.4,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.352
+  },
+  {
+    "question_id": 2485,
+    "image_name": "929.jpg",
+    "error_class": "CLASS_C",
+    "route": "slow_path",
+    "box_area_pct": 0.694,
+    "question": "vùng cam là vùng gì ?",
+    "gt_answers": [
+      "cấp 3 ( nguy cơ cao )"
+    ],
+    "pred_answer": "Vùng cam là vùng cam",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.467
+  },
+  {
+    "question_id": 2547,
+    "image_name": "952.jpg",
+    "error_class": "CLASS_C",
+    "route": "slow_path",
+    "box_area_pct": 1.517,
+    "question": "gofoodvn là gì ?",
+    "gt_answers": [
+      "hệ thống cửa hàng thực phẩm cao cấp"
+    ],
+    "pred_answer": "Gofood.vn là hệ thống cửa hàng thực phẩm nhập khẩu cao cấp",
+    "f1_verified": 0.7619,
+    "substring_verified": 0.0,
+    "anls_verified": 0.6034,
+    "latency_s": 4.236
+  },
+  {
+    "question_id": 375,
+    "image_name": "126.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 0.858,
+    "question": "ở đây có những cửa hàng gì ?",
+    "gt_answers": [
+      "giầy đồ hiệu",
+      "giầy đồ hiệu EU",
+      "anta sports",
+      "in thêu may cờ",
+      "Like Kid'a",
+      "smartshoes",
+      "xèng kids"
+    ],
+    "pred_answer": "ANTA SPORTS và Like Kids",
+    "f1_verified": 0.5714,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.987
+  },
+  {
+    "question_id": 377,
+    "image_name": "126.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 0.268,
+    "question": "ở đây có những cửa hàng gì ?",
+    "gt_answers": [
+      "in thêu may cờ",
+      "giầy đồ hiệu EU",
+      "anta sports",
+      "Like Kid'a",
+      "smartshoes",
+      "xèng kids"
+    ],
+    "pred_answer": "ANTA SPORTS và Like Kids",
+    "f1_verified": 0.5714,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 4.214
+  },
+  {
+    "question_id": 424,
+    "image_name": "145.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 35.294,
+    "question": "slogan của của hàng là gì ?",
+    "gt_answers": [
+      "nơi bạn gửi trọn niềm tin"
+    ],
+    "pred_answer": "\"Thế Giới\"",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.803
+  },
+  {
+    "question_id": 613,
+    "image_name": "206.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 0.746,
+    "question": "số điện thoại của nhà hàng này là gì ?",
+    "gt_answers": [
+      "05103919229"
+    ],
+    "pred_answer": "0510391234",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.7273,
+    "latency_s": 1.968
+  },
+  {
+    "question_id": 1031,
+    "image_name": "352.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 10.811,
+    "question": "2020 như thế nào ?",
+    "gt_answers": [
+      "sống có trách nhiệm với cộng đồng"
+    ],
+    "pred_answer": "Sống với cộng đồng",
+    "f1_verified": 0.7273,
+    "substring_verified": 0.0,
+    "anls_verified": 0.5455,
+    "latency_s": 1.013
+  },
+  {
+    "question_id": 1063,
+    "image_name": "368.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 10.46,
+    "question": "đây là nồi lẩu gì ?",
+    "gt_answers": [
+      "nồi lẩu thái siêu to , siêu cay !"
+    ],
+    "pred_answer": "Thái siêu",
+    "f1_verified": 0.4444,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.942
+  },
+  {
+    "question_id": 1122,
+    "image_name": "390.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 9.256,
+    "question": "tối nay ai sẽ như thế nào ?",
+    "gt_answers": [
+      "tối nay ai sẽ ra đường cùng ta ?"
+    ],
+    "pred_answer": "Gương kia tối nay ai sẽ như thế nào?",
+    "f1_verified": 0.4706,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.669
+  },
+  {
+    "question_id": 1969,
+    "image_name": "755.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 2.889,
+    "question": "người vợ nói gì trong hình ảnh sau khi cưới ?",
+    "gt_answers": [
+      "bà thách cả họ nhà mày"
+    ],
+    "pred_answer": "Chịch chịch",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 0.897
+  },
+  {
+    "question_id": 2008,
+    "image_name": "779.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 4.304,
+    "question": "rô nói gì với si ?",
+    "gt_answers": [
+      "ông không đợi tôi à si ?"
+    ],
+    "pred_answer": "à, tôi về trước nhé!\"",
+    "f1_verified": 0.3636,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.999
+  },
+  {
+    "question_id": 2101,
+    "image_name": "811.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 0.389,
+    "question": "quầy hàng hàng kế bên quầy cá bán gì ?",
+    "gt_answers": [
+      "đùi ếch tươi"
+    ],
+    "pred_answer": "thu cắt khúc",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 3.517
+  },
+  {
+    "question_id": 678,
+    "image_name": "229.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 5.423,
+    "question": "những chiếc xe hơi đang đậu ở đâu ?",
+    "gt_answers": [
+      "mega market"
+    ],
+    "pred_answer": "trước nhà hàng Mega Market",
+    "f1_verified": 0.5714,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.546
+  },
+  {
+    "question_id": 1069,
+    "image_name": "370.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 6.035,
+    "question": "đây là hình ảnh gì ?",
+    "gt_answers": [
+      "tóm tắt sự kiện"
+    ],
+    "pred_answer": "chụp iPhone 14",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.895
+  },
+  {
+    "question_id": 1116,
+    "image_name": "388.jpg",
+    "error_class": "CLASS_D",
+    "route": "fast_path",
+    "box_area_pct": 8.503,
+    "question": "tiền có quan trọng không ?",
+    "gt_answers": [
+      "tiền không quan trọng"
+    ],
+    "pred_answer": "Không",
+    "f1_verified": 0.4,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 0.356
+  },
+  {
+    "question_id": 1117,
+    "image_name": "388.jpg",
+    "error_class": "CLASS_D",
+    "route": "fast_path",
+    "box_area_pct": 18.929,
+    "question": "tiền nào không quan trọng ?",
+    "gt_answers": [
+      "đang nói về tiền của người khác !"
+    ],
+    "pred_answer": "người khác",
+    "f1_verified": 0.4444,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.648
+  },
+  {
+    "question_id": 1120,
+    "image_name": "390.jpg",
+    "error_class": "CLASS_D",
+    "route": "fast_path",
+    "box_area_pct": 7.052,
+    "question": "các thánh làm gì ?",
+    "gt_answers": [
+      "tiếp đi"
+    ],
+    "pred_answer": "Tiếp đi các thánh",
+    "f1_verified": 0.6667,
+    "substring_verified": 1.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.632
+  },
+  {
+    "question_id": 1350,
+    "image_name": "471.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 14.664,
+    "question": "chữ trong hình là gì ?",
+    "gt_answers": [
+      "nói thật đi ! sáng nay mấy giờ mới dậy ?"
+    ],
+    "pred_answer": "Nói thật",
+    "f1_verified": 0.3636,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.607
+  },
+  {
+    "question_id": 1351,
+    "image_name": "471.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 10.712,
+    "question": "nói thật điều gì ?",
+    "gt_answers": [
+      "sáng nay mấy giờ mới dậy ?"
+    ],
+    "pred_answer": "hôm nay",
+    "f1_verified": 0.25,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.121
+  },
+  {
+    "question_id": 1393,
+    "image_name": "484.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 5.584,
+    "question": "vì sao nhân vật trong hình dọa báo công an ?",
+    "gt_answers": [
+      "mày ăn nói ba trợn"
+    ],
+    "pred_answer": "có thể là nhân vật trong truyện tranh \"Tao báo công an mày ăn nói ba trọn\"",
+    "f1_verified": 0.3636,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 6.014
+  },
+  {
+    "question_id": 1501,
+    "image_name": "518.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 8.527,
+    "question": "chàng trai làm những câu còn lại như thế nào ?",
+    "gt_answers": [
+      "mấy câu kia em không làm"
+    ],
+    "pred_answer": "sai 1 câu",
+    "f1_verified": 0.2222,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.177
+  },
+  {
+    "question_id": 1829,
+    "image_name": "693.jpg",
+    "error_class": "CLASS_D",
+    "route": "slow_path",
+    "box_area_pct": 51.202,
+    "question": "đây là hình ảnh gì ?",
+    "gt_answers": [
+      "ảnh chế bts"
+    ],
+    "pred_answer": "hai người đàn ông",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.531
+  },
+  {
+    "question_id": 1148,
+    "image_name": "399.jpg",
+    "error_class": "CLASS_E",
+    "route": "slow_path",
+    "box_area_pct": 2.607,
+    "question": "huấn luyện viên nói gì ở hiệp 2 ?",
+    "gt_answers": [
+      "nể mấy đứa nhỏ ta tha đó"
+    ],
+    "pred_answer": "Bức ảnh không cung cấp thông tin về câu trả lời",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.893
+  },
+  {
+    "question_id": 1661,
+    "image_name": "589.jpg",
+    "error_class": "CLASS_E",
+    "route": "fast_path",
+    "box_area_pct": 1.647,
+    "question": "ai là người sở hữu tấm ảnh này ?",
+    "gt_answers": [
+      "tôi hóa học"
+    ],
+    "pred_answer": "Tôi không thể xác định danh tính của người sở hữu tấm ảnh này dựa trên thông tin trong ảnh",
+    "f1_verified": 0.087,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 1.902
+  },
+  {
+    "question_id": 5226,
+    "image_name": "1834.jpg",
+    "error_class": "CLASS_E",
+    "route": "fast_path",
+    "box_area_pct": 2.27,
+    "question": "chủ sở hữu tấm ảnh này là ai ?",
+    "gt_answers": [
+      "khampha24"
+    ],
+    "pred_answer": "Không thể xác định chủ sở hữu tấm ảnh này từ hình ảnh",
+    "f1_verified": 0.0,
+    "substring_verified": 0.0,
+    "anls_verified": 0.0,
+    "latency_s": 2.346
+  }
+]
