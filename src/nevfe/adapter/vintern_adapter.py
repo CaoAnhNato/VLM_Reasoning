@@ -31,11 +31,13 @@ from src.nevfe.core.engine import (
     compute_question_conditioned_cross_attention_saliency,
     compute_query_grounded_lexical_bias,
     apply_saliency_modulated_gating,
+    compute_brevity_steering_vectors,
+    apply_representation_brevity_steering,
 )
 
 
-CANONICAL_PROMPT_TEMPLATE = "Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question}"
-PROMPT_INSTRUCTION = "Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: "
+CANONICAL_PROMPT_TEMPLATE = "{question}\nTrả lời ngắn gọn: "
+PROMPT_INSTRUCTION = "Trả lời ngắn gọn: "
 
 
 def select_admissible_aspect_ratio_grid(
@@ -336,7 +338,9 @@ class VinternNEVFEAdapter:
         self.max_dynamic_patch = getattr(getattr(model, "config", None), "max_dynamic_patch", 6)
         self.num_image_token = getattr(model, "num_image_token", 256)
         self.image_size = getattr(getattr(model, "config", None), "image_size", 448)
-        self.system_message = getattr(model, "system_message", "Bạn là một trợ lý AI hữu ích.")
+        self.system_message = getattr(
+            model, "system_message", "Trích xuất chính xác chữ trong ảnh dưới dạng câu trả lời ngắn gọn nhất."
+        )
 
         # Caching dictionaries for image-level reuse across questions
         self._cached_img_key: Optional[Tuple[int, int, bytes]] = None
@@ -753,7 +757,7 @@ class VinternNEVFEAdapter:
             "<img>" + ("<IMG_CONTEXT>" * num_tokens) + "</img>\n"
         )
         if user_prompt is None:
-            user_prompt = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
+            user_prompt = f"{question.strip()}\nTrả lời ngắn gọn: "
         suffix_str = f"{user_prompt}<|im_end|>\n<|im_start|>assistant\n"
 
         prefix_ids = self.tokenizer(prefix_str, return_tensors="pt", add_special_tokens=False).input_ids.to(self.device)
@@ -913,18 +917,38 @@ class VinternNEVFEAdapter:
             v_l_gated = apply_saliency_modulated_gating(v_l, s_qcass, lambda_gate=lambda_gate)
 
             # 4. Canonical natural prompt framing & Stream Embeddings (Directives W2-W4)
-            prompt_text = f"Dựa vào chữ trong ảnh, hãy trả lời ngắn gọn: {question.strip()}"
+            prompt_text = f"{question.strip()}\nTrả lời ngắn gọn: "
             embeds_g = self.prepare_inputs(v_g, question, user_prompt=prompt_text)
             embeds_l = self.prepare_inputs(v_l_gated, question, user_prompt=prompt_text)
 
-            # 5. Independent Dual KV-Cache Prefill (Theorems 26-28)
+            # Directive W2: Representation-Space Brevity Steering Vectors (Theorem 43)
+            u_brev, v_q = compute_brevity_steering_vectors(
+                embed_layer=embed_layer,
+                tokenizer=self.tokenizer,
+                question=question,
+                device=self.device,
+            )
+            lambda_brev = 0.25 * float(self.engine.lambda_param)
+            tau_brev = 0.5 * float(self.engine.mu_param)
+
+            # 5. Independent Dual KV-Cache Prefill with Symmetrical Brevity Steering (Theorems 26-28 & 43)
             out_g = self.model.language_model.model(
                 inputs_embeds=embeds_g,
                 use_cache=True,
                 return_dict=True,
             )
             past_key_values_g = out_g.past_key_values
-            logits_g = self.model.language_model.lm_head(out_g.last_hidden_state[:, -1:, :])[0, 0, :]
+            h_g_prefill = apply_representation_brevity_steering(
+                out_g.last_hidden_state[:, -1:, :],
+                u_brev=u_brev,
+                v_q=v_q,
+                step_idx=1,
+                lambda_brev=lambda_brev,
+                tau_brev=tau_brev,
+            )
+            if hasattr(self.model.language_model.model, "norm"):
+                h_g_prefill = self.model.language_model.model.norm(h_g_prefill)
+            logits_g = self.model.language_model.lm_head(h_g_prefill)[0, 0, :]
 
             out_l = self.model.language_model.model(
                 inputs_embeds=embeds_l,
@@ -932,7 +956,17 @@ class VinternNEVFEAdapter:
                 return_dict=True,
             )
             past_key_values_l = out_l.past_key_values
-            logits_l = self.model.language_model.lm_head(out_l.last_hidden_state[:, -1:, :])[0, 0, :]
+            h_l_prefill = apply_representation_brevity_steering(
+                out_l.last_hidden_state[:, -1:, :],
+                u_brev=u_brev,
+                v_q=v_q,
+                step_idx=1,
+                lambda_brev=lambda_brev,
+                tau_brev=tau_brev,
+            )
+            if hasattr(self.model.language_model.model, "norm"):
+                h_l_prefill = self.model.language_model.model.norm(h_l_prefill)
+            logits_l = self.model.language_model.lm_head(h_l_prefill)[0, 0, :]
 
             # 6. Query token mask & Dynamic Token Resolution (Directive W4)
             vocab_size = logits_g.shape[-1]
@@ -981,17 +1015,13 @@ class VinternNEVFEAdapter:
                 )
                 next_id = int(next_tok_tensor.item())
 
-                # Autonomous Optical Stopping Gate (Theorem 34, Directive W5)
-                omega_t, s_bar_t = self.engine.get_last_continuation_saliency()
-                stop_decision = evaluate_semantic_stopping(
+                # Autonomous Epistemic Stopping Gate (Theorem 45, Directive W3)
+                stop_decision = self.engine.evaluate_stopping(
                     logits_g=logits_g,
                     logits_l=logits_l,
                     steered_tokens=next_tok_tensor,
-                    omega_t=omega_t,
-                    s_bar_t=s_bar_t,
                     eos_token_ids=eos_token_ids,
                     step_idx=step,
-                    grace_horizon=self.engine.get_last_grace_horizon(),
                 )
 
                 if bool(stop_decision.item()) if isinstance(stop_decision, torch.Tensor) else bool(stop_decision):
@@ -1003,7 +1033,7 @@ class VinternNEVFEAdapter:
                 if step == max_new_tokens:
                     break
 
-                # Advance both streams synchronously via independent KV-caches (Directive W1)
+                # Advance both streams synchronously via independent KV-caches with Brevity Steering (Directive W2)
                 next_tok = torch.tensor([[next_id]], dtype=torch.long, device=self.device)
                 next_emb = embed_layer(next_tok)  # [1, 1, D]
 
@@ -1014,7 +1044,17 @@ class VinternNEVFEAdapter:
                     return_dict=True,
                 )
                 past_key_values_g = out_g.past_key_values
-                logits_g = self.model.language_model.lm_head(out_g.last_hidden_state[:, -1:, :])[0, 0, :]
+                h_g_step = apply_representation_brevity_steering(
+                    out_g.last_hidden_state[:, -1:, :],
+                    u_brev=u_brev,
+                    v_q=v_q,
+                    step_idx=step + 1,
+                    lambda_brev=lambda_brev,
+                    tau_brev=tau_brev,
+                )
+                if hasattr(self.model.language_model.model, "norm"):
+                    h_g_step = self.model.language_model.model.norm(h_g_step)
+                logits_g = self.model.language_model.lm_head(h_g_step)[0, 0, :]
 
                 out_l = self.model.language_model.model(
                     inputs_embeds=next_emb,
@@ -1023,7 +1063,17 @@ class VinternNEVFEAdapter:
                     return_dict=True,
                 )
                 past_key_values_l = out_l.past_key_values
-                logits_l = self.model.language_model.lm_head(out_l.last_hidden_state[:, -1:, :])[0, 0, :]
+                h_l_step = apply_representation_brevity_steering(
+                    out_l.last_hidden_state[:, -1:, :],
+                    u_brev=u_brev,
+                    v_q=v_q,
+                    step_idx=step + 1,
+                    lambda_brev=lambda_brev,
+                    tau_brev=tau_brev,
+                )
+                if hasattr(self.model.language_model.model, "norm"):
+                    h_l_step = self.model.language_model.model.norm(h_l_step)
+                logits_l = self.model.language_model.lm_head(h_l_step)[0, 0, :]
 
             del past_key_values_g, past_key_values_l, out_g, out_l
             pred_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()

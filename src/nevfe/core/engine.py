@@ -531,23 +531,30 @@ def apply_saliency_modulated_gating(
     s_qcass: torch.Tensor,
     lambda_gate: float,
     mu_steer: float = 0.2,
+    gamma: Optional[float] = None,
     eps: float = 1e-6,
 ) -> torch.Tensor:
     """
-    Theorem 42: Standardized Question-Conditioned Saliency Gating Operator.
+    Theorem 42 & 44: Power-Law Saliency-Modulated Gating Operator (Directive W1).
     Modulates visual patch tokens in representation space strictly before LLM prefill.
-    Includes Area Chair dynamic range modulation to guarantee strict identity fallback on uniform queries.
+    Concentrates visual text evidence via power-law scaling T_gamma (Theorem 44)
+    and applies standardized saliency gating with Area Chair dynamic range modulation.
 
     Args:
         visual_tokens: Visual patch embeddings [P, D] or [1, P, D] where P in {256, 512}, D=896.
         s_qcass: Saliency field tensor [P] or [1, P] on the probability simplex Delta^{P-1}.
         lambda_gate: Continuous gating strength hyperparameter in [0.2, 0.6] (0.5 * lambda_param).
         mu_steer: Prototype steering strength constant (default 0.2).
+        gamma: Optional power-law concentration exponent. If None, derived as 1.0 + 2.0 * lambda_gate (1.0 + lambda_param).
         eps: Numerical stability constant.
 
     Returns:
         Modulated visual patch embeddings with identical shape and dtype.
     """
+    # Exact identity fallback when lambda_gate == 0.0 (Directive W1)
+    if float(lambda_gate) == 0.0:
+        return visual_tokens
+
     orig_shape = visual_tokens.shape
     orig_dtype = visual_tokens.dtype
     orig_device = visual_tokens.device
@@ -570,6 +577,17 @@ def apply_saliency_modulated_gating(
     if total_s > eps and abs(float(total_s) - 1.0) > 1e-3:
         s = s / total_s
 
+    # Directive W1: Power-Law Saliency Concentration (Theorem 44 Direction B)
+    if gamma is None:
+        lambda_param = 2.0 * float(lambda_gate)
+        gamma = 1.0 + lambda_param
+
+    if float(gamma) > 1.0:
+        orig_s_dtype = s.dtype
+        s_clamped = torch.clamp(s.float(), min=1e-8)
+        s_powered = torch.pow(s_clamped, float(gamma))
+        s = (s_powered / (torch.sum(s_powered) + 1e-8)).to(dtype=orig_s_dtype)
+
     # Standardized spatial saliency score z_QCASS
     mu_s = 1.0 / float(P)
     sigma_s = torch.sqrt(torch.mean((s - mu_s) ** 2) + eps)
@@ -582,6 +600,10 @@ def apply_saliency_modulated_gating(
     s_max = torch.max(s)
     s_min = torch.min(s)
     delta_range = (s_max - s_min) / (s_max + eps)
+
+    # Exact uniform query identity fallback (Theorem 44)
+    if delta_range < 1e-6:
+        return visual_tokens
 
     # Saliency Prototype: v_sal = sum_{k=1}^P S(k) * v_k in R^D
     v_f = v.float()
@@ -599,6 +621,149 @@ def apply_saliency_modulated_gating(
         v_out = v_out.unsqueeze(0)
 
     return v_out
+
+
+def compute_brevity_steering_vectors(
+    embed_layer: Union[torch.nn.Module, Any],
+    tokenizer: Any,
+    question: str,
+    device: Optional[Union[str, torch.device]] = None,
+    eps: float = 1e-8,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Representation-Space Brevity Steering Vector Computation (Theorem 43, Directive W2).
+    Computes query-orthogonal brevity unit vector u_brev and normalized question direction v_q.
+    
+    Zero regex, zero stopwords, operating strictly in continuous representation space.
+
+    Args:
+        embed_layer: Language model input token embedding layer.
+        tokenizer: Model tokenizer.
+        question: User query question string.
+        device: Target execution device.
+        eps: Numerical stability constant.
+
+    Returns:
+        u_brev: Query-orthogonal brevity steering unit vector [D].
+        v_q: Normalized question centroid unit vector [D].
+    """
+    if device is None:
+        if hasattr(embed_layer, "weight") and embed_layer.weight is not None:
+            device = embed_layer.weight.device
+        else:
+            device = "cpu"
+
+    # 1. Question centroid e_q_bar and normalized direction v_q
+    q_str = question.strip() if question else ""
+    if q_str and tokenizer is not None and hasattr(tokenizer, "encode"):
+        q_ids = tokenizer.encode(q_str, add_special_tokens=False, return_tensors="pt").to(device)
+    else:
+        q_ids = torch.empty((1, 0), dtype=torch.long, device=device)
+
+    if q_ids.numel() > 0:
+        q_embeds = embed_layer(q_ids).squeeze(0).float()  # [T_q, D]
+        e_q_bar = torch.mean(q_embeds, dim=0)  # [D]
+        norm_e_q = torch.norm(e_q_bar, p=2) + eps
+        v_q = e_q_bar / norm_e_q
+    else:
+        D = embed_layer.weight.shape[-1] if hasattr(embed_layer, "weight") else 896
+        v_q = torch.zeros(D, device=device, dtype=torch.float32)
+
+    # 2. Brevity directive centroid e_brev_bar from "Trả lời ngắn gọn: "
+    brev_str = "Trả lời ngắn gọn: "
+    if tokenizer is not None and hasattr(tokenizer, "encode"):
+        brev_ids = tokenizer.encode(brev_str, add_special_tokens=False, return_tensors="pt").to(device)
+        brev_embeds = embed_layer(brev_ids).squeeze(0).float()  # [T_b, D]
+        e_brev_bar = torch.mean(brev_embeds, dim=0)  # [D]
+    else:
+        e_brev_bar = torch.zeros_like(v_q)
+
+    # 3. Conversational baseline centroid e_sys_bar from "Bạn là một trợ lý AI hữu ích."
+    sys_str = "Bạn là một trợ lý AI hữu ích."
+    if tokenizer is not None and hasattr(tokenizer, "encode"):
+        sys_ids = tokenizer.encode(sys_str, add_special_tokens=False, return_tensors="pt").to(device)
+        sys_embeds = embed_layer(sys_ids).squeeze(0).float()  # [T_s, D]
+        e_sys_bar = torch.mean(sys_embeds, dim=0)  # [D]
+    else:
+        e_sys_bar = torch.zeros_like(v_q)
+
+    # 4. Difference vector delta_brev = e_brev_bar - e_sys_bar
+    delta_brev = e_brev_bar - e_sys_bar  # [D]
+
+    # 5. Query-orthogonal Gram-Schmidt projection:
+    # delta_ortho = delta_brev - (delta_brev^T v_q) * v_q
+    if torch.norm(v_q, p=2) > eps:
+        proj_q = torch.dot(delta_brev, v_q) * v_q
+        delta_ortho = delta_brev - proj_q
+    else:
+        delta_ortho = delta_brev
+
+    norm_ortho = torch.norm(delta_ortho, p=2) + eps
+    u_brev = delta_ortho / norm_ortho
+
+    return u_brev, v_q
+
+
+def apply_representation_brevity_steering(
+    h_t: torch.Tensor,
+    u_brev: torch.Tensor,
+    v_q: torch.Tensor,
+    step_idx: int = 1,
+    lambda_brev: float = 0.25,
+    tau_brev: float = 2.0,
+    eps: float = 1e-8,
+) -> torch.Tensor:
+    """
+    Representation-Space Brevity Steering Operator (Theorem 43, Directive W2).
+
+    Formula:
+        alpha_t = lambda_brev * exp(-(step_idx - 1) / tau_brev)
+        beta_t = 0.5 * alpha_t
+        h_tilde = h_t + alpha_t * ||h_t||_2 * u_brev - beta_t * (h_t^T v_q) * v_q
+
+    Invariants:
+        1. lambda_brev == 0 => h_tilde == h_t (exact identity fallback).
+        2. Asymptotic decay: perturbation -> 0 as step_idx increases.
+        3. Manifold preservation: steering stays inside language embedding manifold.
+
+    Args:
+        h_t: Hidden state tensor of shape [..., D].
+        u_brev: Query-orthogonal brevity unit vector [D].
+        v_q: Normalized question direction unit vector [D].
+        step_idx: 1-indexed autoregressive decoding step.
+        lambda_brev: Brevity steering strength (coupled to 0.25 * lambda_param).
+        tau_brev: Brevity exponential decay horizon (coupled to 0.5 * mu_param).
+        eps: Numerical stability constant.
+
+    Returns:
+        Steered hidden state tensor with identical shape and dtype.
+    """
+    if float(lambda_brev) <= 1e-9 or float(tau_brev) <= 1e-9:
+        return h_t
+
+    orig_dtype = h_t.dtype
+    h = h_t.float()
+
+    decay = math.exp(-max(0, step_idx - 1) / max(float(tau_brev), 1e-6))
+    alpha_t = float(lambda_brev) * decay
+    beta_t = 0.5 * alpha_t
+
+    if alpha_t <= 1e-9:
+        return h_t
+
+    u_b = u_brev.float().to(device=h.device)
+    v_query = v_q.float().to(device=h.device)
+
+    # Norm of hidden state preserving batch and sequence dimensions [..., 1]
+    norm_h = torch.norm(h, p=2, dim=-1, keepdim=True)
+
+    # Projection onto question direction [..., 1]
+    proj_v = torch.sum(h * v_query, dim=-1, keepdim=True)
+
+    # Steering update: h_tilde = h + alpha_t * ||h|| * u_brev - beta_t * (h^T v_q) * v_q
+    h_steered = h + alpha_t * norm_h * u_b - beta_t * proj_v * v_query
+
+    return h_steered.to(dtype=orig_dtype)
 
 
 def compute_box_iou(
@@ -1124,6 +1289,76 @@ def compute_entropy_continuation_horizon(
 _compute_continuation_horizon = compute_entropy_continuation_horizon
 
 
+def compute_epistemic_exhaustion_index(
+    log_p_l: torch.Tensor,
+    log_p_g: torch.Tensor,
+    peak_js: Optional[Union[float, torch.Tensor]] = None,
+    eps: float = 1e-8,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """
+    Information-Theoretic Epistemic Exhaustion Index (Theorem 45, Directive W3).
+
+    Computes:
+        1. Jensen-Shannon divergence J_t = D_JS(p_L || p_G).
+        2. Dynamic peak J_max^(t) = max(peak_js, J_t).
+        3. Optical grounding depletion rho_t = clamp(1.0 - J_t / (J_max^(t) + 1e-6), 0.0, 1.0).
+        4. Normalized Shannon entropy H_hat_t = clamp(H(p_L) / ln K, 0.0, 1.0).
+        5. Epistemic exhaustion index E_t = rho_t * H_hat_t in [0.0, 1.0].
+
+    Returns:
+        e_t: Epistemic exhaustion index [B, 1] or scalar.
+        peak_js: Updated peak JS divergence [B, 1] or scalar.
+        j_t: Current JS divergence [B, 1] or scalar.
+        rho_t: Grounding depletion [B, 1] or scalar.
+        h_hat_t: Normalized entropy [B, 1] or scalar.
+    """
+    orig_1d = (log_p_l.dim() == 1)
+    if orig_1d:
+        log_p_l = log_p_l.unsqueeze(0)
+        log_p_g = log_p_g.unsqueeze(0)
+
+    # 1. Probabilities p_L and p_G
+    p_l = torch.exp(log_p_l.float())
+    p_g = torch.exp(log_p_g.float())
+
+    # Mixture M = 0.5 * (p_L + p_G)
+    m = 0.5 * (p_l + p_g)
+    log_m = torch.log(torch.clamp(m, min=1e-12))
+
+    # KL divergences KL(p_L || M) and KL(p_G || M)
+    kl_l_m = torch.sum(p_l * (log_p_l.float() - log_m), dim=-1, keepdim=True)
+    kl_g_m = torch.sum(p_g * (log_p_g.float() - log_m), dim=-1, keepdim=True)
+    j_t = torch.clamp(0.5 * (kl_l_m + kl_g_m), min=0.0)  # [B, 1]
+
+    # 2. Dynamic Peak JS tracking
+    if peak_js is not None:
+        if isinstance(peak_js, (int, float)):
+            peak_t = torch.tensor(float(peak_js), device=j_t.device, dtype=j_t.dtype).expand_as(j_t)
+        else:
+            peak_t = peak_js.to(device=j_t.device, dtype=j_t.dtype)
+            if peak_t.dim() == 0:
+                peak_t = peak_t.expand_as(j_t)
+        new_peak_js = torch.maximum(peak_t, j_t)
+    else:
+        new_peak_js = j_t
+
+    # 3. Relative optical depletion rho_t
+    rho_t = torch.clamp(1.0 - j_t / (new_peak_js + 1e-6), 0.0, 1.0)  # [B, 1]
+
+    # 4. Normalized Shannon entropy H_hat_t
+    K_vocab = p_l.shape[-1]
+    ln_k = math.log(max(K_vocab, 2))
+    h_raw = -torch.sum(p_l * torch.log(torch.clamp(p_l, min=1e-12)), dim=-1, keepdim=True)
+    h_hat_t = torch.clamp(h_raw / ln_k, 0.0, 1.0)  # [B, 1]
+
+    # 5. Epistemic exhaustion index E_t = rho_t * H_hat_t
+    e_t = torch.clamp(rho_t * h_hat_t, 0.0, 1.0)  # [B, 1]
+
+    if orig_1d:
+        return e_t.squeeze(0), new_peak_js.squeeze(0), j_t.squeeze(0), rho_t.squeeze(0), h_hat_t.squeeze(0)
+    return e_t, new_peak_js, j_t, rho_t, h_hat_t
+
+
 def compute_refusal_resistant_continuation_horizon(
     norm_entropy: torch.Tensor,
     norm_divergence: torch.Tensor,
@@ -1267,24 +1502,31 @@ def evaluate_semantic_stopping(
     eos_token_ids: Optional[Sequence[int]] = None,
     step_idx: Optional[int] = None,
     grace_horizon: Optional[torch.Tensor] = None,
+    e_t: Optional[Union[float, torch.Tensor]] = None,
+    delta_eos: Optional[Union[float, torch.Tensor]] = None,
+    is_in_alnum_cohesion: Optional[Union[bool, torch.Tensor]] = None,
 ) -> torch.Tensor:
     """
-    Iteration 17: Calibrated Crisp Semantic Stopping Gate (Theorem 34, Directive W5).
+    Theorem 45: Information-Theoretic Epistemic Stopping Gate (Directive W3).
+    Excises the degenerate omega_t <= s_bar_t check completely.
     Releases crisp EOS without regex or stopwords when:
       1) Steered ensemble explicitly chose EOS, OR
-      2) Global stream chose EOS and optical evidence is exhausted, OR
-      3) Dual streams agree on EOS and optical evidence is exhausted, OR
-      4) Step >= 2 AND optical evidence is exhausted AND grace_horizon <= 0.30.
+      2) Dual streams agree on EOS, OR
+      3) Global stream chose EOS, OR
+      4) Step >= 2 AND e_t >= 0.45 AND delta_eos >= 6.0 AND not in alphanumeric cohesion.
 
     Args:
         logits_g: Global stream logits [B, K] or [K].
         logits_l: Optional focal stream logits [B, K] or [K].
         steered_tokens: Optional selected tokens [B] or scalar tensor.
-        omega_t: Optical continuation saliency [B, 1] or [1].
-        s_bar_t: Ambient expectation [B, 1] or [1].
+        omega_t: Deprecated/preserved for signature compatibility.
+        s_bar_t: Deprecated/preserved for signature compatibility.
         eos_token_ids: Sequence of EOS token IDs.
         step_idx: 1-indexed autoregressive decoding step index.
         grace_horizon: Optional epistemic continuation grace buffer [B, 1] or [1].
+        e_t: Epistemic exhaustion index E_t in [0.0, 1.0].
+        delta_eos: Hill-kinetic EOS logit boost in nats.
+        is_in_alnum_cohesion: Boolean flag/tensor indicating active alphanumeric/digit/sep cohesion.
 
     Returns:
         stop_predicate: Boolean tensor [B] or scalar boolean tensor.
@@ -1302,14 +1544,9 @@ def evaluate_semantic_stopping(
             logits_l = logits_l.unsqueeze(0)
         if steered_tokens is not None and steered_tokens.dim() == 0:
             steered_tokens = steered_tokens.unsqueeze(0)
-        if omega_t is not None and omega_t.dim() == 1:
-            omega_t = omega_t.unsqueeze(0)
-        if s_bar_t is not None and s_bar_t.dim() == 1:
-            s_bar_t = s_bar_t.unsqueeze(0)
-        if grace_horizon is not None and grace_horizon.dim() == 1:
-            grace_horizon = grace_horizon.unsqueeze(0)
 
     device = logits_g.device
+    B = logits_g.shape[0]
     eos_tensor = torch.tensor(list(eos_token_ids), device=device, dtype=torch.long)
 
     top_g = torch.argmax(logits_g, dim=-1)  # [B]
@@ -1319,42 +1556,48 @@ def evaluate_semantic_stopping(
     if steered_tokens is not None:
         steered_is_eos = torch.isin(steered_tokens.to(device=device, dtype=torch.long), eos_tensor)
     else:
-        steered_is_eos = torch.zeros_like(is_g_eos)
+        steered_is_eos = is_g_eos
 
-    # Condition 2: optical evidence exhausted (omega_t <= s_bar_t)
-    if omega_t is not None and s_bar_t is not None:
-        is_optical_exhausted = (omega_t.squeeze(-1) <= s_bar_t.squeeze(-1))
-    else:
-        is_optical_exhausted = torch.ones_like(is_g_eos)
-
-    # Condition 3: dual stream agreement
+    # Condition 2: dual stream agreement on EOS
     if logits_l is not None:
         top_l = torch.argmax(logits_l, dim=-1)
         is_l_eos = torch.isin(top_l, eos_tensor)
-        dual_eos_consensus = is_g_eos & is_l_eos & is_optical_exhausted
+        dual_eos_consensus = is_g_eos & is_l_eos
     else:
-        dual_eos_consensus = torch.zeros_like(is_g_eos)
+        dual_eos_consensus = is_g_eos
 
-    # Global wants to stop AND optical evidence is exhausted
-    global_exhausted_stop = is_g_eos & is_optical_exhausted
-
-    # Condition 4 (Theorem 34 Part 4, Directive W5: Calibrated crisp exhaustion stop):
-    # At step >= 2, if optical evidence is exhausted AND grace horizon <= 0.30, stop immediately.
-    if step_idx is not None and step_idx >= 2 and omega_t is not None and s_bar_t is not None and is_optical_exhausted.any():
-        if grace_horizon is not None:
-            if grace_horizon.dim() == 0:
-                grace_exhausted = (grace_horizon <= 0.30).expand_as(is_optical_exhausted)
-            elif grace_horizon.dim() == 2:
-                grace_exhausted = (grace_horizon.squeeze(-1) <= 0.30)
-            else:
-                grace_exhausted = (grace_horizon <= 0.30)
+    # Condition 3: Epistemic Exhaustion Crisp Termination (Theorem 45 & Directive W3)
+    # Triggers if: step_idx >= 2 AND e_t >= 0.45 AND delta_eos >= 6.0 AND not in alphanumeric cohesion.
+    if step_idx is not None and step_idx >= 2 and e_t is not None and delta_eos is not None:
+        if isinstance(e_t, (int, float)):
+            e_tensor = torch.full((B,), float(e_t), device=device, dtype=torch.float32)
         else:
-            grace_exhausted = torch.ones_like(is_optical_exhausted)
-        crisp_exhaustion_stop = is_optical_exhausted & grace_exhausted
-    else:
-        crisp_exhaustion_stop = torch.zeros_like(is_g_eos)
+            e_tensor = e_t.to(device=device, dtype=torch.float32).view(-1)
+            if e_tensor.numel() == 1 and B > 1:
+                e_tensor = e_tensor.expand(B)
 
-    stop_predicate = steered_is_eos | dual_eos_consensus | global_exhausted_stop | crisp_exhaustion_stop
+        if isinstance(delta_eos, (int, float)):
+            d_tensor = torch.full((B,), float(delta_eos), device=device, dtype=torch.float32)
+        else:
+            d_tensor = delta_eos.to(device=device, dtype=torch.float32).view(-1)
+            if d_tensor.numel() == 1 and B > 1:
+                d_tensor = d_tensor.expand(B)
+
+        if is_in_alnum_cohesion is not None:
+            if isinstance(is_in_alnum_cohesion, bool):
+                cohesion_tensor = torch.full((B,), is_in_alnum_cohesion, device=device, dtype=torch.bool)
+            else:
+                cohesion_tensor = is_in_alnum_cohesion.to(device=device, dtype=torch.bool).view(-1)
+                if cohesion_tensor.numel() == 1 and B > 1:
+                    cohesion_tensor = cohesion_tensor.expand(B)
+        else:
+            cohesion_tensor = torch.zeros(B, device=device, dtype=torch.bool)
+
+        crisp_epistemic_stop = (e_tensor >= 0.45) & (d_tensor >= 6.0) & (~cohesion_tensor)
+    else:
+        crisp_epistemic_stop = torch.zeros_like(is_g_eos)
+
+    stop_predicate = steered_is_eos | dual_eos_consensus | crisp_epistemic_stop
 
     if orig_1d:
         return stop_predicate.squeeze(0)
@@ -1872,6 +2115,8 @@ def nevfe_step_logits(
     alnum_token_ids: Optional[Sequence[int]] = None,
     lambda_diac: float = 0.10,
     mu_diac: float = 1.0,
+    peak_js: Optional[Union[float, torch.Tensor]] = None,
+    return_epistemic_exhaustion: bool = False,
 ) -> Tuple:
     """
     Decoupled Dual-Stream Rectified Contrastive Sharpening with Dynamic Continuation Base Anchor (Directives W4 & W6).
@@ -1961,6 +2206,10 @@ def nevfe_step_logits(
         s_bar_t = torch.zeros((ll.shape[0], 1), device=ll.device)
         grace_horizon = torch.ones((ll.shape[0], 1), device=ll.device)
         epistemic_certainty = torch.ones((ll.shape[0], 1), device=ll.device)
+        e_t = torch.zeros((ll.shape[0], 1), device=ll.device)
+        hill_eos_boost = torch.zeros((ll.shape[0], 1), device=ll.device)
+        updated_peak_js = torch.zeros((ll.shape[0], 1), device=ll.device)
+        is_in_alnum_cohesion = False
     else:
         # Iteration 13: Refusal-Resistant Dynamic Continuation Horizon (RR-DEH, Directives W3 & W4)
         # 1. Standardized Low-Contrast Text Index & Bounded Dynamic Temperature (use focal entropy directly)
@@ -2018,6 +2267,7 @@ def nevfe_step_logits(
 
         # 5. Symmetrically Calibrated Contrastive Termination for EOS Tokens (Directive W4)
         # p_term(t) is gated by gamma_t to permit instant stopping on short entities
+        eos_list = []
         if eos_token_ids is not None:
             K = steered_potential.shape[-1]
             eos_list = [int(eid) for eid in eos_token_ids if int(eid) < K]
@@ -2027,6 +2277,19 @@ def nevfe_step_logits(
                 raw_term_penalty = torch.relu(log_pg_eos - log_pl_eos)
                 term_penalty = gamma_t * raw_term_penalty
                 steered_potential[:, eos_list] = base_potential[:, eos_list] - lambda_t * term_penalty
+
+        # Directive W3: Information-Theoretic Epistemic Exhaustion Index & Dynamic EOS Modulation (Theorem 45)
+        e_t, updated_peak_js, j_t, rho_t, h_hat_t = compute_epistemic_exhaustion_index(
+            log_p_l=log_p_l_cal,
+            log_p_g=log_p_g,
+            peak_js=peak_js,
+        )
+        tau_eos = 0.07 * float(mu_param)
+        denom_eos = (e_t ** 2) + (tau_eos ** 2) + 1e-8
+        hill_eos_boost = (8.0 * float(lambda_param)) * ((e_t ** 2) / denom_eos)  # [B, 1]
+
+        if eos_token_ids is not None and eos_list:
+            steered_potential[:, eos_list] = steered_potential[:, eos_list] + hill_eos_boost
 
         # Directive W4 (Theorem 37 Separator-Bridging Orthographic Cohesion Horizon):
         # Epistemic continuation certainty E_t = (1 - H_G) * chi_term from global predictive distribution p_G
@@ -2111,6 +2374,7 @@ def nevfe_step_logits(
             is_prev_digit = (prev_token_id is not None and prev_token_id in digit_token_ids)
             is_prev_sep_for_cohesion = (prev_token_id is not None and prev_token_id in separator_token_ids)
             is_prev_alnum = (prev_token_id is not None and alnum_token_ids is not None and prev_token_id in alnum_token_ids)
+            is_in_alnum_cohesion = bool(is_prev_digit or is_prev_sep_for_cohesion or is_prev_alnum)
 
             if step_idx >= 2 and space_token_id < K:
                 if is_prev_alnum:
@@ -2229,6 +2493,15 @@ def nevfe_step_logits(
             grace_horizon = grace_horizon.squeeze(0)
         if epistemic_certainty is not None:
             epistemic_certainty = epistemic_certainty.squeeze(0)
+        if e_t is not None:
+            e_t = e_t.squeeze(0)
+        if hill_eos_boost is not None:
+            hill_eos_boost = hill_eos_boost.squeeze(0)
+        if updated_peak_js is not None:
+            updated_peak_js = updated_peak_js.squeeze(0)
+
+    if return_epistemic_exhaustion:
+        return next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded, grace_horizon, epistemic_certainty, e_t, hill_eos_boost, updated_peak_js, is_in_alnum_cohesion
 
     if return_epistemic_certainty:
         if return_continuation_saliency and return_grounding_status and return_grace_horizon:
@@ -2294,6 +2567,10 @@ class NEVFEEngine:
         self._last_is_grounded: Optional[torch.Tensor] = None
         self._last_grace_horizon: Optional[torch.Tensor] = None
         self._last_epistemic_certainty: Optional[torch.Tensor] = None
+        self._last_e_t: Optional[torch.Tensor] = None
+        self._last_delta_eos: Optional[torch.Tensor] = None
+        self._peak_js: Optional[torch.Tensor] = None
+        self._is_in_alnum_cohesion: bool = False
         self._prev_token_id: Optional[int] = None
         self._prev_prev_token_id: Optional[int] = None
         self._num_separators_emitted: int = 0
@@ -2438,6 +2715,10 @@ class NEVFEEngine:
             self._prev_prev_token_id = None
             self._num_separators_emitted = 0
             self._last_epistemic_certainty = None
+            self._last_e_t = None
+            self._last_delta_eos = None
+            self._peak_js = None
+            self._is_in_alnum_cohesion = False
 
         eff_prev_tok = prev_token_id if prev_token_id is not None else self._prev_token_id
         eff_prev_prev_tok = prev_prev_token_id if prev_prev_token_id is not None else self._prev_prev_token_id
@@ -2479,13 +2760,19 @@ class NEVFEEngine:
             alnum_token_ids=eff_alnum,
             lambda_diac=eff_lambda_diac,
             mu_diac=eff_mu_diac,
+            peak_js=self._peak_js,
+            return_epistemic_exhaustion=True,
         )
-        next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded, grace_horizon, epistemic_certainty = res
+        next_tokens, steered_logits, coupling_tensor, entropy_nats, omega_t, s_bar_t, is_grounded, grace_horizon, epistemic_certainty, e_t, hill_eos_boost, updated_peak_js, is_in_alnum_cohesion = res
         self._last_omega_t = omega_t
         self._last_s_bar_t = s_bar_t
         self._last_is_grounded = is_grounded
         self._last_grace_horizon = grace_horizon
         self._last_epistemic_certainty = epistemic_certainty
+        self._last_e_t = e_t
+        self._last_delta_eos = hill_eos_boost
+        self._peak_js = updated_peak_js
+        self._is_in_alnum_cohesion = is_in_alnum_cohesion
 
         # Track history for sequential steps
         next_id = int(next_tokens.item()) if next_tokens.numel() == 1 else int(next_tokens[0].item())
@@ -2515,6 +2802,18 @@ class NEVFEEngine:
         """Return the most recent epistemic certainty E_t computed during decode_step (Directive W4)."""
         return getattr(self, "_last_epistemic_certainty", None)
 
+    def get_last_epistemic_exhaustion(self) -> Optional[torch.Tensor]:
+        """Return the most recent epistemic exhaustion index E_t (Theorem 45, Directive W3)."""
+        return getattr(self, "_last_e_t", None)
+
+    def get_last_delta_eos(self) -> Optional[torch.Tensor]:
+        """Return the most recent Hill-kinetic EOS boost in nats (Theorem 45, Directive W3)."""
+        return getattr(self, "_last_delta_eos", None)
+
+    def is_in_alnum_cohesion(self) -> bool:
+        """Return whether current state is inside an active alphanumeric/digit/sep sequence (Directive W3)."""
+        return bool(getattr(self, "_is_in_alnum_cohesion", False))
+
     def is_last_token_grounded(self) -> bool:
         """Return whether the most recently selected token is an optically grounded entity token (Directive W4)."""
         if not hasattr(self, "_last_is_grounded") or self._last_is_grounded is None:
@@ -2531,7 +2830,7 @@ class NEVFEEngine:
         eos_token_ids: Optional[Sequence[int]] = None,
         step_idx: Optional[int] = None,
     ) -> torch.Tensor:
-        """Evaluate consensus stopping using last computed continuation saliency and grace horizon (Directive W5)."""
+        """Evaluate consensus stopping using last computed continuation saliency, grace horizon, and epistemic exhaustion (Directive W3)."""
         return evaluate_semantic_stopping(
             logits_g=logits_g,
             logits_l=logits_l,
@@ -2541,6 +2840,55 @@ class NEVFEEngine:
             eos_token_ids=eos_token_ids,
             step_idx=step_idx,
             grace_horizon=getattr(self, "_last_grace_horizon", None),
+            e_t=getattr(self, "_last_e_t", None),
+            delta_eos=getattr(self, "_last_delta_eos", None),
+            is_in_alnum_cohesion=getattr(self, "_is_in_alnum_cohesion", False),
+        )
+
+    def compute_brevity_steering_vectors(
+        self,
+        embed_layer: Any,
+        tokenizer: Any,
+        question: str,
+        device: Optional[Union[str, torch.device]] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Compute query-orthogonal brevity unit vector and question direction (Theorem 43, Directive W2)."""
+        return compute_brevity_steering_vectors(
+            embed_layer=embed_layer,
+            tokenizer=tokenizer,
+            question=question,
+            device=device,
+        )
+
+    def apply_brevity_steering(
+        self,
+        h_t: torch.Tensor,
+        u_brev: torch.Tensor,
+        v_q: torch.Tensor,
+        step_idx: int = 1,
+    ) -> torch.Tensor:
+        """Apply representation-space brevity steering to hidden state h_t (Theorem 43, Directive W2)."""
+        lambda_brev = 0.25 * float(self.lambda_param)
+        tau_brev = 0.5 * float(self.mu_param)
+        return apply_representation_brevity_steering(
+            h_t=h_t,
+            u_brev=u_brev,
+            v_q=v_q,
+            step_idx=step_idx,
+            lambda_brev=lambda_brev,
+            tau_brev=tau_brev,
+        )
+
+    def compute_epistemic_exhaustion(
+        self,
+        log_p_l: torch.Tensor,
+        log_p_g: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Compute epistemic exhaustion index E_t and related metrics (Theorem 45, Directive W3)."""
+        return compute_epistemic_exhaustion_index(
+            log_p_l=log_p_l,
+            log_p_g=log_p_g,
+            peak_js=self._peak_js,
         )
 
     def compute_qcass_saliency(
