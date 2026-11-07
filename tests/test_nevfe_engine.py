@@ -132,25 +132,25 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertGreater(alpha_t.item(), 0.15, "Dynamic coupling alpha_t must remain active when BC ~ 0.90!")
 
     def test_04_dynamic_coupling_and_float32_safeguard(self):
-        # When BC = 1.0 (total agreement), visual guidance dynamic coupling should be 0.0
+        # When BC = 1.0 (total agreement), visual guidance dynamic coupling should be 0.0 at t > 1
         bc_full = torch.tensor([[1.0]])
-        lam_0 = compute_dynamic_coupling(0.50, bc_full)
+        lam_0 = compute_dynamic_coupling(0.50, bc_full, step_idx=2)
         self.assertAlmostEqual(lam_0.item(), 0.0, places=5)
 
         # When BC = 0.0 (total disagreement), dynamic coupling should equal alpha (0.50)
         bc_zero = torch.tensor([[0.0]])
-        lam_max = compute_dynamic_coupling(0.50, bc_zero)
+        lam_max = compute_dynamic_coupling(0.50, bc_zero, step_idx=2)
         self.assertAlmostEqual(lam_max.item(), 0.50, places=5)
 
         # Intermediate BC: alpha * sqrt(1 - BC^2)
         # For BC = 0.6: sqrt(1 - 0.36) = 0.8 -> 0.50 * 0.8 = 0.40
         bc_mid = torch.tensor([[0.6]])
-        lam_mid = compute_dynamic_coupling(0.50, bc_mid)
+        lam_mid = compute_dynamic_coupling(0.50, bc_mid, step_idx=2)
         self.assertAlmostEqual(lam_mid.item(), 0.40, places=5)
 
         # Float32 precision boundary test: when BC slightly exceeds 1.0 due to float32 rounding
         bc_eps_above = torch.tensor([[1.0000002]], dtype=torch.float32)
-        lam_safe = compute_dynamic_coupling(0.50, bc_eps_above)
+        lam_safe = compute_dynamic_coupling(0.50, bc_eps_above, step_idx=2)
         self.assertFalse(torch.isnan(lam_safe).any(), "Coupling must not be NaN on float32 epsilon overflow!")
         self.assertEqual(lam_safe.item(), 0.0)
 
