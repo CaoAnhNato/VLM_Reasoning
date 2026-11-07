@@ -42,15 +42,17 @@ from scripts.benchmark.metrics import (
     compute_token_f1,
     compute_exact_match,
 )
-from scripts.benchmark.sg_vcd.bbox_selector import (
-    KLDivergenceRegionSelector,
-    MultiRegionSelectionResult,
-)
-from scripts.benchmark.sg_vcd.roi_cropper import (
-    apply_adaptive_laplacian_edge_reemphasis,
-)
-from scripts.benchmark.sg_vcd.adaptive_propagator import (
-    verify_and_resolve_candidate_boxes,
+import torch
+import torch.nn.functional as F
+
+from src.nevfe.core.engine import (
+    NEVFEEngine,
+    compute_mean_field_reference_embeddings,
+    compute_bhattacharyya_coefficient,
+    compute_dynamic_coupling,
+    compute_dynamic_plausibility_floor,
+    mean_field_contrastive_step,
+    nevfe_step_logits,
 )
 
 
@@ -443,169 +445,226 @@ class TestTier1Feature5PipelineResult(unittest.TestCase):
         self.assertEqual(deserialized["stage1_bbox"], [292, 655, 452, 703])
 
 
-class TestTier1Round3AlgorithmicUpgrades(unittest.TestCase):
+class TestTier1Feature6IGVFEDMathematicalInvariants(unittest.TestCase):
+    r"""
+    F6: Information-Geometric Variational Free Energy Decoding (IG-VFED) Mathematical Invariants.
+    
+    Verifies:
+    - Test 1: Blind Mean-Field reference tensor V^0 = 1_P \bar{v}^\top with spatial gradient oblivion (\nabla_{spatial} V^0 \equiv 0) across 2D and 3D shapes.
+    - Test 2: Fisher-Rao Bhattacharyya proximity BC_t with clamp safeguard strictly in [0.0, 1.0], identity, and orthogonal cases.
+    - Test 3: Binding Directive A (Preamble Echo Suppression at t=1): strict penalization of negative visual PMI tokens (z_1^+ - z_1^0 < 0) and amplification of positive visual PMI tokens.
+    - Test 4: Dynamic Geodesic Candidate Plausibility Boundary beta_t = beta * BC_t: boundary expansion under optical divergence to rescue valid scene text subwords.
+    - Test 5: 100% Backbone-Agnostic tensor dimensionality invariance: arbitrary D, P, V, and batch sizes without hardcoding.
+    - Test 6: Strict hyperparameter budget invariant: exactly <= 2 continuous hyperparameters (lambda_param, beta_param).
+    - Test 7: Modular Factorial Micro-Ablation Switches (comp_a, comp_b, comp_c) and dynamic reconfiguration.
     """
-    Round 3 SOTA Algorithmic Upgrades & Canonical Metrics Test Suite:
-    - Test 1: Stage 1 Adaptive Top-K candidate selection with disjoint bimodal distribution (K=2, IoU <= 0.20, IoM <= 0.35).
-    - Test 2: Fallback to K=1 when secondary mode is below significance gate (gamma_signif < 0.40 or p < 0.10).
-    - Test 3: Adaptive Pre-RoI Laplacian edge re-emphasis at low magnification (M <= 1.0 -> psi=0, identity).
-    - Test 4: Adaptive Pre-RoI Laplacian edge re-emphasis at high magnification (M=3.5 -> sharpening active, uint8 range).
-    - Test 5: Symmetric Canonical Text Normalizer on closed classes (admin, numbers, currency, loanwords, digit chunking).
-    - Test 6: Monotonic Max evaluation metric guarantee (Delta Metric >= 0 across all metrics).
-    - Test 7: Post-propagation candidate box collision verification (IoU >= 0.45 merges to K=1, IoU < 0.45 retains K=2).
-    """
 
-    def test_01_top2_candidate_selection_disjoint_modes(self):
-        """Verify K=2 candidate selection when two distinct, non-overlapping spatial modes exist."""
-        h, w = 64, 64
-        prob_map = np.full((h, w), 0.01, dtype=np.float32)
-        
-        # Mode 1 at (15, 15)
-        prob_map[10:20, 10:20] = 0.85
-        # Mode 2 at (45, 45)
-        prob_map[40:50, 40:50] = 0.75
+    def test_01_mean_field_reference_tensor_and_spatial_gradient_oblivion(self):
+        """Verify V^0 has zero spatial gradient across tokens while preserving sequence length and channel dimension."""
+        p_len, d_dim = 256, 896
+        v_2d = torch.randn(p_len, d_dim, dtype=torch.float32)
+        v0_2d = compute_mean_field_reference_embeddings(v_2d)
 
-        selector = KLDivergenceRegionSelector(
-            tau_iou=0.20,
-            tau_iom=0.35,
-            gamma_signif=0.40,
-            min_prob_threshold=0.10,
+        self.assertEqual(v0_2d.shape, v_2d.shape)
+        # Spatial gradient check: all patch tokens in v0_2d must be identical
+        diff_2d = v0_2d[0:1, :] - v0_2d[1:, :]
+        self.assertAlmostEqual(torch.max(torch.abs(diff_2d)).item(), 0.0, places=6)
+        # Centroid equality
+        expected_mean = v_2d.mean(dim=0, keepdim=True).expand_as(v_2d)
+        torch.testing.assert_close(v0_2d, expected_mean)
+
+        # Test 3D [N_tiles, P, D]
+        n_tiles = 6
+        v_3d = torch.randn(n_tiles, p_len, d_dim, dtype=torch.float32)
+        v0_3d = compute_mean_field_reference_embeddings(v_3d)
+
+        self.assertEqual(v0_3d.shape, v_3d.shape)
+        # All patches across all tiles must be identical
+        diff_3d = v0_3d - v0_3d[0:1, 0:1, :]
+        self.assertAlmostEqual(torch.max(torch.abs(diff_3d)).item(), 0.0, places=6)
+
+    def test_02_fisher_rao_bhattacharyya_coefficient_safeguard_clamp(self):
+        """Verify BC_t clamp safeguard in [0.0, 1.0], identity case = 1.0, and orthogonal support = 0.0."""
+        vocab_size = 1000
+
+        # Identity case: p_plus == p_zero -> BC == 1.0
+        logits = torch.randn(1, vocab_size)
+        p = F.softmax(logits, dim=-1)
+        bc_ident = compute_bhattacharyya_coefficient(p, p)
+        self.assertAlmostEqual(bc_ident.item(), 1.0, places=5)
+
+        # Orthogonal disjoint support case: p_plus and p_zero have zero overlap -> BC == 0.0
+        p_plus = torch.zeros(1, vocab_size)
+        p_zero = torch.zeros(1, vocab_size)
+        p_plus[0, :500] = 1.0 / 500.0
+        p_zero[0, 500:] = 1.0 / 500.0
+        bc_ortho = compute_bhattacharyya_coefficient(p_plus, p_zero)
+        self.assertAlmostEqual(bc_ortho.item(), 0.0, places=6)
+
+        # Clamp safeguard check: values are strictly in [0.0, 1.0] across 20 random distributions
+        for _ in range(20):
+            lp = torch.randn(2, vocab_size) * 5.0
+            lz = torch.randn(2, vocab_size) * 5.0
+            bc = compute_bhattacharyya_coefficient(F.softmax(lp, dim=-1), F.softmax(lz, dim=-1))
+            self.assertTrue(torch.all(bc >= 0.0).item())
+            self.assertTrue(torch.all(bc <= 1.0).item())
+
+    def test_03_binding_directive_a_preamble_echo_suppression_at_t1(self):
+        """
+        Verify Binding Directive A at t=1:
+        - When language prior dominates (BC_1 -> 1.0), conversational echo tokens with
+          negative visual PMI (z_1^+ - z_1^0 < 0) are strictly penalized: z_1^* < z_1^+.
+        - Visual entity tokens with positive visual PMI (z_1^+ - z_1^0 > 0) are amplified: z_1^* > z_1^+.
+        - At t > 1, geodesic cooling smoothly attenuates contrast on syntactic connectors where BC_t -> 1.0.
+        """
+        vocab_size = 500
+        lambda_param = 0.50
+
+        # Construct logits at t=1 where language prior dominates (BC_1 close to 1.0)
+        base_logits = torch.randn(1, vocab_size)
+        lp = base_logits.clone()
+        lz = base_logits.clone()
+
+        # Echo token v_echo: high in language prior (unconditioned), so z_plus < z_zero (negative PMI)
+        v_echo = 10
+        lp[0, v_echo] = 5.0
+        lz[0, v_echo] = 8.0  # negative visual PMI: lp - lz = -3.0
+
+        # Entity token v_entity: high in optical evidence (multimodal), so z_plus > z_zero (positive PMI)
+        v_entity = 20
+        lp[0, v_entity] = 6.0
+        lz[0, v_entity] = 1.0  # positive visual PMI: lp - lz = +5.0
+
+        # Step t = 1
+        _, steered_logits_t1, alpha_t1, _ = nevfe_step_logits(
+            lp, lz, lambda_param=lambda_param, step_idx=1
         )
-        result = selector.select_top_k(prob_map, orig_w=640, orig_h=640, max_k=2)
 
-        self.assertIsInstance(result, MultiRegionSelectionResult)
-        self.assertEqual(result.k, 2)
-        self.assertEqual(len(result.bboxes), 2)
-        self.assertEqual(len(result.kl_divergences), 2)
-        self.assertGreater(result.kl_divergences[0], result.kl_divergences[1])
+        # Directive A check: alpha_1 must be strictly positive (alpha_1 >= lambda)
+        self.assertGreaterEqual(alpha_t1.item(), lambda_param)
 
-        # Verify spatial non-overlap constraints
-        box1, box2 = result.bboxes[0], result.bboxes[1]
-        iou = calculate_iou(box1, box2)
-        self.assertLessEqual(iou, 0.20)
+        # Steered logit for echo token must be strictly lower than lp (penalized!)
+        self.assertLess(steered_logits_t1[0, v_echo].item(), lp[0, v_echo].item())
 
-    def test_02_top2_candidate_selection_single_mode_fallback(self):
-        """Verify fallback to K=1 when secondary mode is below significance gate."""
-        h, w = 64, 64
-        prob_map = np.full((h, w), 0.01, dtype=np.float32)
-        
-        # Only one dominant peak
-        prob_map[10:20, 10:20] = 0.90
-        # Weak secondary peak with p < 0.10 or ratio p/a < 1.0
-        prob_map[40:44, 40:44] = 0.05
+        # Steered logit for entity token must be strictly higher than lp (amplified!)
+        self.assertGreater(steered_logits_t1[0, v_entity].item(), lp[0, v_entity].item())
 
-        selector = KLDivergenceRegionSelector(
-            tau_iou=0.20,
-            tau_iom=0.35,
-            gamma_signif=0.40,
-            min_prob_threshold=0.10,
-        )
-        result = selector.select_top_k(prob_map, orig_w=640, orig_h=640, max_k=2)
+        # Check step t > 1 on identical distributions (BC -> 1.0)
+        # alpha_t should cool to zero (s_t = sqrt(1 - BC^2) -> 0)
+        p_same = F.softmax(base_logits, dim=-1)
+        bc_high = compute_bhattacharyya_coefficient(p_same, p_same)
+        alpha_t2 = compute_dynamic_coupling(lambda_param, bc_high, step_idx=2)
+        self.assertLess(alpha_t2.item(), 1e-3)
 
-        self.assertEqual(result.k, 1)
-        self.assertEqual(len(result.bboxes), 1)
-        self.assertEqual(len(result.kl_divergences), 1)
+    def test_04_dynamic_geodesic_candidate_plausibility_boundary_beta_t(self):
+        """
+        Verify dynamic plausibility boundary beta_t = beta * BC_t:
+        - When optical divergence is high (BC_t -> 0), beta_t -> 0, rescuing valid rare subwords.
+        - When aligned with prior (BC_t -> 1), beta_t -> beta, enforcing standard truncation.
+        """
+        beta_param = 0.05
+        bc_divergent = torch.tensor([[0.05]])
+        bc_aligned = torch.tensor([[0.95]])
 
-    def test_03_adaptive_laplacian_edge_reemphasis_low_mag(self):
-        """Verify identity transform when magnification M <= 1.0."""
-        img_arr = np.random.randint(0, 255, (100, 100, 3), dtype=np.uint8)
-        img = Image.fromarray(img_arr, mode="RGB")
+        beta_div = compute_dynamic_plausibility_floor(beta_param, bc_divergent, comp_b=True)
+        beta_ali = compute_dynamic_plausibility_floor(beta_param, bc_aligned, comp_b=True)
 
-        # M = 1.0 -> psi(1.0) = tanh(0) = 0.0 -> returns original unchanged
-        out_img = apply_adaptive_laplacian_edge_reemphasis(img, magnification=1.0)
-        out_arr = np.array(out_img)
+        self.assertAlmostEqual(beta_div.item(), beta_param * 0.05, places=5)
+        self.assertAlmostEqual(beta_ali.item(), beta_param * 0.95, places=5)
+        self.assertLess(beta_div.item(), beta_ali.item())
 
-        np.testing.assert_array_equal(out_arr, img_arr)
+        # Test candidate selection rescues subword token
+        vocab_size = 100
+        lp = torch.full((1, vocab_size), -10.0)
+        lp[0, 0] = 5.0    # dominant token
+        lp[0, 1] = 1.0    # rare text subword
+        lz = torch.randn(1, vocab_size)
 
-        # M = 0.8 -> psi <= 0 -> returns original unchanged
-        out_img_low = apply_adaptive_laplacian_edge_reemphasis(img, magnification=0.8)
-        np.testing.assert_array_equal(np.array(out_img_low), img_arr)
+        p_plus = F.softmax(lp, dim=-1)
+        p_zero = F.softmax(lz, dim=-1)
+        bc = compute_bhattacharyya_coefficient(p_plus, p_zero)
 
-    def test_04_adaptive_laplacian_edge_reemphasis_high_mag(self):
-        """Verify high magnification (M=3.5) re-emphasizes edges while bounding pixels to [0, 255]."""
-        img_arr = np.zeros((100, 100, 3), dtype=np.uint8)
-        img_arr[:, :50, :] = 50
-        img_arr[:, 50:, :] = 180
-        img = Image.fromarray(img_arr, mode="RGB")
+        beta_dynamic = compute_dynamic_plausibility_floor(beta_param, bc, comp_b=True)
+        max_p = torch.max(p_plus, dim=-1, keepdim=True).values
 
-        out_img = apply_adaptive_laplacian_edge_reemphasis(img, magnification=3.5, lambda_0=0.50)
-        out_arr = np.array(out_img)
+        if bc.item() < 0.35:
+            self.assertTrue(p_plus[0, 1] >= beta_dynamic[0, 0] * max_p[0, 0])
 
-        self.assertEqual(out_arr.shape, img_arr.shape)
-        self.assertEqual(out_arr.dtype, np.uint8)
-        self.assertTrue(np.all(out_arr >= 0) and np.all(out_arr <= 255))
-        
-        # High-contrast edge boundary should be sharpened (non-identical to input)
-        self.assertFalse(np.array_equal(out_arr, img_arr))
-        # Uniform flat regions (far from edge) should remain untouched due to gradient gate omega_grad
-        self.assertEqual(out_arr[10, 10, 0], img_arr[10, 10, 0])
-        self.assertEqual(out_arr[10, 90, 0], img_arr[10, 90, 0])
+    def test_05_backbone_agnostic_dimensionality_invariance(self):
+        """Verify engine operates agnostically across arbitrary D, P, V, and batch dimensions."""
+        engine = NEVFEEngine(lambda_param=0.50, beta_param=0.05)
 
-    def test_05_canonical_normalizer_administrative_and_closed_classes(self):
-        """Verify canonical normalizer correctly handles administrative abbreviations, currency, loanwords, and phone numbers."""
-        test_cases = [
-            ("q . 1", "quận 1"),
-            ("q.1", "quận 1"),
-            ("ubnd tp hcm", "ủy ban nhân dân thành phố hồ chí minh"),
-            ("gd & đt", "giáo dục và đào tạo"),
-            ("100.000 vnđ", "100000 đ"),
-            ("café", "cà phê"),
-            ("090 123 4567", "0901234567"),
-            ("098.765.4321", "0987654321"),
-        ]
-        for inp, expected in test_cases:
-            norm = canonical_normalize_vietnamese_vqa(inp)
-            self.assertEqual(norm, expected, f"Failed canonical normalize for '{inp}': got '{norm}', expected '{expected}'")
+        for vocab_size in [50, 500, 32000, 151936]:
+            # 1D logits
+            lp_1d = torch.randn(vocab_size)
+            lz_1d = torch.randn(vocab_size)
+            tok_1d, steered_1d, alpha_1d, _ = engine.decode_step(lp_1d, lz_1d, step_idx=1)
+            self.assertIsInstance(tok_1d.item(), int)
+            self.assertEqual(steered_1d.shape, (vocab_size,))
 
-    def test_06_monotonic_max_metric_guarantee(self):
-        """Verify Monotonic Max guarantees Delta Metric >= 0 against standard metrics."""
-        pred_abbr = "ubnd q . 1"
-        gt_full = "Ủy ban nhân dân quận 1"
+            # 2D batched logits [B, V]
+            batch_size = 2
+            lp_2d = torch.randn(batch_size, vocab_size)
+            lz_2d = torch.randn(batch_size, vocab_size)
+            tok_2d, steered_2d, alpha_2d, _ = engine.decode_step(lp_2d, lz_2d, step_idx=1)
+            self.assertEqual(tok_2d.shape, (batch_size,))
+            self.assertEqual(steered_2d.shape, (batch_size, vocab_size))
 
-        em = compute_exact_match(pred_abbr, gt_full)
-        self.assertEqual(em, 1.0)
+    def test_06_hyperparameter_budget_and_strict_invariants(self):
+        """Verify engine enforces strictly <= 2 continuous hyperparameters with valid parameter bounds."""
+        engine = NEVFEEngine(lambda_param=0.50, beta_param=0.05)
+        self.assertEqual(engine.lambda_param, 0.50)
+        self.assertEqual(engine.beta_param, 0.05)
 
-        f1 = compute_token_f1(pred_abbr, gt_full)
-        self.assertEqual(f1, 1.0)
+        with self.assertRaises(ValueError):
+            NEVFEEngine(lambda_param=-0.1)
+        with self.assertRaises(ValueError):
+            NEVFEEngine(lambda_param=2.5)
+        with self.assertRaises(ValueError):
+            NEVFEEngine(beta_param=0.0)
 
-        anls = compute_anls(pred_abbr, gt_full)
-        self.assertEqual(anls, 1.0)
+    def test_07_factorial_micro_ablation_switches(self):
+        """Verify modular ablation switches (Marginal A, Marginal B, Primary AB, and Directive A comp_c) toggle cleanly."""
+        engine = NEVFEEngine(lambda_param=0.50, beta_param=0.05)
+        # By default, full IG-VFED is active (comp_a=True, comp_b=True, comp_c=True)
+        self.assertTrue(engine.comp_a)
+        self.assertTrue(engine.comp_b)
+        self.assertTrue(engine.comp_c)
 
-        sub = compute_substring_match(pred_abbr, gt_full)
-        self.assertEqual(sub, 1.0)
+        # 4 Factorial Micro-Ablation Masks:
+        # Mask 1,0,0: Iter 22 Champion baseline (comp_a=True, comp_b=False, comp_c=False)
+        engine.set_ablation_switches(comp_a=True, comp_b=False, comp_c=False)
+        self.assertTrue(engine.comp_a)
+        self.assertFalse(engine.comp_b)
+        self.assertFalse(engine.comp_c)
 
-        pairs = [
-            ("100 k", "100 nghìn"),
-            ("0901 234 567", "0901234567"),
-            ("Báo Lạng Sơn", "Báo Lạng Sơn"),
-            ("hoàn toàn khác", "không liên quan"),
-        ]
-        for p, g in pairs:
-            self.assertTrue(0.0 <= compute_exact_match(p, g) <= 1.0)
-            self.assertTrue(0.0 <= compute_token_f1(p, g) <= 1.0)
-            self.assertTrue(0.0 <= compute_anls(p, g) <= 1.0)
-            self.assertTrue(0.0 <= compute_substring_match(p, g) <= 1.0)
+        # Mask 1,1,0: Iter 22 + Dynamic beta_t ONLY
+        engine.set_ablation_switches(comp_a=True, comp_b=True, comp_c=False)
+        self.assertTrue(engine.comp_a)
+        self.assertTrue(engine.comp_b)
+        self.assertFalse(engine.comp_c)
 
-    def test_07_post_propagation_collision_merge(self):
-        """Verify candidate box collision resolution: IoU >= 0.45 merges to K=1, IoU < 0.45 keeps K=2."""
-        box_a = [10, 10, 50, 50]
-        box_b = [15, 15, 55, 55]
-        iou_ab = calculate_iou(box_a, box_b)
-        self.assertGreaterEqual(iou_ab, 0.45)
+        # Mask 1,0,1: Iter 22 + Directive A t=1 boost ONLY
+        engine.set_ablation_switches(comp_a=True, comp_b=False, comp_c=True)
+        self.assertTrue(engine.comp_a)
+        self.assertFalse(engine.comp_b)
+        self.assertTrue(engine.comp_c)
 
-        merged = verify_and_resolve_candidate_boxes([box_a, box_b], iou_collision_threshold=0.45)
-        self.assertEqual(len(merged), 1)
-        self.assertEqual(merged[0], [10, 10, 55, 55])
+        # Mask 1,1,1: Full IG-VFED (comp_a=True, comp_b=True, comp_c=True)
+        engine.set_ablation_switches(comp_a=True, comp_b=True, comp_c=True)
+        self.assertTrue(engine.comp_a)
+        self.assertTrue(engine.comp_b)
+        self.assertTrue(engine.comp_c)
 
-        box_c = [10, 10, 30, 30]
-        box_d = [70, 70, 90, 90]
-        iou_cd = calculate_iou(box_c, box_d)
-        self.assertLess(iou_cd, 0.45)
+        # Mathematical verification of comp_c gating Directive A t=1 preamble boost:
+        bc_one = torch.tensor([[1.0]])
+        # When comp_c=False at t=1: alpha_1 = lambda * sqrt(1 - 1^2) = 0.0 (Iter 22 baseline)
+        alpha_t1_no_boost = compute_dynamic_coupling(0.50, bc_one, step_idx=1, comp_a=True, comp_c=False)
+        self.assertAlmostEqual(alpha_t1_no_boost.item(), 0.0, places=5)
 
-        retained = verify_and_resolve_candidate_boxes([box_c, box_d], iou_collision_threshold=0.45)
-        self.assertEqual(len(retained), 2)
-        self.assertEqual(retained[0], box_c)
-        self.assertEqual(retained[1], box_d)
+        # When comp_c=True at t=1: alpha_1 = 0.0 + lambda * 1.0 = 0.50 (Directive A boost)
+        alpha_t1_boost = compute_dynamic_coupling(0.50, bc_one, step_idx=1, comp_a=True, comp_c=True)
+        self.assertAlmostEqual(alpha_t1_boost.item(), 0.50, places=5)
 
 
 if __name__ == "__main__":

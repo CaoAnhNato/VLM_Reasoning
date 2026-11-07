@@ -72,15 +72,19 @@ class TestAdversarialMFCDMath(unittest.TestCase):
                 self.assertLessEqual(bc.item(), 1.0, f"BC exceeded 1.0 for V={V}: {bc.item()}")
                 self.assertGreaterEqual(bc.item(), 0.999, f"BC unexpectedly low for identical p: {bc.item()}")
 
-                # Coupling modulation: due to float32 machine precision scaling sqrt(eps_mach) ~= 3.45e-4,
+                # Coupling modulation at t > 1: due to float32 machine precision scaling sqrt(eps_mach) ~= 3.45e-4,
                 # a 1-LSB rounding in BC (BC = 1 - 2^-24) yields coupling = 0.5 * sqrt(2^-23) = 2^-12 = 0.00024414.
-                # Dynamic coupling must remain <= 5e-4 (negligible < 0.05% of maximum coupling 0.50).
-                coupling = compute_dynamic_coupling(0.50, bc)
+                # Dynamic coupling at t > 1 must remain <= 5e-4 (negligible < 0.05% of maximum coupling 0.50).
+                coupling = compute_dynamic_coupling(0.50, bc, step_idx=2)
                 self.assertFalse(torch.isnan(coupling).any(), f"Coupling is NaN for V={V}")
                 self.assertLess(coupling.item(), 5e-4, f"Coupling unexpectedly large for identical distributions: {coupling.item()}")
 
+                # At t = 1, Binding Directive A enforces alpha_1 = lambda * BC ~= 0.50 (within sqrt(eps_mach) ~= 5e-4)
+                coupling_t1 = compute_dynamic_coupling(0.50, bc, step_idx=1)
+                self.assertAlmostEqual(coupling_t1.item(), 0.50, delta=5e-4)
+
                 # When lp == lz, steered logits must equal lp identically (< 1e-5)
-                _, steered = mean_field_contrastive_step(logits, logits, alpha=0.50, beta=0.05)
+                _, steered = mean_field_contrastive_step(logits, logits, alpha=0.50, beta=0.05, step_idx=2)
                 cand_mask = (p >= 0.05 * torch.max(p))
                 diff = torch.abs(steered[cand_mask] - logits[cand_mask])
                 self.assertLess(diff.max().item(), 1e-5, f"Steered logits diverged from base logits for V={V}")
@@ -88,7 +92,7 @@ class TestAdversarialMFCDMath(unittest.TestCase):
     def test_02_bc_machine_epsilon_overflow_handling(self):
         """Adversarial injection: inject BC slightly > 1.0 (e.g. 1.0000002, 1.001, 10.0, 1e6).
         Unclamped sqrt(1 - BC^2) would yield NaN for BC > 1.0.
-        Verify that compute_dynamic_coupling clamps BC and returns 0.0 without NaNs.
+        Verify that compute_dynamic_coupling clamps BC and returns 0.0 at t > 1 without NaNs.
         """
         adversarial_bcs = [
             torch.tensor([[1.0 + 1e-7]], dtype=torch.float32),
@@ -100,10 +104,10 @@ class TestAdversarialMFCDMath(unittest.TestCase):
         ]
         for bc_adv in adversarial_bcs:
             with self.subTest(bc_input=bc_adv.item()):
-                coupling = compute_dynamic_coupling(0.50, bc_adv)
+                coupling = compute_dynamic_coupling(0.50, bc_adv, step_idx=2)
                 self.assertFalse(torch.isnan(coupling).any(), f"Coupling was NaN for BC={bc_adv.item()}")
                 self.assertFalse(torch.isinf(coupling).any(), f"Coupling was Inf for BC={bc_adv.item()}")
-                self.assertEqual(coupling.item(), 0.0, f"Coupling must be 0.0 when BC >= 1.0, got {coupling.item()}")
+                self.assertEqual(coupling.item(), 0.0, f"Coupling must be 0.0 when BC >= 1.0 at t > 1, got {coupling.item()}")
 
     def test_03_bc_negative_and_zero_boundary(self):
         """Adversarial injection: test BC <= 0.0 (-1e6, -1.0, 0.0).

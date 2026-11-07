@@ -61,6 +61,16 @@ class NEVFEPipeline:
             mu_param=self.mu_param,
         )
 
+    def set_ablation_switches(
+        self,
+        comp_a: bool = True,
+        comp_b: bool = True,
+        comp_c: bool = True,
+    ) -> None:
+        """Dynamically configure micro-ablation toggles for Factorial Interaction testing."""
+        if hasattr(self.adapter, "set_ablation_switches"):
+            self.adapter.set_ablation_switches(comp_a=comp_a, comp_b=comp_b, comp_c=comp_c)
+
     def extract_visual_features(self, image: Image.Image) -> torch.Tensor:
         """Extract and cache 100% native unwarped visual features for image-level reuse."""
         return self.adapter.extract_visual_features(image)

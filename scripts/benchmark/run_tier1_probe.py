@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TIER 1 FAST FALSIFICATION PROBE RUNNER (N=100)
+TIER 1 FAST FALSIFICATION PROBE RUNNER (N=100) — ITERATION 23 CALIBRATED
 Multi-Worker Sharded Architecture for Google Colab L4 GPU (~40s execution)
 
-Executes rapid empirical falsification on the curated 100-question probe
-from results/cerv_400_benchmark/predictions.jsonl across Classes A through E.
-
-Strict A* Evaluation Protocol:
-- Uses exact unrelaxed SQuAD / ViTextVQA metrics from scripts.benchmark.metrics.
-- Compares against Reigning Champion Commit 410225b:
-    * Champion_Probe_F1: 38.81%
-    * Champion_Probe_Substring: 30.00%
-    * Champion_Probe_ANLS: 29.89%
-    * Champion_Probe_EM: 9.00%
-- Verification Gate: Candidate_Probe_F1 > 38.81% and Candidate_Probe_Substring >= 30.00%.
-- If gate fails: Immediate VETO and rollback to commit 410225b.
+Key Calibrations for Iteration 23:
+1. Ratcheted Falsification Baseline:
+   Updated to Reigning Probe Record (from results/tier1_probe_nevfe/summary_metrics.json):
+     * Champion_Probe_F1:        41.94%
+     * Champion_Probe_Substring: 34.00%
+     * Champion_Probe_ANLS:      30.17%
+     * Champion_Probe_EM:         9.00%
+2. Fast Falsification Gate:
+   Candidate_Probe_F1 > 41.94% AND Candidate_Probe_Substring >= 34.00%.
+   If either fails -> Immediate VETO and rollback to reigning champion.
+3. Modular Micro-Ablation Switches:
+   Supports Factorial Micro-Ablation Strategy (Directive #3) via:
+     * --ablation-mask "1,1,1" (or "1,0,0", "0,1,0", "0,0,1", "1,0,1", etc.)
+     * --enable-comp-a / --enable-comp-b / --enable-comp-c flags.
+4. Directive #5 & #6 Compliance:
+   Turnkey multi-worker sharding (4 workers), zero debug on live GPU,
+   pure mock verification capability locally.
 """
 
 import argparse
@@ -31,7 +36,6 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from PIL import Image
 import torch
 
-# Clean UTF-8 console output on Windows
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -68,20 +72,21 @@ DEFAULT_VERIFIED_DATASET = os.path.join(
 )
 DEFAULT_IMAGE_DIR = os.path.join(PROJECT_ROOT, "data", "vitextvqa", "st_images")
 
-# Baseline Invariants for Reigning Champion (Commit 410225b / Iteration 4) on N=100 probe
+# Ratcheted Baseline Invariants for Reigning Champion on N=100 probe (Iteration 22 record)
 CHAMPION_PROBE_SCORES = {
-    "token_f1": 38.81,
-    "substring_match": 30.00,
-    "anls": 29.89,
+    "token_f1": 41.94,
+    "substring_match": 34.00,
+    "anls": 30.17,
     "exact_match": 9.00,
 }
 
+# Per-Class Scores achieved by Reigning Champion on N=100 probe
 CHAMPION_CLASS_SCORES = {
-    "CLASS_A": {"count": 30, "f1": 22.31, "substring": 30.00, "anls": 16.88, "em": 6.67},
-    "CLASS_B": {"count": 35, "f1": 48.54, "substring": 28.57, "anls": 40.03, "em": 8.57},
-    "CLASS_C": {"count": 12, "f1": 58.10, "substring": 33.33, "anls": 46.11, "em": 16.67},
-    "CLASS_D": {"count": 20, "f1": 40.79, "substring": 35.00, "anls": 23.94, "em": 10.00},
-    "CLASS_E": {"count": 3, "f1": 0.00, "substring": 0.00, "anls": 16.67, "em": 0.00},
+    "CLASS_A": {"count": 30, "f1": 15.60, "substring": 26.67, "anls": 7.93, "em": 0.00},
+    "CLASS_B": {"count": 35, "f1": 62.88, "substring": 37.14, "anls": 50.93, "em": 11.43},
+    "CLASS_C": {"count": 12, "f1": 42.09, "substring": 33.33, "anls": 23.44, "em": 0.00},
+    "CLASS_D": {"count": 20, "f1": 45.58, "substring": 40.00, "anls": 30.78, "em": 20.00},
+    "CLASS_E": {"count": 3, "f1": 36.23, "substring": 33.33, "anls": 33.33, "em": 33.33},
 }
 
 
@@ -95,6 +100,15 @@ def resolve_image_path(image_name: str, candidate_dirs: List[str]) -> Optional[s
     return None
 
 
+def parse_ablation_mask(mask_str: str) -> Tuple[bool, bool, bool]:
+    """Parse comma-separated mask e.g. '1,0,1' into boolean flags."""
+    parts = [p.strip() for p in mask_str.split(",")]
+    b_a = bool(int(parts[0])) if len(parts) > 0 else True
+    b_b = bool(int(parts[1])) if len(parts) > 1 else True
+    b_c = bool(int(parts[2])) if len(parts) > 2 else True
+    return b_a, b_b, b_c
+
+
 def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
     os.makedirs(args.output_dir, exist_ok=True)
     manifest_path = args.probe_manifest
@@ -105,7 +119,6 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
     with open(manifest_path, "r", encoding="utf-8") as f:
         manifest_items: List[Dict[str, Any]] = json.load(f)
 
-    # Effective limit from limit or test_samples
     effective_limit = 0
     if getattr(args, "test_samples", 0) and args.test_samples > 0:
         effective_limit = args.test_samples
@@ -134,17 +147,27 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
     shard_info = f" (Worker {args.worker_id}/{args.num_workers})" if args.num_workers > 1 else ""
     is_mock = getattr(args, "mock", False)
 
+    # Resolve ablation switches
+    comp_a, comp_b, comp_c = parse_ablation_mask(args.ablation_mask)
+    if getattr(args, "enable_comp_a", None) is not None:
+        comp_a = args.enable_comp_a
+    if getattr(args, "enable_comp_b", None) is not None:
+        comp_b = args.enable_comp_b
+    if getattr(args, "enable_comp_c", None) is not None:
+        comp_c = args.enable_comp_c
+
+    ablation_str = f"A={int(comp_a)}, B={int(comp_b)}, C={int(comp_c)}"
+
     print("=" * 80)
     print(f" TIER 1 FAST FALSIFICATION PROBE (N={len(manifest_items)}){shard_info}")
-    print(f" Timestamp:      {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f" Pipeline Type:  {args.pipeline_type.upper()}{' [MOCK MODE]' if is_mock else ''}")
-    print(f" Model:          {args.model_name}")
-    print(f" Device:         {args.device}")
-    print(f" Hyperparams:    lambda = {args.lambda_param}, beta = {args.beta_param}, mu = {args.mu_param}")
-    print(f" Shard Samples:  {len(manifest_items)} across {len({item['image_name'] for item in manifest_items})} images")
+    print(f" Timestamp:        {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f" Pipeline Type:    {args.pipeline_type.upper()}{' [MOCK MODE]' if is_mock else ''}")
+    print(f" Ablation Mask:    [{ablation_str}]")
+    print(f" Hyperparams:      lambda = {args.lambda_param}, beta = {args.beta_param}, mu = {args.mu_param}")
+    print(f" Ratchet Baseline: F1 > {CHAMPION_PROBE_SCORES['token_f1']}%, Substring >= {CHAMPION_PROBE_SCORES['substring_match']}%")
     print("=" * 80)
 
-    # Load verified answers dictionary if available
+    # Load verified answers dictionary
     verified_answer_map: Dict[int, List[str]] = {}
     if os.path.isfile(args.verified_dataset):
         try:
@@ -165,7 +188,6 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
         os.path.join(PROJECT_ROOT, "data", "vitextvqa"),
     ]
 
-    # Group probe items by image for visual feature caching
     grouped_by_image: Dict[str, List[Dict[str, Any]]] = {}
     for item in manifest_items:
         img_name = item["image_name"]
@@ -187,6 +209,9 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
             beta_param=args.beta_param,
             mu_param=args.mu_param,
         )
+        # Pass ablation flags dynamically to pipeline adapter/engine if supported
+        if hasattr(pipeline, "set_ablation_switches"):
+            pipeline.set_ablation_switches(comp_a=comp_a, comp_b=comp_b, comp_c=comp_c)
 
     results_records: List[Dict[str, Any]] = []
     start_total_time = time.time()
@@ -206,14 +231,12 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
             if not img_path:
                 print(f"[ERROR] Could not resolve image: {img_name}")
                 continue
-
             try:
                 image = Image.open(img_path).convert("RGB")
             except Exception as e:
                 print(f"[ERROR] Failed to open image {img_path}: {e}")
                 continue
 
-            # Extract & cache unwarped native visual features for this image
             try:
                 with torch.inference_mode():
                     _ = pipeline.extract_visual_features(image)
@@ -232,7 +255,7 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
             pred_text = ""
 
             if is_mock:
-                pred_text = verified_answers[0] if verified_answers else (gt_answers[0] if gt_answers else "đáp án")
+                pred_text = verified_answers[0] if verified_answers else "đáp án"
             else:
                 try:
                     with torch.inference_mode():
@@ -244,7 +267,6 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
 
             elapsed = time.time() - t0
 
-            # Strict A* Metric Computation
             s2_metrics = compute_stage2_metrics(
                 pred_answer=pred_text,
                 gt_answers=gt_answers,
@@ -259,10 +281,6 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
                 "question": question,
                 "gt_answers": gt_answers,
                 "verified_all_answers": verified_answers,
-                "cerv_baseline_pred": item.get("pred_answer", ""),
-                "cerv_baseline_f1": float(item.get("f1_verified", 0.0)),
-                "cerv_baseline_substring": float(item.get("substring_verified", 0.0)),
-                "cerv_baseline_anls": float(item.get("anls_verified", 0.0)),
                 "candidate_pred": pred_text,
                 "candidate_f1": float(s2_metrics["f1_verified"]),
                 "candidate_substring": float(s2_metrics["substring_verified"]),
@@ -289,17 +307,20 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
     total_time = time.time() - start_total_time
 
     if args.num_workers > 1:
-        # Shard metrics file
         shard_summary_path = os.path.join(args.output_dir, f"summary_shard_{args.worker_id}.json")
         with open(shard_summary_path, "w", encoding="utf-8") as sf:
             json.dump({"worker_id": args.worker_id, "count": len(results_records), "records": results_records}, sf)
-        print(f"[WORKER {args.worker_id}] Shard finished in {total_time:.2f}s. Saved to {jsonl_output_path}")
         return {"worker_id": args.worker_id, "count": len(results_records)}
 
-    return aggregate_and_report_probe(results_records, total_time, args.output_dir)
+    return aggregate_and_report_probe(results_records, total_time, args.output_dir, ablation_str)
 
 
-def aggregate_and_report_probe(results_records: List[Dict[str, Any]], total_time: float, output_dir: str) -> Dict[str, Any]:
+def aggregate_and_report_probe(
+    results_records: List[Dict[str, Any]],
+    total_time: float,
+    output_dir: str,
+    ablation_str: str = "A=1, B=1, C=1",
+) -> Dict[str, Any]:
     n = max(1, len(results_records))
     overall_f1 = sum(r["candidate_f1"] for r in results_records) / n * 100
     overall_sub = sum(r["candidate_substring"] for r in results_records) / n * 100
@@ -310,7 +331,6 @@ def aggregate_and_report_probe(results_records: List[Dict[str, Any]], total_time
     delta_sub_vs_champion = overall_sub - CHAMPION_PROBE_SCORES["substring_match"]
     delta_anls_vs_champion = overall_anls - CHAMPION_PROBE_SCORES["anls"]
 
-    # Class breakdown
     classes = ["CLASS_A", "CLASS_B", "CLASS_C", "CLASS_D", "CLASS_E"]
     class_stats: Dict[str, Dict[str, float]] = {}
     for c in classes:
@@ -334,7 +354,7 @@ def aggregate_and_report_probe(results_records: List[Dict[str, Any]], total_time
                 "candidate_em": round(c_em, 2),
             }
 
-    # Strict Monotonic Ratchet Gate against Champion 410225b
+    # Strict Monotonic Ratchet Gate: MUST BEAT Iteration 22 Record
     gate_passed = (overall_f1 > CHAMPION_PROBE_SCORES["token_f1"]) and (overall_sub >= CHAMPION_PROBE_SCORES["substring_match"])
 
     summary = {
@@ -342,6 +362,7 @@ def aggregate_and_report_probe(results_records: List[Dict[str, Any]], total_time
         "total_probe_samples": len(results_records),
         "total_runtime_s": round(total_time, 2),
         "avg_latency_s": round(total_time / n, 3),
+        "ablation_configuration": ablation_str,
         "overall": {
             "candidate_token_f1": round(overall_f1, 2),
             "champion_token_f1": CHAMPION_PROBE_SCORES["token_f1"],
@@ -357,13 +378,13 @@ def aggregate_and_report_probe(results_records: List[Dict[str, Any]], total_time
         },
         "per_class_diagnostics": class_stats,
         "falsification_gate": {
-            "criterion": "Candidate_F1 > Champion_F1 (38.81%) AND Candidate_Substring >= Champion_Substring (30.00%)",
+            "criterion": f"Candidate_F1 > {CHAMPION_PROBE_SCORES['token_f1']}% AND Candidate_Substring >= {CHAMPION_PROBE_SCORES['substring_match']}%",
             "champion_probe_f1": CHAMPION_PROBE_SCORES["token_f1"],
             "achieved_probe_f1": round(overall_f1, 2),
             "champion_probe_substring": CHAMPION_PROBE_SCORES["substring_match"],
             "achieved_probe_substring": round(overall_sub, 2),
             "gate_passed": gate_passed,
-            "action": "CLEAR FOR TIER 2 FULL RUN" if gate_passed else "IMMEDIATE VETO & GIT ROLLBACK TO COMMIT 410225b",
+            "action": "CLEAR FOR TIER 2 FULL RUN" if gate_passed else "IMMEDIATE VETO & GIT ROLLBACK TO REIGNING CHAMPION",
         },
     }
 
@@ -371,9 +392,8 @@ def aggregate_and_report_probe(results_records: List[Dict[str, Any]], total_time
     with open(summary_json_path, "w", encoding="utf-8") as sf:
         json.dump(summary, sf, ensure_ascii=False, indent=2)
 
-    # Print publication-grade summary report
     print("\n" + "=" * 80)
-    print(" TIER 1 FAST FALSIFICATION PROBE: EMPIRICAL VALIDATION REPORT")
+    print(f" TIER 1 FAST FALSIFICATION PROBE REPORT [{ablation_str}]")
     print("=" * 80)
     print(f" Total Evaluated:            {len(results_records)} questions")
     print(f" Total Runtime:              {total_time:.1f} s ({total_time/n:.2f} s/question)")
@@ -383,19 +403,9 @@ def aggregate_and_report_probe(results_records: List[Dict[str, Any]], total_time
     print(f" ANLS (Relaxed Accuracy):    Candidate: {overall_anls:5.2f}% | Champion: {CHAMPION_PROBE_SCORES['anls']:5.2f}% | Delta: {delta_anls_vs_champion:+5.2f}%")
     print(f" Exact Match:                Candidate: {overall_em:5.2f}% | Champion: {CHAMPION_PROBE_SCORES['exact_match']:5.2f}%")
     print("-" * 80)
-    print(" PER-CLASS PERFORMANCE BREAKDOWN (vs Champion 410225b):")
-    for c, stats in class_stats.items():
-        print(f"   [{c}] (N={stats['count']:2d}): "
-              f"F1: {stats['candidate_f1']:5.2f}% (d: {stats['delta_f1']:+5.2f}%) | "
-              f"Sub: {stats['candidate_substring']:5.2f}% (d: {stats['delta_substring']:+5.2f}%) | "
-              f"ANLS: {stats['candidate_anls']:5.2f}%")
-    print("-" * 80)
-    print(f" FALSIFICATION GATE STATUS:   {'PASSED (CLEAR FOR TIER 2 FULL RUN)' if gate_passed else 'FAILED (VETO & ROLLBACK TO 410225b)'}")
-    print(" Gate Requirement: Candidate F1 > 38.81% AND Candidate Substring >= 30.00%")
+    print(f" FALSIFICATION GATE STATUS:   {'PASSED (CLEAR FOR TIER 2 FULL RUN)' if gate_passed else 'FAILED (VETO & ROLLBACK TO CHAMPION)'}")
+    print(f" Gate Requirement: Candidate F1 > {CHAMPION_PROBE_SCORES['token_f1']}% AND Candidate Substring >= {CHAMPION_PROBE_SCORES['substring_match']}%")
     print(f" Achieved: F1 = {overall_f1:.2f}%, Substring = {overall_sub:.2f}%")
-    print("=" * 80)
-    print(f" Detailed predictions saved: {os.path.join(output_dir, 'predictions.jsonl')}")
-    print(f" Summary metrics saved:      {summary_json_path}")
     print("=" * 80 + "\n")
 
     return summary
@@ -407,13 +417,11 @@ def run_probe_multiprocess_coordinator(args: argparse.Namespace) -> Dict[str, An
     start_time = time.time()
 
     print("\n" + "=" * 80)
-    print(" MULTI-WORKER TIER 1 PROBE COORDINATOR")
-    print(f" Number of Workers: {num_workers}")
+    print(f" MULTI-WORKER TIER 1 PROBE COORDINATOR ({num_workers} Workers)")
     print(f" Target Device:     {args.device}")
     print(f" Output Directory:  {args.output_dir}")
     print("=" * 80)
 
-    # Clean existing shard files
     for pattern in ["predictions_shard_*.jsonl*", "summary_shard_*.json*"]:
         for f in glob.glob(os.path.join(args.output_dir, pattern)):
             try:
@@ -438,7 +446,14 @@ def run_probe_multiprocess_coordinator(args: argparse.Namespace) -> Dict[str, An
             "--verified-dataset", str(args.verified_dataset),
             "--image-dir", str(args.image_dir),
             "--output-dir", str(args.output_dir),
+            "--ablation-mask", str(args.ablation_mask),
         ]
+        if getattr(args, "enable_comp_a", None) is not None:
+            cmd += ["--enable-comp-a", str(args.enable_comp_a)]
+        if getattr(args, "enable_comp_b", None) is not None:
+            cmd += ["--enable-comp-b", str(args.enable_comp_b)]
+        if getattr(args, "enable_comp_c", None) is not None:
+            cmd += ["--enable-comp-c", str(args.enable_comp_c)]
         if getattr(args, "mock", False):
             cmd.append("--mock")
         if getattr(args, "test_samples", 0) and args.test_samples > 0:
@@ -473,7 +488,6 @@ def run_probe_multiprocess_coordinator(args: argparse.Namespace) -> Dict[str, An
     total_time = time.time() - start_time
     print(f"\n[COORDINATOR] All {num_workers} probe workers finished in {total_time:.2f} s!")
 
-    # Merge shard predictions into master predictions.jsonl
     master_jsonl = os.path.join(args.output_dir, "predictions.jsonl")
     all_records = []
     seen_qids = set()
@@ -493,28 +507,32 @@ def run_probe_multiprocess_coordinator(args: argparse.Namespace) -> Dict[str, An
                                 out_f.write(line)
 
     print(f"[COORDINATOR] Aggregated {len(all_records)} unique records into {master_jsonl}")
-    return aggregate_and_report_probe(all_records, total_time, args.output_dir)
+    return aggregate_and_report_probe(all_records, total_time, args.output_dir, args.ablation_mask)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Tier 1 Fast Falsification Probe Runner")
+    parser = argparse.ArgumentParser(description="Tier 1 Fast Falsification Probe Runner (Calibrated)")
     parser.add_argument("--probe-manifest", dest="probe_manifest", type=str, default=DEFAULT_MANIFEST_PATH, help="Path to probe_100_manifest.json")
     parser.add_argument("--verified-dataset", dest="verified_dataset", type=str, default=DEFAULT_VERIFIED_DATASET, help="Path to answer_bboxes_400_verified.json")
     parser.add_argument("--image-dir", dest="image_dir", type=str, default=DEFAULT_IMAGE_DIR, help="Path to image directory")
     parser.add_argument("--pipeline-type", "--method", dest="pipeline_type", type=str, default="nevfe", choices=["nevfe"], help="Pipeline type")
     parser.add_argument("--model-name", dest="model_name", type=str, default="5CD-AI/Vintern-1B-v3_5", help="Hugging Face model ID")
     parser.add_argument("--device", dest="device", type=str, default="cuda", help="Execution device (cuda or cpu)")
-    parser.add_argument("--lambda-param", "--lambda", dest="lambda_param", type=float, default=0.50, help="Visual evidence coupling constant alpha")
-    parser.add_argument("--beta-param", "--beta", dest="beta_param", type=float, default=0.05, help="Adaptive plausibility truncation floor beta")
-    parser.add_argument("--mu-param", "--mu", dest="mu_param", type=float, default=0.0, help="Query barrier height parameter (optional)")
+    parser.add_argument("--lambda-param", "--lambda", dest="lambda_param", type=float, default=0.50, help="Visual coupling alpha")
+    parser.add_argument("--beta-param", "--beta", dest="beta_param", type=float, default=0.05, help="Plausibility floor beta")
+    parser.add_argument("--mu-param", "--mu", dest="mu_param", type=float, default=0.0, help="Query barrier height parameter")
+    parser.add_argument("--ablation-mask", dest="ablation_mask", type=str, default="1,1,1", help="Ablation mask e.g. 1,0,1")
+    parser.add_argument("--enable-comp-a", dest="enable_comp_a", type=lambda x: (str(x).lower() == 'true'), default=None, help="Explicit toggle for component A")
+    parser.add_argument("--enable-comp-b", dest="enable_comp_b", type=lambda x: (str(x).lower() == 'true'), default=None, help="Explicit toggle for component B")
+    parser.add_argument("--enable-comp-c", dest="enable_comp_c", type=lambda x: (str(x).lower() == 'true'), default=None, help="Explicit toggle for component C")
     parser.add_argument("--output-dir", dest="output_dir", type=str, default="results/tier1_probe_nevfe", help="Output directory")
     parser.add_argument("--max-new-tokens", dest="max_new_tokens", type=int, default=64, help="Max new tokens")
-    parser.add_argument("--limit", dest="limit", type=int, default=0, help="Limit number of probe questions (for testing)")
+    parser.add_argument("--limit", dest="limit", type=int, default=0, help="Limit number of probe questions")
     parser.add_argument("--test-samples", dest="test_samples", type=int, default=0, help="Alias for limit")
-    parser.add_argument("--num-workers", dest="num_workers", type=int, default=1, help="Number of parallel worker processes")
-    parser.add_argument("--worker-id", dest="worker_id", type=int, default=0, help="Worker shard ID (0 <= worker_id < num_workers)")
-    parser.add_argument("--multi-proc", dest="multi_proc", type=int, default=0, help="Launch N parallel worker processes and aggregate")
-    parser.add_argument("--mock", dest="mock", action="store_true", help="Run in synthetic mock mode without GPU model loading")
+    parser.add_argument("--num-workers", dest="num_workers", type=int, default=1, help="Number of worker processes")
+    parser.add_argument("--worker-id", dest="worker_id", type=int, default=0, help="Worker shard ID")
+    parser.add_argument("--multi-proc", dest="multi_proc", type=int, default=0, help="Launch N parallel worker processes")
+    parser.add_argument("--mock", dest="mock", action="store_true", help="Synthetic mock mode")
     args = parser.parse_args()
 
     if args.multi_proc and args.multi_proc > 1:

@@ -172,6 +172,15 @@ class VinternNEVFEAdapter:
         self._cached_img_key: Optional[Tuple[int, int, bytes]] = None
         self._cached_vit_embeds: Optional[torch.Tensor] = None
 
+    def set_ablation_switches(
+        self,
+        comp_a: bool = True,
+        comp_b: bool = True,
+        comp_c: bool = True,
+    ) -> None:
+        """Dynamically configure micro-ablation toggles for Factorial Interaction testing."""
+        self.engine.set_ablation_switches(comp_a=comp_a, comp_b=comp_b, comp_c=comp_c)
+
     @staticmethod
     def _build_default_transform(input_size: int = 448):
         return T.Compose([

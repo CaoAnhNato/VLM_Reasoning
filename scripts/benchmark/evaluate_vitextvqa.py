@@ -791,6 +791,8 @@ def run_multiprocess_coordinator(args: argparse.Namespace):
             cmd += ["--beta-param", str(args.beta_param)]
         if getattr(args, "mu_param", None) is not None:
             cmd += ["--mu-param", str(args.mu_param)]
+        if getattr(args, "ablation_mask", None) is not None:
+            cmd += ["--ablation-mask", str(args.ablation_mask)]
         if getattr(args, "test_images", 0) and args.test_images > 0:
             cmd += ["--test-images", str(args.test_images)]
         elif args.test_samples and args.test_samples > 0:
@@ -1029,6 +1031,11 @@ def run_benchmark(args: argparse.Namespace):
             beta_p = getattr(args, "beta_param", 1.0)
             mu_p = getattr(args, "mu_param", 3.0)
             pipeline = NEVFEPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device, lambda_param=lambda_p, beta_param=beta_p, mu_param=mu_p)
+            ablation_mask = getattr(args, "ablation_mask", "1,1,1")
+            if ablation_mask and hasattr(pipeline, "set_ablation_switches"):
+                from scripts.benchmark.run_tier1_probe import parse_ablation_mask
+                a_sw, b_sw, c_sw = parse_ablation_mask(ablation_mask)
+                pipeline.set_ablation_switches(comp_a=a_sw, comp_b=b_sw, comp_c=c_sw)
 
     # 4. Group remaining samples by image for visual token & disk caching
     grouped_samples = group_samples_by_image(remaining_samples)
@@ -1298,6 +1305,7 @@ def main():
     parser.add_argument("--data-dir", type=str, default="data/vitextvqa", help="Path to ViTextVQA dataset root.")
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to checkpoint JSON file.")
     parser.add_argument("--output-dir", type=str, default="results/sg_vcd_400_benchmark", help="Output directory.")
+    parser.add_argument("--ablation-mask", "--ablation_mask", type=str, default="1,1,1", help="Ablation mask for NE-VFE components A,B,C.")
     parser.add_argument("--device", type=str, default="cuda", help="Device (cuda or cpu).")
     parser.add_argument("--mock", action="store_true", help="Run with synthetic mock pipeline for safe local testing without loading models.")
     args = parser.parse_args()
