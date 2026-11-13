@@ -256,7 +256,7 @@ def export_live_calibration_bank(
             logits_zero = out_zero.logits[:, -1, :].to(dtype=torch.float16).cpu()
             attn_sum = _summarize_attentions(getattr(out_plus, "attentions", None))
             q_mask = build_query_token_mask(
-                tokenizer, question, vocab_size=int(logits_plus.shape[-1]), device="cpu"
+                question, tokenizer, vocab_size=int(logits_plus.shape[-1]), device="cpu"
             )
 
             payload = {
