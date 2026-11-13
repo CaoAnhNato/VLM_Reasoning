@@ -148,8 +148,8 @@ def export_synthetic_calibration_bank(
         logits_zero = (torch.randn((1, vocab_size), generator=gen, dtype=torch.float32) * 2.0).to(torch.float16)
         vit_norms = torch.rand((num_tiles, 256), generator=gen, dtype=torch.float32).add(0.5).to(torch.float16)
         attn_sum = torch.rand((24, 14), generator=gen, dtype=torch.float32).to(torch.float16)
-        q_mask = torch.zeros((seq_len,), dtype=torch.bool)
-        q_mask[max(2, seq_len // 3): seq_len - 2] = True
+        q_mask = torch.zeros((vocab_size,), dtype=torch.bool)
+        q_mask[2: min(16, vocab_size)] = True
 
         payload = {
             "qid": qid,
@@ -206,23 +206,16 @@ def export_live_calibration_bank(
 ) -> Dict[str, Any]:
     """Extract real step-1 baseline tensors from Vintern on GPU for the 30 calibration QIDs."""
     from PIL import Image
-    from transformers import AutoModel, AutoTokenizer
-    from nevfe.adapter.vintern_adapter import VinternNEVFEAdapter
+    from scripts.benchmark.evaluate_vitextvqa import load_vintern_model
+    from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter, build_query_token_mask
 
     cal_items = load_calibration_items(manifest_path)
     if not cal_items:
         raise ValueError(f"No is_calibration=true items found in {manifest_path}")
 
-    dtype = torch.float16 if device.startswith("cuda") and torch.cuda.is_available() else torch.float32
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, use_fast=False)
-    model = AutoModel.from_pretrained(
-        model_name,
-        torch_dtype=dtype,
-        low_cpu_mem_usage=True,
-        trust_remote_code=True,
-    ).to(device)
+    model, tokenizer, transform = load_vintern_model(model_name, device=device)
     model.eval()
-    adapter = VinternNEVFEAdapter(model=model, tokenizer=tokenizer, device=device)
+    adapter = VinternNEVFEAdapter(model=model, tokenizer=tokenizer, transform=transform, device=device)
 
     os.makedirs(output_dir, exist_ok=True)
     entries: List[Dict[str, Any]] = []
@@ -241,9 +234,9 @@ def export_live_calibration_bank(
             vit_embeds = adapter.extract_visual_features(pil_img)
             vit_norms = vit_embeds.norm(dim=-1).to(dtype=torch.float16).cpu()
 
-            embeds_plus, attn_mask, q_mask_t = adapter.build_multimodal_embeds(vit_embeds, question)
-            zero_vit = torch.zeros_like(vit_embeds)
-            embeds_zero, _, _ = adapter.build_multimodal_embeds(zero_vit, question)
+            embeds_plus = adapter.build_multimodal_embeds(vit_embeds, question)
+            embeds_zero = adapter.build_mfvr_embeds(vit_embeds, question)
+            attn_mask = torch.ones((1, embeds_plus.shape[1]), dtype=torch.long, device=embeds_plus.device)
 
             out_plus = model.language_model(
                 inputs_embeds=embeds_plus,
@@ -262,10 +255,8 @@ def export_live_calibration_bank(
             logits_plus = out_plus.logits[:, -1, :].to(dtype=torch.float16).cpu()
             logits_zero = out_zero.logits[:, -1, :].to(dtype=torch.float16).cpu()
             attn_sum = _summarize_attentions(getattr(out_plus, "attentions", None))
-            q_mask = (
-                q_mask_t.reshape(-1).to(dtype=torch.bool).cpu()
-                if q_mask_t is not None
-                else torch.zeros((embeds_plus.shape[1],), dtype=torch.bool)
+            q_mask = build_query_token_mask(
+                tokenizer, question, vocab_size=int(logits_plus.shape[-1]), device="cpu"
             )
 
             payload = {
