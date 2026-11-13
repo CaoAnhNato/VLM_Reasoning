@@ -20,6 +20,7 @@ import datetime
 import functools
 import gc
 import glob
+import hashlib
 import inspect
 import io
 import json
@@ -53,8 +54,12 @@ except Exception:
 
 from PIL import Image
 import torch
-import torchvision.transforms as T
-from torchvision.transforms.functional import InterpolationMode
+try:
+    import torchvision.transforms as T
+    from torchvision.transforms.functional import InterpolationMode
+except ImportError:
+    T = None
+    InterpolationMode = None
 
 # Compatibility patches for InternVLChatModel / Vintern on modern transformers
 if hasattr(torch.nn.Module, "__getattr__") and not getattr(torch.nn.Module, "_all_tied_weights_patched", False):
@@ -536,6 +541,184 @@ def _export_benchmark_csvs(output_dir: str, summary: Dict[str, Any], records: Li
         print(f"[WARN] Could not export predictions.csv: {e}")
 
 
+def _parse_ablation_bits(mask_str: Optional[str]) -> Tuple[int, int, int]:
+    cleaned = str(mask_str or "1,1,1").strip()
+    if "," in cleaned:
+        parts = [p.strip() for p in cleaned.split(",") if p.strip()]
+    elif len(cleaned) >= 3 and all(ch in "01" for ch in cleaned):
+        parts = list(cleaned)
+    else:
+        raise ValueError(f"Invalid ablation mask: {mask_str!r}")
+    if len(parts) < 3:
+        raise ValueError(f"Expected >= 3 ablation mask bits, got {mask_str!r}")
+    return int(bool(int(parts[0]))), int(bool(int(parts[1]))), int(bool(int(parts[2])))
+
+
+def _resolve_nevfe_config(args: argparse.Namespace):
+    from src.nevfe.core.engine import AlgorithmConfig
+
+    defaults = AlgorithmConfig()
+    lam = defaults.lambda_param
+    beta = defaults.beta_param
+    mask_bits = defaults.ablation_mask
+    if getattr(args, "config_json", None) and os.path.isfile(args.config_json):
+        with open(args.config_json, "r", encoding="utf-8") as cf:
+            cfg = json.load(cf)
+        if cfg.get("lambda_param") is not None:
+            lam = float(cfg["lambda_param"])
+        if cfg.get("beta_param") is not None:
+            beta = float(cfg["beta_param"])
+        if cfg.get("ablation_mask") is not None:
+            raw_m = cfg["ablation_mask"]
+            mask_bits = tuple(int(x) for x in raw_m[:3]) if isinstance(raw_m, (list, tuple)) else _parse_ablation_bits(str(raw_m))
+    if getattr(args, "lambda_param", None) is not None:
+        lam = float(args.lambda_param)
+    if getattr(args, "beta_param", None) is not None:
+        beta = float(args.beta_param)
+    if getattr(args, "ablation_mask", None) is not None:
+        mask_bits = _parse_ablation_bits(args.ablation_mask)
+    return AlgorithmConfig(lambda_param=lam, beta_param=beta, ablation_mask=mask_bits)
+
+
+def _preflight_dataset_images(samples: List[Dict[str, Any]]) -> None:
+    missing: List[str] = []
+    seen_imgs: Set[str] = set()
+    for s in samples:
+        img_name = s.get("image_name", "")
+        if img_name in seen_imgs:
+            continue
+        seen_imgs.add(img_name)
+        img_path = s.get("image_path")
+        if not img_path or not os.path.isfile(img_path):
+            missing.append(img_name)
+    if missing:
+        raise FileNotFoundError(
+            f"Preflight failed: {len(missing)}/{len(seen_imgs)} dataset images missing on disk: {missing[:5]}"
+        )
+
+
+def _classify_question_type(q: str) -> str:
+    ql = (q or "").lower()
+    if "tên gì" in ql or "là gì" in ql or "cái gì" in ql:
+        return "what_name"
+    if "bao nhiêu" in ql or "mấy" in ql or "số" in ql:
+        return "number_count"
+    if "ở đâu" in ql or "địa chỉ" in ql:
+        return "where"
+    if "nào" in ql or "ai" in ql:
+        return "which_who"
+    return "other"
+
+
+def _write_extended_benchmark_artifacts(
+    output_dir: str,
+    summary: Dict[str, Any],
+    records: List[Dict[str, Any]],
+    config_meta: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Write all 9 contract artifacts + POSIX sha256sum.txt atomically."""
+    import csv
+
+    # 1. per_question_type.csv
+    by_qtype: Dict[str, List[Dict[str, Any]]] = {}
+    for r in records:
+        qt = _classify_question_type(r.get("question", ""))
+        by_qtype.setdefault(qt, []).append(r)
+    with open(os.path.join(output_dir, "per_question_type.csv"), "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["question_type", "count", "f1_verified_pct", "substring_verified_pct", "anls_verified_pct"])
+        for qt, recs in sorted(by_qtype.items()):
+            cnt = max(1, len(recs))
+            f1 = sum(x.get("stage2_metrics", {}).get("f1_verified", 0.0) for x in recs) / cnt * 100.0
+            sub = sum(x.get("stage2_metrics", {}).get("substring_verified", 0.0) for x in recs) / cnt * 100.0
+            anls = sum(x.get("stage2_metrics", {}).get("anls_verified", 0.0) for x in recs) / cnt * 100.0
+            writer.writerow([qt, len(recs), f"{f1:.2f}", f"{sub:.2f}", f"{anls:.2f}"])
+
+    # 2. pareto_latency_f1.csv
+    s2 = summary.get("stage2", {})
+    perf = summary.get("performance", {})
+    f1_pct = float(s2.get("f1_verified_pct", 0.0))
+    sub_pct = float(s2.get("substring_match_verified_pct", 0.0))
+    with open(os.path.join(output_dir, "pareto_latency_f1.csv"), "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(
+            ["method", "total_samples", "avg_latency_s", "throughput_samples_per_min", "f1_verified_pct", "substring_match_verified_pct", "composite_pct"]
+        )
+        writer.writerow(
+            [
+                (config_meta or {}).get("method", "nevfe"),
+                summary.get("total_evaluated_samples", len(records)),
+                f"{float(perf.get('avg_latency_s', 0.0)):.3f}",
+                f"{float(perf.get('throughput_samples_per_min', 0.0)):.2f}",
+                f"{f1_pct:.2f}",
+                f"{sub_pct:.2f}",
+                f"{(f1_pct + sub_pct) / 2.0:.2f}",
+            ]
+        )
+
+    # 3. qualitative_gallery_examples.json
+    sorted_recs = sorted(records, key=lambda r: float(r.get("stage2_metrics", {}).get("f1_verified", 0.0)), reverse=True)
+    mid = len(sorted_recs) // 2
+    gallery = {
+        "top_examples": sorted_recs[:5],
+        "median_examples": sorted_recs[max(0, mid - 2): mid + 3],
+        "bottom_examples": sorted_recs[-5:],
+    }
+    with open(os.path.join(output_dir, "qualitative_gallery_examples.json"), "w", encoding="utf-8") as f:
+        json.dump(gallery, f, ensure_ascii=False, indent=2)
+
+    # 4. bbox_diagnostics.jsonl
+    with open(os.path.join(output_dir, "bbox_diagnostics.jsonl"), "w", encoding="utf-8") as f:
+        for r in records:
+            s1 = r.get("stage1_metrics", {})
+            row = {
+                "question_id": r.get("question_id"),
+                "image_name": r.get("image_name"),
+                "gt_bbox": r.get("gt_bbox"),
+                "pred_bbox": r.get("pred_bbox"),
+                "iou": s1.get("iou", 0.0),
+                "recall": s1.get("recall", 0.0),
+            }
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+    # 5. config_used.json
+    cfg_payload = dict(config_meta or {})
+    cfg_payload["total_evaluated_samples"] = summary.get("total_evaluated_samples", len(records))
+    cfg_payload["timestamp_utc"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    with open(os.path.join(output_dir, "config_used.json"), "w", encoding="utf-8") as f:
+        json.dump(cfg_payload, f, ensure_ascii=False, indent=2)
+
+    # 6. Ensure evaluation.log exists even in single-worker/mock paths
+    eval_log_path = os.path.join(output_dir, "evaluation.log")
+    if not os.path.isfile(eval_log_path):
+        with open(eval_log_path, "w", encoding="utf-8") as f:
+            f.write(f"Evaluation completed: {summary.get('total_evaluated_samples', len(records))} samples.\n")
+
+    # 7. Write sha256sum.txt using POSIX basenames for sha256sum -c compatibility
+    expected_artifacts = [
+        "summary_metrics.json",
+        "predictions.jsonl",
+        "per_question_type.csv",
+        "pareto_latency_f1.csv",
+        "qualitative_gallery_examples.json",
+        "bbox_diagnostics.jsonl",
+        "checkpoint.json",
+        "evaluation.log",
+        "config_used.json",
+    ]
+    lines: List[str] = []
+    for fname in expected_artifacts:
+        fpath = os.path.join(output_dir, fname)
+        if os.path.isfile(fpath):
+            h = hashlib.sha256()
+            with open(fpath, "rb") as rf:
+                for chunk in iter(lambda: rf.read(65536), b""):
+                    h.update(chunk)
+            lines.append(f"{h.hexdigest()}  {fname}")
+    with open(os.path.join(output_dir, "sha256sum.txt"), "w", encoding="utf-8", newline="\n") as sf:
+        sf.write("\n".join(lines) + ("\n" if lines else ""))
+
+
 def generate_benchmark_report(output_dir: str, summary: Dict[str, Any], total_time: Optional[float] = None, method: str = "SG-VCD") -> str:
     """Generate comprehensive BENCHMARK_REPORT.md matching project reporting standards."""
     report_path = os.path.join(output_dir, "BENCHMARK_REPORT.md")
@@ -608,7 +791,14 @@ def generate_benchmark_report(output_dir: str, summary: Dict[str, Any], total_ti
     return report_path
 
 
-def aggregate_shards(output_dir: str, num_workers: int, method: str = "sg_vcd", model_name: str = "5CD-AI/Vintern-1B-v3_5", total_time: Optional[float] = None) -> Dict[str, Any]:
+def aggregate_shards(
+    output_dir: str,
+    num_workers: int,
+    method: str = "nevfe",
+    model_name: str = "5CD-AI/Vintern-1B-v3_5",
+    total_time: Optional[float] = None,
+    config_meta: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
     Merge shard predictions and checkpoints across all N workers, sort by index/question ID,
     and generate unified master artifacts:
@@ -722,6 +912,14 @@ def aggregate_shards(output_dir: str, num_workers: int, method: str = "sg_vcd", 
                     pass
                 out_log.write("\n")
 
+    # 7. Write extended contract artifacts + sha256sum.txt
+    _write_extended_benchmark_artifacts(
+        output_dir,
+        summary,
+        all_records,
+        config_meta=config_meta or {"method": method, "model_name": model_name},
+    )
+
     # Print summary
     print("\n" + "=" * 80)
     print(" FINAL AGGREGATED BENCHMARK SUMMARY:")
@@ -793,6 +991,8 @@ def run_multiprocess_coordinator(args: argparse.Namespace):
             cmd += ["--mu-param", str(args.mu_param)]
         if getattr(args, "ablation_mask", None) is not None:
             cmd += ["--ablation-mask", str(args.ablation_mask)]
+        if getattr(args, "config_json", None):
+            cmd += ["--config-json", str(args.config_json)]
         if getattr(args, "test_images", 0) and args.test_images > 0:
             cmd += ["--test-images", str(args.test_images)]
         elif args.test_samples and args.test_samples > 0:
@@ -829,12 +1029,23 @@ def run_multiprocess_coordinator(args: argparse.Namespace):
     print(f"\n[COORDINATOR] All {num_workers} workers completed successfully in {total_time:.2f} s!")
 
     # Merge shards
+    cfg = _resolve_nevfe_config(args) if args.method == "nevfe" else None
+    config_meta = {
+        "method": args.method,
+        "model_name": args.model_name,
+        "lambda_param": cfg.lambda_param if cfg else args.lambda_param,
+        "beta_param": cfg.beta_param if cfg else args.beta_param,
+        "ablation_mask": "".join(str(x) for x in cfg.ablation_mask) if cfg else args.ablation_mask,
+        "config_json": getattr(args, "config_json", None),
+        "device": args.device,
+    }
     aggregate_shards(
         output_dir=args.output_dir,
         num_workers=num_workers,
         method=args.method,
         model_name=args.model_name,
         total_time=total_time,
+        config_meta=config_meta,
     )
 
 
@@ -1013,13 +1224,31 @@ def run_benchmark(args: argparse.Namespace):
                 json.dump(summary, smf, ensure_ascii=False, indent=2)
             _export_benchmark_csvs(args.output_dir, summary, ckpt_mgr.records)
             generate_benchmark_report(args.output_dir, summary, method=args.method)
+            _write_extended_benchmark_artifacts(
+                args.output_dir,
+                summary,
+                ckpt_mgr.records,
+                config_meta={"method": args.method, "model_name": args.model_name, "device": device},
+            )
         return
 
-    # 3. Load Model and Pipeline
+    nevfe_cfg = _resolve_nevfe_config(args) if args.method == "nevfe" else None
+    config_meta = {
+        "method": args.method,
+        "model_name": args.model_name,
+        "lambda_param": nevfe_cfg.lambda_param if nevfe_cfg else args.lambda_param,
+        "beta_param": nevfe_cfg.beta_param if nevfe_cfg else args.beta_param,
+        "ablation_mask": "".join(str(x) for x in nevfe_cfg.ablation_mask) if nevfe_cfg else args.ablation_mask,
+        "config_json": getattr(args, "config_json", None),
+        "device": device,
+    }
+
+    # 3. Preflight images & Load Model and Pipeline
     if getattr(args, "mock", False):
         print("\n[MOCK MODE] Running with synthetic mock pipeline — zero model loading, minimal RAM/CPU overhead.")
         model, tokenizer, transform, pipeline = None, None, None, None
     else:
+        _preflight_dataset_images(samples)
         model, tokenizer, transform = load_vintern_model(args.model_name, device=device)
         pipeline = None
         if args.method == "sg_vcd":
@@ -1027,15 +1256,7 @@ def run_benchmark(args: argparse.Namespace):
         elif args.method == "cerv":
             pipeline = CERVPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device)
         elif args.method == "nevfe":
-            lambda_p = getattr(args, "lambda_param", 1.0)
-            beta_p = getattr(args, "beta_param", 1.0)
-            mu_p = getattr(args, "mu_param", 3.0)
-            pipeline = NEVFEPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device, lambda_param=lambda_p, beta_param=beta_p, mu_param=mu_p)
-            ablation_mask = getattr(args, "ablation_mask", "1,1,1")
-            if ablation_mask and hasattr(pipeline, "set_ablation_switches"):
-                from scripts.benchmark.run_tier1_probe import parse_ablation_mask
-                a_sw, b_sw, c_sw = parse_ablation_mask(ablation_mask)
-                pipeline.set_ablation_switches(comp_a=a_sw, comp_b=b_sw, comp_c=c_sw)
+            pipeline = NEVFEPipeline(model=model, tokenizer=tokenizer, transform=transform, device=device, config=nevfe_cfg)
 
     # 4. Group remaining samples by image for visual token & disk caching
     grouped_samples = group_samples_by_image(remaining_samples)
@@ -1162,9 +1383,7 @@ def run_benchmark(args: argparse.Namespace):
                         spatial_conf = 1.0
             except Exception as e:
                 print(f"[ERROR] Inference exception for question {qid} on {img_name}: {e}")
-                pred_answer = ""
-                pred_bbox = [0, 0, W, H]
-                spatial_conf = 0.0
+                raise
 
             elapsed = time.time() - t0
 
@@ -1272,6 +1491,7 @@ def run_benchmark(args: argparse.Namespace):
             json.dump(summary, smf, ensure_ascii=False, indent=2)
         _export_benchmark_csvs(args.output_dir, summary, ckpt_mgr.records)
         generate_benchmark_report(args.output_dir, summary, total_time=total_time, method=args.method)
+        _write_extended_benchmark_artifacts(args.output_dir, summary, ckpt_mgr.records, config_meta=config_meta)
 
     try:
         if os.path.exists(lock_file):
@@ -1296,10 +1516,11 @@ def main():
     parser.add_argument("--resume", action="store_true", default=True, help="Resume from existing checkpoint (default: True).")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite checkpoint and re-run from scratch.")
     parser.add_argument("--batch-size", type=int, default=1, help="Batch size (default: 1 for RTX 3050 4GB).")
-    parser.add_argument("--method", "--pipeline-type", "--pipeline_type", dest="method", type=str, default="cerv", choices=["cerv", "sg_vcd", "baseline", "nevfe"], help="Evaluation method.")
-    parser.add_argument("--lambda-param", "--lambda", dest="lambda_param", type=float, default=1.0, help="NE-VFE visual coupling constant.")
-    parser.add_argument("--beta-param", "--beta", dest="beta_param", type=float, default=1.0, help="NE-VFE thermodynamic precision.")
-    parser.add_argument("--mu-param", "--mu", dest="mu_param", type=float, default=3.0, help="QO-VFE query barrier height parameter.")
+    parser.add_argument("--method", "--pipeline-type", "--pipeline_type", dest="method", type=str, default="nevfe", choices=["cerv", "sg_vcd", "baseline", "nevfe"], help="Evaluation method.")
+    parser.add_argument("--config-json", dest="config_json", type=str, default=None, help="Optional JSON overriding AlgorithmConfig fields.")
+    parser.add_argument("--lambda-param", "--lambda", dest="lambda_param", type=float, default=None, help="NE-VFE visual coupling constant (None = AlgorithmConfig default).")
+    parser.add_argument("--beta-param", "--beta", dest="beta_param", type=float, default=None, help="NE-VFE thermodynamic precision (None = AlgorithmConfig default).")
+    parser.add_argument("--mu-param", "--mu", dest="mu_param", type=float, default=0.0, help="Deprecated CLI shim; unused by Iter 23+ AlgorithmConfig.")
     parser.add_argument("--model-name", "--model_name", "--model-path", "--model_path", dest="model_name", type=str, default="5CD-AI/Vintern-1B-v3_5", help="Hugging Face model ID.")
     parser.add_argument("--dataset", type=str, default="results/swintextspotter_auto_annot/answer_bboxes_400_verified.json", help="Path to verified annotations JSON.")
     parser.add_argument("--data-dir", type=str, default="data/vitextvqa", help="Path to ViTextVQA dataset root.")

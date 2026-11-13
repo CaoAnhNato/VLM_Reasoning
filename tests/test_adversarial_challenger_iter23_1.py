@@ -28,10 +28,12 @@ from src.nevfe.core.engine import (
     compute_dynamic_coupling,
     compute_dynamic_plausibility_floor,
     compute_unnormalized_entropy,
-    mean_field_contrastive_step,
     nevfe_step_logits,
-    modulate_patch_embeddings,
 )
+
+def _compat_step(lp, lz, alpha=0.50, beta=0.05, step_idx=1):
+    toks, logits, _, _ = nevfe_step_logits(lp, lz, lambda_param=alpha, beta_param=beta, step_idx=step_idx)
+    return toks, logits
 
 
 class TestAdversarialChallengerIter23(unittest.TestCase):
@@ -156,7 +158,7 @@ class TestAdversarialChallengerIter23(unittest.TestCase):
         # p0 concentrated on token 1
         lz[1] = 20.0
 
-        next_tok, steered = mean_field_contrastive_step(lp, lz, alpha=0.5, beta=0.05, step_idx=1)
+        next_tok, steered = _compat_step(lp, lz, alpha=0.5, beta=0.05, step_idx=1)
         self.assertEqual(next_tok.item(), 0)
         # Token 0 should have steered logit: lp[0] + 0.5 * (lp[0] - lz[0])
         expected_steered_0 = 20.0 + 0.5 * (20.0 - (-10.0))
@@ -271,7 +273,7 @@ class TestAdversarialChallengerIter23(unittest.TestCase):
             lz = torch.randn(V, dtype=dtype)
 
             # mean_field_contrastive_step
-            next_tok, steered = mean_field_contrastive_step(lp, lz, alpha=0.5, beta=0.05, step_idx=1)
+            next_tok, steered = _compat_step(lp, lz, alpha=0.5, beta=0.05, step_idx=1)
             self.assertTrue(0 <= next_tok.item() < V)
             self.assertFalse(torch.isnan(steered).any())
 
@@ -407,8 +409,6 @@ class TestAdversarialChallengerIter23(unittest.TestCase):
             NEVFEEngine(beta_param=0.0)
         with self.assertRaises(ValueError):
             NEVFEEngine(beta_param=6.0)
-        with self.assertRaises(ValueError):
-            NEVFEEngine(mu_param=-1.0)
 
 
 if __name__ == "__main__":

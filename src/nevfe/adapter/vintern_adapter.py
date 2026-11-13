@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
 r"""
-Vintern-1B-v3_5 Adapter for Mean-Field Contrastive Reference Decoding (MF-CD).
+Vintern-1B-v3_5 Adapter for Information-Geometric Variational Free Energy Decoding (IG-VFED).
 
 Handles:
 - Dynamic Aspect-Ratio Tiling & 100% Native Unwarped Patch Extraction.
 - Positive Stream (p_t^+): 100% native unwarped visual patch embeddings entering LLM Layer 0.
 - Reference Stream (p_t^0): Mean-Field Visual Reference (MFVR, V^0 = 1_P \bar{v}^\top).
-  Theorem 2: \nabla_{spatial} V^0 \equiv 0, zero character strokes, zero readable text.
 - Synchronized KV-cache progression across both streams.
-- Zero regex, zero keywords/stopwords, strictly <= 2 hyperparameters (lambda, beta).
+- Safe try...finally forward-hook lifecycle for Qwen2 sdpa introspection.
 """
 
-from typing import Dict, List, Optional, Tuple
+from contextlib import contextmanager
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 from PIL import Image
 import torch
-import torchvision.transforms as T
-from torchvision.transforms.functional import InterpolationMode
 
-from src.nevfe.core.engine import NEVFEEngine, compute_mean_field_reference_embeddings
+from src.nevfe.core.engine import (
+    AlgorithmConfig,
+    NEVFEEngine,
+    compute_mean_field_reference_embeddings,
+)
 
 
 PROMPT_INSTRUCTION = "Trả lời thật ngắn gọn câu hỏi sau dựa vào chữ xuất hiện trong ảnh: "
@@ -52,9 +54,7 @@ def dynamic_preprocess_vintern(
     image_size: int = 448,
     use_thumbnail: bool = True,
 ) -> List[Image.Image]:
-    """
-    Standard dynamic aspect-ratio tiling for Vintern / InternVL models.
-    """
+    """Standard dynamic aspect-ratio tiling for Vintern / InternVL models."""
     orig_w, orig_h = image.size
     aspect_ratio = orig_w / max(1, orig_h)
 
@@ -102,10 +102,7 @@ def build_query_token_mask(
     vocab_size: int,
     device: torch.device,
 ) -> torch.Tensor:
-    """
-    Construct Query Indicator Tensor m_Q in {0, 1}^|V| invariant to casing and BPE prefixes.
-    Strictly 0 regex, 0 hardcoded stopwords, 100% PyTorch tensor ops.
-    """
+    """Construct Query Indicator Tensor m_Q in {0, 1}^|V| invariant to casing and BPE prefixes."""
     variants = [
         question,
         question.lower(),
@@ -139,10 +136,34 @@ def build_query_token_mask(
     return q_mask
 
 
+@contextmanager
+def managed_forward_hooks(
+    hook_specs: List[Tuple[Any, Callable[..., Any]]],
+) -> Iterator[List[Any]]:
+    """
+    Register forward hooks inside a try...finally block so handles are always removed,
+    even under Qwen2 sdpa (attentions=None) or inference exceptions.
+    Reference: scripts/benchmark/sg_vcd/attention_extractor.py.
+    """
+    handles: List[Any] = []
+    try:
+        for module, hook_fn in hook_specs:
+            if hasattr(module, "register_forward_hook"):
+                handles.append(module.register_forward_hook(hook_fn))
+        yield handles
+    finally:
+        for h in handles:
+            try:
+                h.remove()
+            except Exception:
+                pass
+
+
 class VinternNEVFEAdapter:
     """
-    Vintern-1B-v3_5 VLM Adapter driving Mean-Field Contrastive Reference Decoding (MF-CD).
+    Vintern-1B-v3_5 VLM Adapter driving Information-Geometric Variational Free Energy Decoding.
     """
+
     def __init__(
         self,
         model,
@@ -151,24 +172,38 @@ class VinternNEVFEAdapter:
         device: str = "cuda",
         lambda_param: float = 0.50,
         beta_param: float = 0.05,
-        mu_param: float = 0.0,
-    ):
+        config: Optional[AlgorithmConfig] = None,
+    ) -> None:
         self.model = model
         self.tokenizer = tokenizer
         self.device = device
-        self.transform = transform or self._build_default_transform(input_size=448)
 
-        self.engine = NEVFEEngine(
-            lambda_param=lambda_param,
-            beta_param=beta_param,
-            mu_param=mu_param,
+        model_cfg = getattr(model, "config", None)
+        vision_cfg = getattr(model_cfg, "vision_config", None)
+        self.decoder_config = getattr(
+            getattr(model, "language_model", model),
+            "config",
+            model_cfg,
         )
+        self.force_image_size = int(
+            getattr(model_cfg, "force_image_size", None)
+            or getattr(vision_cfg, "image_size", None)
+            or 448
+        )
+        self.transform = transform or self._build_default_transform(input_size=self.force_image_size)
 
-        self.max_dynamic_patch = getattr(getattr(model, "config", None), "max_dynamic_patch", 6)
+        resolved_cfg = (
+            config
+            if config is not None
+            else AlgorithmConfig(lambda_param=lambda_param, beta_param=beta_param)
+        )
+        self.engine = NEVFEEngine(config=resolved_cfg)
+
+        self.max_dynamic_patch = getattr(model_cfg, "max_dynamic_patch", 6)
         self.num_image_token = getattr(model, "num_image_token", 256)
         self.system_message = getattr(model, "system_message", "Bạn là một trợ lý AI hữu ích.")
 
-        # Cache for visual features per image
+        # Immutable per-image visual cache
         self._cached_img_key: Optional[Tuple[int, int, bytes]] = None
         self._cached_vit_embeds: Optional[torch.Tensor] = None
 
@@ -183,12 +218,29 @@ class VinternNEVFEAdapter:
 
     @staticmethod
     def _build_default_transform(input_size: int = 448):
-        return T.Compose([
-            T.Lambda(lambda img: img.convert("RGB") if img.mode != "RGB" else img),
-            T.Resize((input_size, input_size), interpolation=InterpolationMode.BICUBIC),
-            T.ToTensor(),
-            T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-        ])
+        try:
+            import torchvision.transforms as T
+            from torchvision.transforms.functional import InterpolationMode
+
+            return T.Compose([
+                T.Lambda(lambda img: img.convert("RGB") if img.mode != "RGB" else img),
+                T.Resize((input_size, input_size), interpolation=InterpolationMode.BICUBIC),
+                T.ToTensor(),
+                T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+            ])
+        except ImportError:
+            import numpy as np
+
+            mean = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32).view(3, 1, 1)
+            std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32).view(3, 1, 1)
+
+            def _fallback_transform(img: Image.Image) -> torch.Tensor:
+                rgb = img.convert("RGB") if img.mode != "RGB" else img
+                resized = rgb.resize((input_size, input_size), Image.Resampling.BICUBIC)
+                arr = torch.from_numpy(np.asarray(resized, dtype=np.float32) / 255.0).permute(2, 0, 1)
+                return (arr - mean) / std
+
+            return _fallback_transform
 
     @staticmethod
     def _make_image_key(image: Image.Image) -> Tuple[int, int, bytes]:
@@ -199,17 +251,17 @@ class VinternNEVFEAdapter:
     def extract_visual_features(self, image: Image.Image) -> torch.Tensor:
         """
         Extract 100% native unwarped visual patch embeddings from InternViT-300M.
-        Preserves pretrained vision-language manifold M_vis entering LLM Layer 0.
+        Preserves pretrained vision-language manifold entering LLM Layer 0.
         """
         img_key = self._make_image_key(image)
         if self._cached_img_key == img_key and self._cached_vit_embeds is not None:
-            return self._cached_vit_embeds
+            return self._cached_vit_embeds.detach()
 
         tiles = dynamic_preprocess_vintern(
             image,
             min_num=1,
             max_num=self.max_dynamic_patch,
-            image_size=448,
+            image_size=self.force_image_size,
             use_thumbnail=True,
         )
 
@@ -218,29 +270,62 @@ class VinternNEVFEAdapter:
         )
 
         with torch.no_grad():
-            raw_vit_embeds = self.model.extract_feature(pixel_values)  # [N_tiles, 256, 896]
+            raw_vit_embeds = self.model.extract_feature(pixel_values)
 
         del pixel_values
 
-        # Invariant: patch embeddings remain 100% native and unwarped
         self._cached_img_key = img_key
-        self._cached_vit_embeds = raw_vit_embeds
-        return raw_vit_embeds
+        self._cached_vit_embeds = raw_vit_embeds.detach()
+        return self._cached_vit_embeds.detach()
 
     def extract_and_modulate_visual_features(self, image: Image.Image) -> torch.Tensor:
         """Alias for backward compatibility; preserves unwarped native patch embeddings."""
         return self.extract_visual_features(image)
 
+    def encode_transient_roi_crops(
+        self,
+        image: Image.Image,
+        bboxes: List[Tuple[int, int, int, int]],
+    ) -> Optional[torch.Tensor]:
+        """
+        Encode transient question-guided native RGB crops via scripts/benchmark/sg_vcd/roi_cropper.py
+        without mutating self._cached_vit_embeds.
+        """
+        if not bboxes:
+            return None
+        from scripts.benchmark.sg_vcd.roi_cropper import DynamicMultiTileROICropper
+
+        cropper = DynamicMultiTileROICropper(target_size=self.force_image_size)
+        crop_tiles: List[Image.Image] = []
+        for box in bboxes:
+            res = cropper.crop(image, box)
+            crop_tiles.extend(res.roi_tiles)
+        if not crop_tiles:
+            return None
+        pixel_values = torch.stack([self.transform(t) for t in crop_tiles]).to(
+            device=self.device, dtype=torch.bfloat16
+        )
+        with torch.no_grad():
+            crop_embeds = self.model.extract_feature(pixel_values)
+        del pixel_values
+        return crop_embeds.detach()
+
     def build_multimodal_embeds(
         self,
         vit_embeds: torch.Tensor,
         question: str,
+        extra_vit_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         Construct input embeddings for positive multimodal stream (p_t^+).
-        Patch embeddings enter LLM Layer 0 100% native and unwarped.
+        Concatenates any transient crop features per question without mutating vit_embeds.
         """
-        n_tiles = vit_embeds.shape[0]
+        effective_vit = (
+            torch.cat([vit_embeds, extra_vit_embeds], dim=0)
+            if extra_vit_embeds is not None
+            else vit_embeds
+        )
+        n_tiles = effective_vit.shape[0]
         total_img_tokens = n_tiles * self.num_image_token
 
         prefix_str = (
@@ -263,7 +348,7 @@ class VinternNEVFEAdapter:
         vis_start = int(vis_indices[0].item())
         vis_end = int(vis_indices[-1].item()) + 1
 
-        flat_vit = vit_embeds.reshape(-1, vit_embeds.shape[-1]).to(prefix_embeds.dtype)
+        flat_vit = effective_vit.reshape(-1, effective_vit.shape[-1]).to(prefix_embeds.dtype)
         prefix_embeds[0, vis_start:vis_end, :] = flat_vit
 
         return torch.cat([prefix_embeds, suffix_embeds], dim=1)
@@ -272,29 +357,19 @@ class VinternNEVFEAdapter:
         self,
         vit_embeds: torch.Tensor,
         question: str,
+        extra_vit_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        r"""
-        Construct input embeddings for Mean-Field Visual Reference (MFVR) stream (p_t^0).
-
-        Computes the spatial centroid across all tiles and patch tokens:
-            \bar{v} = (1 / P) \sum_{i=1}^P v_i
-        and broadcasts across all P visual token positions:
-            V^0 = 1_P \bar{v}^\top \in \mathbb{R}^{P \times D}
-
-        Theorem 2: Vanishes spatial gradient (\nabla_{spatial} V^0 \equiv 0) and mutual information
-        with character strokes (I(S; V^0) = 0).
-        Guarantees zero readable scene text in V^0, completely eliminating L_L - L_G self-cancellation.
-        """
-        # vit_embeds: [N_tiles, 256, D]
-        v_mean = vit_embeds.mean(dim=(0, 1), keepdim=True)  # [1, 1, D]
-        vit_embeds_zero = v_mean.expand_as(vit_embeds)       # [N_tiles, 256, D]
+        """Construct input embeddings for Mean-Field Visual Reference (MFVR) stream (p_t^0)."""
+        effective_vit = (
+            torch.cat([vit_embeds, extra_vit_embeds], dim=0)
+            if extra_vit_embeds is not None
+            else vit_embeds
+        )
+        vit_embeds_zero = compute_mean_field_reference_embeddings(effective_vit)
         return self.build_multimodal_embeds(vit_embeds_zero, question)
 
     def build_text_only_embeds(self, question: str) -> torch.Tensor:
-        """
-        Construct input embeddings for text-only unconditioned stream (p_t^0).
-        Deprecated in favor of build_mfvr_embeds (MFVR).
-        """
+        """Construct input embeddings for text-only unconditioned stream (legacy helper)."""
         prompt_str = (
             f"<|im_start|>system\n{self.system_message}<|im_end|>\n"
             f"<|im_start|>user\n{PROMPT_INSTRUCTION}{question.strip()}<|im_end|>\n"
@@ -310,9 +385,7 @@ class VinternNEVFEAdapter:
         question: str,
         max_new_tokens: int = 64,
     ) -> str:
-        """
-        Dual-Stream Autoregressive Generation with Mean-Field Contrastive Reference Decoding (MF-CD).
-        """
+        """Dual-Stream Autoregressive Generation with IG-VFED."""
         with torch.no_grad():
             vit_embeds = self.extract_visual_features(image)
 
@@ -323,7 +396,6 @@ class VinternNEVFEAdapter:
             eos_im_end = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
             eos_std = self.tokenizer.eos_token_id
 
-            # Prefill multimodal branch (p_t^+)
             out_plus = self.model.language_model.model(
                 inputs_embeds=multimodal_embeds,
                 use_cache=True,
@@ -332,7 +404,6 @@ class VinternNEVFEAdapter:
             kv_plus = out_plus.past_key_values
             logits_plus = self.model.language_model.lm_head(out_plus.last_hidden_state[:, -1:, :])[:, -1, :]
 
-            # Prefill Mean-Field Visual Reference unconditioned branch (p_t^0)
             out_zero = self.model.language_model.model(
                 inputs_embeds=mfvr_embeds,
                 use_cache=True,
@@ -341,18 +412,11 @@ class VinternNEVFEAdapter:
             kv_zero = out_zero.past_key_values
             logits_zero = self.model.language_model.lm_head(out_zero.last_hidden_state[:, -1:, :])[:, -1, :]
 
-            # Optional query mask if mu_param > 0
-            q_mask = None
-            if self.engine.mu_param > 0:
-                vocab_size = logits_plus.shape[-1]
-                q_mask = build_query_token_mask(question, self.tokenizer, vocab_size, self.device)
-
             generated_ids: List[int] = []
 
             for step in range(1, max_new_tokens + 1):
-                # Single-Step Mean-Field Contrastive Reference Decoding (MF-CD)
                 next_tok_tensor, _, _, _ = self.engine.decode_step(
-                    logits_plus, logits_zero, q_mask=q_mask, step_idx=step
+                    logits_plus, logits_zero, q_mask=None, step_idx=step
                 )
                 next_id = int(next_tok_tensor.item())
 
@@ -364,7 +428,6 @@ class VinternNEVFEAdapter:
                 if step == max_new_tokens:
                     break
 
-                # Advance both streams synchronously on the chosen token
                 next_tok = torch.tensor([[next_id]], dtype=torch.long, device=self.device)
                 next_emb = embed_layer(next_tok)
 

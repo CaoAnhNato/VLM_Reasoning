@@ -1,0 +1,36 @@
+{
+  "commit_sha": "148f870",
+  "branch": "iter23_staging",
+  "method": "IG-VFED",
+  "config": {
+    "lambda_param": 0.5,
+    "beta_param": 0.05,
+    "ablation_mask": [
+      1,
+      1,
+      1
+    ]
+  },
+  "probe_70_heldout": {
+    "count": 70,
+    "token_f1_pct": 42.94,
+    "substring_match_pct": 31.43,
+    "anls_pct": 30.86,
+    "exact_match_pct": 10.0,
+    "composite_pct": 37.19
+  },
+  "probe_100_full": {
+    "count": 100,
+    "token_f1_pct": 44.17,
+    "substring_match_pct": 35.0,
+    "composite_pct": 39.59
+  },
+  "benchmark_1222": {
+    "count": 1222,
+    "token_f1_pct": 60.19,
+    "substring_match_pct": 61.46,
+    "anls_pct": 48.86,
+    "exact_match_pct": 31.59,
+    "composite_pct": 60.83
+  }
+}

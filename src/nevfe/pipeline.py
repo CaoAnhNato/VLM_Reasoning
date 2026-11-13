@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """
 Non-Equilibrium Variational Free Energy (NE-VFE) Inference Pipeline:
-Single-Mechanism Mean-Field Contrastive Reference Decoding (MF-CD).
+Information-Geometric Variational Free Energy Decoding (IG-VFED).
 
 Provides end-to-end inference interface adhering to Strict A* Evaluation Protocol.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 import time
 from typing import Any, Dict, List, Optional
 from PIL import Image
 import torch
 
 from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter
+from src.nevfe.core.engine import AlgorithmConfig, SPEC_REF
 
 
 @dataclass
@@ -21,6 +22,7 @@ class NEVFEResult:
     Standardized result structure returned by NEVFEPipeline.
     Compatible with evaluate_vitextvqa.py benchmark harness.
     """
+
     pred_text: str
     stage1_bbox: List[int]
     spatial_confidence: float = 1.0
@@ -30,9 +32,9 @@ class NEVFEResult:
 
 class NEVFEPipeline:
     """
-    End-to-End Mean-Field Contrastive Reference Decoding (MF-CD) Inference Pipeline.
-    Strictly 2 continuous parameters (lambda_param, beta_param).
+    End-to-End Information-Geometric Variational Free Energy Decoding (IG-VFED) Pipeline.
     """
+
     def __init__(
         self,
         model,
@@ -41,24 +43,26 @@ class NEVFEPipeline:
         device: str = "cuda",
         lambda_param: float = 0.50,
         beta_param: float = 0.05,
-        mu_param: float = 0.0,
-    ):
+        config: Optional[AlgorithmConfig] = None,
+    ) -> None:
         self.model = model
         self.tokenizer = tokenizer
         self.device = device
         self.transform = transform
-        self.lambda_param = float(lambda_param)
-        self.beta_param = float(beta_param)
-        self.mu_param = float(mu_param)
+        self.config = (
+            config
+            if config is not None
+            else AlgorithmConfig(lambda_param=lambda_param, beta_param=beta_param)
+        )
+        self.lambda_param = self.config.lambda_param
+        self.beta_param = self.config.beta_param
 
         self.adapter = VinternNEVFEAdapter(
             model=model,
             tokenizer=tokenizer,
             transform=transform,
             device=device,
-            lambda_param=self.lambda_param,
-            beta_param=self.beta_param,
-            mu_param=self.mu_param,
+            config=self.config,
         )
 
     def set_ablation_switches(
@@ -68,6 +72,11 @@ class NEVFEPipeline:
         comp_c: bool = True,
     ) -> None:
         """Dynamically configure micro-ablation toggles for Factorial Interaction testing."""
+        self.config = AlgorithmConfig(
+            lambda_param=self.config.lambda_param,
+            beta_param=self.config.beta_param,
+            ablation_mask=(int(bool(comp_a)), int(bool(comp_b)), int(bool(comp_c))),
+        )
         if hasattr(self.adapter, "set_ablation_switches"):
             self.adapter.set_ablation_switches(comp_a=comp_a, comp_b=comp_b, comp_c=comp_c)
 
@@ -83,10 +92,10 @@ class NEVFEPipeline:
         **kwargs,
     ) -> NEVFEResult:
         """
-        Execute MF-CD inference on (image, question).
+        Execute IG-VFED inference on (image, question).
 
         Returns:
-            NEVFEResult with predicted answer text and full-image bounding box.
+            NEVFEResult with predicted answer text, full-image bbox, and spec/config diagnostics.
         """
         t0 = time.time()
         w, h = image.size
@@ -97,6 +106,7 @@ class NEVFEPipeline:
             max_new_tokens=max_new_tokens,
         )
         elapsed = time.time() - t0
+        cfg = self.adapter.engine.config
 
         return NEVFEResult(
             pred_text=pred_text,
@@ -105,8 +115,10 @@ class NEVFEPipeline:
             timing={"latency_s": elapsed},
             diagnostics={
                 "method": "nevfe",
-                "lambda_param": self.lambda_param,
-                "beta_param": self.beta_param,
-                "mu_param": self.mu_param,
+                "spec_ref": SPEC_REF,
+                "config": asdict(cfg),
+                "ablation_mask": list(cfg.ablation_mask),
+                "lambda_param": cfg.lambda_param,
+                "beta_param": cfg.beta_param,
             },
         )

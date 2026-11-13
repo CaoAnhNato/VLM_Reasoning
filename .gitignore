@@ -39,3 +39,7 @@ logs/
 *.log
 wandb/
 runs/
+
+# Swarm transient outputs & local runtime artifacts
+results/swarm_runs/
+.agents/swarm_runtime/
