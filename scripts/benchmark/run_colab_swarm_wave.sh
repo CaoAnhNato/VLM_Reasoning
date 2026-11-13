@@ -4,14 +4,16 @@ export PYTHONUNBUFFERED=1
 
 # Colab L4 Parallel Swarm Wave Runner
 # Copy to /tmp/run_colab_swarm_wave.sh before launching so git checkout inside $REPO_DIR never mutates a running script.
-# NOTE: No runtime.unassign() calls or traps belong inside this script; colab_runner manages Colab runtime teardown.
+# NOTE: No runtime.unassign() calls or traps belong inside this script; colab-runner manages Colab runtime teardown.
 
 WAVE_MANIFEST=""
-REPO_DIR="${REPO_DIR:-/content/repo}"
-DRIVE_RESULTS="${DRIVE_RESULTS:-/content/drive/MyDrive/vitextvqa_swarm_results}"
+REPO_DIR="${REPO_DIR:-/content/vlm_bench}"
+OUT_ROOT="${OUT_ROOT:-/content/out}"
+DRIVE_FOLDER_PREFIX="${DRIVE_FOLDER_PREFIX:-VLM_Swarm_Runs}"
+DRIVE_RESULTS="${DRIVE_RESULTS:-}"
 DATA_DIR="${DATA_DIR:-/content/data/vitextvqa}"
-DATASET_JSON="${DATASET_JSON:-$REPO_DIR/results/swintextspotter_auto_annot/answer_bboxes_400_verified.json}"
-PROBE_MANIFEST="${PROBE_MANIFEST:-$REPO_DIR/configs/probe_100_manifest.json}"
+DATASET_JSON=""
+PROBE_MANIFEST=""
 LOG_FILE="${WAVE_LOG_FILE:-/tmp/wave.log}"
 WATCHDOG_INTERVAL_S="${WATCHDOG_INTERVAL_S:-60}"
 WATCHDOG_STALL_S="${WATCHDOG_STALL_S:-1800}"
@@ -21,6 +23,8 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --wave-manifest) WAVE_MANIFEST="$2"; shift 2 ;;
     --repo-dir) REPO_DIR="$2"; shift 2 ;;
+    --out-root) OUT_ROOT="$2"; shift 2 ;;
+    --drive-folder-prefix) DRIVE_FOLDER_PREFIX="$2"; shift 2 ;;
     --drive-results) DRIVE_RESULTS="$2"; shift 2 ;;
     --data-dir) DATA_DIR="$2"; shift 2 ;;
     --dataset) DATASET_JSON="$2"; shift 2 ;;
@@ -30,24 +34,39 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+DATASET_JSON="${DATASET_JSON:-$REPO_DIR/results/swintextspotter_auto_annot/answer_bboxes_400_verified.json}"
+PROBE_MANIFEST="${PROBE_MANIFEST:-$REPO_DIR/configs/probe_100_manifest.json}"
+
 if [[ -z "$WAVE_MANIFEST" || ! -f "$WAVE_MANIFEST" ]]; then
   echo "[WAVE ERROR] --wave-manifest missing or not found: $WAVE_MANIFEST" >&2
   exit 2
 fi
 
-mkdir -p "$DRIVE_RESULTS"
+mkdir -p "$OUT_ROOT"
+[[ -n "$DRIVE_RESULTS" ]] && mkdir -p "$DRIVE_RESULTS"
+rm -f /tmp/WAVE_COMPLETE_MARKER /tmp/WAVE_STALLED_MARKER
 touch "$LOG_FILE"
 PGID="$(ps -o pgid= $$ | tr -d ' ')"
 WATCHDOG_PID=""
+SYNC_HELPER="/tmp/colab_drive_sync.py"
+if [[ -f "$REPO_DIR/scripts/benchmark/colab_drive_sync.py" ]]; then
+  cp -f "$REPO_DIR/scripts/benchmark/colab_drive_sync.py" "$SYNC_HELPER"
+fi
 
 sync_to_drive() {
   local src="$1"
-  local dst="$2"
-  mkdir -p "$dst"
-  if command -v rsync >/dev/null 2>&1; then
-    rsync -a --inplace "$src/" "$dst/"
-  else
-    cp -a "$src/." "$dst/"
+  local remote_sub="$2"
+  if [[ -n "${RCLONE_DRIVE_TOKEN_JSON:-}" && -f "$SYNC_HELPER" ]]; then
+    python3 "$SYNC_HELPER" --local-dir "$src" --folder "${DRIVE_FOLDER_PREFIX}/${remote_sub}" --write-sha256 2>&1 | tee -a "$LOG_FILE"
+  fi
+  if [[ -n "$DRIVE_RESULTS" ]]; then
+    local dst="$DRIVE_RESULTS/$remote_sub"
+    mkdir -p "$dst"
+    if command -v rsync >/dev/null 2>&1; then
+      rsync -a --inplace "$src/" "$dst/"
+    else
+      cp -a "$src/." "$dst/"
+    fi
   fi
 }
 
@@ -64,13 +83,13 @@ start_watchdog() {
       ckpt_count="$(python3 -c '
 import glob, json, sys
 tot = 0
-for p in glob.glob(sys.argv[1] + "/**/checkpoint*.json", recursive=True):
+for p in glob.glob(sys.argv[1] + "/**/checkpoint*.json", recursive=True) + glob.glob(sys.argv[2] + "/**/checkpoint*.json", recursive=True):
     try:
         tot += int(json.load(open(p)).get("total_completed", 0))
     except Exception:
         pass
 print(tot)
-' "$work_root" 2>/dev/null || echo 0)"
+' "$work_root" "$OUT_ROOT" 2>/dev/null || echo 0)"
       local cur_sig="${log_bytes}:${ckpt_count}"
       if [[ "$cur_sig" == "$last_sig" ]]; then
         stall_elapsed=$((stall_elapsed + WATCHDOG_INTERVAL_S))
@@ -80,8 +99,11 @@ print(tot)
       fi
       if [[ "$stall_elapsed" -ge "$WATCHDOG_STALL_S" ]]; then
         echo "[WATCHDOG] Stalled for ${stall_elapsed}s (${cur_sig}). Terminating process group -${PGID}." >> "$LOG_FILE"
-        echo "stalled_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$DRIVE_RESULTS/WAVE_STALLED_MARKER"
-        sync_to_drive "$work_root" "$DRIVE_RESULTS/_stalled_partial" || true
+        mkdir -p "$OUT_ROOT/_stalled_partial"
+        echo "stalled_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$OUT_ROOT/_stalled_partial/WAVE_STALLED_MARKER"
+        echo "stalled_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/WAVE_STALLED_MARKER
+        cp -f "$LOG_FILE" "$OUT_ROOT/_stalled_partial/wave.log" 2>/dev/null || true
+        sync_to_drive "$OUT_ROOT/_stalled_partial" "_stalled_partial" || true
         kill -TERM -- "-$PGID" 2>/dev/null || true
         sleep 5
         kill -KILL -- "-$PGID" 2>/dev/null || true
@@ -110,20 +132,28 @@ echo "[WAVE] Starting Colab L4 swarm wave with $N_ITEMS queue items (PGID=$PGID)
 for idx in $(seq 0 $((N_ITEMS - 1))); do
   eval "$(python3 -c '
 import json, shlex, sys
-item = json.load(open(sys.argv[1]))[int(sys.argv[2])]
+raw = json.load(open(sys.argv[1]))
+items = raw["queue"] if isinstance(raw, dict) and "queue" in raw else raw
+item = items[int(sys.argv[2])]
 for k in ("team_id", "iter_k", "impl_sha", "config_json", "ablation_masks", "baseline_probe_json"):
     val = "" if item.get(k) is None else str(item.get(k))
     print(f"ITEM_{k.upper()}={shlex.quote(val)}")
 ' "$WAVE_MANIFEST" "$idx")"
 
-  RUN_DIR="$WORK_ROOT/${ITEM_TEAM_ID}_iter${ITEM_ITER_K}"
+  NORM_TEAM="${ITEM_TEAM_ID#team_}"
+  NORM_TEAM="${NORM_TEAM#t}"
+  RUN_TAG="team_${NORM_TEAM}_iter_${ITEM_ITER_K}"
+  RUN_DIR="$WORK_ROOT/$RUN_TAG"
   SMOKE_DIR="$RUN_DIR/smoke_3"
   STAGE_A_DIR="$RUN_DIR/stage_a_probe"
-  STAGE_B_DIR="$RUN_DIR/stage_b_eval"
-  DRIVE_OUT="$DRIVE_RESULTS/${ITEM_TEAM_ID}/iter_${ITEM_ITER_K}"
+  STAGE_B_DIR="$OUT_ROOT/$RUN_TAG"
+  rm -rf "$STAGE_B_DIR"
   mkdir -p "$SMOKE_DIR" "$STAGE_A_DIR" "$STAGE_B_DIR"
 
-  echo "[WAVE] === Queue [$idx] team=${ITEM_TEAM_ID} iter=${ITEM_ITER_K} sha=${ITEM_IMPL_SHA} ===" | tee -a "$LOG_FILE"
+  echo "[WAVE] === Queue [$idx] ${RUN_TAG} sha=${ITEM_IMPL_SHA} ===" | tee -a "$LOG_FILE"
+  if ! git -C "$REPO_DIR" cat-file -e "${ITEM_IMPL_SHA}^{commit}" 2>/dev/null; then
+    git -C "$REPO_DIR" fetch origin 2>&1 | tee -a "$LOG_FILE" || true
+  fi
   git -C "$REPO_DIR" checkout -f "$ITEM_IMPL_SHA" 2>&1 | tee -a "$LOG_FILE"
 
   CFG_ARGS=()
@@ -160,13 +190,17 @@ for k in ("team_id", "iter_k", "impl_sha", "config_json", "ablation_masks", "bas
     "${CFG_ARGS[@]}" \
     "${BASE_PROBE_ARGS[@]}" 2>&1 | tee -a "$LOG_FILE"
 
+  cp -f "$STAGE_A_DIR/probe_ablation_summary.json" "$STAGE_B_DIR/probe_ablation_summary.json"
+  cp -a "$STAGE_A_DIR" "$STAGE_B_DIR/stage_a_probe"
+
   PASS_A="$(python3 -c 'import json, sys; print("1" if json.load(open(sys.argv[1])).get("pass_stage_a") else "0")' "$STAGE_A_DIR/probe_ablation_summary.json")"
   BEST_MASK="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1])).get("best_mask") or "111")' "$STAGE_A_DIR/probe_ablation_summary.json")"
 
   if [[ "$PASS_A" != "1" ]]; then
-    echo "[WAVE] team=${ITEM_TEAM_ID} iter=${ITEM_ITER_K} VETOED at Stage A." | tee -a "$LOG_FILE"
-    echo "stage_a_veto=1" > "$RUN_DIR/STAGE_A_VETO"
-    sync_to_drive "$RUN_DIR" "$DRIVE_OUT"
+    echo "[WAVE] ${RUN_TAG} VETOED at Stage A." | tee -a "$LOG_FILE"
+    echo "stage_a_veto=1" > "$STAGE_B_DIR/STAGE_A_VETO"
+    echo "completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$STAGE_B_DIR/WAVE_COMPLETE_MARKER"
+    sync_to_drive "$STAGE_B_DIR" "$RUN_TAG"
     continue
   fi
 
@@ -213,10 +247,12 @@ for k in ("team_id", "iter_k", "impl_sha", "config_json", "ablation_masks", "bas
       "${CFG_ARGS[@]}" 2>&1 | tee -a "$LOG_FILE"
   fi
 
+  cp -f "$STAGE_A_DIR/probe_ablation_summary.json" "$STAGE_B_DIR/probe_ablation_summary.json"
+  echo "completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$STAGE_B_DIR/WAVE_COMPLETE_MARKER"
   (cd "$STAGE_B_DIR" && sha256sum -c sha256sum.txt) 2>&1 | tee -a "$LOG_FILE"
-  sync_to_drive "$RUN_DIR" "$DRIVE_OUT"
-  echo "completed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$DRIVE_OUT/WAVE_COMPLETE_MARKER"
+  sync_to_drive "$STAGE_B_DIR" "$RUN_TAG"
 done
 
-echo "wave_finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$DRIVE_RESULTS/WAVE_COMPLETE_MARKER"
+echo "wave_finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/WAVE_COMPLETE_MARKER
+[[ -n "$DRIVE_RESULTS" ]] && echo "wave_finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$DRIVE_RESULTS/WAVE_COMPLETE_MARKER"
 echo "[WAVE] All $N_ITEMS items completed successfully." | tee -a "$LOG_FILE"

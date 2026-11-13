@@ -129,16 +129,19 @@ def _index_cached_pdfs(cache_dir: str) -> Dict[str, Dict[str, Any]]:
 
 def _load_read_manifest(cache_dir: str) -> Dict[str, Dict[str, Any]]:
     manifest_by_sha: Dict[str, Dict[str, Any]] = {}
-    manifest_path = os.path.join(cache_dir, "read_manifest.json")
-    if not os.path.isfile(manifest_path):
+    if not os.path.isdir(cache_dir):
         return manifest_by_sha
-    entries = json.load(open(manifest_path, "r", encoding="utf-8"))
-    for entry in entries:
-        sha = str(entry.get("pdf_sha256", "")).lower()
-        pages = [int(p) for p in entry.get("pages_read", [])]
-        chars = int(entry.get("body_chars", 0))
-        if sha and any(p >= 2 for p in pages) and chars >= MIN_BODY_CHARS:
-            manifest_by_sha[sha] = entry
+    for root, _, files in os.walk(cache_dir):
+        if "read_manifest.json" not in files:
+            continue
+        manifest_path = os.path.join(root, "read_manifest.json")
+        entries = json.load(open(manifest_path, "r", encoding="utf-8"))
+        for entry in entries:
+            sha = str(entry.get("pdf_sha256", "")).lower()
+            pages = [int(p) for p in entry.get("pages_read", [])]
+            chars = int(entry.get("body_chars", 0))
+            if sha and any(p >= 2 for p in pages) and chars >= MIN_BODY_CHARS:
+                manifest_by_sha[sha] = entry
     return manifest_by_sha
 
 

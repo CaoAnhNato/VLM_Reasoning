@@ -346,12 +346,14 @@ def run_auditor(
                 ledger = json.load(open(ledger_path, "r", encoding="utf-8"))
                 team_key = f"team_{team}"
                 t_meta = ledger["teams"][team_key]
+                rh_p = t_meta["reading_history_path"]
+                bib_p = t_meta["bib_path"]
                 lit_res = verify_literature_audit(
                     transcript_path=t_meta["transcript_path"],
                     cursor_step=int(t_meta.get("cursor_step", 0)),
                     cache_dir=t_meta["cache_dir"],
-                    reading_history_path=t_meta["reading_history_path"],
-                    bib_path=t_meta["bib_path"],
+                    reading_history_path=rh_p if os.path.isabs(rh_p) else os.path.join(snap, rh_p),
+                    bib_path=bib_p if os.path.isabs(bib_p) else os.path.join(snap, bib_p),
                 )
                 checks["check1"] = lit_res
             c235 = _check_2_and_3_and_5(os.path.join(snap, "src", "nevfe", "core"))
