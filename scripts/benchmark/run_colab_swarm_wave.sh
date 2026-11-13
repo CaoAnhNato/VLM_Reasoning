@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export PYTHONUNBUFFERED=1
 
 # Colab L4 Parallel Swarm Wave Runner
 # Copy to /tmp/run_colab_swarm_wave.sh before launching so git checkout inside $REPO_DIR never mutates a running script.

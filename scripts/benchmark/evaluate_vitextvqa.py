@@ -317,13 +317,13 @@ def load_benchmark_dataset(
         raw_data = json.load(f)
 
     candidate_dirs = [
+        os.path.join(PROJECT_ROOT, data_dir, "st_images"),
+        os.path.join(PROJECT_ROOT, data_dir),
         os.path.join(PROJECT_ROOT, "data", "vitextvqa", "st_images"),
         os.path.join(PROJECT_ROOT, "data", "xanylabeling_workspace", "Cao_Anh_001_100"),
         os.path.join(PROJECT_ROOT, "data", "xanylabeling_workspace", "Trieu_101_200"),
         os.path.join(PROJECT_ROOT, "data", "xanylabeling_workspace", "Cam_Tu_201_300"),
         os.path.join(PROJECT_ROOT, "data", "xanylabeling_workspace", "Thanh_Tam_301_400"),
-        os.path.join(PROJECT_ROOT, data_dir, "st_images"),
-        os.path.join(PROJECT_ROOT, data_dir),
     ]
 
     samples: List[Dict[str, Any]] = []
@@ -332,8 +332,17 @@ def load_benchmark_dataset(
     if isinstance(raw_data, dict) and "images" in raw_data:
         images_list = raw_data["images"]
         all_img_names = {img["image_name"] for img in images_list}
-        st_cache = os.path.join(PROJECT_ROOT, "data", "vitextvqa", "st_images")
-        downloaded_paths = ensure_local_images(all_img_names, st_cache)
+        downloaded_paths: Dict[str, str] = {}
+        missing_names: Set[str] = set()
+        for img_name in all_img_names:
+            existing = resolve_image_path(img_name, candidate_dirs)
+            if existing:
+                downloaded_paths[img_name] = existing
+            else:
+                missing_names.add(img_name)
+        if missing_names:
+            st_cache = os.path.join(PROJECT_ROOT, data_dir, "st_images") if data_dir else os.path.join(PROJECT_ROOT, "data", "vitextvqa", "st_images")
+            downloaded_paths.update(ensure_local_images(missing_names, st_cache))
 
         for img in images_list:
             img_name = img["image_name"]
