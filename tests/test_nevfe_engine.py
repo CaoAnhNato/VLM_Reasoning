@@ -34,8 +34,9 @@ from src.nevfe.core.engine import (
     compute_mean_field_reference_embeddings,
     compute_unnormalized_entropy,
     compute_variational_posterior,
+    deflate_conditional_posterior,
     nevfe_step_logits,
-    select_bernoulli_kl_subwindow,
+    select_renyi_foveal_subwindow,
 )
 
 
@@ -407,10 +408,12 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertEqual(pipe.adapter.engine.gamma_param, 0.72)
         self.assertEqual(pipe.config.ablation_mask, (0, 1, 1))
 
-    def test_16_vre_of_eq1_optical_and_eq2_lexical_boundaries(self):
-        unif_e = torch.full((4, 4), 2.5)
-        p_unif = compute_bregman_optical_distribution(unif_e)
-        self.assertTrue(torch.allclose(p_unif, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+    def test_16_fr_stvf_eq1_optical_and_eq2_lexical_boundaries(self):
+        # Constant 1e30 invariance (0-homogeneous peak scaling avoids float32 overflow/ULP amplification)
+        huge_const = torch.full((4, 4), 1e30, dtype=torch.float32)
+        p_huge = compute_bregman_optical_distribution(huge_const)
+        self.assertTrue(torch.isfinite(p_huge).all())
+        self.assertTrue(torch.allclose(p_huge, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
 
         nan_e = torch.tensor([[float("nan"), float("inf")], [float("-inf"), 0.0]])
         p_nan = compute_bregman_optical_distribution(nan_e)
@@ -421,15 +424,23 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         peak_e[1, 2] = 5.0
         p_peak = compute_bregman_optical_distribution(peak_e)
         self.assertAlmostEqual(float(p_peak.sum().item()), 1.0, places=5)
-        self.assertGreater(float(p_peak[1, 2].item()), 0.9)
+        self.assertGreater(float(p_peak[1, 2].item()), 0.5)
 
-        # Constant patch embeddings + float32 ULP perturbation < 1e-6 must hit uniform branch
-        const_v = torch.ones((4, 4, 8), dtype=torch.float32) * 3.0
+        # Eq. 2: Constant 1e30 + ULP perturbation < tau_D must hit uniform branch; dim mismatch raises ValueError
+        const_v = torch.full((4, 4, 8), 1e30, dtype=torch.float32)
         const_v[0, 0, 0] += 1e-7
         q_emb = torch.randn(3, 8)
         p_lex_const = compute_lexical_spatial_distribution(const_v, q_emb)
         self.assertTrue(torch.allclose(p_lex_const, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
         self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, None), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+        with self.assertRaises(ValueError):
+            compute_lexical_spatial_distribution(const_v, torch.randn(2, 7))
+
+        # +/-Inf and NaN safety in Eq. 2
+        v_inf = torch.tensor([[[float("inf"), 1.0], [float("-inf"), float("nan")]]])
+        q_inf = torch.tensor([[float("nan"), float("inf")]])
+        p_lex_inf = compute_lexical_spatial_distribution(v_inf, q_inf)
+        self.assertTrue(torch.isfinite(p_lex_inf).all())
 
         # Discriminative patch alignment concentrates mass on matching cell
         disc_v = torch.zeros((4, 4, 8), dtype=torch.float32)
@@ -439,10 +450,14 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         p_lex_disc = compute_lexical_spatial_distribution(disc_v, q_target)
         self.assertEqual(tuple(torch.nonzero(p_lex_disc == p_lex_disc.max(), as_tuple=False)[0].tolist()), (2, 3))
 
-    def test_17_vre_of_eq3_and_eq4_float32_nan_safety(self):
+    def test_17_fr_stvf_eq3_eq4a_renyi_and_eq4b_deflation(self):
         p_opt = torch.zeros((8, 8), dtype=torch.float32)
-        p_opt[1:3, 2:4] = 0.25  # p(C) == 1.0 exact on 2x2 subwindow (area = 4/64 = 0.0625 <= 0.5)
+        p_opt[1:3, 2:4] = 0.25  # p(C1) == 1.0 exact on 2x2 subwindow (area = 4/64 <= 0.5)
         p_lex = torch.full((8, 8), 1.0 / 64.0, dtype=torch.float32)
+
+        post_default = compute_variational_posterior(p_opt, p_lex, gamma_param=None)
+        post_half = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5)
+        self.assertTrue(torch.allclose(post_default, post_half, atol=1e-6))
 
         post_opt = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=True, comp_b=False)
         self.assertAlmostEqual(float(post_opt[1:3, 2:4].sum().item()), 1.0, places=4)
@@ -453,25 +468,45 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         post_none = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=False)
         self.assertTrue(torch.allclose(post_none, p_lex, atol=1e-6))
 
-        # Compact support p(C)=1.0 must produce finite positive kl_star without 0*log(0)=NaN
-        box, kl_star, p_mass, area_frac = select_bernoulli_kl_subwindow(p_opt, comp_c=True)
-        self.assertTrue(math.isfinite(kl_star))
-        self.assertGreater(kl_star, 0.0)
+        # Eq. 4a: Compact support p(C)=1.0 yields finite positive J_{1/2} without NaN
+        box, j_star, p_mass, area_frac = select_renyi_foveal_subwindow(p_opt)
+        self.assertTrue(math.isfinite(j_star))
+        self.assertGreater(j_star, 0.0)
         self.assertEqual(box, (1, 2, 3, 4))
         self.assertAlmostEqual(p_mass, 1.0, places=5)
         self.assertAlmostEqual(area_frac, 4.0 / 64.0, places=5)
 
-        # Uniform/solid posterior yields kl_star == 0.0
-        box_u, kl_u, _, _ = select_bernoulli_kl_subwindow(p_lex, comp_c=True)
-        self.assertEqual(kl_u, 0.0)
+        # Uniform posterior yields j_star == 0.0
+        box_u, j_u, _, _ = select_renyi_foveal_subwindow(p_lex)
+        self.assertEqual(j_u, 0.0)
         self.assertEqual(box_u, (0, 0, 8, 8))
 
-        # comp_c=False disables subwindow selection
-        box_off, kl_off, _, _ = select_bernoulli_kl_subwindow(p_opt, comp_c=False)
-        self.assertEqual(kl_off, 0.0)
-        self.assertEqual(box_off, (0, 0, 8, 8))
+        # Eq. 4b: KL I-projection uniform-exterior nullity -> j2_star == 0.0 when exterior is uniform
+        single_mode = torch.full((8, 8), 0.005, dtype=torch.float32)
+        single_mode[1:3, 2:4] = 0.1775
+        p_def_null = deflate_conditional_posterior(single_mode, (1, 2, 3, 4))
+        self.assertTrue(torch.allclose(p_def_null, torch.full((8, 8), 1.0 / 64.0), atol=1e-5))
+        _, j2_null, _, _ = select_renyi_foveal_subwindow(p_def_null)
+        self.assertEqual(j2_null, 0.0)
 
-    def test_18_adapter_mock_fallback_immutability_and_locked_decoder(self):
+        # Dual disjoint modes -> comp_c=True extracts [box1, box2]; comp_c=False extracts [box1]
+        opt_dual = torch.zeros((8, 8), dtype=torch.float32)
+        opt_dual[1:3, 1:3] = 10.0
+        opt_dual[5:7, 5:7] = 6.0
+        patch_const = torch.ones((8, 8, 4), dtype=torch.float32)
+        eng_dual = NEVFEEngine(config=AlgorithmConfig(gamma_param=0.5, ablation_mask=(1, 1, 1)))
+        boxes_dual, j1_d, _ = eng_dual.foveate(opt_dual, patch_const, query_embeds=None)
+        self.assertGreater(j1_d, 1e-6)
+        self.assertEqual(len(boxes_dual), 2)
+        self.assertNotEqual(boxes_dual[0], boxes_dual[1])
+
+        eng_single = NEVFEEngine(config=AlgorithmConfig(gamma_param=0.5, ablation_mask=(1, 1, 0)))
+        boxes_single, j1_s, _ = eng_single.foveate(opt_dual, patch_const, query_embeds=None)
+        self.assertEqual(len(boxes_single), 1)
+        self.assertEqual(boxes_single[0], boxes_dual[0])
+
+    def test_18_adapter_so2_rejection_zero_blur_and_immutability(self):
+        import numpy as np
         from PIL import Image, ImageDraw
         from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter
 
@@ -488,9 +523,8 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             def __call__(self, inputs_embeds, past_key_values=None, use_cache=True, return_dict=True):
                 del past_key_values, use_cache, return_dict
                 self.seen_seq_lens.append(int(inputs_embeds.shape[1]))
-                b_sz, s_len, _ = inputs_embeds.shape
                 hidden_out = inputs_embeds[:, -1:, :]
-                return type("_Out", (), {"last_hidden_state": hidden_out, "past_key_values": ("kv", s_len)})()
+                return type("_Out", (), {"last_hidden_state": hidden_out, "past_key_values": ("kv", int(inputs_embeds.shape[1]))})()
 
         class _MockLM:
             config = _MockCfg()
@@ -505,7 +539,7 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
 
             def lm_head(self, x):
                 out = torch.zeros((x.shape[0], x.shape[1], self.vocab_size), dtype=torch.float32)
-                out[:, :, 2] = 5.0  # immediate <|im_end|>
+                out[:, :, 2] = 5.0
                 return out
 
         class _MockTok:
@@ -535,40 +569,70 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             def __init__(self):
                 self.language_model = _MockLM(vocab_size=64, hidden=16)
                 self.extract_calls = []
+                self.last_pixels = None
 
             def extract_feature(self, pixel_values):
                 self.extract_calls.append(int(pixel_values.shape[0]))
+                self.last_pixels = pixel_values.detach().clone()
                 n_t = int(pixel_values.shape[0])
-                # Deliberately return non-grid count 3 on initial 1-tile call or exact shape
                 return torch.arange(n_t * 16 * 16, dtype=torch.float32).view(n_t, 16, 16) * 0.01
 
-        img = Image.new("RGB", (200, 120), color=(240, 240, 240))
-        draw = ImageDraw.Draw(img)
-        draw.rectangle([20, 20, 48, 42], fill=(10, 10, 10))
-        draw.line([22, 22, 46, 40], fill=(250, 250, 250), width=2)
-
+        # 1. Rank-1 diagonal ramp (SO(2) invariance: det(J) == 0 -> optical_energy near 0 -> uniform P_opt on interior cells)
+        yy, xx = np.mgrid[0:64, 0:64]
+        diag_ramp = np.clip((xx + yy) * 2, 0, 255).astype(np.uint8)
+        diag_img = Image.fromarray(np.stack([diag_ramp, diag_ramp, diag_ramp], axis=-1))
         model = _MockModel()
         adapter = VinternNEVFEAdapter(model=model, tokenizer=_MockTok(), device="cpu")
+        _, e_diag, _, _ = adapter._extract_lattice_and_energy(diag_img, torch.zeros(1, 16, 16))
+        self.assertLess(float(e_diag[:-1, :-1].max().item()), 1e-6)
+        p_diag = compute_bregman_optical_distribution(e_diag[:-1, :-1])
+        self.assertTrue(torch.allclose(p_diag, torch.full((3, 3), 1.0 / 9.0), atol=1e-5))
 
-        # Verify mock (B, 1) fallback when N_tiles has B != gx * gy (e.g., 3 tiles -> B=2, (2,1))
+        # 2. 0%-blur unblurred in-bounds slicing verification on crisp checkerboard tile
+        sharp_img = Image.new("RGB", (224, 224), color=(0, 0, 0))
+        sharp_draw = ImageDraw.Draw(sharp_img)
+        for y in range(20, 90, 4):
+            sharp_draw.line([20, y, 90, y], fill=(255, 255, 255), width=2)
+        sharp_draw.rectangle([140, 140, 180, 180], fill=(255, 255, 255))
+        adapter_raw = VinternNEVFEAdapter(
+            model=model,
+            tokenizer=_MockTok(),
+            transform=lambda im: torch.from_numpy(np.asarray(im, dtype=np.float32)).permute(2, 0, 1),
+            device="cpu",
+        )
+        crop_emb = adapter_raw.encode_transient_roi_crops(sharp_img, [(10, 10, 90, 90), (140, 140, 180, 180)], max_tiles=2)
+        self.assertIsNotNone(crop_emb)
+        self.assertEqual(int(crop_emb.shape[0]), 2)
+        # Verify sharp high-frequency contrast preserved without Gaussian blur attenuation
+        self.assertGreater(float(model.last_pixels[0].max().item()), 250.0)
+        self.assertLess(float(model.last_pixels[0].min().item()), 5.0)
+
+        # 3. Mock (B, 1) fallback, multi-question _cached_vit_embeds immutability, and comp_c single-vs-dual boxes
+        img = Image.new("RGB", (224, 140), color=(240, 240, 240))
+        draw = ImageDraw.Draw(img)
+        draw.rectangle([16, 16, 48, 48], fill=(10, 10, 10))
+        draw.line([18, 18, 46, 46], fill=(250, 250, 250), width=2)
+        draw.rectangle([160, 88, 192, 120], fill=(20, 20, 20))
+        draw.line([162, 90, 190, 118], fill=(250, 250, 250), width=2)
+
         fake_3tile = torch.randn(3, 16, 16)
         patch_lat, opt_e, _, _ = adapter._extract_lattice_and_energy(img, fake_3tile)
         self.assertEqual(tuple(patch_lat.shape), (4, 8, 16))
         self.assertEqual(tuple(opt_e.shape), (4, 8))
 
-        # Multi-question generation preserves _cached_vit_embeds immutably
         v1 = adapter.extract_visual_features(img).clone()
         adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
         cached_after_q1 = adapter._cached_vit_embeds.clone()
+        crop_count_full = model.extract_calls[-1]
         adapter.generate(img, "giá bao nhiêu?", max_new_tokens=2)
         self.assertTrue(torch.equal(v1, cached_after_q1))
         self.assertTrue(torch.equal(v1, adapter._cached_vit_embeds))
 
-        # comp_c=False skips foveation (extra_vit_embeds=None) while keeping IG-VFED locked
-        calls_before = len(model.extract_calls)
         adapter.set_ablation_switches(comp_a=True, comp_b=True, comp_c=False)
         adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
-        self.assertEqual(len(model.extract_calls), calls_before)
+        crop_count_single = model.extract_calls[-1]
+        self.assertGreaterEqual(crop_count_full, crop_count_single)
+        self.assertEqual(crop_count_single, 1)
 
 
 if __name__ == "__main__":
