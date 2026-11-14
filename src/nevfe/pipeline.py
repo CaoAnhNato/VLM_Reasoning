@@ -43,7 +43,7 @@ class NEVFEPipeline:
         device: str = "cuda",
         lambda_param: float = 0.50,
         beta_param: float = 0.05,
-        gamma_param: float = 0.50,
+        gamma_param: float = 0.65,
         config: Optional[AlgorithmConfig] = None,
     ) -> None:
         self.model = model
@@ -128,5 +128,6 @@ class NEVFEPipeline:
                 "lambda_param": cfg.lambda_param,
                 "beta_param": cfg.beta_param,
                 "gamma_param": cfg.gamma_param,
+                "foveal_bboxes": list(getattr(self.adapter, "_last_foveal_bboxes", [])),
             },
         )
