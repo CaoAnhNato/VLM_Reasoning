@@ -43,7 +43,7 @@ class NEVFEPipeline:
         device: str = "cuda",
         lambda_param: float = 0.50,
         beta_param: float = 0.05,
-        gamma_param: float = 0.50,
+        gamma_param: float = 0.75,
         config: Optional[AlgorithmConfig] = None,
     ) -> None:
         self.model = model
@@ -114,10 +114,12 @@ class NEVFEPipeline:
         )
         elapsed = time.time() - t0
         cfg = self.adapter.engine.config
+        last_bbox = getattr(self.adapter, "_last_foveal_bbox", None)
+        stage1_bbox = list(last_bbox) if last_bbox is not None else [0, 0, w, h]
 
         return NEVFEResult(
             pred_text=pred_text,
-            stage1_bbox=[0, 0, w, h],
+            stage1_bbox=stage1_bbox,
             spatial_confidence=1.0,
             timing={"latency_s": elapsed},
             diagnostics={
