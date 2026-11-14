@@ -23,6 +23,7 @@ from src.nevfe.core.engine import (
     NEVFEEngine,
     compute_mean_field_reference_embeddings,
     nevfe_step_logits,
+    plan_isotropic_strip_boxes,
 )
 
 
@@ -179,7 +180,7 @@ class VinternNEVFEAdapter:
         device: str = "cuda",
         lambda_param: float = 0.50,
         beta_param: float = 0.05,
-        gamma_param: float = 0.50,
+        gamma_param: float = 0.85,
         config: Optional[AlgorithmConfig] = None,
     ) -> None:
         self.model = model
@@ -218,6 +219,7 @@ class VinternNEVFEAdapter:
         # Immutable per-image visual cache
         self._cached_img_key: Optional[Tuple[int, int, bytes]] = None
         self._cached_vit_embeds: Optional[torch.Tensor] = None
+        self._last_foveal_bboxes: List[List[int]] = []
 
     def set_ablation_switches(
         self,
@@ -302,12 +304,11 @@ class VinternNEVFEAdapter:
         min_magnification: float = 0.0,
     ) -> Optional[torch.Tensor]:
         """
-        Encode unblurred isotropic single-locus native RGB crops via Nyquist-gated multi-tile slicing
-        using DynamicMultiTileROICropper.select_grid without mutating self._cached_vit_embeds.
+        Encode unblurred seam-overlapped 1:1 isotropic native RGB sub-tiles via Nyquist-gated
+        strip partitioning without mutating self._cached_vit_embeds.
         """
         if not bboxes or max_tiles <= 0:
             return None
-        from scripts.benchmark.sg_vcd.roi_cropper import DynamicMultiTileROICropper
 
         rgb_img = image.convert("RGB")
         w_img, h_img = rgb_img.size
@@ -315,7 +316,8 @@ class VinternNEVFEAdapter:
             return None
 
         remaining = int(max_tiles)
-        min_tile_dim = max(1, self.force_image_size // 4)
+        p_side_cfg = max(1, int(round(math.sqrt(max(1, self.num_image_token)))))
+        s_p = float(self.force_image_size) / float(p_side_cfg)
         crop_tiles: List[Image.Image] = []
 
         for bx1, by1, bx2, by2 in bboxes:
@@ -333,51 +335,25 @@ class VinternNEVFEAdapter:
             y1 = max(0, min(h_img - min_dy, cby1 - pad_y))
             x2 = max(x1 + min_dx, min(w_img, cbx2 + pad_x))
             y2 = max(y1 + min_dy, min(h_img, cby2 + pad_y))
-            dx = max(min_dx, x2 - x1)
-            dy = max(min_dy, y2 - y1)
 
-            cropper = DynamicMultiTileROICropper(
-                target_size=self.force_image_size,
+            sub_boxes, (_, _), sub_span = plan_isotropic_strip_boxes(
+                (x1, y1, x2, y2),
+                (w_img, h_img),
+                patch_stride=s_p,
                 max_tiles=remaining,
-                min_tile_dim=min_tile_dim,
+                comp_c=self.engine.comp_c,
             )
-            gx_star, gy_star = cropper.select_grid(dx, dy)
-
-            s_unit = max(dx / gx_star, dy / gy_star)
-            s_min = min(32.0, float(min(w_img, h_img)))
-            s_floor = s_min + (0.05 * float(min(w_img, h_img))) / (
-                1.0 + math.exp(-0.05 * (max(dx, dy) - s_min))
-            )
-            s_unit = min(max(s_unit, s_floor), float(w_img) / gx_star, float(h_img) / gy_star)
-            s_x = min(float(w_img), max(float(dx), s_unit * gx_star))
-            s_y = min(float(h_img), max(float(dy), s_unit * gy_star))
-
-            m_crop = min(
-                (self.force_image_size * gx_star) / max(1.0, s_x),
-                (self.force_image_size * gy_star) / max(1.0, s_y),
-            )
+            m_crop = float(self.force_image_size) / max(1.0, sub_span)
             if min_magnification > 0.0 and m_crop <= min_magnification:
                 continue
 
-            mu_x = 0.5 * (x1 + x2)
-            mu_y = 0.5 * (y1 + y2)
-            sx1 = max(0.0, min(float(w_img) - s_x, mu_x - 0.5 * s_x))
-            sy1 = max(0.0, min(float(h_img) - s_y, mu_y - 0.5 * s_y))
-            tile_w = s_x / gx_star
-            tile_h = s_y / gy_star
-
-            for ty in range(gy_star):
-                for tx in range(gx_star):
-                    tx1 = max(0, min(w_img - 1, int(round(sx1 + tx * tile_w))))
-                    ty1 = max(0, min(h_img - 1, int(round(sy1 + ty * tile_h))))
-                    tx2 = max(tx1 + 1, min(w_img, int(round(sx1 + (tx + 1) * tile_w))))
-                    ty2 = max(ty1 + 1, min(h_img, int(round(sy1 + (ty + 1) * tile_h))))
-                    sub = rgb_img.crop((tx1, ty1, tx2, ty2)).resize(
-                        (self.force_image_size, self.force_image_size),
-                        Image.BICUBIC,
-                    )
-                    crop_tiles.append(sub)
-            remaining -= gx_star * gy_star
+            for tx1, ty1, tx2, ty2 in sub_boxes:
+                sub = rgb_img.crop((tx1, ty1, tx2, ty2)).resize(
+                    (self.force_image_size, self.force_image_size),
+                    Image.Resampling.BICUBIC,
+                )
+                crop_tiles.append(sub)
+            remaining -= len(sub_boxes)
 
         if not crop_tiles:
             return None
@@ -483,7 +459,10 @@ class VinternNEVFEAdapter:
         vit_embeds: torch.Tensor,
         question: str,
     ) -> Optional[torch.Tensor]:
-        """Run FRSA-PBCF foveation and extract transient RGB sub-tile features without mutating vit_embeds."""
+        """Run SKS-OIF foveation and extract transient RGB sub-tile features without mutating vit_embeds."""
+        self._last_foveal_bboxes = []
+        if not (self.engine.comp_a or self.engine.comp_b or self.engine.comp_c):
+            return None
         patch_embeds, optical_energy, img_w, img_h = self._extract_lattice_and_energy(image, vit_embeds)
         query_embeds = self._extract_query_embeds(question, vit_embeds.device)
         box, j_star, _ = self.engine.foveate(optical_energy, patch_embeds, query_embeds=query_embeds)
@@ -500,8 +479,10 @@ class VinternNEVFEAdapter:
         y1 = int(round(i1 * img_h / h_g))
         x2 = int(round(j2 * img_w / w_g))
         y2 = int(round(i2 * img_h / h_g))
+        px_box = (x1, y1, x2, y2)
+        self._last_foveal_bboxes = [list(px_box)]
         return self.encode_transient_roi_crops(
-            image, [(x1, y1, x2, y2)], max_tiles=3, min_magnification=m_glob
+            image, [px_box], max_tiles=3, min_magnification=m_glob
         )
 
     def build_multimodal_embeds(

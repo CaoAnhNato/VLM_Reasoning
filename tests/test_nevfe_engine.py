@@ -24,18 +24,19 @@ import torch
 import torch.nn.functional as F
 
 from src.nevfe.core.engine import (
+    SPEC_REF,
     AlgorithmConfig,
     NEVFEEngine,
     compute_bhattacharyya_coefficient,
-    compute_bregman_optical_distribution,
+    compute_chromatic_stroke_prior,
     compute_dynamic_coupling,
     compute_dynamic_plausibility_floor,
-    compute_lexical_spatial_distribution,
     compute_mean_field_reference_embeddings,
+    compute_stroke_specificity_posterior,
     compute_unnormalized_entropy,
-    compute_variational_posterior,
     nevfe_step_logits,
-    select_poisson_bregman_subwindow,
+    plan_isotropic_strip_boxes,
+    select_optical_foveal_locus,
 )
 
 
@@ -381,8 +382,15 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
                 self.assertLess((got[3] - ref[3]).abs().max().item(), 1e-7)
 
 
-    def test_15_vre_of_gamma_param_and_pipeline_preservation(self):
+    def test_15_sks_oif_config_spec_ref_and_pipeline(self):
         from src.nevfe.pipeline import NEVFEPipeline
+
+        self.assertTrue(SPEC_REF.startswith("docs/specs/team_1/spec_iter_9.md@v1.0"))
+        default_cfg = AlgorithmConfig()
+        self.assertEqual(default_cfg.lambda_param, 0.50)
+        self.assertEqual(default_cfg.beta_param, 0.05)
+        self.assertEqual(default_cfg.gamma_param, 0.85)
+        self.assertEqual(default_cfg.ablation_mask, (1, 1, 1))
 
         cfg = AlgorithmConfig(gamma_param=0.35)
         self.assertEqual(cfg.gamma_param, 0.35)
@@ -400,6 +408,9 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             language_model = type("_LM", (), {"config": _MockCfg()})()
             num_image_token = 16
 
+        pipe_def = NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu")
+        self.assertEqual(pipe_def.gamma_param, 0.85)
+
         pipe = NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu", gamma_param=0.72)
         self.assertEqual(pipe.gamma_param, 0.72)
         pipe.set_ablation_switches(comp_a=False, comp_b=True, comp_c=True)
@@ -407,104 +418,152 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertEqual(pipe.adapter.engine.gamma_param, 0.72)
         self.assertEqual(pipe.config.ablation_mask, (0, 1, 1))
 
-    def test_16_fr_stvf_eq1_optical_and_eq2_lexical_boundaries(self):
+    def test_16_sks_oif_eq1_naka_rushton_and_eq2_stroke_specificity(self):
         unif_e = torch.full((4, 4), 2.5)
-        p_unif = compute_bregman_optical_distribution(unif_e)
-        self.assertTrue(torch.allclose(p_unif, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+        p_unif = compute_chromatic_stroke_prior(unif_e, gamma_param=0.85)
+        self.assertTrue(torch.allclose(p_unif, torch.ones((4, 4)), atol=1e-6))
 
         nan_e = torch.tensor([[float("nan"), float("inf")], [float("-inf"), 0.0]])
-        p_nan = compute_bregman_optical_distribution(nan_e)
+        p_nan = compute_chromatic_stroke_prior(nan_e, gamma_param=0.85)
         self.assertTrue(torch.isfinite(p_nan).all())
-        self.assertTrue(torch.allclose(p_nan, torch.full((2, 2), 0.25), atol=1e-6))
+        self.assertTrue(torch.allclose(p_nan, torch.ones((2, 2)), atol=1e-6))
+        self.assertEqual(compute_chromatic_stroke_prior(torch.empty((0, 4))).numel(), 0)
+        with self.assertRaises(ValueError):
+            compute_chromatic_stroke_prior(torch.ones((4,)))
 
-        # 0-homogeneity & FLT_MAX overflow immunity + 0.0% background leakage below mean
+        # 0-homogeneity & FLT_MAX overflow immunity + strong background suppression
         peak_e = torch.full((4, 4), 0.1)
         peak_e[1, 2] = 5.0
-        p_peak = compute_bregman_optical_distribution(peak_e)
-        p_huge = compute_bregman_optical_distribution(peak_e * 1e36)
+        p_peak = compute_chromatic_stroke_prior(peak_e, gamma_param=0.85)
+        p_huge = compute_chromatic_stroke_prior(peak_e * 1e36, gamma_param=0.85)
         self.assertTrue(torch.isfinite(p_huge).all())
         self.assertTrue(torch.allclose(p_peak, p_huge, atol=1e-5))
-        self.assertAlmostEqual(float(p_peak[0, 0].item()), 0.0, places=6)
-        self.assertAlmostEqual(float(p_peak[1, 2].item()), 1.0, places=6)
+        self.assertGreater(float(p_peak[1, 2].item()), 0.90)
+        self.assertLess(float(p_peak[0, 0].item()), 0.30)
 
-        # ULP-perturbed constant energy must stay uniform
+        # Naka-Rushton saturation protects modest text stroke from 13x brighter specular glare
+        glare_e = torch.full((4, 4), 0.05)
+        glare_e[0, 1] = 200.0
+        glare_e[2, 2] = 15.0
+        p_glare = compute_chromatic_stroke_prior(glare_e, gamma_param=0.85)
+        self.assertGreater(float(p_glare[2, 2].item()), 0.50)
+        self.assertLess(float(p_glare[0, 0].item()), 0.02)
+        self.assertGreater(float(p_glare[0, 1].item()), float(p_glare[2, 2].item()))
+
+        # ULP-perturbed constant energy -> 1.0; comp_a=False / gamma=0 -> 1.0 everywhere
         ulp_e = torch.full((4, 4), 100.0)
         ulp_e[0, 0] += 1e-5
-        self.assertTrue(torch.allclose(compute_bregman_optical_distribution(ulp_e), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+        self.assertTrue(torch.allclose(compute_chromatic_stroke_prior(ulp_e), torch.ones((4, 4)), atol=1e-6))
+        self.assertTrue(torch.allclose(compute_chromatic_stroke_prior(peak_e, comp_a=False), torch.ones((4, 4)), atol=1e-6))
+        self.assertTrue(torch.allclose(compute_chromatic_stroke_prior(peak_e, gamma_param=0.0), torch.ones((4, 4)), atol=1e-6))
 
-        # Constant patch embeddings + float32 ULP perturbation < 1e-6 must hit uniform branch
+        # Eq. (2): constant patch embeddings, query_embeds=None, empty query, or N<=1 -> uniform 1/N
         const_v = torch.ones((4, 4, 8), dtype=torch.float32) * 3.0
         const_v[0, 0, 0] += 1e-7
         q_emb = torch.randn(3, 8)
-        p_lex_const = compute_lexical_spatial_distribution(const_v, q_emb)
-        self.assertTrue(torch.allclose(p_lex_const, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-        self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, None), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-
-        # Mismatched query dim raises ValueError
+        u_16 = torch.full((4, 4), 1.0 / 16.0)
+        self.assertTrue(torch.allclose(compute_stroke_specificity_posterior(const_v, p_glare, q_emb), u_16, atol=1e-6))
+        self.assertTrue(torch.allclose(compute_stroke_specificity_posterior(const_v, p_glare, None), u_16, atol=1e-6))
+        self.assertTrue(torch.allclose(compute_stroke_specificity_posterior(const_v, p_glare, torch.empty((0, 8))), u_16, atol=1e-6))
+        self.assertTrue(torch.allclose(compute_stroke_specificity_posterior(torch.ones((1, 1, 8)), torch.ones((1, 1)), q_emb), torch.ones((1, 1)), atol=1e-6))
         with self.assertRaises(ValueError):
-            compute_lexical_spatial_distribution(const_v, torch.randn(2, 5))
+            compute_stroke_specificity_posterior(torch.ones((4, 8)), torch.ones((4,)), q_emb)
+        with self.assertRaises(ValueError):
+            compute_stroke_specificity_posterior(const_v, torch.ones((2, 2)), q_emb)
+        with self.assertRaises(ValueError):
+            compute_stroke_specificity_posterior(const_v, p_glare, torch.randn(2, 5))
 
-        # Discriminative patch alignment concentrates mass on matching cell even at large scale
+        # Eq. (2) Smooth-face hijack immunity + shared-RMS discriminative query specificity
+        stroke_p = torch.zeros((4, 4), dtype=torch.float32)
+        stroke_p[2, 3] = 1.0  # target stroke matching query
+        stroke_p[1, 0] = 1.0  # distracting stroke orthogonal to query
         disc_v = torch.zeros((4, 4, 8), dtype=torch.float32)
         disc_v[:, :, 0] = 1.0
-        disc_v[2, 3, :] = torch.tensor([0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) * 1e30
-        q_target = torch.tensor([[0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]) * 1e30
-        p_lex_disc = compute_lexical_spatial_distribution(disc_v, q_target)
-        self.assertTrue(torch.isfinite(p_lex_disc).all())
-        self.assertEqual(tuple(torch.nonzero(p_lex_disc == p_lex_disc.max(), as_tuple=False)[0].tolist()), (2, 3))
+        disc_v[0, 0, :] = torch.tensor([0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # smooth face strongly matches q!
+        disc_v[2, 3, :] = torch.tensor([0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) * 1e20
+        disc_v[1, 0, :] = torch.tensor([0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0]) * 1e20
+        q_target = torch.tensor([[0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]]) * 1e20
+        p_spec = compute_stroke_specificity_posterior(disc_v, stroke_p, q_target, comp_b=True)
+        self.assertTrue(torch.isfinite(p_spec).all())
+        self.assertAlmostEqual(float(p_spec[0, 0].item()), 0.0, places=6)
+        self.assertEqual(tuple(torch.nonzero(p_spec == p_spec.max(), as_tuple=False)[0].tolist()), (2, 3))
+        self.assertGreater(float(p_spec[2, 3].item()), 0.85)
+        p_zero_prior = compute_stroke_specificity_posterior(disc_v, torch.zeros((4, 4)), q_target)
+        self.assertEqual(tuple(torch.nonzero(p_zero_prior == p_zero_prior.max(), as_tuple=False)[0].tolist()), (2, 3))
 
-    def test_17_frsa_pbcf_eq3_fisher_rao_and_eq4_poisson_bregman(self):
-        p_opt = torch.zeros((8, 8), dtype=torch.float32)
-        p_opt[1:3, 2:4] = 0.25  # p(C) == 1.0 exact on 2x2 subwindow (area = 4/64 = 0.0625 <= 0.5)
-        p_lex = torch.full((8, 8), 1.0 / 64.0, dtype=torch.float32)
+        # comp_b=False uses unweighted max_m path while respecting stroke gate pi
+        p_spec_off = compute_stroke_specificity_posterior(disc_v, stroke_p, q_target, comp_b=False)
+        self.assertTrue(torch.isfinite(p_spec_off).all())
+        self.assertAlmostEqual(float(p_spec_off[0, 0].item()), 0.0, places=6)
+        self.assertEqual(tuple(torch.nonzero(p_spec_off == p_spec_off.max(), as_tuple=False)[0].tolist()), (2, 3))
 
-        # Eq. (3) Fisher-Rao spherical geodesic: disjoint supports never collapse to zero/cliffs
-        disjoint_lex = torch.zeros((8, 8), dtype=torch.float32)
-        disjoint_lex[5:7, 5:7] = 0.25
-        post_disjoint = compute_variational_posterior(p_opt, disjoint_lex, gamma_param=0.5, comp_a=True, comp_b=True)
-        self.assertTrue(torch.isfinite(post_disjoint).all())
-        self.assertAlmostEqual(float(post_disjoint[1:3, 2:4].sum().item()), 0.5, places=5)
-        self.assertAlmostEqual(float(post_disjoint[5:7, 5:7].sum().item()), 0.5, places=5)
+    def test_17_sks_oif_eq3_single_locus_and_eq4_isotropic_strip_tiling(self):
+        with self.assertRaises(ValueError):
+            select_optical_foveal_locus(torch.ones((4,)))
+        self.assertEqual(select_optical_foveal_locus(torch.empty((0, 4)))[1:], (0.0, 0.0, 0.0))
+        self.assertEqual(select_optical_foveal_locus(torch.ones((1, 1)))[1:], (0.0, 1.0, 1.0))
+        self.assertEqual(plan_isotropic_strip_boxes((0, 0, 10, 10), (0, 100), patch_stride=28.0), ([], (1, 1), 0.0))
 
-        # Eq. (3) ablation branches
-        post_opt = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=True, comp_b=False)
-        self.assertAlmostEqual(float(post_opt[1:3, 2:4].sum().item()), 1.0, places=4)
-        post_lex = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=True)
-        self.assertTrue(torch.allclose(post_lex, p_lex, atol=1e-5))
-        post_none = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=False)
-        self.assertTrue(torch.allclose(post_none, p_lex, atol=1e-6))
-
-        # Eq. (4) Poisson-Bregman compact support selects tight (1, 2, 3, 4) without exterior-depletion inflation
-        box, j_star, p_mass, area_frac = select_poisson_bregman_subwindow(p_opt, comp_c=True)
-        self.assertTrue(math.isfinite(j_star))
-        self.assertGreater(j_star, 0.0)
+        post = torch.zeros((8, 8), dtype=torch.float32)
+        post[1:3, 2:4] = 0.25  # 2x2 subwindow inside 8x8 -> area = 4/64 = 0.0625
+        box, j_star, p_mass, area_frac = select_optical_foveal_locus(post)
         self.assertEqual(box, (1, 2, 3, 4))
         self.assertAlmostEqual(p_mass, 1.0, places=5)
         self.assertAlmostEqual(area_frac, 4.0 / 64.0, places=5)
         self.assertAlmostEqual(j_star, math.log(16.0) - (1.0 - 4.0 / 64.0), places=4)
 
-        # Anti-inflation on elevated spot + uniform floor: must stay tight on spot, not expand to 50%
-        spot = torch.full((8, 8), 0.005, dtype=torch.float32)
-        spot[3:5, 4:6] = 0.18
-        spot_box, spot_j, _, spot_area = select_poisson_bregman_subwindow(spot, comp_c=True)
-        self.assertEqual(spot_box, (3, 4, 5, 6))
-        self.assertLessEqual(spot_area, 0.1)
-        self.assertGreater(spot_j, 0.0)
-
-        # Uniform/solid posterior yields j_star == 0.0
-        box_u, j_u, _, _ = select_poisson_bregman_subwindow(p_lex, comp_c=True)
+        unif = torch.full((8, 8), 1.0 / 64.0, dtype=torch.float32)
+        box_u, j_u, _, _ = select_optical_foveal_locus(unif)
         self.assertEqual(j_u, 0.0)
         self.assertEqual(box_u, (0, 0, 8, 8))
 
-        # comp_c=False disables subwindow selection
-        box_off, j_off, _, _ = select_poisson_bregman_subwindow(p_opt, comp_c=False)
-        self.assertEqual(j_off, 0.0)
-        self.assertEqual(box_off, (0, 0, 8, 8))
+        # Eq. (4): 112px-gated 25%-seam-overlapped 1:1 square tiling (patch_stride=28 -> d_min=112, s_fl=56)
+        # 1) 240 x 32 wide banner -> (2, 1) square tiles, 25% seam overlap >= 28px, full ROI union coverage
+        boxes_240, grid_240, span_240 = plan_isotropic_strip_boxes((100, 200, 340, 232), (800, 600), patch_stride=28.0, max_tiles=3, comp_c=True)
+        self.assertEqual(grid_240, (2, 1))
+        self.assertEqual(len(boxes_240), 2)
+        for tx1, ty1, tx2, ty2 in boxes_240:
+            self.assertEqual(tx2 - tx1, ty2 - ty1)
+            self.assertEqual(float(tx2 - tx1), span_240)
+        self.assertLessEqual(boxes_240[0][0], 100)
+        self.assertGreaterEqual(boxes_240[1][2], 340)
+        self.assertGreaterEqual(boxes_240[0][2] - boxes_240[1][0], 28)
 
-    def test_18_adapter_cst_isoluminant_nyquist_gate_and_immutability(self):
+        # 2) 320 x 24 ultra-wide banner -> (3, 1) square tiles with positive seam overlap
+        boxes_320, grid_320, _ = plan_isotropic_strip_boxes((40, 100, 360, 124), (800, 600), patch_stride=28.0, max_tiles=3, comp_c=True)
+        self.assertEqual(grid_320, (3, 1))
+        self.assertEqual(len(boxes_320), 3)
+        self.assertGreater(boxes_320[0][2] - boxes_320[1][0], 0)
+        self.assertGreater(boxes_320[1][2] - boxes_320[2][0], 0)
+
+        # 3) 120 x 30 sub-threshold banner (< 196px) -> stays (1, 1) square
+        boxes_120, grid_120, span_120 = plan_isotropic_strip_boxes((100, 200, 220, 230), (800, 600), patch_stride=28.0, max_tiles=3, comp_c=True)
+        self.assertEqual(grid_120, (1, 1))
+        self.assertEqual(len(boxes_120), 1)
+        self.assertEqual(span_120, 120.0)
+
+        # 4) 36 x 28 micro-text -> single 1:1 56px square (2 * s_p) -> 8.00x magnification at 448px
+        boxes_micro, grid_micro, span_micro = plan_isotropic_strip_boxes((10, 10, 46, 38), (448, 448), patch_stride=28.0, max_tiles=3, comp_c=True)
+        self.assertEqual(grid_micro, (1, 1))
+        self.assertEqual(span_micro, 56.0)
+        self.assertAlmostEqual(448.0 / span_micro, 8.0, places=5)
+        self.assertGreaterEqual(boxes_micro[0][0], 0)
+
+        # 5) comp_c=False disables 25% seam overlap (step_f=1.0 -> 0px seam overlap on 240x32, and (1,1) on 204x32)
+        boxes_off_204, grid_off_204, _ = plan_isotropic_strip_boxes((100, 200, 304, 232), (800, 600), patch_stride=28.0, max_tiles=3, comp_c=False)
+        boxes_on_204, grid_on_204, _ = plan_isotropic_strip_boxes((100, 200, 304, 232), (800, 600), patch_stride=28.0, max_tiles=3, comp_c=True)
+        self.assertEqual(grid_on_204, (2, 1))
+        self.assertEqual(grid_off_204, (1, 1))
+        self.assertEqual(len(boxes_off_204), 1)
+        boxes_off_240, grid_off_240, _ = plan_isotropic_strip_boxes((100, 200, 340, 232), (800, 600), patch_stride=28.0, max_tiles=3, comp_c=False)
+        self.assertEqual(grid_off_240, (2, 1))
+        self.assertLessEqual(boxes_off_240[0][2] - boxes_off_240[1][0], 1)
+
+    def test_18_adapter_cst_nyquist_gate_immutability_and_ablations(self):
         import numpy as np
         from PIL import Image, ImageDraw
         from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter
+        from src.nevfe.pipeline import NEVFEPipeline
 
         class _MockCfg:
             force_image_size = 112
@@ -544,7 +603,13 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
 
             def encode(self, text, add_special_tokens=False):
                 del add_special_tokens
-                return [5, 6] if text else []
+                if not text:
+                    return []
+                if "ở đây" in text:
+                    return [5, 6]
+                if "bao nhiêu" in text:
+                    return [7, 8]
+                return [9, 10]
 
             def convert_tokens_to_ids(self, tok):
                 return {"<IMG_CONTEXT>": 3, "<|im_end|>": 2}.get(tok, 0)
@@ -574,6 +639,8 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
 
         model = _MockModel()
         adapter = VinternNEVFEAdapter(model=model, tokenizer=_MockTok(), device="cpu")
+        self.assertNotEqual(adapter._extract_query_embeds("ở đây ghi chữ gì?", torch.device("cpu")).tolist(),
+                            adapter._extract_query_embeds("giá bao nhiêu?", torch.device("cpu")).tolist())
 
         # 1. Rank-1 diagonal ramp (SO(2) invariance: det(J) == 0 -> optical_energy near 0 on interior cells)
         yy, xx = np.mgrid[0:64, 0:64]
@@ -581,8 +648,8 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         diag_img = Image.fromarray(np.stack([diag_ramp, diag_ramp, diag_ramp], axis=-1))
         _, e_diag, _, _ = adapter._extract_lattice_and_energy(diag_img, torch.zeros(1, 16, 16))
         self.assertLess(float(e_diag[:-1, :-1].max().item()), 1e-6)
-        p_diag = compute_bregman_optical_distribution(e_diag[:-1, :-1])
-        self.assertTrue(torch.allclose(p_diag, torch.full((3, 3), 1.0 / 9.0), atol=1e-5))
+        p_diag = compute_chromatic_stroke_prior(e_diag[:-1, :-1])
+        self.assertTrue(torch.allclose(p_diag, torch.ones((3, 3)), atol=1e-5))
 
         # 2. Isoluminant colored corner junctions (R+G+B=300 everywhere -> grayscale blind, CST detects)
         iso_img = Image.new("RGB", (64, 64), color=(200, 50, 50))
@@ -602,22 +669,42 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertGreaterEqual(model.extract_calls[-1], 2)
         self.assertLessEqual(model.extract_calls[-1], 3)
 
-        # 4. Multi-question generation preserves _cached_vit_embeds immutably & comp_c=False skips foveation
+        # 4. Multi-question generation preserves _cached_vit_embeds immutably & (0,0,0) skips foveation completely
         img = Image.new("RGB", (200, 120), color=(240, 240, 240))
         draw = ImageDraw.Draw(img)
         draw.rectangle([20, 20, 48, 42], fill=(10, 10, 10))
         draw.line([22, 22, 46, 40], fill=(250, 250, 250), width=2)
-        v1 = adapter.extract_visual_features(img).clone()
-        adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
-        cached_after_q1 = adapter._cached_vit_embeds.clone()
-        adapter.generate(img, "giá bao nhiêu?", max_new_tokens=2)
+        pipe = NEVFEPipeline(model=model, tokenizer=_MockTok(), device="cpu")
+        v1 = pipe.adapter.extract_visual_features(img).clone()
+        res_q1 = pipe.run(img, "ở đây ghi chữ gì?", max_new_tokens=2)
+        self.assertEqual(res_q1.stage1_bbox, [0, 0, 200, 120])
+        self.assertIsInstance(res_q1.diagnostics["foveal_bboxes"], list)
+        cached_after_q1 = pipe.adapter._cached_vit_embeds.clone()
+        pipe.run(img, "giá bao nhiêu?", max_new_tokens=2)
         self.assertTrue(torch.equal(v1, cached_after_q1))
-        self.assertTrue(torch.equal(v1, adapter._cached_vit_embeds))
+        self.assertTrue(torch.equal(v1, pipe.adapter._cached_vit_embeds))
 
+        for mask in [(1, 1, 1), (0, 1, 1), (1, 0, 1), (1, 1, 0)]:
+            pipe.set_ablation_switches(*mask)
+            pipe.run(img, "ở đây ghi chữ gì?", max_new_tokens=2)
         calls_before = len(model.extract_calls)
-        adapter.set_ablation_switches(comp_a=True, comp_b=True, comp_c=False)
-        adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
+        pipe.set_ablation_switches(comp_a=False, comp_b=False, comp_c=False)
+        pipe.run(img, "ở đây ghi chữ gì?", max_new_tokens=2)
         self.assertEqual(len(model.extract_calls), calls_before)
+
+    def test_19_sks_oif_cpu_latency_budget(self):
+        import time
+
+        engine = NEVFEEngine(config=AlgorithmConfig())
+        opt = torch.rand(12, 16, dtype=torch.float32)
+        v_p = torch.randn(12, 16, 896, dtype=torch.float32)
+        q_e = torch.randn(16, 896, dtype=torch.float32)
+        t0 = time.perf_counter()
+        for _ in range(25):
+            engine.foveate(opt, v_p, query_embeds=q_e)
+            plan_isotropic_strip_boxes((20, 40, 320, 88), (896, 672), patch_stride=28.0, max_tiles=3, comp_c=True)
+        ms_per_step = ((time.perf_counter() - t0) * 1000.0) / 25.0
+        self.assertLess(ms_per_step, 5.0)
 
 
 if __name__ == "__main__":
