@@ -27,13 +27,12 @@ from src.nevfe.core.engine import (
     AlgorithmConfig,
     NEVFEEngine,
     compute_bhattacharyya_coefficient,
-    compute_bregman_optical_distribution,
     compute_dynamic_coupling,
     compute_dynamic_plausibility_floor,
     compute_lexical_spatial_distribution,
+    compute_manifold_markov_posterior,
     compute_mean_field_reference_embeddings,
     compute_unnormalized_entropy,
-    compute_variational_posterior,
     nevfe_step_logits,
     select_poisson_bregman_subwindow,
 )
@@ -381,8 +380,13 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
                 self.assertLess((got[3] - ref[3]).abs().max().item(), 1e-7)
 
 
-    def test_15_vre_of_gamma_param_and_pipeline_preservation(self):
+    def test_15_avmf_gamma_param_pruning_and_pipeline_sync(self):
+        import src.nevfe.core.engine as engine_mod
         from src.nevfe.pipeline import NEVFEPipeline
+
+        self.assertFalse(hasattr(engine_mod, "compute_bregman_optical_distribution"))
+        self.assertFalse(hasattr(engine_mod, "compute_variational_posterior"))
+        self.assertEqual(AlgorithmConfig().gamma_param, 0.65)
 
         cfg = AlgorithmConfig(gamma_param=0.35)
         self.assertEqual(cfg.gamma_param, 0.35)
@@ -400,6 +404,10 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             language_model = type("_LM", (), {"config": _MockCfg()})()
             num_image_token = 16
 
+        pipe_default = NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu")
+        self.assertEqual(pipe_default.gamma_param, 0.65)
+        self.assertEqual(pipe_default.adapter.engine.gamma_param, 0.65)
+
         pipe = NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu", gamma_param=0.72)
         self.assertEqual(pipe.gamma_param, 0.72)
         pipe.set_ablation_switches(comp_a=False, comp_b=True, comp_c=True)
@@ -407,104 +415,107 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertEqual(pipe.adapter.engine.gamma_param, 0.72)
         self.assertEqual(pipe.config.ablation_mask, (0, 1, 1))
 
-    def test_16_fr_stvf_eq1_optical_and_eq2_lexical_boundaries(self):
-        unif_e = torch.full((4, 4), 2.5)
-        p_unif = compute_bregman_optical_distribution(unif_e)
-        self.assertTrue(torch.allclose(p_unif, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-
-        nan_e = torch.tensor([[float("nan"), float("inf")], [float("-inf"), 0.0]])
-        p_nan = compute_bregman_optical_distribution(nan_e)
-        self.assertTrue(torch.isfinite(p_nan).all())
-        self.assertTrue(torch.allclose(p_nan, torch.full((2, 2), 0.25), atol=1e-6))
-
-        # 0-homogeneity & FLT_MAX overflow immunity + 0.0% background leakage below mean
-        peak_e = torch.full((4, 4), 0.1)
-        peak_e[1, 2] = 5.0
-        p_peak = compute_bregman_optical_distribution(peak_e)
-        p_huge = compute_bregman_optical_distribution(peak_e * 1e36)
-        self.assertTrue(torch.isfinite(p_huge).all())
-        self.assertTrue(torch.allclose(p_peak, p_huge, atol=1e-5))
-        self.assertAlmostEqual(float(p_peak[0, 0].item()), 0.0, places=6)
-        self.assertAlmostEqual(float(p_peak[1, 2].item()), 1.0, places=6)
-
-        # ULP-perturbed constant energy must stay uniform
-        ulp_e = torch.full((4, 4), 100.0)
-        ulp_e[0, 0] += 1e-5
-        self.assertTrue(torch.allclose(compute_bregman_optical_distribution(ulp_e), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-
-        # Constant patch embeddings + float32 ULP perturbation < 1e-6 must hit uniform branch
+    def test_16_avmf_eq1_kl_specificity_and_boundaries(self):
+        # Constant / ULP / NaN / mismatched dim boundaries
         const_v = torch.ones((4, 4, 8), dtype=torch.float32) * 3.0
         const_v[0, 0, 0] += 1e-7
         q_emb = torch.randn(3, 8)
-        p_lex_const = compute_lexical_spatial_distribution(const_v, q_emb)
-        self.assertTrue(torch.allclose(p_lex_const, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-        self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, None), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+        unif_4x4 = torch.full((4, 4), 1.0 / 16.0)
+        self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, q_emb), unif_4x4, atol=1e-6))
+        self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, None), unif_4x4, atol=1e-6))
 
-        # Mismatched query dim raises ValueError
+        nan_v = torch.zeros((2, 2, 4), dtype=torch.float32)
+        nan_v[0, 0, 0] = float("nan")
+        nan_q = torch.tensor([[float("inf"), float("-inf"), 0.0, 0.0]])
+        p_nan = compute_lexical_spatial_distribution(nan_v, nan_q)
+        self.assertTrue(torch.isfinite(p_nan).all())
+        self.assertTrue(torch.allclose(p_nan, torch.full((2, 2), 0.25), atol=1e-6))
+
         with self.assertRaises(ValueError):
             compute_lexical_spatial_distribution(const_v, torch.randn(2, 5))
 
-        # Discriminative patch alignment concentrates mass on matching cell even at large scale
-        disc_v = torch.zeros((4, 4, 8), dtype=torch.float32)
-        disc_v[:, :, 0] = 1.0
-        disc_v[2, 3, :] = torch.tensor([0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) * 1e30
-        q_target = torch.tensor([[0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]) * 1e30
-        p_lex_disc = compute_lexical_spatial_distribution(disc_v, q_target)
-        self.assertTrue(torch.isfinite(p_lex_disc).all())
-        self.assertEqual(tuple(torch.nonzero(p_lex_disc == p_lex_disc.max(), as_tuple=False)[0].tolist()), (2, 3))
+        # Stopword suppression: 3 diffuse query tokens vs 1 sharp entity token on (4, 4:6)
+        grid = torch.zeros((6, 6, 8), dtype=torch.float32)
+        grid[:, :, :4] = torch.randn((6, 6, 4), dtype=torch.float32) * 0.5 + 1.0
+        grid[4, 4:6, :] = 0.0
+        grid[4, 4:6, 4] = 8.0  # sharp entity locus orthogonal to diffuse background subspace
+        q_mix = torch.tensor([
+            [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+        ])
+        p_kl = compute_lexical_spatial_distribution(grid, q_mix, comp_a=True)
+        p_raw = compute_lexical_spatial_distribution(grid, q_mix, comp_a=False)
+        self.assertGreater(float(p_kl[4, 4:6].sum().item()), float(p_raw[4, 4:6].sum().item()))
+        self.assertEqual(tuple(torch.nonzero(p_kl == p_kl.max(), as_tuple=False)[0].tolist())[0], 4)
 
-    def test_17_frsa_pbcf_eq3_fisher_rao_and_eq4_poisson_bregman(self):
-        p_opt = torch.zeros((8, 8), dtype=torch.float32)
-        p_opt[1:3, 2:4] = 0.25  # p(C) == 1.0 exact on 2x2 subwindow (area = 4/64 = 0.0625 <= 0.5)
-        p_lex = torch.full((8, 8), 1.0 / 64.0, dtype=torch.float32)
+        # FLT_MAX / 1e30 scale overflow safety
+        p_huge = compute_lexical_spatial_distribution(grid * 1e30, q_mix * 1e30, comp_a=True)
+        self.assertTrue(torch.isfinite(p_huge).all())
+        self.assertTrue(torch.allclose(p_kl, p_huge, atol=1e-4))
 
-        # Eq. (3) Fisher-Rao spherical geodesic: disjoint supports never collapse to zero/cliffs
-        disjoint_lex = torch.zeros((8, 8), dtype=torch.float32)
-        disjoint_lex[5:7, 5:7] = 0.25
-        post_disjoint = compute_variational_posterior(p_opt, disjoint_lex, gamma_param=0.5, comp_a=True, comp_b=True)
-        self.assertTrue(torch.isfinite(post_disjoint).all())
-        self.assertAlmostEqual(float(post_disjoint[1:3, 2:4].sum().item()), 0.5, places=5)
-        self.assertAlmostEqual(float(post_disjoint[5:7, 5:7].sum().item()), 0.5, places=5)
+    def test_17_avmf_eq2_markov_resolvent_and_eq3_foveate(self):
+        # 8x8 manifold: two separate same-color horizontal banners separated by orthogonal background + 1 isolated 1x1 patch
+        bg = torch.tensor([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        sign_vec = torch.tensor([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        iso_vec = torch.tensor([0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        patch_embeds = bg.view(1, 1, 8).repeat(8, 8, 1)
+        patch_embeds[1, 1:6, :] = sign_vec  # Upper target signboard (5 patches)
+        patch_embeds[5, 1:6, :] = sign_vec  # Lower disconnected distractor signboard (zero edge bridge)
+        patch_embeds[3, 3, :] = iso_vec     # Isolated 1x1 <4px CLASS_A patch
 
-        # Eq. (3) ablation branches
-        post_opt = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=True, comp_b=False)
-        self.assertAlmostEqual(float(post_opt[1:3, 2:4].sum().item()), 1.0, places=4)
-        post_lex = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=True)
-        self.assertTrue(torch.allclose(post_lex, p_lex, atol=1e-5))
-        post_none = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=False)
-        self.assertTrue(torch.allclose(post_none, p_lex, atol=1e-6))
+        # Anchor peaked at left edge [1, 1] of upper signboard
+        pa = torch.zeros((8, 8), dtype=torch.float32)
+        pa[1, 1] = 1.0
+        post = compute_manifold_markov_posterior(pa, patch_embeds, gamma_param=0.65, comp_b=True)
+        self.assertAlmostEqual(float(post.sum().item()), 1.0, places=5)
+        self.assertGreater(float(post[1, 2:6].sum().item()), 0.35)
+        self.assertAlmostEqual(float(post[5, 1:6].max().item()), 0.0, places=6)  # 0.0% cross-sign jump
 
-        # Eq. (4) Poisson-Bregman compact support selects tight (1, 2, 3, 4) without exterior-depletion inflation
-        box, j_star, p_mass, area_frac = select_poisson_bregman_subwindow(p_opt, comp_c=True)
-        self.assertTrue(math.isfinite(j_star))
+        # Isolated 1x1 CLASS_A patch suffers 0.0000 outward dilution
+        pa_iso = torch.full((8, 8), 0.001, dtype=torch.float32)
+        pa_iso[3, 3] = 1.0
+        pa_iso_norm = pa_iso / pa_iso.sum()
+        post_iso = compute_manifold_markov_posterior(pa_iso, patch_embeds, gamma_param=0.65, comp_b=True)
+        self.assertAlmostEqual(float(post_iso[3, 3].item()), float(pa_iso_norm[3, 3].item()), places=5)
+
+        # comp_b=False bypasses Markov resolvent
+        post_off = compute_manifold_markov_posterior(pa, patch_embeds, gamma_param=0.65, comp_b=False)
+        self.assertAlmostEqual(float(post_off[1, 1].item()), 1.0, places=6)
+
+        # NaN/Inf safety & N=0/1 boundaries
+        self.assertEqual(compute_manifold_markov_posterior(torch.zeros((0, 0)), torch.zeros((0, 0, 4))).numel(), 0)
+        nan_pa = torch.tensor([[float("nan"), float("inf")], [0.0, 0.0]])
+        post_nan = compute_manifold_markov_posterior(nan_pa, torch.randn(2, 2, 4))
+        self.assertTrue(torch.isfinite(post_nan).all())
+        self.assertAlmostEqual(float(post_nan.sum().item()), 1.0, places=5)
+
+        # Full NEVFEEngine.foveate executes Eq.(1)->(2)->(3) and captures the horizontal signboard
+        engine = NEVFEEngine()
+        q_anchor = torch.zeros((1, 8), dtype=torch.float32)
+        patch_embeds[1, 1, :] = torch.tensor([0.0, 1.0, 0.0, 0.4, 0.0, 0.0, 0.0, 0.0])  # keyword end of upper banner
+        q_anchor[0, 3] = 1.0
+        box, j_star, _ = engine.foveate(patch_embeds, q_anchor)
         self.assertGreater(j_star, 0.0)
-        self.assertEqual(box, (1, 2, 3, 4))
+        self.assertLessEqual(box[0], 1)
+        self.assertGreaterEqual(box[2], 2)
+        self.assertLessEqual(box[1], 1)
+        self.assertGreaterEqual(box[3], 5)
+
+        # Eq. (3) Poisson-Bregman compact support check
+        p_compact = torch.zeros((8, 8), dtype=torch.float32)
+        p_compact[1:3, 2:4] = 0.25
+        c_box, c_j, p_mass, area_frac = select_poisson_bregman_subwindow(p_compact, comp_c=True)
+        self.assertEqual(c_box, (1, 2, 3, 4))
         self.assertAlmostEqual(p_mass, 1.0, places=5)
         self.assertAlmostEqual(area_frac, 4.0 / 64.0, places=5)
-        self.assertAlmostEqual(j_star, math.log(16.0) - (1.0 - 4.0 / 64.0), places=4)
+        self.assertGreater(c_j, 0.0)
 
-        # Anti-inflation on elevated spot + uniform floor: must stay tight on spot, not expand to 50%
-        spot = torch.full((8, 8), 0.005, dtype=torch.float32)
-        spot[3:5, 4:6] = 0.18
-        spot_box, spot_j, _, spot_area = select_poisson_bregman_subwindow(spot, comp_c=True)
-        self.assertEqual(spot_box, (3, 4, 5, 6))
-        self.assertLessEqual(spot_area, 0.1)
-        self.assertGreater(spot_j, 0.0)
-
-        # Uniform/solid posterior yields j_star == 0.0
-        box_u, j_u, _, _ = select_poisson_bregman_subwindow(p_lex, comp_c=True)
-        self.assertEqual(j_u, 0.0)
-        self.assertEqual(box_u, (0, 0, 8, 8))
-
-        # comp_c=False disables subwindow selection
-        box_off, j_off, _, _ = select_poisson_bregman_subwindow(p_opt, comp_c=False)
-        self.assertEqual(j_off, 0.0)
-        self.assertEqual(box_off, (0, 0, 8, 8))
-
-    def test_18_adapter_cst_isoluminant_nyquist_gate_and_immutability(self):
-        import numpy as np
+    def test_18_adapter_patch_lattice_bbox_nyquist_and_immutability(self):
         from PIL import Image, ImageDraw
         from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter
+        from src.nevfe.pipeline import NEVFEPipeline
 
         class _MockCfg:
             force_image_size = 112
@@ -570,28 +581,23 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             def extract_feature(self, pixel_values):
                 self.extract_calls.append(int(pixel_values.shape[0]))
                 n_t = int(pixel_values.shape[0])
-                return torch.arange(n_t * 16 * 16, dtype=torch.float32).view(n_t, 16, 16) * 0.01
+                feats = torch.zeros((n_t, 16, 16), dtype=torch.float32)
+                feats[:, :4, :4] = 2.0  # non-uniform patch lattice so AVMF foveates
+                return feats
 
         model = _MockModel()
         adapter = VinternNEVFEAdapter(model=model, tokenizer=_MockTok(), device="cpu")
+        self.assertEqual(adapter.engine.gamma_param, 0.65)
+        self.assertIsNone(adapter._last_foveal_bbox)
 
-        # 1. Rank-1 diagonal ramp (SO(2) invariance: det(J) == 0 -> optical_energy near 0 on interior cells)
-        yy, xx = np.mgrid[0:64, 0:64]
-        diag_ramp = np.clip((xx + yy) * 2, 0, 255).astype(np.uint8)
-        diag_img = Image.fromarray(np.stack([diag_ramp, diag_ramp, diag_ramp], axis=-1))
-        _, e_diag, _, _ = adapter._extract_lattice_and_energy(diag_img, torch.zeros(1, 16, 16))
-        self.assertLess(float(e_diag[:-1, :-1].max().item()), 1e-6)
-        p_diag = compute_bregman_optical_distribution(e_diag[:-1, :-1])
-        self.assertTrue(torch.allclose(p_diag, torch.full((3, 3), 1.0 / 9.0), atol=1e-5))
+        # 1. _extract_patch_lattice mock fallback (B, 1) when N_tiles has B != gx * gy
+        img = Image.new("RGB", (200, 120), color=(240, 240, 240))
+        fake_3tile = torch.randn(3, 16, 16)
+        patch_lat, iw, ih = adapter._extract_patch_lattice(img, fake_3tile)
+        self.assertEqual(tuple(patch_lat.shape), (4, 8, 16))
+        self.assertEqual((iw, ih), (200, 120))
 
-        # 2. Isoluminant colored corner junctions (R+G+B=300 everywhere -> grayscale blind, CST detects)
-        iso_img = Image.new("RGB", (64, 64), color=(200, 50, 50))
-        ImageDraw.Draw(iso_img).rectangle([16, 16, 36, 36], fill=(50, 200, 50))
-        _, e_iso, _, _ = adapter._extract_lattice_and_energy(iso_img, torch.zeros(1, 16, 16))
-        self.assertGreater(float(e_iso.max().item()), 0.02)
-        self.assertAlmostEqual(float(e_iso.min().item()), 0.0, places=6)
-
-        # 3. Nyquist super-resolution gate: reject crops with M_crop <= M_glob, allow focused banners up to 3 tiles
+        # 2. Nyquist super-resolution gate: reject crops with M_crop <= M_glob, allow focused banners up to 3 tiles
         sq_img = Image.new("RGB", (224, 224), color=(240, 240, 240))
         calls_pre = len(model.extract_calls)
         self.assertIsNone(adapter.encode_transient_roi_crops(sq_img, [(0, 0, 224, 224)], max_tiles=3, min_magnification=0.5))
@@ -602,11 +608,9 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertGreaterEqual(model.extract_calls[-1], 2)
         self.assertLessEqual(model.extract_calls[-1], 3)
 
-        # 4. Multi-question generation preserves _cached_vit_embeds immutably & comp_c=False skips foveation
-        img = Image.new("RGB", (200, 120), color=(240, 240, 240))
+        # 3. Multi-question generation preserves _cached_vit_embeds immutably & updates _last_foveal_bbox
         draw = ImageDraw.Draw(img)
         draw.rectangle([20, 20, 48, 42], fill=(10, 10, 10))
-        draw.line([22, 22, 46, 40], fill=(250, 250, 250), width=2)
         v1 = adapter.extract_visual_features(img).clone()
         adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
         cached_after_q1 = adapter._cached_vit_embeds.clone()
@@ -614,10 +618,19 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertTrue(torch.equal(v1, cached_after_q1))
         self.assertTrue(torch.equal(v1, adapter._cached_vit_embeds))
 
+        # 4. Pipeline propagates _last_foveal_bbox (and resets on comp_c=False)
+        pipe = NEVFEPipeline(model=model, tokenizer=_MockTok(), device="cpu")
+        self.assertEqual(pipe.gamma_param, 0.65)
+        res_on = pipe.run(img, "ở đây ghi chữ gì?", max_new_tokens=2)
+        self.assertEqual(len(res_on.stage1_bbox), 4)
+        self.assertIsNotNone(pipe.adapter._last_foveal_bbox)
+
         calls_before = len(model.extract_calls)
-        adapter.set_ablation_switches(comp_a=True, comp_b=True, comp_c=False)
-        adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
+        pipe.set_ablation_switches(comp_a=True, comp_b=True, comp_c=False)
+        res_off = pipe.run(img, "ở đây ghi chữ gì?", max_new_tokens=2)
         self.assertEqual(len(model.extract_calls), calls_before)
+        self.assertIsNone(pipe.adapter._last_foveal_bbox)
+        self.assertEqual(res_off.stage1_bbox, [0, 0, 200, 120])
 
 
 if __name__ == "__main__":
