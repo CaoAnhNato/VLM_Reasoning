@@ -11,14 +11,18 @@ Handles:
 """
 
 from contextlib import contextmanager
+import math
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
+import numpy as np
 from PIL import Image
 import torch
+import torch.nn.functional as F
 
 from src.nevfe.core.engine import (
     AlgorithmConfig,
     NEVFEEngine,
     compute_mean_field_reference_embeddings,
+    nevfe_step_logits,
 )
 
 
@@ -47,6 +51,19 @@ def _find_closest_aspect_ratio(
     return best_ratio
 
 
+def _build_target_ratios(min_num: int, max_num: int) -> List[Tuple[int, int]]:
+    return sorted(
+        set(
+            (i, j)
+            for n in range(min_num, max_num + 1)
+            for i in range(1, n + 1)
+            for j in range(1, n + 1)
+            if min_num <= i * j <= max_num
+        ),
+        key=lambda x: x[0] * x[1],
+    )
+
+
 def dynamic_preprocess_vintern(
     image: Image.Image,
     min_num: int = 1,
@@ -57,17 +74,7 @@ def dynamic_preprocess_vintern(
     """Standard dynamic aspect-ratio tiling for Vintern / InternVL models."""
     orig_w, orig_h = image.size
     aspect_ratio = orig_w / max(1, orig_h)
-
-    target_ratios = sorted(
-        set(
-            (i, j)
-            for n in range(min_num, max_num + 1)
-            for i in range(1, n + 1)
-            for j in range(1, n + 1)
-            if i * j <= max_num and i * j >= min_num
-        ),
-        key=lambda x: x[0] * x[1],
-    )
+    target_ratios = _build_target_ratios(min_num, max_num)
 
     target_aspect_ratio = _find_closest_aspect_ratio(
         aspect_ratio, target_ratios, orig_w, orig_h, image_size
@@ -172,6 +179,7 @@ class VinternNEVFEAdapter:
         device: str = "cuda",
         lambda_param: float = 0.50,
         beta_param: float = 0.05,
+        gamma_param: float = 0.50,
         config: Optional[AlgorithmConfig] = None,
     ) -> None:
         self.model = model
@@ -195,7 +203,11 @@ class VinternNEVFEAdapter:
         resolved_cfg = (
             config
             if config is not None
-            else AlgorithmConfig(lambda_param=lambda_param, beta_param=beta_param)
+            else AlgorithmConfig(
+                lambda_param=lambda_param,
+                beta_param=beta_param,
+                gamma_param=gamma_param,
+            )
         )
         self.engine = NEVFEEngine(config=resolved_cfg)
 
@@ -286,6 +298,7 @@ class VinternNEVFEAdapter:
         self,
         image: Image.Image,
         bboxes: List[Tuple[int, int, int, int]],
+        max_tiles: int = 2,
     ) -> Optional[torch.Tensor]:
         """
         Encode transient question-guided native RGB crops via scripts/benchmark/sg_vcd/roi_cropper.py
@@ -295,7 +308,10 @@ class VinternNEVFEAdapter:
             return None
         from scripts.benchmark.sg_vcd.roi_cropper import DynamicMultiTileROICropper
 
-        cropper = DynamicMultiTileROICropper(target_size=self.force_image_size)
+        cropper = DynamicMultiTileROICropper(
+            target_size=self.force_image_size,
+            max_tiles=max_tiles,
+        )
         crop_tiles: List[Image.Image] = []
         for box in bboxes:
             res = cropper.crop(image, box)
@@ -309,6 +325,100 @@ class VinternNEVFEAdapter:
             crop_embeds = self.model.extract_feature(pixel_values)
         del pixel_values
         return crop_embeds.detach()
+
+    def _resolve_tile_grid(
+        self,
+        image: Image.Image,
+        n_tiles: int,
+    ) -> Tuple[int, int, int]:
+        """Resolve spatial tile count B and grid (g_x, g_y) with mock fallback (B, 1)."""
+        b = 1 if n_tiles == 1 else n_tiles - 1
+        if b == 1:
+            return 1, 1, 1
+        orig_w, orig_h = image.size
+        aspect_ratio = orig_w / max(1, orig_h)
+        target_ratios = _build_target_ratios(1, self.max_dynamic_patch)
+        gx, gy = _find_closest_aspect_ratio(
+            aspect_ratio, target_ratios, orig_w, orig_h, self.force_image_size
+        )
+        if b != gx * gy:
+            return b, b, 1
+        return b, gx, gy
+
+    def _extract_lattice_and_energy(
+        self,
+        image: Image.Image,
+        vit_embeds: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor, int, int]:
+        """Assemble unwarped patch lattice [H_g, W_g, D] and RGB scattering modulus [H_g, W_g]."""
+        b, gx, gy = self._resolve_tile_grid(image, int(vit_embeds.shape[0]))
+        p_tile, dim = int(vit_embeds.shape[1]), int(vit_embeds.shape[2])
+        p_side = int(round(math.sqrt(p_tile)))
+        if p_side * p_side != p_tile:
+            raise ValueError(f"Expected square patch token count per tile, got {p_tile}")
+        h_g, w_g = p_side * gy, p_side * gx
+        patch_embeds = (
+            vit_embeds[:b]
+            .detach()
+            .reshape(gy, gx, p_side, p_side, dim)
+            .permute(0, 2, 1, 3, 4)
+            .reshape(h_g, w_g, dim)
+        )
+        rgb_arr = np.asarray(image.convert("RGB"), dtype=np.float32) / 255.0
+        lum = torch.from_numpy(rgb_arr).mean(dim=-1)
+        img_h, img_w = int(lum.shape[0]), int(lum.shape[1])
+        u_x = torch.abs(lum[:, 1:] - lum[:, :-1]) if img_w > 1 else torch.zeros((img_h, 1), dtype=torch.float32)
+        u_y = torch.abs(lum[1:, :] - lum[:-1, :]) if img_h > 1 else torch.zeros((1, img_w), dtype=torch.float32)
+        s_x = F.adaptive_avg_pool2d(u_x.unsqueeze(0).unsqueeze(0), (h_g, w_g)).squeeze(0).squeeze(0)
+        s_y = F.adaptive_avg_pool2d(u_y.unsqueeze(0).unsqueeze(0), (h_g, w_g)).squeeze(0).squeeze(0)
+        optical_energy = torch.sqrt(torch.clamp(s_x * s_y, min=0.0)).to(device=vit_embeds.device)
+        return patch_embeds, optical_energy, img_w, img_h
+
+    def _extract_query_embeds(
+        self,
+        question: str,
+        target_device: torch.device,
+    ) -> Optional[torch.Tensor]:
+        """Extract prompt-centered Layer-0 query embeddings [M, D] in float32."""
+        q_text = question.strip()
+        if not q_text:
+            return None
+        q_tok = self.tokenizer.encode(q_text, add_special_tokens=False)
+        if not q_tok:
+            return None
+        lm = getattr(self.model, "language_model", None)
+        get_emb = getattr(lm, "get_input_embeddings", None)
+        if not callable(get_emb):
+            return None
+        embed_layer = get_emb()
+        q_ids = torch.tensor(q_tok, dtype=torch.long, device=target_device).unsqueeze(0)
+        q_raw = embed_layer(q_ids).squeeze(0).float()
+        p_tok = self.tokenizer.encode(PROMPT_INSTRUCTION, add_special_tokens=False)
+        if p_tok:
+            p_ids = torch.tensor(p_tok, dtype=torch.long, device=target_device).unsqueeze(0)
+            p_mean = embed_layer(p_ids).squeeze(0).float().mean(dim=0, keepdim=True)
+            return q_raw - p_mean
+        return q_raw
+
+    def extract_foveated_roi_crops(
+        self,
+        image: Image.Image,
+        vit_embeds: torch.Tensor,
+        question: str,
+    ) -> Optional[torch.Tensor]:
+        """Run VRE-OF foveation and extract transient RGB sub-tile features without mutating vit_embeds."""
+        patch_embeds, optical_energy, img_w, img_h = self._extract_lattice_and_energy(image, vit_embeds)
+        query_embeds = self._extract_query_embeds(question, vit_embeds.device)
+        box, kl_star, _ = self.engine.foveate(optical_energy, patch_embeds, query_embeds=query_embeds)
+        if kl_star <= 1e-6:
+            return None
+        h_g, w_g = int(optical_energy.shape[0]), int(optical_energy.shape[1])
+        i1, j1, i2, j2 = box
+        x1 = int(round(j1 * img_w / w_g))
+        y1 = int(round(i1 * img_h / h_g))
+        x2 = int(round(j2 * img_w / w_g))
+        y2 = int(round(i2 * img_h / h_g))
+        return self.encode_transient_roi_crops(image, [(x1, y1, x2, y2)], max_tiles=2)
 
     def build_multimodal_embeds(
         self,
@@ -385,12 +495,17 @@ class VinternNEVFEAdapter:
         question: str,
         max_new_tokens: int = 64,
     ) -> str:
-        """Dual-Stream Autoregressive Generation with IG-VFED."""
+        """Dual-Stream Autoregressive Generation with VRE-OF + locked IG-VFED."""
         with torch.no_grad():
             vit_embeds = self.extract_visual_features(image)
+            extra_vit_embeds = self.extract_foveated_roi_crops(image, vit_embeds, question)
 
-            multimodal_embeds = self.build_multimodal_embeds(vit_embeds, question)
-            mfvr_embeds = self.build_mfvr_embeds(vit_embeds, question)
+            multimodal_embeds = self.build_multimodal_embeds(
+                vit_embeds, question, extra_vit_embeds=extra_vit_embeds
+            )
+            mfvr_embeds = self.build_mfvr_embeds(
+                vit_embeds, question, extra_vit_embeds=extra_vit_embeds
+            )
 
             embed_layer = self.model.language_model.get_input_embeddings()
             eos_im_end = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
@@ -415,8 +530,16 @@ class VinternNEVFEAdapter:
             generated_ids: List[int] = []
 
             for step in range(1, max_new_tokens + 1):
-                next_tok_tensor, _, _, _ = self.engine.decode_step(
-                    logits_plus, logits_zero, q_mask=None, step_idx=step
+                next_tok_tensor, _, _, _ = nevfe_step_logits(
+                    logits_plus,
+                    logits_zero,
+                    lambda_param=self.engine.lambda_param,
+                    beta_param=self.engine.beta_param,
+                    q_mask=None,
+                    step_idx=step,
+                    comp_a=True,
+                    comp_b=True,
+                    comp_c=True,
                 )
                 next_id = int(next_tok_tensor.item())
 

@@ -43,6 +43,7 @@ class NEVFEPipeline:
         device: str = "cuda",
         lambda_param: float = 0.50,
         beta_param: float = 0.05,
+        gamma_param: float = 0.50,
         config: Optional[AlgorithmConfig] = None,
     ) -> None:
         self.model = model
@@ -52,10 +53,15 @@ class NEVFEPipeline:
         self.config = (
             config
             if config is not None
-            else AlgorithmConfig(lambda_param=lambda_param, beta_param=beta_param)
+            else AlgorithmConfig(
+                lambda_param=lambda_param,
+                beta_param=beta_param,
+                gamma_param=gamma_param,
+            )
         )
         self.lambda_param = self.config.lambda_param
         self.beta_param = self.config.beta_param
+        self.gamma_param = self.config.gamma_param
 
         self.adapter = VinternNEVFEAdapter(
             model=model,
@@ -75,6 +81,7 @@ class NEVFEPipeline:
         self.config = AlgorithmConfig(
             lambda_param=self.config.lambda_param,
             beta_param=self.config.beta_param,
+            gamma_param=self.config.gamma_param,
             ablation_mask=(int(bool(comp_a)), int(bool(comp_b)), int(bool(comp_c))),
         )
         if hasattr(self.adapter, "set_ablation_switches"):
@@ -120,5 +127,6 @@ class NEVFEPipeline:
                 "ablation_mask": list(cfg.ablation_mask),
                 "lambda_param": cfg.lambda_param,
                 "beta_param": cfg.beta_param,
+                "gamma_param": cfg.gamma_param,
             },
         )

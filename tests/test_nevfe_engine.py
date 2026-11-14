@@ -26,12 +26,16 @@ import torch.nn.functional as F
 from src.nevfe.core.engine import (
     AlgorithmConfig,
     NEVFEEngine,
-    compute_mean_field_reference_embeddings,
     compute_bhattacharyya_coefficient,
+    compute_bregman_optical_distribution,
     compute_dynamic_coupling,
     compute_dynamic_plausibility_floor,
+    compute_lexical_spatial_distribution,
+    compute_mean_field_reference_embeddings,
     compute_unnormalized_entropy,
+    compute_variational_posterior,
     nevfe_step_logits,
+    select_bernoulli_kl_subwindow,
 )
 
 
@@ -375,6 +379,196 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
                 self.assertLess((got[1] - ref[1]).abs().max().item(), 1e-7)
                 self.assertLess((got[2] - ref[2]).abs().max().item(), 1e-7)
                 self.assertLess((got[3] - ref[3]).abs().max().item(), 1e-7)
+
+
+    def test_15_vre_of_gamma_param_and_pipeline_preservation(self):
+        from src.nevfe.pipeline import NEVFEPipeline
+
+        cfg = AlgorithmConfig(gamma_param=0.35)
+        self.assertEqual(cfg.gamma_param, 0.35)
+        with self.assertRaises(ValueError):
+            AlgorithmConfig(gamma_param=-0.05)
+        with self.assertRaises(ValueError):
+            AlgorithmConfig(gamma_param=1.05)
+
+        class _MockCfg:
+            force_image_size = 448
+            max_dynamic_patch = 2
+
+        class _MockModel:
+            config = _MockCfg()
+            language_model = type("_LM", (), {"config": _MockCfg()})()
+            num_image_token = 16
+
+        pipe = NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu", gamma_param=0.72)
+        self.assertEqual(pipe.gamma_param, 0.72)
+        pipe.set_ablation_switches(comp_a=False, comp_b=True, comp_c=True)
+        self.assertEqual(pipe.config.gamma_param, 0.72)
+        self.assertEqual(pipe.adapter.engine.gamma_param, 0.72)
+        self.assertEqual(pipe.config.ablation_mask, (0, 1, 1))
+
+    def test_16_vre_of_eq1_optical_and_eq2_lexical_boundaries(self):
+        unif_e = torch.full((4, 4), 2.5)
+        p_unif = compute_bregman_optical_distribution(unif_e)
+        self.assertTrue(torch.allclose(p_unif, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+
+        nan_e = torch.tensor([[float("nan"), float("inf")], [float("-inf"), 0.0]])
+        p_nan = compute_bregman_optical_distribution(nan_e)
+        self.assertTrue(torch.isfinite(p_nan).all())
+        self.assertTrue(torch.allclose(p_nan, torch.full((2, 2), 0.25), atol=1e-6))
+
+        peak_e = torch.zeros((4, 4))
+        peak_e[1, 2] = 5.0
+        p_peak = compute_bregman_optical_distribution(peak_e)
+        self.assertAlmostEqual(float(p_peak.sum().item()), 1.0, places=5)
+        self.assertGreater(float(p_peak[1, 2].item()), 0.9)
+
+        # Constant patch embeddings + float32 ULP perturbation < 1e-6 must hit uniform branch
+        const_v = torch.ones((4, 4, 8), dtype=torch.float32) * 3.0
+        const_v[0, 0, 0] += 1e-7
+        q_emb = torch.randn(3, 8)
+        p_lex_const = compute_lexical_spatial_distribution(const_v, q_emb)
+        self.assertTrue(torch.allclose(p_lex_const, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+        self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, None), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+
+        # Discriminative patch alignment concentrates mass on matching cell
+        disc_v = torch.zeros((4, 4, 8), dtype=torch.float32)
+        disc_v[:, :, 0] = 1.0
+        disc_v[2, 3, :] = torch.tensor([0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        q_target = torch.tensor([[0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
+        p_lex_disc = compute_lexical_spatial_distribution(disc_v, q_target)
+        self.assertEqual(tuple(torch.nonzero(p_lex_disc == p_lex_disc.max(), as_tuple=False)[0].tolist()), (2, 3))
+
+    def test_17_vre_of_eq3_and_eq4_float32_nan_safety(self):
+        p_opt = torch.zeros((8, 8), dtype=torch.float32)
+        p_opt[1:3, 2:4] = 0.25  # p(C) == 1.0 exact on 2x2 subwindow (area = 4/64 = 0.0625 <= 0.5)
+        p_lex = torch.full((8, 8), 1.0 / 64.0, dtype=torch.float32)
+
+        post_opt = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=True, comp_b=False)
+        self.assertAlmostEqual(float(post_opt[1:3, 2:4].sum().item()), 1.0, places=4)
+
+        post_lex = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=True)
+        self.assertTrue(torch.allclose(post_lex, p_lex, atol=1e-5))
+
+        post_none = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=False)
+        self.assertTrue(torch.allclose(post_none, p_lex, atol=1e-6))
+
+        # Compact support p(C)=1.0 must produce finite positive kl_star without 0*log(0)=NaN
+        box, kl_star, p_mass, area_frac = select_bernoulli_kl_subwindow(p_opt, comp_c=True)
+        self.assertTrue(math.isfinite(kl_star))
+        self.assertGreater(kl_star, 0.0)
+        self.assertEqual(box, (1, 2, 3, 4))
+        self.assertAlmostEqual(p_mass, 1.0, places=5)
+        self.assertAlmostEqual(area_frac, 4.0 / 64.0, places=5)
+
+        # Uniform/solid posterior yields kl_star == 0.0
+        box_u, kl_u, _, _ = select_bernoulli_kl_subwindow(p_lex, comp_c=True)
+        self.assertEqual(kl_u, 0.0)
+        self.assertEqual(box_u, (0, 0, 8, 8))
+
+        # comp_c=False disables subwindow selection
+        box_off, kl_off, _, _ = select_bernoulli_kl_subwindow(p_opt, comp_c=False)
+        self.assertEqual(kl_off, 0.0)
+        self.assertEqual(box_off, (0, 0, 8, 8))
+
+    def test_18_adapter_mock_fallback_immutability_and_locked_decoder(self):
+        from PIL import Image, ImageDraw
+        from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter
+
+        class _MockCfg:
+            force_image_size = 112
+            max_dynamic_patch = 4
+
+        class _MockLMCore:
+            def __init__(self, vocab_size=64, hidden=16):
+                self.vocab_size = vocab_size
+                self.hidden = hidden
+                self.seen_seq_lens = []
+
+            def __call__(self, inputs_embeds, past_key_values=None, use_cache=True, return_dict=True):
+                del past_key_values, use_cache, return_dict
+                self.seen_seq_lens.append(int(inputs_embeds.shape[1]))
+                b_sz, s_len, _ = inputs_embeds.shape
+                hidden_out = inputs_embeds[:, -1:, :]
+                return type("_Out", (), {"last_hidden_state": hidden_out, "past_key_values": ("kv", s_len)})()
+
+        class _MockLM:
+            config = _MockCfg()
+
+            def __init__(self, vocab_size=64, hidden=16):
+                self.emb = torch.nn.Embedding(vocab_size, hidden)
+                self.model = _MockLMCore(vocab_size=vocab_size, hidden=hidden)
+                self.vocab_size = vocab_size
+
+            def get_input_embeddings(self):
+                return self.emb
+
+            def lm_head(self, x):
+                out = torch.zeros((x.shape[0], x.shape[1], self.vocab_size), dtype=torch.float32)
+                out[:, :, 2] = 5.0  # immediate <|im_end|>
+                return out
+
+        class _MockTok:
+            eos_token_id = 2
+
+            def encode(self, text, add_special_tokens=False):
+                del add_special_tokens
+                return [5, 6] if text else []
+
+            def convert_tokens_to_ids(self, tok):
+                return {"<IMG_CONTEXT>": 3, "<|im_end|>": 2}.get(tok, 0)
+
+            def __call__(self, text, return_tensors="pt", add_special_tokens=False):
+                del return_tensors, add_special_tokens
+                n_img = text.count("<IMG_CONTEXT>")
+                ids = [1] + ([3] * n_img) + [4] if n_img > 0 else [5, 6, 7]
+                return type("_Enc", (), {"input_ids": torch.tensor([ids], dtype=torch.long)})()
+
+            def decode(self, ids, skip_special_tokens=True):
+                del skip_special_tokens
+                return "ok"
+
+        class _MockModel:
+            config = _MockCfg()
+            num_image_token = 16
+
+            def __init__(self):
+                self.language_model = _MockLM(vocab_size=64, hidden=16)
+                self.extract_calls = []
+
+            def extract_feature(self, pixel_values):
+                self.extract_calls.append(int(pixel_values.shape[0]))
+                n_t = int(pixel_values.shape[0])
+                # Deliberately return non-grid count 3 on initial 1-tile call or exact shape
+                return torch.arange(n_t * 16 * 16, dtype=torch.float32).view(n_t, 16, 16) * 0.01
+
+        img = Image.new("RGB", (200, 120), color=(240, 240, 240))
+        draw = ImageDraw.Draw(img)
+        draw.rectangle([20, 20, 48, 42], fill=(10, 10, 10))
+        draw.line([22, 22, 46, 40], fill=(250, 250, 250), width=2)
+
+        model = _MockModel()
+        adapter = VinternNEVFEAdapter(model=model, tokenizer=_MockTok(), device="cpu")
+
+        # Verify mock (B, 1) fallback when N_tiles has B != gx * gy (e.g., 3 tiles -> B=2, (2,1))
+        fake_3tile = torch.randn(3, 16, 16)
+        patch_lat, opt_e, _, _ = adapter._extract_lattice_and_energy(img, fake_3tile)
+        self.assertEqual(tuple(patch_lat.shape), (4, 8, 16))
+        self.assertEqual(tuple(opt_e.shape), (4, 8))
+
+        # Multi-question generation preserves _cached_vit_embeds immutably
+        v1 = adapter.extract_visual_features(img).clone()
+        adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
+        cached_after_q1 = adapter._cached_vit_embeds.clone()
+        adapter.generate(img, "giá bao nhiêu?", max_new_tokens=2)
+        self.assertTrue(torch.equal(v1, cached_after_q1))
+        self.assertTrue(torch.equal(v1, adapter._cached_vit_embeds))
+
+        # comp_c=False skips foveation (extra_vit_embeds=None) while keeping IG-VFED locked
+        calls_before = len(model.extract_calls)
+        adapter.set_ablation_switches(comp_a=True, comp_b=True, comp_c=False)
+        adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
+        self.assertEqual(len(model.extract_calls), calls_before)
 
 
 if __name__ == "__main__":
