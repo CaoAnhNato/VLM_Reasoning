@@ -1,0 +1,109 @@
+# Team 1 Specification — Iteration 1 (`spec_iter_1.md`)
+
+> **Note**: Do NOT embed a `spec_sha256` field inside this file. The SHA-256 digest is computed externally over the UTF-8 LF-normalized bytes of this file (`sha256(bytes.replace(b"\r\n", b"\n"))`) and bound on line 2 of `src/nevfe/core/engine.py`.
+
+## 1. Header
+- **team_id**: `team_1`
+- **direction_id**: `direction_1`
+- **iteration**: `1`
+- **spec_version**: `v1.0`
+- **base_best_commit**: `d79b6505f735be3444dced6fc13bf40a5a9846d3`
+
+## 2. Backbone Tensor Invariants
+- **Vision Encoder (`InternViT-300M`)**: Unwarped per-image global patch embeddings `vit_embeds` of shape `[N_tiles, 256, 896]` (`bfloat16`), cached once per image in `self._cached_vit_embeds` and **never mutated or algebraically warped** across multi-question images. When `N_tiles == 1`, spatial grid is `(g_x, g_y) = (1, 1)` (`B = 1`); when `N_tiles > 1` (`use_thumbnail=True`), `vit_embeds[:N_tiles - 1]` contains `B = g_x * g_y` non-overlapping `448 x 448` spatial sub-tiles in row-major order and `vit_embeds[-1]` is the global thumbnail. Each tile encodes `p_side x p_side` visual tokens (`p_side = int(round(sqrt(num_image_token)))`, i.e., `16 x 16 = 256` on `Vintern-1B-v3_5` with `28 x 28` effective pixel stride after `2 x 2` pixel-shuffle). Transient per-question foveal RGB sub-tiles `extra_vit_embeds` (`[N_crop, 256, 896]`, `bfloat16`, `N_crop in {1, 2}`) are extracted from native RGB via `DynamicMultiTileROICropper` (`scripts/benchmark/sg_vcd/roi_cropper.py`) and concatenated transiently along `dim=0` (`[N_tiles + N_crop, 256, 896]`) inside `build_multimodal_embeds` and `build_mfvr_embeds` without mutating `self._cached_vit_embeds`.
+- **Language Decoder (`Qwen2.5-0.5B-Instruct`)**: `24` transformer layers, `14` query heads, `2` KV heads (`7:1` GQA group ratio), hidden dimension `896`, dynamic vocabulary size `vocab_size` (never hardcoded in `src/nevfe/core/engine.py`). **Domain 1 Disjointness Invariant**: Zero hooks, zero attention-implementation overrides, and zero hidden-state edits are registered on intra-decoder layers `1..24`; `7:1` GQA KV-caches inside `Qwen2.5-0.5B-Instruct` operate unmodified over the concatenated Layer-0 input sequence `[V_global; V_crop]`. Layer-0 lexical query conditioning reads only the input token embedding lookup table `model.language_model.get_input_embeddings()` (`[M, D]`) prior to Layer 1.
+- **Two-Stream Contract**: Positive visual-conditioned logits `logits_plus` (`[B_batch, V]` or `[V]`) and Mean-Field Visual Reference prior logits `logits_zero` (`[B_batch, V]` or `[V]`) computed with zeroed spatial gradient (`V^0 = 1_{P'} \bar{v}^\top` over the matched `[N_tiles + N_crop, 256, 896]` visual token sequence so sequence lengths of `p_t^+` and `p_t^0` remain identical and global readable text never self-cancels). Single-step `IG-VFED` decoding over `(logits_plus, logits_zero)` is preserved without multi-step (`t >= 2`) trajectory modification.
+
+## 3. Open-Loop Calibration Bank Observation
+- Executed CPU-only (`CUDA_VISIBLE_DEVICES=""`) open-loop inspection under `scripts/local/run_guarded.py` on the 30-sample Calibration Bank (`data/local_calibration_bank/`, `vocab_size = 151,674`):
+  - **Global Bank Metrics**: `num_samples = 30`, `finite_ratio = 1.0000`, `simplex_kl_mean = 0.390094`, `top1_prior_shift_rate = 0.4000`, `wall_ms = 436.1 ms` (`< 0.5 s` CPU contract).
+  - **Stratified Per-Class Breakdown (`CLASS_A..CLASS_E`)**:
+    - `CLASS_A` (`n = 9`, `< 4 px` sub-Nyquist stroke): `BC_mean = 0.7909` (highest prior-posterior overlap across all classes, proving `p_1^+` collapses toward blind `p_1^0`), `H(p_1^+) = 2.1856 nats` (highest predictive uncertainty), `vit_embed_norms` spatial CV `vn_cv = 0.2180` (lowest across all classes due to background ViT register norm outliers masking tiny strokes), `shift_rate = 0.3333`.
+    - `CLASS_B` (`n = 10`): `BC_mean = 0.7420`, `H(p_1^+) = 1.9305 nats`, `vn_cv = 0.2590`, `shift_rate = 0.6000`.
+    - `CLASS_C` (`n = 4`): `BC_mean = 0.7810`, `H(p_1^+) = 1.4265 nats`, `vn_cv = 0.2316`, `shift_rate = 0.2500`.
+    - `CLASS_D` (`n = 6`): `BC_mean = 0.5867`, `H(p_1^+) = 1.9279 nats`, `vn_cv = 0.2624`, `shift_rate = 0.1667`.
+    - `CLASS_E` (`n = 1`): `BC_mean = 0.4604`, `H(p_1^+) = 2.1059 nats`, `vn_cv = 0.2727`, `shift_rate = 1.0000`.
+  - **Native RGB Calibration Geometry (`30` `is_calibration=true` images only)**: Mean native resolution is `927.2 x 741.0 px` (width up to `2304 px`). Un-centered directional gradient pooling yields diffuse scene boxes (`mean area_frac = 0.286`, `mean Bernoulli KL = 0.135 nats`), whereas squared Euclidean Bregman-excess centering `(E_opt - mean(E_opt))_+^2` concentrates mass onto compact stroke clusters (`median area_frac = 0.117`, `mean Bernoulli KL = 0.614 nats`, `~3.0x` linear zoom over global `448 x 448` view).
+
+## 4. Numbered Governing Equations & Boundary Conditions
+
+We formulate **Variational Relative-Entropy Optical Foveation (`VRE-OF`)** from a single unified variational principle: maximizing binary partition Kullback-Leibler information (`vanerven2014renyi` Theorem 2) over the exact KL-Bregman barycenter posterior (`banerjee2005bregman` Proposition 1) fusing native-RGB windowed scattering stroke energy (`bruna2013scattering`) with Bregman-centered Layer-0 visual-lexical alignment. All backbone-agnostic functions **(Eq. 1)–(Eq. 4)** and **(Eq. 5)–(Eq. 7)** reside in `src/nevfe/core/engine.py` using only allowed numeric literals `{0, 0.0, 0.5, 1, 1.0, -1, 2, 2.0, 1e-6, 1e-8, 1e-12, -1e9}` and rank/axis indices `-4..4`; native RGB pooling and PIL crop extraction reside in `src/nevfe/adapter/vintern_adapter.py`.
+
+### 4.1 Adapter Pre-Extraction on Spatial Lattice $\Omega$ (`vintern_adapter.py`)
+Given native RGB image $I$ of pixel size $(W, H)$ and cached unwarped `vit_embeds` (`[N_tiles, P_tile, D]`) with spatial tile grid $(g_x, g_y)$ ($B = 1$ if $N_{\text{tiles}} == 1$ else $N_{\text{tiles}} - 1$, $p_{\text{side}} = \text{round}(\sqrt{P_{\text{tile}}})$, lattice shape $(H_g, W_g) = (p_{\text{side}} g_y, \, p_{\text{side}} g_x)$):
+1. **Unwarped Spatial Patch Lattice**: Reshape `vit_embeds[:B]` (without mutating `self._cached_vit_embeds`) into `patch_embeds` $V \in \mathbb{R}^{H_g \times W_g \times D}$ where tile $b \in \{0, \dots, B-1\}$ occupies rows $[t_y p_{\text{side}}, (t_y + 1) p_{\text{side}})$ and columns $[t_x p_{\text{side}}, (t_x + 1) p_{\text{side}})$ with $t_y = \lfloor b / g_x \rfloor$, $t_x = b \bmod g_x$.
+2. **Windowed Directional Scattering Modulus (`bruna2013scattering`)**: Let $I_Y \in [0, 1]^{H \times W}$ be channel-averaged `float32` RGB luminance. Compute horizontal and vertical finite-difference moduli $U_x = |I_Y[:, 1:] - I_Y[:, :-1]|$ (zeros of shape $(H, 1)$ if $W \le 1$) and $U_y = |I_Y[1:, :] - I_Y[:-1, :]|$ (zeros of shape $(1, W)$ if $H \le 1$), pool each onto $(H_g, W_g)$ via `F.adaptive_avg_pool2d`, and form the 2D isotropic stroke scattering modulus `optical_energy` $\mathcal{E}_{\text{opt}}(u) = \sqrt{\max(0, S_x(u) \cdot S_y(u))} \in \mathbb{R}_{\ge 0}^{H_g \times W_g}$ (suppressing 1D horizon/pole step edges where either $S_x \approx 0$ or $S_y \approx 0$).
+3. **Prompt-Centered Layer-0 Query Embeddings**: Tokenize `question.strip()` (`add_special_tokens=False`) into $M$ token IDs. If $M == 0$, set `query_embeds = None`; else look up `q_raw = embed_layer(q_ids).float()` (`[M, D]`) and subtract the mean `float32` Layer-0 embedding of `PROMPT_INSTRUCTION` (`prompt_mean`, `[1, D]`) to obtain `query_embeds` $E_Q \in \mathbb{R}^{M \times D}$.
+
+### 4.2 Core Variational Foveation Equations (`src/nevfe/core/engine.py`)
+
+- **(Eq. 1) Squared Bregman-Excess Optical Distribution (`compute_bregman_optical_distribution`)**:
+  Given `optical_energy` $\mathcal{E}_{\text{opt}} \in \mathbb{R}^{H_g \times W_g}$ (requiring `.dim() == 2`), promote to `float32`, sanitize `NaN`/`\pm\infty \to 0.0`, and clamp $\mathcal{E}(u) = \max(0.0, \mathcal{E}_{\text{opt}}(u))$. Subtract the unique spatial Bregman centroid $\bar{\mathcal{E}} = \frac{1}{H_g W_g} \sum_{v \in \Omega} \mathcal{E}(v)$ (`banerjee2005bregman` Prop. 1) and form the positive squared Euclidean Bregman excess (`banerjee2005bregman` Ex. 5):
+  $$\tilde{\mathcal{E}}(u) = \big(\max(0.0, \; \mathcal{E}(u) - \bar{\mathcal{E}})\big)^2, \qquad Z_{\text{opt}} = \sum_{v \in \Omega} \tilde{\mathcal{E}}(v)$$
+  $$P_{\text{opt}}(u) = \begin{cases} \dfrac{\tilde{\mathcal{E}}(u)}{\max(Z_{\text{opt}}, \, \epsilon)} & \text{if } Z_{\text{opt}} > \epsilon \\ \dfrac{1.0}{\max(1, \, H_g W_g)} & \text{if } Z_{\text{opt}} \le \epsilon \text{ (uniform / monochromatic boundary)} \end{cases}, \qquad \epsilon = 10^{-12}$$
+
+- **(Eq. 2) Bregman-Centered Layer-0 Lexical Spatial Distribution (`compute_lexical_spatial_distribution`)**:
+  Given `patch_embeds` $V \in \mathbb{R}^{H_g \times W_g \times D}$ (requiring `.dim() == 3`) and `query_embeds` $E_Q \in \mathbb{R}^{M \times D}$ (`Optional[torch.Tensor]`), promote to `float32` and sanitize `NaN`/`\pm\infty \to 0.0`.
+  - *Boundary condition ($E_Q$ is `None`, `.dim() != 2`, or $M == 0$)*: Return exact uniform distribution $P_{\text{lex}}(u) = \frac{1.0}{\max(1, H_g W_g)} \in \mathbb{R}^{H_g \times W_g}$.
+  - Otherwise, remove the spatial mean-field register centroid $\bar{V} = \frac{1}{H_g W_g}\sum_{v \in \Omega} V(v)$ (`darcet2024registers`, `banerjee2005bregman`) and L2-normalize with $\epsilon_v = 10^{-8}$:
+    $$\hat{V}(u) = \frac{V(u) - \bar{V}}{\|V(u) - \bar{V}\|_2 + \epsilon_v} \in \mathbb{R}^{H_g \times W_g \times D}, \qquad \hat{E}_m = \frac{E_{Q,m}}{\|E_{Q,m}\|_2 + \epsilon_v} \in \mathbb{R}^{D}$$
+    Compute peak cross-modal cosine alignment $c_Q(u) = \max_{1 \le m \le M} \langle \hat{V}(u), \hat{E}_m \rangle \in \mathbb{R}^{H_g \times W_g}$, standardize across $\Omega$ with $\bar{c}_Q = \text{mean}(c_Q)$ and $\sigma_Q = \sqrt{\text{mean}((c_Q - \bar{c}_Q)^2) + \epsilon_v}$, and map via the strictly positive Legendre-Bregman Softmax dual (preventing false zeros on sub-Nyquist `CLASS_A` strokes while reducing to exact uniform when $\sigma_Q \le 10^{-6}$):
+    $$z_Q(u) = \begin{cases} \dfrac{c_Q(u) - \bar{c}_Q}{\sigma_Q} & \text{if } \sigma_Q > 10^{-6} \\ 0.0 & \text{if } \sigma_Q \le 10^{-6} \end{cases}, \qquad P_{\text{lex}}(u) = \text{Softmax}_{u \in \Omega}\big(z_Q(u)\big) \in \Delta^{H_g W_g - 1}$$
+
+- **(Eq. 3) KL-Bregman Variational Posterior (`compute_variational_posterior`)**:
+  Given $P_{\text{opt}}, P_{\text{lex}} \in \Delta^{H_g W_g - 1}$, scalar `gamma_param` $\gamma \in [0.0, 1.0]$, and ablation flags `(comp_a, comp_b)`, resolve the effective convex weight:
+  $$\gamma_{\text{eff}} = \begin{cases} \text{clamp}(\gamma, 0.0, 1.0) & \text{if } \text{comp\_a} \wedge \text{comp\_b} \\ 1.0 & \text{if } \text{comp\_a} \wedge \neg\text{comp\_b} \\ 0.0 & \text{if } \neg\text{comp\_a} \wedge \text{comp\_b} \end{cases}$$
+  - *Boundary condition ($\neg\text{comp\_a} \wedge \neg\text{comp\_b}$)*: Return uniform $P_\gamma^*(u) = \frac{1.0}{\max(1, H_g W_g)}$.
+  - Otherwise, compute the unique minimizer $P_\gamma^* = \arg\min_{P \in \Delta} [\gamma_{\text{eff}} D_{\text{KL}}(P \parallel P_{\text{opt}}) + (1 - \gamma_{\text{eff}}) D_{\text{KL}}(P \parallel P_{\text{lex}})]$ in log-space with $\epsilon = 10^{-12}$:
+    $$P_\gamma^*(u) = \text{Softmax}_{u \in \Omega}\Big(\gamma_{\text{eff}} \ln \max(P_{\text{opt}}(u), \epsilon) + (1.0 - \gamma_{\text{eff}}) \ln \max(P_{\text{lex}}(u), \epsilon)\Big)$$
+
+- **(Eq. 4) Exact Binary-Partition Bernoulli-KL Subwindow Functional (`select_bernoulli_kl_subwindow`)**:
+  Given `posterior_2d` $P_\gamma^* \in \Delta^{H_g W_g - 1}$ and ablation flag `comp_c`:
+  - *Boundary condition ($\neg\text{comp\_c}$ or $H_g W_g \le 1$)*: Return full lattice `((0, 0, H_g, W_g), 0.0, 1.0, 1.0)` (`kl_star = 0.0`, injecting zero extra crops).
+  - Otherwise, construct the zero-padded 2D summed-area table $S \in \mathbb{R}^{(H_g+1)\times(W_g+1)}$ over `float32` $P_\gamma^*$ and evaluate all nonempty axis-aligned subwindows $C = [i_1, i_2) \times [j_1, j_2)$ ($0 \le i_1 < i_2 \le H_g$, $0 \le j_1 < j_2 \le W_g$ via `torch.triu_indices(..., offset=1)`), with captured mass $p(C) = S_{i_2, j_2} - S_{i_1, j_2} - S_{i_2, j_1} + S_{i_1, j_1}$ and area fraction $a(C) = \frac{(i_2 - i_1)(j_2 - j_1)}{H_g W_g}$. Over the admissible zoom cone $\mathcal{C}_{\text{adm}} = \{C : p(C) > a(C) + \epsilon_k \;\wedge\; \epsilon_k \le a(C) \le 0.5\}$ ($\epsilon_k = 10^{-8}$, ensuring strictly above-uniform information density and isotropic zoom $\ge \sqrt{2}$ over the global frame), evaluate binary partition relative entropy (`vanerven2014renyi` Thm. 2) with $p_{\text{cl}} = \text{clamp}(p(C), \epsilon_k, 1.0 - \epsilon_k)$, $a_{\text{cl}} = \text{clamp}(a(C), \epsilon_k, 1.0 - \epsilon_k)$:
+    $$J_{\text{KL}}(C) = \begin{cases} \max\!\left(0.0, \; p_{\text{cl}} \ln \dfrac{p_{\text{cl}}}{a_{\text{cl}}} + (1.0 - p_{\text{cl}}) \ln \dfrac{1.0 - p_{\text{cl}}}{1.0 - a_{\text{cl}}}\right) & \text{if } C \in \mathcal{C}_{\text{adm}} \\ 0.0 & \text{otherwise} \end{cases}$$
+    Let $C^* = \arg\max_C J_{\text{KL}}(C)$ and $J^* = J_{\text{KL}}(C^*)$. If $J^* \le 10^{-6}$ (e.g., uniform/solid image), return `((0, 0, H_g, W_g), 0.0, 1.0, 1.0)`; otherwise return `((i_1^*, j_1^*, i_2^*, j_2^*), float(J^*), float(p(C^*)), float(a(C^*)))`.
+  - Expose `NEVFEEngine.foveate(self, optical_energy, patch_embeds, query_embeds=None)` executing `(Eq. 1) -> (Eq. 2) -> (Eq. 3) -> (Eq. 4)` with `(self.gamma_param, self.comp_a, self.comp_b, self.comp_c)` and returning `((i_1^*, j_1^*, i_2^*, j_2^*), kl_star, posterior_2d)`. When `kl_star > 1e-6`, `vintern_adapter.py` maps $x_1 = \text{round}(j_1^* W / W_g)$, $y_1 = \text{round}(i_1^* H / H_g)$, $x_2 = \text{round}(j_2^* W / W_g)$, $y_2 = \text{round}(i_2^* H / H_g)$, extracts `extra_vit_embeds` via `DynamicMultiTileROICropper(target_size=self.force_image_size, max_tiles=2)`, and concatenates `[vit_embeds; extra_vit_embeds]` transiently in both `build_multimodal_embeds` and `build_mfvr_embeds`.
+
+### 4.3 Retained Baseline Single-Step `IG-VFED` Equations (`t = 1` vs. `t > 1` & Standalone Equivalence)
+- **(Eq. 5) Mean-Field Visual Reference (`compute_mean_field_reference_embeddings`)**:
+  For `effective_vit` $V_{\text{eff}} \in \mathbb{R}^{N_{\text{eff}} \times P_{\text{tile}} \times D}$ (or 2D `[P, D]`), $V^0 = \mathbf{1} \bar{\boldsymbol{v}}^\top$ via spatial mean over `dim=(0, 1)` (or `dim=0` for 2D).
+- **(Eq. 6) Bhattacharyya Coefficient & Geodesic Coupling (`compute_bhattacharyya_coefficient`, `compute_dynamic_coupling`)**:
+  Promoting `logits_plus`, `logits_zero` to `float32`, $p_t^+ = \text{Softmax}(z_t^+)$, $p_t^0 = \text{Softmax}(z_t^0)$, $\text{BC}_t = \text{clamp}\big(\sum_{w=1}^{V} \sqrt{\max(0.0, p_{t,w}^+ p_{t,w}^0)}, \, 0.0, \, 1.0\big)$. For standalone `NEVFEEngine.decode_step` (preserving 100% `test_01..test_14` backward compatibility): if $\neg d_a$, $\alpha_t = \lambda$; else $\alpha_t = \lambda \sqrt{\text{clamp}(1.0 - \text{BC}_t^2, 0.0, 1.0)} + \mathbb{I}[t == 1 \wedge d_c] \, \lambda \, \text{BC}_t$.
+- **(Eq. 7) Dynamic Plausibility Truncation & Argmax (`compute_dynamic_plausibility_floor`, `nevfe_step_logits`)**:
+  $\beta_t = \text{clamp}(\beta \cdot \text{BC}_t, 0.0, 1.0)$ if $d_b$ else $\beta$; $\tilde{z}_t = z_t^+ + \alpha_t (z_t^+ - z_t^0)$; $z_t^{\text{steer}}(w) = \tilde{z}_t(w)$ if $p_t^+(w) \ge \beta_t \max_u p_t^+(u)$ else $-10^9$; $\hat{y}_t = \arg\max_w z_t^{\text{steer}}(w)$. Inside `VinternNEVFEAdapter.generate`, `nevfe_step_logits` is invoked with the locked `148f870` `IG-VFED` decoder switches `(comp_a=True, comp_b=True, comp_c=True)` so `ablation_mask` cleanly isolates the three `VRE-OF` optical components without confounding Iteration-23 logit decoding, while `NEVFEEngine.decode_step` retains `(self.comp_a, self.comp_b, self.comp_c)` for exact `test_14` unit-test parity. Both `NEVFEEngine.set_ablation_switches` and `NEVFEPipeline.set_ablation_switches` preserve `gamma_param`.
+
+## 5. `AlgorithmConfig` Parameter Table (`<= 3` Total Tunable Parameters)
+| Field Name | Type | Valid Domain | Default | Physical Role |
+| :--- | :--- | :--- | :--- | :--- |
+| `lambda_param` | `float` | `[0.0, 1.5]` | `0.50` | Fisher-Rao geodesic contrastive coupling scale between `p_t^+` and Mean-Field `p_t^0` |
+| `beta_param` | `float` | `[0.001, 5.0]` | `0.05` | Dynamic geodesic candidate plausibility truncation scale |
+| `gamma_param` | `float` | `[0.0, 1.0]` | `0.50` | KL-Bregman variational weight balancing native-RGB scattering stroke density `P_opt` vs. Layer-0 lexical alignment `P_lex` |
+
+*(Count excludes `ablation_mask: Tuple[int, ...] = (1, 1, 1)`. Total tunable fields in `AlgorithmConfig` = `3 <= 3`.)*
+
+## 6. Full + Leave-One-Out Ablation Mask Table
+| Mask (`ablation_mask`) | Active `VRE-OF` Components (with locked `IG-VFED` decoder) | Hypothesis Tested |
+| :--- | :--- | :--- |
+| `(1, 1, 1)` | Full `VRE-OF`: `P_opt` (`comp_a=1`) + `P_lex` (`comp_b=1`) + Bernoulli-KL transient crop `[V_global; V_crop]` (`comp_c=1`) | Synergistic sub-Nyquist native-RGB stroke sensing and Layer-0 lexical disambiguation |
+| `(0, 1, 1)` | Leave-One-Out (`comp_a=0`, $\gamma_{\text{eff}}=0.0$): `P_lex` only + Bernoulli-KL crop | Marginal contribution of native-RGB directional scattering modulus energy `P_opt` in suppressing ViT register artifacts |
+| `(1, 0, 1)` | Leave-One-Out (`comp_b=0`, $\gamma_{\text{eff}}=1.0$): `P_opt` only + Bernoulli-KL crop | Marginal contribution of Bregman-centered Layer-0 cross-modal alignment `P_lex` in multi-sign disambiguation |
+| `(1, 1, 0)` | Leave-One-Out (`comp_c=0`): `extra_vit_embeds = None` (exact `148f870` `IG-VFED` baseline) | Marginal causal lift of transient Bernoulli-KL high-resolution foveal sub-tile sensing over global tiles alone |
+
+## 7. Structural Independence Matrix
+| BibTeX Key | Bucket [A/B/C/D] | Extracted Principle | Structural Difference vs. Prior SOTA & Other Teams |
+| :--- | :--- | :--- | :--- |
+| `liu2024ocrbench` | `A` | Empirical proof that LMMs fall back to semantic word priors when optical glyph strokes are degraded or blurry | Diagnostic anchor only; `VRE-OF` uses zero OCR engines or lexical dictionaries |
+| `li2024monkey` | `A` | Unwarped `448 x 448` sub-tile patching preserves small scene text whereas naive ViT positional interpolation collapses accuracy | Diagnostic anchor; `Monkey` requires `9.8B` LoRA training (`40` A800-days), whereas `VRE-OF` is 100% training-free |
+| `wu2024vstar` | `B` | Foil: `SEAL/V*` trains an auxiliary LoRA visual-search MLLM and runs multi-turn LLM tree search over `Visual Working Memory` | Never chained: `VRE-OF` uses zero auxiliary models, zero LoRA weights, and zero multi-turn LLM search |
+| `zhang2025vicrop` | `B` | Foil: `ViCrop` runs two extra full LLM forward/backward passes under `eager` attention with a hardcoded English generic prompt `"Write a general description of the image."` | Never chained: `VRE-OF` performs zero extra LLM prefill passes, registers zero intra-decoder hooks (`layers 1..24`), and uses zero hardcoded language strings |
+| `leng2024vcd` | `B` | Foil: `VCD` injects stochastic Gaussian noise onto low-resolution global images and applies static contrastive weight $\alpha$ | Never chained: `VRE-OF` uses deterministic analytic `MFVR` (`V^0`) plus transient high-res native-RGB foveal sub-tiles |
+| `darcet2024registers` | `C` | Uniform background ViT patches form `10x`-norm register outliers holding global rather than local pixel information | Mechanistically motivates subtracting spatial Bregman centroid $\bar{V}$ and coupling with native-RGB scattering energy rather than raw `vit_embed_norms` |
+| `park2022how` | `C` | Fourier spectrum proof that ViT Multi-Head Self-Attention acts as a spatial low-pass filter attenuating high-frequency signals | Mechanistically explains why `< 4 px` strokes must be sensed in native RGB prior to `InternViT` MSA blocks |
+| `chen2024internvl` | `C` | `2 x 2` pixel-shuffle (`448 x 448 -> 16 x 16 = 256` tokens, `28 x 28` effective stride) and dynamic multi-tile concatenation geometry | Grounds exact `(16 * g_y, 16 * g_x)` lattice assembly and lossless `[V_global; V_crop]` Layer-0 concatenation |
+| `vanerven2014renyi` | `D` | Binary partition supremum representation $D_\alpha(P \parallel Q) = \sup_{\mathcal{P}} D_\alpha(P|_{\mathcal{P}} \parallel Q|_{\mathcal{P}})$ and Rényi-Chernoff log-linear order interpolation (*IEEE TIT*, ISSN `0018-9448`, Q1) | Unifies both the `P_gamma^*` posterior and `J_KL(C)` subwindow functional; 100% disjoint from Team 2 output-simplex multi-step trajectory (`#17`) and Team 3 `7:1` GQA `o_proj` hooks (`#19`) |
+| `bruna2013scattering` | `D` | Deformation-Lipschitz windowed directional wavelet modulus pooling $S_J[\psi]x(u) = (|x \star \psi| \star \phi_{2^J})(u)$ (*IEEE TPAMI*, ISSN `0162-8828`, Q1) | Provides localized translation-invariant stroke energy on native RGB without trainable filters or edge heuristics |
+| `banerjee2005bregman` | `D` | Unique Bregman expectation centroid $s^\dagger = \mathbb{E}[X]$, squared Euclidean Bregman information, and Legendre exponential-family duality (*JMLR*, ISSN `1532-4435`, Q1) | Unifies spatial mean centering in **(Eq. 1)–(Eq. 2)**, KL-Bregman barycenter in **(Eq. 3)**, and `MFVR` blind reference in **(Eq. 5)** under one framework |
+
+## 8. Mechanical Revision Changelog (`v1.0 -> v1.3`)
+- `v1.0`: Initial unified `VRE-OF` Domain 1 specification (`<= 3` tunable parameters, `11` verified Q1/A* papers across Buckets A–D, zero intra-decoder hooks, zero trajectory edits) submitted for `@critic` Structural Independence clearance.
