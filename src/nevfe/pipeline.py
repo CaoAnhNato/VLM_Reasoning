@@ -128,6 +128,5 @@ class NEVFEPipeline:
                 "lambda_param": cfg.lambda_param,
                 "beta_param": cfg.beta_param,
                 "gamma_param": cfg.gamma_param,
-                "foveal_bboxes": list(getattr(self.adapter, "_last_foveal_bboxes", [])),
             },
         )
