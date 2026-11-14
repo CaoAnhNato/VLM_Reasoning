@@ -179,7 +179,7 @@ class VinternNEVFEAdapter:
         device: str = "cuda",
         lambda_param: float = 0.50,
         beta_param: float = 0.05,
-        gamma_param: float = 0.65,
+        gamma_param: float = 0.50,
         config: Optional[AlgorithmConfig] = None,
     ) -> None:
         self.model = model
@@ -218,7 +218,6 @@ class VinternNEVFEAdapter:
         # Immutable per-image visual cache
         self._cached_img_key: Optional[Tuple[int, int, bytes]] = None
         self._cached_vit_embeds: Optional[torch.Tensor] = None
-        self._last_foveal_bboxes: List[List[int]] = []
 
     def set_ablation_switches(
         self,
@@ -319,7 +318,7 @@ class VinternNEVFEAdapter:
         min_tile_dim = max(1, self.force_image_size // 4)
         crop_tiles: List[Image.Image] = []
 
-        for idx, (bx1, by1, bx2, by2) in enumerate(bboxes):
+        for bx1, by1, bx2, by2 in bboxes:
             if remaining <= 0:
                 break
             cbx1, cbx2 = round(min(bx1, bx2)), round(max(bx1, bx2))
@@ -337,16 +336,15 @@ class VinternNEVFEAdapter:
             dx = max(min_dx, x2 - x1)
             dy = max(min_dy, y2 - y1)
 
-            per_box_cap = max(1, remaining - (len(bboxes) - 1 - idx))
             cropper = DynamicMultiTileROICropper(
                 target_size=self.force_image_size,
-                max_tiles=per_box_cap,
+                max_tiles=remaining,
                 min_tile_dim=min_tile_dim,
             )
             gx_star, gy_star = cropper.select_grid(dx, dy)
 
             s_unit = max(dx / gx_star, dy / gy_star)
-            s_min = min(float(min_tile_dim), float(min(w_img, h_img)))
+            s_min = min(32.0, float(min(w_img, h_img)))
             s_floor = s_min + (0.05 * float(min(w_img, h_img))) / (
                 1.0 + math.exp(-0.05 * (max(dx, dy) - s_min))
             )
@@ -410,12 +408,12 @@ class VinternNEVFEAdapter:
             return b, b, 1
         return b, gx, gy
 
-    def _extract_lattice(
+    def _extract_lattice_and_energy(
         self,
         image: Image.Image,
         vit_embeds: torch.Tensor,
-    ) -> Tuple[torch.Tensor, int, int]:
-        """Assemble unwarped patch lattice [H_g, W_g, D] with zero RGB pooling."""
+    ) -> Tuple[torch.Tensor, torch.Tensor, int, int]:
+        """Assemble unwarped patch lattice [H_g, W_g, D] and SO(2) Color Structure Tensor energy [H_g, W_g]."""
         b, gx, gy = self._resolve_tile_grid(image, int(vit_embeds.shape[0]))
         p_tile, dim = int(vit_embeds.shape[1]), int(vit_embeds.shape[2])
         p_side = int(round(math.sqrt(p_tile)))
@@ -429,8 +427,29 @@ class VinternNEVFEAdapter:
             .permute(0, 2, 1, 3, 4)
             .reshape(h_g, w_g, dim)
         )
-        img_w, img_h = image.size
-        return patch_embeds, int(img_w), int(img_h)
+        rgb_arr = np.asarray(image.convert("RGB"), dtype=np.float32) / 255.0
+        img_chw = torch.from_numpy(rgb_arr).permute(2, 0, 1)
+        img_h, img_w = int(img_chw.shape[1]), int(img_chw.shape[2])
+        ix = (
+            F.pad(img_chw[:, :, 1:] - img_chw[:, :, :-1], (0, 1))
+            if img_w > 1
+            else torch.zeros_like(img_chw)
+        )
+        iy = (
+            F.pad(img_chw[:, 1:, :] - img_chw[:, :-1, :], (0, 0, 0, 1))
+            if img_h > 1
+            else torch.zeros_like(img_chw)
+        )
+        g_xx = (ix * ix).mean(dim=0)
+        g_yy = (iy * iy).mean(dim=0)
+        g_xy = (ix * iy).mean(dim=0)
+        cst = torch.stack([g_xx, g_yy, g_xy], dim=0).unsqueeze(0)
+        pooled = F.adaptive_avg_pool2d(cst, (h_g, w_g)).squeeze(0)
+        j_xx, j_yy, j_xy = pooled[0], pooled[1], pooled[2]
+        det = torch.clamp(j_xx * j_yy - j_xy * j_xy, min=0.0)
+        tr = torch.clamp(j_xx + j_yy, min=0.0) + 1e-12
+        optical_energy = torch.sqrt(det / tr).to(device=vit_embeds.device)
+        return patch_embeds, optical_energy, img_w, img_h
 
     def _extract_query_embeds(
         self,
@@ -464,31 +483,25 @@ class VinternNEVFEAdapter:
         vit_embeds: torch.Tensor,
         question: str,
     ) -> Optional[torch.Tensor]:
-        """Run SPB-MLF multi-locus foveation and extract transient RGB sub-tile features without mutating vit_embeds."""
-        self._last_foveal_bboxes = []
-        patch_embeds, img_w, img_h = self._extract_lattice(image, vit_embeds)
+        """Run FRSA-PBCF foveation and extract transient RGB sub-tile features without mutating vit_embeds."""
+        patch_embeds, optical_energy, img_w, img_h = self._extract_lattice_and_energy(image, vit_embeds)
         query_embeds = self._extract_query_embeds(question, vit_embeds.device)
-        boxes, j_star, _ = self.engine.foveate(patch_embeds, query_embeds=query_embeds)
-        if j_star <= 1e-6 or not boxes:
+        box, j_star, _ = self.engine.foveate(optical_energy, patch_embeds, query_embeds=query_embeds)
+        if j_star <= 1e-6:
             return None
         _, gx_glob, gy_glob = self._resolve_tile_grid(image, int(vit_embeds.shape[0]))
         m_glob = min(
             (self.force_image_size * gx_glob) / max(1, img_w),
             (self.force_image_size * gy_glob) / max(1, img_h),
         )
-        h_g, w_g = int(patch_embeds.shape[0]), int(patch_embeds.shape[1])
-        pixel_boxes = [
-            (
-                int(round(j1 * img_w / w_g)),
-                int(round(i1 * img_h / h_g)),
-                int(round(j2 * img_w / w_g)),
-                int(round(i2 * img_h / h_g)),
-            )
-            for i1, j1, i2, j2 in boxes
-        ]
-        self._last_foveal_bboxes = [[x1, y1, x2, y2] for x1, y1, x2, y2 in pixel_boxes]
+        h_g, w_g = int(optical_energy.shape[0]), int(optical_energy.shape[1])
+        i1, j1, i2, j2 = box
+        x1 = int(round(j1 * img_w / w_g))
+        y1 = int(round(i1 * img_h / h_g))
+        x2 = int(round(j2 * img_w / w_g))
+        y2 = int(round(i2 * img_h / h_g))
         return self.encode_transient_roi_crops(
-            image, pixel_boxes, max_tiles=3, min_magnification=m_glob
+            image, [(x1, y1, x2, y2)], max_tiles=3, min_magnification=m_glob
         )
 
     def build_multimodal_embeds(

@@ -27,14 +27,15 @@ from src.nevfe.core.engine import (
     AlgorithmConfig,
     NEVFEEngine,
     compute_bhattacharyya_coefficient,
+    compute_bregman_optical_distribution,
     compute_dynamic_coupling,
     compute_dynamic_plausibility_floor,
+    compute_lexical_spatial_distribution,
     compute_mean_field_reference_embeddings,
-    compute_signboard_manifold_posterior,
-    compute_spb_anchor_posterior,
     compute_unnormalized_entropy,
+    compute_variational_posterior,
     nevfe_step_logits,
-    select_submodular_bregman_loci,
+    select_poisson_bregman_subwindow,
 )
 
 
@@ -380,18 +381,8 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
                 self.assertLess((got[3] - ref[3]).abs().max().item(), 1e-7)
 
 
-    def test_15_gamma_param_default_sync_pruning_and_pipeline_preservation(self):
-        import src.nevfe.core.engine as engine_mod
+    def test_15_vre_of_gamma_param_and_pipeline_preservation(self):
         from src.nevfe.pipeline import NEVFEPipeline
-
-        self.assertEqual(AlgorithmConfig().gamma_param, 0.65)
-        for pruned_name in (
-            "compute_bregman_optical_distribution",
-            "compute_lexical_spatial_distribution",
-            "compute_variational_posterior",
-            "select_poisson_bregman_subwindow",
-        ):
-            self.assertFalse(hasattr(engine_mod, pruned_name))
 
         cfg = AlgorithmConfig(gamma_param=0.35)
         self.assertEqual(cfg.gamma_param, 0.35)
@@ -409,10 +400,6 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             language_model = type("_LM", (), {"config": _MockCfg()})()
             num_image_token = 16
 
-        default_pipe = NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu")
-        self.assertEqual(default_pipe.gamma_param, 0.65)
-        self.assertEqual(default_pipe.adapter.engine.gamma_param, 0.65)
-
         pipe = NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu", gamma_param=0.72)
         self.assertEqual(pipe.gamma_param, 0.72)
         pipe.set_ablation_switches(comp_a=False, comp_b=True, comp_c=True)
@@ -420,168 +407,104 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertEqual(pipe.adapter.engine.gamma_param, 0.72)
         self.assertEqual(pipe.config.ablation_mask, (0, 1, 1))
 
-    def test_16_spb_mlf_eq1_empirical_cone_kl_specificity_and_soft_or(self):
-        # 1. Constant / ULP-perturbed patches, None/empty queries, and degenerate dims hit uniform fallback
+    def test_16_fr_stvf_eq1_optical_and_eq2_lexical_boundaries(self):
+        unif_e = torch.full((4, 4), 2.5)
+        p_unif = compute_bregman_optical_distribution(unif_e)
+        self.assertTrue(torch.allclose(p_unif, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+
+        nan_e = torch.tensor([[float("nan"), float("inf")], [float("-inf"), 0.0]])
+        p_nan = compute_bregman_optical_distribution(nan_e)
+        self.assertTrue(torch.isfinite(p_nan).all())
+        self.assertTrue(torch.allclose(p_nan, torch.full((2, 2), 0.25), atol=1e-6))
+
+        # 0-homogeneity & FLT_MAX overflow immunity + 0.0% background leakage below mean
+        peak_e = torch.full((4, 4), 0.1)
+        peak_e[1, 2] = 5.0
+        p_peak = compute_bregman_optical_distribution(peak_e)
+        p_huge = compute_bregman_optical_distribution(peak_e * 1e36)
+        self.assertTrue(torch.isfinite(p_huge).all())
+        self.assertTrue(torch.allclose(p_peak, p_huge, atol=1e-5))
+        self.assertAlmostEqual(float(p_peak[0, 0].item()), 0.0, places=6)
+        self.assertAlmostEqual(float(p_peak[1, 2].item()), 1.0, places=6)
+
+        # ULP-perturbed constant energy must stay uniform
+        ulp_e = torch.full((4, 4), 100.0)
+        ulp_e[0, 0] += 1e-5
+        self.assertTrue(torch.allclose(compute_bregman_optical_distribution(ulp_e), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+
+        # Constant patch embeddings + float32 ULP perturbation < 1e-6 must hit uniform branch
         const_v = torch.ones((4, 4, 8), dtype=torch.float32) * 3.0
         const_v[0, 0, 0] += 1e-7
         q_emb = torch.randn(3, 8)
-        self.assertTrue(torch.allclose(compute_spb_anchor_posterior(const_v, q_emb), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-        self.assertTrue(torch.allclose(compute_spb_anchor_posterior(const_v, None), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-        self.assertTrue(torch.allclose(compute_spb_anchor_posterior(const_v, torch.empty((0, 8))), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-        self.assertTrue(torch.allclose(compute_spb_anchor_posterior(torch.zeros((1, 1, 8)), torch.ones((1, 8))), torch.ones((1, 1)), atol=1e-6))
+        p_lex_const = compute_lexical_spatial_distribution(const_v, q_emb)
+        self.assertTrue(torch.allclose(p_lex_const, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+        self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, None), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
 
-        # 2. Adversarial NaN / Inf / subnormal 1e-38 / all-zero queries stay finite on simplex
-        adv_v = torch.ones((2, 2, 4), dtype=torch.float32) * 1e-38
-        adv_v[0, 0, 0] = float("nan")
-        adv_v[0, 1, 1] = float("inf")
-        adv_q = torch.tensor([[1.0, float("-inf"), float("nan"), 0.0]], dtype=torch.float32)
-        p_adv = compute_spb_anchor_posterior(adv_v, adv_q)
-        self.assertTrue(torch.isfinite(p_adv).all())
-        self.assertAlmostEqual(float(p_adv.sum().item()), 1.0, places=5)
-        p_all_nan_q = compute_spb_anchor_posterior(torch.randn((3, 3, 4)), torch.full((2, 4), float("nan")))
-        self.assertTrue(torch.allclose(p_all_nan_q, torch.full((3, 3), 1.0 / 9.0), atol=1e-6))
-
+        # Mismatched query dim raises ValueError
         with self.assertRaises(ValueError):
-            compute_spb_anchor_posterior(const_v, torch.randn(2, 5))
-        with self.assertRaises(ValueError):
-            compute_spb_anchor_posterior(torch.zeros((4, 4)), q_emb)
+            compute_lexical_spatial_distribution(const_v, torch.randn(2, 5))
 
-        # 3. 0-homogeneity & FLT_MAX overflow immunity
+        # Discriminative patch alignment concentrates mass on matching cell even at large scale
         disc_v = torch.zeros((4, 4, 8), dtype=torch.float32)
         disc_v[:, :, 0] = 1.0
         disc_v[2, 3, :] = torch.tensor([0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) * 1e30
         q_target = torch.tensor([[0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]) * 1e30
-        p_disc = compute_spb_anchor_posterior(disc_v, q_target)
-        self.assertTrue(torch.isfinite(p_disc).all())
-        self.assertEqual(tuple(torch.nonzero(p_disc == p_disc.max(), as_tuple=False)[0].tolist()), (2, 3))
+        p_lex_disc = compute_lexical_spatial_distribution(disc_v, q_target)
+        self.assertTrue(torch.isfinite(p_lex_disc).all())
+        self.assertEqual(tuple(torch.nonzero(p_lex_disc == p_lex_disc.max(), as_tuple=False)[0].tolist()), (2, 3))
 
-        # 4. Narrow-cone sensitivity (no 1/D variance floor suppression when empirical dispersion << 1/sqrt(D))
-        cone_v = torch.zeros((8, 8, 64), dtype=torch.float32)
-        cone_v[:, :, 0] = 1.0
-        cone_v[3, 4, 1] = 0.006  # tiny 0.006 cone perturbation << 1/sqrt(64) = 0.125
-        q_cone = torch.zeros((1, 64), dtype=torch.float32)
-        q_cone[0, 0] = 1.0
-        q_cone[0, 1] = 0.006
-        p_cone = compute_spb_anchor_posterior(cone_v, q_cone, comp_a=True)
-        self.assertGreater(float(p_cone[3, 4].item()), 0.80)
+    def test_17_frsa_pbcf_eq3_fisher_rao_and_eq4_poisson_bregman(self):
+        p_opt = torch.zeros((8, 8), dtype=torch.float32)
+        p_opt[1:3, 2:4] = 0.25  # p(C) == 1.0 exact on 2x2 subwindow (area = 4/64 = 0.0625 <= 0.5)
+        p_lex = torch.full((8, 8), 1.0 / 64.0, dtype=torch.float32)
 
-        # 5. Repetitive clutter de-crowding + Soft-OR compound-entity recall (comp_a=True vs comp_a=False)
-        clutter_v = torch.zeros((8, 8, 16), dtype=torch.float32)
-        clutter_v[:, :, 3] = 1.0
-        clutter_v[0:3, :, :] = 0.0
-        clutter_v[0:3, :, 0] = 1.0  # 24 repetitive clutter patches along dim 0
-        clutter_v[5, 2, :] = 0.0
-        clutter_v[5, 2, 1] = 1.0  # compound token 1
-        clutter_v[5, 3, :] = 0.0
-        clutter_v[5, 3, 2] = 1.0  # compound token 2
-        q_comp = torch.zeros((3, 16), dtype=torch.float32)
-        q_comp[0, 0] = 1.0
-        q_comp[1, 1] = 1.0
-        q_comp[2, 2] = 1.0
-        p_kl = compute_spb_anchor_posterior(clutter_v, q_comp, comp_a=True)
-        p_raw = compute_spb_anchor_posterior(clutter_v, q_comp, comp_a=False)
-        self.assertGreater(float(p_kl[5, 2:4].sum().item()), float(p_raw[5, 2:4].sum().item()))
-        top2 = [divmod(int(idx), 8) for idx in torch.topk(p_kl.flatten(), 2).indices.tolist()]
-        self.assertEqual(set(top2), {(5, 2), (5, 3)})
+        # Eq. (3) Fisher-Rao spherical geodesic: disjoint supports never collapse to zero/cliffs
+        disjoint_lex = torch.zeros((8, 8), dtype=torch.float32)
+        disjoint_lex[5:7, 5:7] = 0.25
+        post_disjoint = compute_variational_posterior(p_opt, disjoint_lex, gamma_param=0.5, comp_a=True, comp_b=True)
+        self.assertTrue(torch.isfinite(post_disjoint).all())
+        self.assertAlmostEqual(float(post_disjoint[1:3, 2:4].sum().item()), 0.5, places=5)
+        self.assertAlmostEqual(float(post_disjoint[5:7, 5:7].sum().item()), 0.5, places=5)
 
-        # 6. Regression (#193/#201): N=256, D=896 narrow cone preserves 2-patch sparse target alongside 64-patch clutter
-        vit_cone = torch.zeros((16, 16, 896), dtype=torch.float32)
-        vit_cone[:, :, 0] = 1.0
-        vit_cone[0:4, :, 1] = 0.01  # 64 broad clutter patches
-        vit_cone[8, 4:6, 2] = 0.006  # 2 sparse narrow-cone target patches
-        q_vit = torch.zeros((2, 896), dtype=torch.float32)
-        q_vit[0, 0], q_vit[0, 1] = 1.0, 0.01
-        q_vit[1, 0], q_vit[1, 2] = 1.0, 0.006
-        p_vit_kl = compute_spb_anchor_posterior(vit_cone, q_vit, comp_a=True)
-        p_vit_raw = compute_spb_anchor_posterior(vit_cone, q_vit, comp_a=False)
-        self.assertGreater(float(p_vit_kl[8, 4:6].sum().item()), float(p_vit_raw[8, 4:6].sum().item()))
-        self.assertGreater(float(p_vit_kl[8, 4:6].sum().item()), 0.50)
+        # Eq. (3) ablation branches
+        post_opt = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=True, comp_b=False)
+        self.assertAlmostEqual(float(post_opt[1:3, 2:4].sum().item()), 1.0, places=4)
+        post_lex = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=True)
+        self.assertTrue(torch.allclose(post_lex, p_lex, atol=1e-5))
+        post_none = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=False)
+        self.assertTrue(torch.allclose(post_none, p_lex, atol=1e-6))
 
-    def test_17_spb_mlf_eq2_coifman_lafon_and_eq3_submodular_2locus(self):
-        # Eq. (2): Coifman-Lafon anisotropic reading-line resolvent at r_N = 1/N
-        lat = torch.zeros((8, 8, 8), dtype=torch.float32)
-        lat[:, :, 0] = 1.0
-        lat[1, 1, :] = torch.tensor([0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])  # isolated 1x1 patch
-        for col in (1, 2, 4, 5):  # reading-line row 3 with dj=2 gap at (3, 3)
-            lat[3, col, :] = torch.tensor([0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-        for col in (1, 2, 3, 4):  # disconnected parallel banner at row 6 (di == 3 > 1)
-            lat[6, col, :] = torch.tensor([0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        # Eq. (4) Poisson-Bregman compact support selects tight (1, 2, 3, 4) without exterior-depletion inflation
+        box, j_star, p_mass, area_frac = select_poisson_bregman_subwindow(p_opt, comp_c=True)
+        self.assertTrue(math.isfinite(j_star))
+        self.assertGreater(j_star, 0.0)
+        self.assertEqual(box, (1, 2, 3, 4))
+        self.assertAlmostEqual(p_mass, 1.0, places=5)
+        self.assertAlmostEqual(area_frac, 4.0 / 64.0, places=5)
+        self.assertAlmostEqual(j_star, math.log(16.0) - (1.0 - 4.0 / 64.0), places=4)
 
-        # Isolated 1x1 patch retains 1.0000 mass with 0.0000 dilution
-        anchor_iso = torch.zeros((8, 8), dtype=torch.float32)
-        anchor_iso[1, 1] = 1.0
-        self.assertTrue(torch.allclose(compute_signboard_manifold_posterior(anchor_iso, lat, comp_b=True), anchor_iso, atol=1e-6))
+        # Anti-inflation on elevated spot + uniform floor: must stay tight on spot, not expand to 50%
+        spot = torch.full((8, 8), 0.005, dtype=torch.float32)
+        spot[3:5, 4:6] = 0.18
+        spot_box, spot_j, _, spot_area = select_poisson_bregman_subwindow(spot, comp_c=True)
+        self.assertEqual(spot_box, (3, 4, 5, 6))
+        self.assertLessEqual(spot_area, 0.1)
+        self.assertGreater(spot_j, 0.0)
 
-        # Reading line bridges dj=2 gap across (3, 2) -> (3, 4) with 0.0% cross-sign jump to row 6
-        anchor_line = torch.zeros((8, 8), dtype=torch.float32)
-        anchor_line[3, 1] = 1.0
-        post_line = compute_signboard_manifold_posterior(anchor_line, lat, comp_b=True)
-        self.assertTrue(torch.isfinite(post_line).all())
-        self.assertGreater(float(post_line[3, 2].item()), 0.01)
-        self.assertGreater(float(post_line[3, 4].item()), 0.005)
-        self.assertAlmostEqual(float(post_line[6, :].sum().item()), 0.0, places=6)
-        self.assertTrue(torch.allclose(compute_signboard_manifold_posterior(anchor_line, lat, comp_b=False), anchor_line, atol=1e-6))
+        # Uniform/solid posterior yields j_star == 0.0
+        box_u, j_u, _, _ = select_poisson_bregman_subwindow(p_lex, comp_c=True)
+        self.assertEqual(j_u, 0.0)
+        self.assertEqual(box_u, (0, 0, 8, 8))
 
-        # Eq. (3): Unimodal 2x2 and 1x1 return strictly 1 locus (0.0% FP box2)
-        p_uni = torch.zeros((8, 8), dtype=torch.float32)
-        p_uni[1:3, 2:4] = 0.25
-        loci_uni = select_submodular_bregman_loci(p_uni, comp_c=True)
-        self.assertEqual(len(loci_uni), 1)
-        self.assertEqual(loci_uni[0][0], (1, 2, 3, 4))
-        self.assertAlmostEqual(loci_uni[0][1], math.log(16.0) - (1.0 - 4.0 / 64.0), places=4)
+        # comp_c=False disables subwindow selection
+        box_off, j_off, _, _ = select_poisson_bregman_subwindow(p_opt, comp_c=False)
+        self.assertEqual(j_off, 0.0)
+        self.assertEqual(box_off, (0, 0, 8, 8))
 
-        p_tiny = torch.zeros((8, 8), dtype=torch.float32)
-        p_tiny[4, 4] = 1.0
-        loci_tiny = select_submodular_bregman_loci(p_tiny, comp_c=True)
-        self.assertEqual(len(loci_tiny), 1)
-        self.assertEqual(loci_tiny[0][0], (4, 4, 5, 5))
-
-        # Uniform / comp_c=False cleanly abstain with j1_star == 0.0
-        loci_unif = select_submodular_bregman_loci(torch.full((8, 8), 1.0 / 64.0), comp_c=True)
-        self.assertEqual(loci_unif, [((0, 0, 8, 8), 0.0, 1.0, 1.0)])
-        loci_off = select_submodular_bregman_loci(p_uni, comp_c=False)
-        self.assertEqual(loci_off, [((0, 0, 8, 8), 0.0, 1.0, 1.0)])
-
-        # Bimodal 2-locus posterior discovers strictly disjoint C_1* and C_2*
-        p_bi = torch.full((8, 8), 0.08 / 56.0, dtype=torch.float32)
-        p_bi[1:3, 1:3] = 0.12  # Locus 1: 0.48
-        p_bi[5:7, 5:7] = 0.11  # Locus 2: 0.44
-        loci_bi = select_submodular_bregman_loci(p_bi, comp_c=True)
-        self.assertEqual(len(loci_bi), 2)
-        b1, _, _, _ = loci_bi[0]
-        b2, j2_ext, _, _ = loci_bi[1]
-        self.assertEqual(b1, (1, 1, 3, 3))
-        self.assertEqual(b2, (5, 5, 7, 7))
-        self.assertGreater(j2_ext, 0.5)
-        self.assertTrue((b2[2] <= b1[0]) or (b2[0] >= b1[2]) or (b2[3] <= b1[1]) or (b2[1] >= b1[3]))
-
-        # End-to-end NEVFEEngine.foveate & latency budget (< 5.0 ms/step)
-        import time
-        engine = NEVFEEngine(config=AlgorithmConfig(gamma_param=0.65))
-        fov_lat = torch.zeros((8, 8, 32), dtype=torch.float32)
-        fov_lat[:, :, 0] = 1.0
-        fov_lat[2:4, 3:5, :] = 0.0
-        fov_lat[2:4, 3:5, 2] = 1.0
-        q_fov = torch.zeros((1, 32), dtype=torch.float32)
-        q_fov[0, 2] = 1.0
-        fboxes, fj, _ = engine.foveate(fov_lat, query_embeds=q_fov)
-        self.assertGreater(fj, 0.0)
-        self.assertEqual(fboxes, [(2, 3, 4, 5)])
-        nboxes, nj, _ = engine.foveate(fov_lat, query_embeds=None)
-        self.assertEqual(nj, 0.0)
-        self.assertEqual(nboxes, [(0, 0, 8, 8)])
-
-        l_plus = torch.randn(1, 128)
-        l_zero = torch.randn(1, 128)
-        t_s = time.perf_counter()
-        for _ in range(20):
-            engine.decode_step(l_plus, l_zero, step_idx=1)
-        self.assertLess(((time.perf_counter() - t_s) * 1000.0) / 20.0, 5.0)
-
-    def test_18_adapter_extract_lattice_multi_locus_reservation_nyquist_and_immutability(self):
+    def test_18_adapter_cst_isoluminant_nyquist_gate_and_immutability(self):
+        import numpy as np
         from PIL import Image, ImageDraw
         from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter
-        from src.nevfe.pipeline import NEVFEPipeline
 
         class _MockCfg:
             force_image_size = 112
@@ -596,7 +519,7 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             def __call__(self, inputs_embeds, past_key_values=None, use_cache=True, return_dict=True):
                 del past_key_values, use_cache, return_dict
                 self.seen_seq_lens.append(int(inputs_embeds.shape[1]))
-                _, s_len, _ = inputs_embeds.shape
+                b_sz, s_len, _ = inputs_embeds.shape
                 hidden_out = inputs_embeds[:, -1:, :]
                 return type("_Out", (), {"last_hidden_state": hidden_out, "past_key_values": ("kv", s_len)})()
 
@@ -651,20 +574,25 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
 
         model = _MockModel()
         adapter = VinternNEVFEAdapter(model=model, tokenizer=_MockTok(), device="cpu")
-        self.assertEqual(adapter.engine.gamma_param, 0.65)
-        self.assertFalse(hasattr(adapter, "_extract_lattice_and_energy"))
 
-        # 1. _extract_lattice assembles local high-res grid and excludes thumbnail vit_embeds[-1]
+        # 1. Rank-1 diagonal ramp (SO(2) invariance: det(J) == 0 -> optical_energy near 0 on interior cells)
+        yy, xx = np.mgrid[0:64, 0:64]
+        diag_ramp = np.clip((xx + yy) * 2, 0, 255).astype(np.uint8)
+        diag_img = Image.fromarray(np.stack([diag_ramp, diag_ramp, diag_ramp], axis=-1))
+        _, e_diag, _, _ = adapter._extract_lattice_and_energy(diag_img, torch.zeros(1, 16, 16))
+        self.assertLess(float(e_diag[:-1, :-1].max().item()), 1e-6)
+        p_diag = compute_bregman_optical_distribution(e_diag[:-1, :-1])
+        self.assertTrue(torch.allclose(p_diag, torch.full((3, 3), 1.0 / 9.0), atol=1e-5))
+
+        # 2. Isoluminant colored corner junctions (R+G+B=300 everywhere -> grayscale blind, CST detects)
+        iso_img = Image.new("RGB", (64, 64), color=(200, 50, 50))
+        ImageDraw.Draw(iso_img).rectangle([16, 16, 36, 36], fill=(50, 200, 50))
+        _, e_iso, _, _ = adapter._extract_lattice_and_energy(iso_img, torch.zeros(1, 16, 16))
+        self.assertGreater(float(e_iso.max().item()), 0.02)
+        self.assertAlmostEqual(float(e_iso.min().item()), 0.0, places=6)
+
+        # 3. Nyquist super-resolution gate: reject crops with M_crop <= M_glob, allow focused banners up to 3 tiles
         sq_img = Image.new("RGB", (224, 224), color=(240, 240, 240))
-        multi_vit = torch.zeros((5, 16, 16), dtype=torch.float32)
-        multi_vit[:4, :, :] = 1.0
-        multi_vit[4, :, :] = 99.0
-        lat_p, img_w, img_h = adapter._extract_lattice(sq_img, multi_vit)
-        self.assertEqual((img_w, img_h), (224, 224))
-        self.assertEqual(tuple(lat_p.shape), (8, 8, 16))
-        self.assertTrue(torch.allclose(lat_p, torch.ones((8, 8, 16))))
-
-        # 2. Nyquist gate + unimodal banner (<= 3 tiles) + bimodal reservation (both boxes encoded within <= 3 tiles) + anti-keyhole tiny box
         calls_pre = len(model.extract_calls)
         self.assertIsNone(adapter.encode_transient_roi_crops(sq_img, [(0, 0, 224, 224)], max_tiles=3, min_magnification=0.5))
         self.assertEqual(len(model.extract_calls), calls_pre)
@@ -674,18 +602,7 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertGreaterEqual(model.extract_calls[-1], 2)
         self.assertLessEqual(model.extract_calls[-1], 3)
 
-        bimodal_res = adapter.encode_transient_roi_crops(
-            sq_img, [(10, 20, 210, 48), (20, 170, 200, 198)], max_tiles=3, min_magnification=0.5
-        )
-        self.assertIsNotNone(bimodal_res)
-        self.assertGreaterEqual(model.extract_calls[-1], 2)
-        self.assertLessEqual(model.extract_calls[-1], 3)
-
-        keyhole_res = adapter.encode_transient_roi_crops(sq_img, [(100, 100, 102, 102)], max_tiles=3, min_magnification=0.5)
-        self.assertIsNotNone(keyhole_res)
-        self.assertTrue(torch.isfinite(keyhole_res).all())
-
-        # 3. Multi-question generation preserves _cached_vit_embeds immutably; NEVFEPipeline keeps full-scene stage1_bbox & exports diagnostics["foveal_bboxes"]
+        # 4. Multi-question generation preserves _cached_vit_embeds immutably & comp_c=False skips foveation
         img = Image.new("RGB", (200, 120), color=(240, 240, 240))
         draw = ImageDraw.Draw(img)
         draw.rectangle([20, 20, 48, 42], fill=(10, 10, 10))
@@ -697,16 +614,10 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertTrue(torch.equal(v1, cached_after_q1))
         self.assertTrue(torch.equal(v1, adapter._cached_vit_embeds))
 
-        pipe = NEVFEPipeline(model=model, tokenizer=_MockTok(), device="cpu")
-        out_pipe = pipe.run(img, "ở đây ghi chữ gì?", max_new_tokens=2)
-        self.assertEqual(out_pipe.stage1_bbox, [0, 0, 200, 120])
-        self.assertEqual(out_pipe.diagnostics["foveal_bboxes"], list(pipe.adapter._last_foveal_bboxes))
-
         calls_before = len(model.extract_calls)
         adapter.set_ablation_switches(comp_a=True, comp_b=True, comp_c=False)
         adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
         self.assertEqual(len(model.extract_calls), calls_before)
-        self.assertEqual(adapter._last_foveal_bboxes, [])
 
 
 if __name__ == "__main__":
