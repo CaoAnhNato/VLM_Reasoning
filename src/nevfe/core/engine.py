@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-# SPEC_REF: docs/specs/team_1/spec_iter_1.md@v1.0 (sha256=cbe6caa8c122736da6b96ad6683d93a1502cf8e8321dae74da9d33d30c42b406)
+# SPEC_REF: docs/specs/team_1/spec_iter_3.md@v1.0 (sha256=6abf2c0322e675e9afa76c1e180a78a757af387c95e798a9e45a02a0dc67456b)
 """
-Variational Relative-Entropy Optical Foveation (VRE-OF) + IG-VFED Core Engine.
+Fisher-Rao Spherical Amplitude & Poisson-Bregman Chromatic Foveation (FRSA-PBCF) + IG-VFED Core Engine.
 
 Backbone-agnostic mathematical core (<= 250 AST statement lines, <= 3 tunable parameters).
 """
@@ -11,7 +11,7 @@ from typing import Optional, Tuple
 import torch
 import torch.nn.functional as F
 
-SPEC_REF = "docs/specs/team_1/spec_iter_1.md@v1.0 (sha256=cbe6caa8c122736da6b96ad6683d93a1502cf8e8321dae74da9d33d30c42b406)"
+SPEC_REF = "docs/specs/team_1/spec_iter_3.md@v1.0 (sha256=6abf2c0322e675e9afa76c1e180a78a757af387c95e798a9e45a02a0dc67456b)"
 
 
 @dataclass(frozen=True)
@@ -41,18 +41,25 @@ class AlgorithmConfig:
 
 def compute_bregman_optical_distribution(
     optical_energy: torch.Tensor,
+    tau_v: float = 1e-6,
     eps: float = 1e-12,
 ) -> torch.Tensor:
-    """Eq. (1): Squared Bregman-excess optical distribution over spatial lattice Omega."""
+    """Eq. (1): 0-homogeneous rectified Bregman root-density optical distribution over Omega."""
     if optical_energy.dim() != 2:
         raise ValueError(f"Expected 2D optical_energy, got {optical_energy.shape}")
     e = torch.nan_to_num(optical_energy.float(), nan=0.0, posinf=0.0, neginf=0.0).clamp(min=0.0)
     if e.numel() == 0:
         return e
-    excess = torch.clamp(e - e.mean(), min=0.0)
-    sq_excess = excess * excess
-    z_opt = sq_excess.sum()
     unif = torch.full_like(e, 1.0 / float(max(1, e.numel())))
+    m_e = e.max()
+    if float(m_e.item()) <= eps:
+        return unif
+    e_tilde = e / torch.clamp(m_e, min=eps)
+    if float((1.0 - e_tilde.min()).item()) <= tau_v:
+        return unif
+    psi_raw = torch.clamp(e_tilde - e_tilde.mean(), min=0.0)
+    sq_excess = psi_raw * psi_raw
+    z_opt = sq_excess.sum()
     return torch.where(z_opt > eps, sq_excess / torch.clamp(z_opt, min=eps), unif)
 
 
@@ -64,16 +71,23 @@ def compute_lexical_spatial_distribution(
     """Eq. (2): Bregman-centered Layer-0 lexical spatial distribution over Omega."""
     if patch_embeds.dim() != 3:
         raise ValueError(f"Expected 3D patch_embeds, got {patch_embeds.shape}")
-    h_g, w_g, _ = patch_embeds.shape
+    h_g, w_g, dim = patch_embeds.shape
     unif = torch.full((h_g, w_g), 1.0 / float(max(1, h_g * w_g)), dtype=torch.float32, device=patch_embeds.device)
-    if query_embeds is None or query_embeds.dim() != 2 or query_embeds.shape[0] == 0 or h_g * w_g == 0:
+    if query_embeds is None or query_embeds.dim() != 2:
         return unif
-    v = torch.nan_to_num(patch_embeds.float(), nan=0.0, posinf=0.0, neginf=0.0)
-    q = torch.nan_to_num(query_embeds.float(), nan=0.0, posinf=0.0, neginf=0.0)
+    if query_embeds.shape[1] != dim:
+        raise ValueError(f"Expected query_embeds with dim {dim}, got {query_embeds.shape}")
+    if query_embeds.shape[0] == 0 or dim == 0 or h_g * w_g == 0:
+        return unif
+    v_raw = torch.nan_to_num(patch_embeds.float(), nan=0.0, posinf=0.0, neginf=0.0)
+    q_raw = torch.nan_to_num(query_embeds.float(), nan=0.0, posinf=0.0, neginf=0.0)
+    v = v_raw / torch.clamp(v_raw.abs().max(), min=1.0)
+    q = q_raw / torch.clamp(q_raw.abs().amax(dim=-1, keepdim=True), min=1.0)
     dv = v - v.mean(dim=(0, 1), keepdim=True)
     r_v = torch.linalg.vector_norm(dv, dim=-1, keepdim=True)
     r_e = torch.linalg.vector_norm(q, dim=-1, keepdim=True)
-    v_hat = torch.where(r_v > tau_v, dv / torch.clamp(r_v, min=tau_v), torch.zeros_like(dv))
+    tau_d = tau_v * (float(max(1, dim)) ** 0.5)
+    v_hat = torch.where(r_v > tau_d, dv / torch.clamp(r_v, min=tau_d), torch.zeros_like(dv))
     e_hat = torch.where(r_e > tau_v, q / torch.clamp(r_e, min=tau_v), torch.zeros_like(q))
     c_q = torch.matmul(v_hat, e_hat.transpose(0, 1)).max(dim=-1).values
     diff_c = c_q - c_q.mean()
@@ -85,69 +99,83 @@ def compute_lexical_spatial_distribution(
 def compute_variational_posterior(
     p_opt: torch.Tensor,
     p_lex: torch.Tensor,
-    gamma_param: float = 0.50,
+    gamma_param: Optional[float] = None,
     comp_a: bool = True,
     comp_b: bool = True,
     eps: float = 1e-12,
 ) -> torch.Tensor:
-    """Eq. (3): Exact KL-Bregman variational posterior fusing P_opt and P_lex."""
+    """Eq. (3): Riemannian Fisher-Rao spherical amplitude geodesic posterior."""
     if p_opt.dim() != 2 or p_opt.shape != p_lex.shape:
         raise ValueError(f"Expected matching 2D distributions, got {p_opt.shape} and {p_lex.shape}")
     h_g, w_g = p_opt.shape
+    unif = torch.full((h_g, w_g), 1.0 / float(max(1, h_g * w_g)), dtype=torch.float32, device=p_opt.device)
     if h_g * w_g == 0 or (not comp_a and not comp_b):
-        return torch.full((h_g, w_g), 1.0 / float(max(1, h_g * w_g)), dtype=torch.float32, device=p_opt.device)
+        return unif
+    g_val = AlgorithmConfig().gamma_param if gamma_param is None else float(gamma_param)
     if comp_a and comp_b:
-        gamma_eff = min(1.0, max(0.0, float(gamma_param)))
+        gamma_eff = min(1.0, max(0.0, g_val))
     elif comp_a:
         gamma_eff = 1.0
     else:
         gamma_eff = 0.0
-    log_opt = torch.log(torch.clamp(torch.nan_to_num(p_opt.float(), nan=0.0, posinf=0.0, neginf=0.0), min=eps))
-    log_lex = torch.log(torch.clamp(torch.nan_to_num(p_lex.float(), nan=0.0, posinf=0.0, neginf=0.0), min=eps))
-    log_mix = gamma_eff * log_opt + (1.0 - gamma_eff) * log_lex
-    return F.softmax(log_mix.view(-1), dim=-1).view(h_g, w_g)
+    po = torch.nan_to_num(p_opt.float(), nan=0.0, posinf=0.0, neginf=0.0).clamp(min=0.0)
+    pl = torch.nan_to_num(p_lex.float(), nan=0.0, posinf=0.0, neginf=0.0).clamp(min=0.0)
+    po = po / torch.clamp(po.max(), min=1.0)
+    pl = pl / torch.clamp(pl.max(), min=1.0)
+    po_sum, pl_sum = po.sum(), pl.sum()
+    po = po / po_sum if float(po_sum.item()) > eps else unif
+    pl = pl / pl_sum if float(pl_sum.item()) > eps else unif
+    psi = gamma_eff * torch.sqrt(po) + (1.0 - gamma_eff) * torch.sqrt(pl)
+    sq_psi = psi * psi
+    z_gamma = sq_psi.sum()
+    return torch.where(z_gamma > eps, sq_psi / torch.clamp(z_gamma, min=eps), unif)
 
 
-def select_bernoulli_kl_subwindow(
+def select_poisson_bregman_subwindow(
     posterior_2d: torch.Tensor,
     comp_c: bool = True,
     eps_k: float = 1e-6,
     eps: float = 1e-12,
 ) -> Tuple[Tuple[int, int, int, int], float, float, float]:
-    """Eq. (4): Exact binary-partition Bernoulli-KL subwindow selection over Omega."""
+    """Eq. (4): Exact Generalized KL / Poisson-Bregman (beta=1) subwindow selection."""
     if posterior_2d.dim() != 2:
         raise ValueError(f"Expected 2D posterior_2d, got {posterior_2d.shape}")
     h_g, w_g = posterior_2d.shape
     p = torch.nan_to_num(posterior_2d.float(), nan=0.0, posinf=0.0, neginf=0.0).clamp(min=0.0)
+    if h_g * w_g == 0:
+        return (0, 0, h_g, w_g), 0.0, 0.0, 0.0
+    p = p / torch.clamp(p.max(), min=1.0)
     p_sum = p.sum()
-    p = p / p_sum if float(p_sum.item()) > eps else torch.full_like(p, 1.0 / float(max(1, h_g * w_g)))
+    p = p / p_sum if float(p_sum.item()) > eps else torch.full_like(p, 1.0 / float(h_g * w_g))
     if not comp_c or h_g * w_g <= 1:
         return (0, 0, h_g, w_g), 0.0, 1.0, 1.0
     sat = F.pad(p, (1, 0, 1, 0)).cumsum(dim=0).cumsum(dim=1)
     ri = torch.triu_indices(h_g + 1, h_g + 1, offset=1, device=p.device)
     ci = torch.triu_indices(w_g + 1, w_g + 1, offset=1, device=p.device)
     i1, i2, j1, j2 = ri[0], ri[1], ci[0], ci[1]
-    mass = (
+    mass = torch.clamp(
         sat[i2.unsqueeze(1), j2.unsqueeze(0)]
         - sat[i1.unsqueeze(1), j2.unsqueeze(0)]
         - sat[i2.unsqueeze(1), j1.unsqueeze(0)]
-        + sat[i1.unsqueeze(1), j1.unsqueeze(0)]
+        + sat[i1.unsqueeze(1), j1.unsqueeze(0)],
+        min=0.0,
+        max=1.0,
     )
     area = ((i2 - i1).float().unsqueeze(1) * (j2 - j1).float().unsqueeze(0)) / float(h_g * w_g)
     adm = (mass > area + eps_k) & (area >= eps_k) & (area <= 0.5)
-    p_cl = torch.clamp(mass, min=eps_k, max=1.0 - eps_k)
-    a_cl = torch.clamp(area, min=eps_k, max=1.0 - eps_k)
+    p_cl = torch.clamp(mass, min=eps_k, max=1.0)
+    a_cl = torch.clamp(area, min=eps_k, max=1.0)
     j_raw = torch.nan_to_num(
-        p_cl * torch.log(p_cl / a_cl) + (1.0 - p_cl) * torch.log((1.0 - p_cl) / (1.0 - a_cl)),
+        p_cl * torch.log(p_cl / a_cl) - (p_cl - a_cl),
         nan=0.0,
         posinf=0.0,
         neginf=0.0,
     )
-    j_kl = torch.where(adm, torch.clamp(j_raw, min=0.0), torch.zeros_like(j_raw))
-    flat_idx = int(torch.argmax(j_kl.view(-1)).item())
+    j_pois = torch.where(adm, torch.clamp(j_raw, min=0.0), torch.zeros_like(j_raw))
+    flat_idx = int(torch.argmax(j_pois.view(-1)).item())
     n_cols = int(j1.numel())
     r_idx, c_idx = flat_idx // n_cols, flat_idx % n_cols
-    j_star = float(j_kl[r_idx, c_idx].item())
+    j_star = float(j_pois[r_idx, c_idx].item())
     if j_star <= eps_k:
         return (0, 0, h_g, w_g), 0.0, 1.0, 1.0
     box = (int(i1[r_idx].item()), int(j1[c_idx].item()), int(i2[r_idx].item()), int(j2[c_idx].item()))
@@ -323,14 +351,14 @@ class NEVFEEngine:
         patch_embeds: torch.Tensor,
         query_embeds: Optional[torch.Tensor] = None,
     ) -> Tuple[Tuple[int, int, int, int], float, torch.Tensor]:
-        """Execute unified VRE-OF (Eq. 1)-(Eq. 4) variational optical foveation."""
+        """Execute unified FRSA-PBCF (Eq. 1)-(Eq. 4) variational optical foveation."""
         p_opt = compute_bregman_optical_distribution(optical_energy)
         p_lex = compute_lexical_spatial_distribution(patch_embeds, query_embeds)
         posterior_2d = compute_variational_posterior(
             p_opt, p_lex, gamma_param=self.gamma_param, comp_a=self.comp_a, comp_b=self.comp_b
         )
-        box, kl_star, _, _ = select_bernoulli_kl_subwindow(posterior_2d, comp_c=self.comp_c)
-        return box, kl_star, posterior_2d
+        box, j_star, _, _ = select_poisson_bregman_subwindow(posterior_2d, comp_c=self.comp_c)
+        return box, j_star, posterior_2d
 
     def decode_step(
         self,
