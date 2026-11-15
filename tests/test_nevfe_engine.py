@@ -24,18 +24,18 @@ import torch
 import torch.nn.functional as F
 
 from src.nevfe.core.engine import (
+    SPEC_REF,
     AlgorithmConfig,
     NEVFEEngine,
+    assemble_foveated_visual_sequence,
     compute_bhattacharyya_coefficient,
-    compute_bregman_optical_distribution,
     compute_dynamic_coupling,
     compute_dynamic_plausibility_floor,
-    compute_lexical_spatial_distribution,
     compute_mean_field_reference_embeddings,
+    compute_semantic_specificity_posterior,
     compute_unnormalized_entropy,
-    compute_variational_posterior,
     nevfe_step_logits,
-    select_poisson_bregman_subwindow,
+    select_active_foveal_subwindow,
 )
 
 
@@ -407,104 +407,125 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertEqual(pipe.adapter.engine.gamma_param, 0.72)
         self.assertEqual(pipe.config.ablation_mask, (0, 1, 1))
 
-    def test_16_fr_stvf_eq1_optical_and_eq2_lexical_boundaries(self):
-        unif_e = torch.full((4, 4), 2.5)
-        p_unif = compute_bregman_optical_distribution(unif_e)
-        self.assertTrue(torch.allclose(p_unif, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-
-        nan_e = torch.tensor([[float("nan"), float("inf")], [float("-inf"), 0.0]])
-        p_nan = compute_bregman_optical_distribution(nan_e)
-        self.assertTrue(torch.isfinite(p_nan).all())
-        self.assertTrue(torch.allclose(p_nan, torch.full((2, 2), 0.25), atol=1e-6))
-
-        # 0-homogeneity & FLT_MAX overflow immunity + 0.0% background leakage below mean
-        peak_e = torch.full((4, 4), 0.1)
-        peak_e[1, 2] = 5.0
-        p_peak = compute_bregman_optical_distribution(peak_e)
-        p_huge = compute_bregman_optical_distribution(peak_e * 1e36)
-        self.assertTrue(torch.isfinite(p_huge).all())
-        self.assertTrue(torch.allclose(p_peak, p_huge, atol=1e-5))
-        self.assertAlmostEqual(float(p_peak[0, 0].item()), 0.0, places=6)
-        self.assertAlmostEqual(float(p_peak[1, 2].item()), 1.0, places=6)
-
-        # ULP-perturbed constant energy must stay uniform
-        ulp_e = torch.full((4, 4), 100.0)
-        ulp_e[0, 0] += 1e-5
-        self.assertTrue(torch.allclose(compute_bregman_optical_distribution(ulp_e), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-
-        # Constant patch embeddings + float32 ULP perturbation < 1e-6 must hit uniform branch
-        const_v = torch.ones((4, 4, 8), dtype=torch.float32) * 3.0
-        const_v[0, 0, 0] += 1e-7
-        q_emb = torch.randn(3, 8)
-        p_lex_const = compute_lexical_spatial_distribution(const_v, q_emb)
-        self.assertTrue(torch.allclose(p_lex_const, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-        self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, None), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-
-        # Mismatched query dim raises ValueError
+    def test_16_skg_ttaf_eq1_spherical_kl_specificity_and_edge_cases(self):
+        self.assertTrue(SPEC_REF.startswith("docs/specs/team_1/spec_iter_10.md@v1.0"))
         with self.assertRaises(ValueError):
-            compute_lexical_spatial_distribution(const_v, torch.randn(2, 5))
+            compute_semantic_specificity_posterior(torch.ones((4, 8)), None)
+        with self.assertRaises(ValueError):
+            compute_semantic_specificity_posterior(torch.ones((4, 4, 8)), torch.ones((2, 5)))
 
-        # Discriminative patch alignment concentrates mass on matching cell even at large scale
-        disc_v = torch.zeros((4, 4, 8), dtype=torch.float32)
-        disc_v[:, :, 0] = 1.0
-        disc_v[2, 3, :] = torch.tensor([0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) * 1e30
-        q_target = torch.tensor([[0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]) * 1e30
-        p_lex_disc = compute_lexical_spatial_distribution(disc_v, q_target)
-        self.assertTrue(torch.isfinite(p_lex_disc).all())
-        self.assertEqual(tuple(torch.nonzero(p_lex_disc == p_lex_disc.max(), as_tuple=False)[0].tolist()), (2, 3))
+        u_16 = torch.full((4, 4), 1.0 / 16.0)
+        const_v = torch.ones((4, 4, 8), dtype=torch.float32) * 3.0
+        const_v[0, 0, 0] += 1e-7  # ULP-level variation stays <= tau_d -> uniform
+        q_emb = torch.randn(3, 8)
+        self.assertTrue(torch.allclose(compute_semantic_specificity_posterior(const_v, None), u_16, atol=1e-6))
+        self.assertTrue(torch.allclose(compute_semantic_specificity_posterior(const_v, torch.ones((2, 2, 8))), u_16, atol=1e-6))
+        self.assertTrue(torch.allclose(compute_semantic_specificity_posterior(const_v, torch.empty((0, 8))), u_16, atol=1e-6))
+        self.assertTrue(torch.allclose(compute_semantic_specificity_posterior(const_v, q_emb), u_16, atol=1e-6))
+        self.assertEqual(compute_semantic_specificity_posterior(torch.ones((0, 0, 8)), q_emb).shape, (0, 0))
 
-    def test_17_frsa_pbcf_eq3_fisher_rao_and_eq4_poisson_bregman(self):
-        p_opt = torch.zeros((8, 8), dtype=torch.float32)
-        p_opt[1:3, 2:4] = 0.25  # p(C) == 1.0 exact on 2x2 subwindow (area = 4/64 = 0.0625 <= 0.5)
-        p_lex = torch.full((8, 8), 1.0 / 64.0, dtype=torch.float32)
+        # IEEE-754 NaN / +-Inf / 1e36 / 1e-36 scale invariance
+        base_v = torch.randn(4, 4, 8)
+        nan_v = base_v.clone()
+        nan_v[0, 1, 2] = float("nan")
+        nan_v[1, 1, 0] = float("inf")
+        nan_q = torch.randn(2, 8)
+        nan_q[1, 3] = float("-inf")
+        p_nan = compute_semantic_specificity_posterior(nan_v, nan_q)
+        self.assertTrue(torch.isfinite(p_nan).all())
+        self.assertAlmostEqual(float(p_nan.sum().item()), 1.0, places=5)
 
-        # Eq. (3) Fisher-Rao spherical geodesic: disjoint supports never collapse to zero/cliffs
-        disjoint_lex = torch.zeros((8, 8), dtype=torch.float32)
-        disjoint_lex[5:7, 5:7] = 0.25
-        post_disjoint = compute_variational_posterior(p_opt, disjoint_lex, gamma_param=0.5, comp_a=True, comp_b=True)
-        self.assertTrue(torch.isfinite(post_disjoint).all())
-        self.assertAlmostEqual(float(post_disjoint[1:3, 2:4].sum().item()), 0.5, places=5)
-        self.assertAlmostEqual(float(post_disjoint[5:7, 5:7].sum().item()), 0.5, places=5)
+        p_ref = compute_semantic_specificity_posterior(base_v, q_emb)
+        p_big = compute_semantic_specificity_posterior(base_v * 1e35, q_emb * 1e35)
+        p_sub = compute_semantic_specificity_posterior(base_v * 1e-4, q_emb * 1e-4)
+        self.assertTrue(torch.isfinite(p_big).all())
+        self.assertTrue(torch.isfinite(p_sub).all())
+        self.assertTrue(torch.allclose(p_ref, p_big, atol=1e-5))
+        self.assertTrue(torch.allclose(p_ref, p_sub, atol=1e-5))
 
-        # Eq. (3) ablation branches
-        post_opt = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=True, comp_b=False)
-        self.assertAlmostEqual(float(post_opt[1:3, 2:4].sum().item()), 1.0, places=4)
-        post_lex = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=True)
-        self.assertTrue(torch.allclose(post_lex, p_lex, atol=1e-5))
-        post_none = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=False)
-        self.assertTrue(torch.allclose(post_none, p_lex, atol=1e-6))
+        # Orthogonal query subspace -> sig_s == 0 (comp_a=True) & sig_c == 0 (comp_a=False) -> uniform
+        ortho_v = torch.randn(4, 4, 8)
+        ortho_v[:, :, 4:] = 0.0
+        ortho_q = torch.randn(2, 8)
+        ortho_q[:, :4] = 0.0
+        self.assertTrue(torch.allclose(compute_semantic_specificity_posterior(ortho_v, ortho_q, comp_a=True), u_16, atol=1e-6))
+        self.assertTrue(torch.allclose(compute_semantic_specificity_posterior(ortho_v, ortho_q, comp_a=False), u_16, atol=1e-6))
 
-        # Eq. (4) Poisson-Bregman compact support selects tight (1, 2, 3, 4) without exterior-depletion inflation
-        box, j_star, p_mass, area_frac = select_poisson_bregman_subwindow(p_opt, comp_c=True)
-        self.assertTrue(math.isfinite(j_star))
-        self.assertGreater(j_star, 0.0)
+        # Stopword hijacking protection: 1 sharp localized 2x3 sign token vs 7 diffuse distractor tokens
+        gen = torch.Generator().manual_seed(42)
+        disc_v = torch.randn((16, 16, 64), generator=gen, dtype=torch.float32) * 0.15
+        q_dirs = F.normalize(torch.randn((8, 64), generator=gen, dtype=torch.float32), dim=-1)
+        target_vec = q_dirs[0]
+        disc_v[4:6, 5:8, :] += target_vec * 2.0
+        for d_idx in range(1, 8):
+            disc_v[:8, :, :] += q_dirs[d_idx] * 0.35
+        p_comp_a = compute_semantic_specificity_posterior(disc_v, q_dirs, comp_a=True)
+        p_max_m = compute_semantic_specificity_posterior(disc_v, q_dirs, comp_a=False)
+        self.assertGreater(float(p_comp_a[4:6, 5:8].sum().item()), float(p_max_m[4:6, 5:8].sum().item()))
+        self.assertGreater(float(p_comp_a[4:6, 5:8].sum().item()), 0.55)
+
+    def test_17_skg_ttaf_eq2_multiscale_scan_gate_and_eq3_thumbnail_splice(self):
+        with self.assertRaises(ValueError):
+            select_active_foveal_subwindow(torch.ones((4,)))
+        self.assertEqual(select_active_foveal_subwindow(torch.empty((0, 4)))[1:], (0.0, 0.0, 0.0))
+        self.assertEqual(select_active_foveal_subwindow(torch.ones((1, 1)))[1:], (0.0, 1.0, 1.0))
+
+        # Sharp localized 2x2 subwindow in 8x8 exceeds tau_scan(64; 0.50)
+        post = torch.zeros((8, 8), dtype=torch.float32)
+        post[1:3, 2:4] = 0.25
+        box, j_star, p_mass, area_frac = select_active_foveal_subwindow(post, gamma_param=0.50, comp_b=True)
         self.assertEqual(box, (1, 2, 3, 4))
         self.assertAlmostEqual(p_mass, 1.0, places=5)
         self.assertAlmostEqual(area_frac, 4.0 / 64.0, places=5)
-        self.assertAlmostEqual(j_star, math.log(16.0) - (1.0 - 4.0 / 64.0), places=4)
+        self.assertGreater(j_star, math.sqrt(math.log(64.0) / 64.0))
 
-        # Anti-inflation on elevated spot + uniform floor: must stay tight on spot, not expand to 50%
-        spot = torch.full((8, 8), 0.005, dtype=torch.float32)
-        spot[3:5, 4:6] = 0.18
-        spot_box, spot_j, _, spot_area = select_poisson_bregman_subwindow(spot, comp_c=True)
-        self.assertEqual(spot_box, (3, 4, 5, 6))
-        self.assertLessEqual(spot_area, 0.1)
-        self.assertGreater(spot_j, 0.0)
+        # Non-finite gamma_param falls back cleanly to default 0.50
+        box_nan, j_nan, _, _ = select_active_foveal_subwindow(post, gamma_param=float("nan"), comp_b=True)
+        self.assertEqual(box_nan, (1, 2, 3, 4))
+        self.assertAlmostEqual(j_nan, j_star, places=6)
 
-        # Uniform/solid posterior yields j_star == 0.0
-        box_u, j_u, _, _ = select_poisson_bregman_subwindow(p_lex, comp_c=True)
-        self.assertEqual(j_u, 0.0)
-        self.assertEqual(box_u, (0, 0, 8, 8))
+        # Diffuse null fluctuation (J ~ 0.08 < tau_scan(256; 0.50) = 0.1472) abstains under comp_b=True, fires under comp_b=False
+        diffuse = torch.full((16, 16), 1.0 / 256.0, dtype=torch.float32)
+        diffuse[:8, :8] += 0.0025
+        box_abs, j_abs, _, _ = select_active_foveal_subwindow(diffuse, gamma_param=0.50, comp_b=True)
+        box_raw, j_raw, _, _ = select_active_foveal_subwindow(diffuse, gamma_param=0.50, comp_b=False)
+        self.assertEqual(j_abs, 0.0)
+        self.assertEqual(box_abs, (0, 0, 16, 16))
+        self.assertGreater(j_raw, 1e-6)
+        self.assertLess(j_raw, math.sqrt(math.log(256.0) / 256.0))
+        self.assertEqual(box_raw, (0, 0, 8, 8))
 
-        # comp_c=False disables subwindow selection
-        box_off, j_off, _, _ = select_poisson_bregman_subwindow(p_opt, comp_c=False)
-        self.assertEqual(j_off, 0.0)
-        self.assertEqual(box_off, (0, 0, 8, 8))
+        # Eq. (3) Thumbnail-terminal splice checks
+        with self.assertRaises(ValueError):
+            assemble_foveated_visual_sequence(torch.ones((16, 8)), None)
+        with self.assertRaises(ValueError):
+            assemble_foveated_visual_sequence(torch.ones((3, 16, 8)), torch.ones((2, 4, 8)))
 
-    def test_18_adapter_cst_isoluminant_nyquist_gate_and_immutability(self):
-        import numpy as np
+        v_single = torch.arange(1 * 4 * 8, dtype=torch.float32).view(1, 4, 8)
+        v_multi = torch.arange(3 * 4 * 8, dtype=torch.float32).view(3, 4, 8)
+        crops = torch.arange(2 * 4 * 8, dtype=torch.float32).view(2, 4, 8) + 100.0
+        self.assertIs(assemble_foveated_visual_sequence(v_multi, None), v_multi)
+        self.assertIs(assemble_foveated_visual_sequence(v_multi, torch.empty((0, 4, 8))), v_multi)
+
+        seq_single = assemble_foveated_visual_sequence(v_single, crops, comp_c=True)
+        self.assertEqual(tuple(seq_single.shape), (3, 4, 8))
+        self.assertTrue(torch.equal(seq_single[-1], v_single[-1]))
+        self.assertTrue(torch.equal(seq_single[:2], crops))
+
+        seq_multi = assemble_foveated_visual_sequence(v_multi, crops, comp_c=True)
+        self.assertEqual(tuple(seq_multi.shape), (5, 4, 8))
+        self.assertTrue(torch.equal(seq_multi[:2], v_multi[:2]))
+        self.assertTrue(torch.equal(seq_multi[2:4], crops))
+        self.assertTrue(torch.equal(seq_multi[-1], v_multi[-1]))
+
+        seq_tail = assemble_foveated_visual_sequence(v_multi, crops, comp_c=False)
+        self.assertTrue(torch.equal(seq_tail[:3], v_multi))
+        self.assertTrue(torch.equal(seq_tail[3:], crops))
+
+    def test_18_skg_ttaf_adapter_all_four_ablations_nyquist_and_immutability(self):
         from PIL import Image, ImageDraw
         from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter
+        from src.nevfe.pipeline import NEVFEPipeline
 
         class _MockCfg:
             force_image_size = 112
@@ -544,7 +565,13 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
 
             def encode(self, text, add_special_tokens=False):
                 del add_special_tokens
-                return [5, 6] if text else []
+                if not text:
+                    return []
+                if "ở đây" in text:
+                    return [5, 6]
+                if "bao nhiêu" in text:
+                    return [7, 8]
+                return [9, 10]
 
             def convert_tokens_to_ids(self, tok):
                 return {"<IMG_CONTEXT>": 3, "<|im_end|>": 2}.get(tok, 0)
@@ -570,54 +597,67 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             def extract_feature(self, pixel_values):
                 self.extract_calls.append(int(pixel_values.shape[0]))
                 n_t = int(pixel_values.shape[0])
-                return torch.arange(n_t * 16 * 16, dtype=torch.float32).view(n_t, 16, 16) * 0.01
+                feat = torch.zeros((n_t, 16, 16), dtype=torch.float32)
+                for ti in range(n_t):
+                    feat[ti] = 0.01 * (ti + 1)
+                feat[0, 0:4, :] = 1.0  # localized semantic anomaly at top tile strip
+                return feat
 
         model = _MockModel()
         adapter = VinternNEVFEAdapter(model=model, tokenizer=_MockTok(), device="cpu")
+        img = Image.new("RGB", (224, 224), color=(240, 240, 240))
+        ImageDraw.Draw(img).rectangle([20, 20, 60, 48], fill=(10, 10, 10))
+        vit = adapter.extract_visual_features(img)
+        patch_lat, iw, ih = adapter._extract_lattice(img, vit)
+        self.assertEqual((iw, ih), (224, 224))
+        self.assertEqual(patch_lat.dim(), 3)
 
-        # 1. Rank-1 diagonal ramp (SO(2) invariance: det(J) == 0 -> optical_energy near 0 on interior cells)
-        yy, xx = np.mgrid[0:64, 0:64]
-        diag_ramp = np.clip((xx + yy) * 2, 0, 255).astype(np.uint8)
-        diag_img = Image.fromarray(np.stack([diag_ramp, diag_ramp, diag_ramp], axis=-1))
-        _, e_diag, _, _ = adapter._extract_lattice_and_energy(diag_img, torch.zeros(1, 16, 16))
-        self.assertLess(float(e_diag[:-1, :-1].max().item()), 1e-6)
-        p_diag = compute_bregman_optical_distribution(e_diag[:-1, :-1])
-        self.assertTrue(torch.allclose(p_diag, torch.full((3, 3), 1.0 / 9.0), atol=1e-5))
-
-        # 2. Isoluminant colored corner junctions (R+G+B=300 everywhere -> grayscale blind, CST detects)
-        iso_img = Image.new("RGB", (64, 64), color=(200, 50, 50))
-        ImageDraw.Draw(iso_img).rectangle([16, 16, 36, 36], fill=(50, 200, 50))
-        _, e_iso, _, _ = adapter._extract_lattice_and_energy(iso_img, torch.zeros(1, 16, 16))
-        self.assertGreater(float(e_iso.max().item()), 0.02)
-        self.assertAlmostEqual(float(e_iso.min().item()), 0.0, places=6)
-
-        # 3. Nyquist super-resolution gate: reject crops with M_crop <= M_glob, allow focused banners up to 3 tiles
-        sq_img = Image.new("RGB", (224, 224), color=(240, 240, 240))
+        # Nyquist super-resolution gate: full box rejected, focused banner accepted
         calls_pre = len(model.extract_calls)
-        self.assertIsNone(adapter.encode_transient_roi_crops(sq_img, [(0, 0, 224, 224)], max_tiles=3, min_magnification=0.5))
+        self.assertIsNone(adapter.encode_transient_roi_crops(img, [(0, 0, 224, 224)], max_tiles=3, min_magnification=0.5))
         self.assertEqual(len(model.extract_calls), calls_pre)
+        self.assertIsNotNone(adapter.encode_transient_roi_crops(img, [(10, 90, 210, 118)], max_tiles=3, min_magnification=0.5))
 
-        banner_res = adapter.encode_transient_roi_crops(sq_img, [(10, 90, 210, 118)], max_tiles=3, min_magnification=0.5)
-        self.assertIsNotNone(banner_res)
-        self.assertGreaterEqual(model.extract_calls[-1], 2)
-        self.assertLessEqual(model.extract_calls[-1], 3)
+        # Thumbnail-terminal splice & matched p_t^+ / p_t^0 lengths inside build_multimodal_embeds & build_mfvr_embeds
+        v_multi = torch.randn(3, 16, 16)
+        extra = torch.randn(2, 16, 16)
+        adapter.set_ablation_switches(comp_a=True, comp_b=True, comp_c=True)
+        e_plus = adapter.build_multimodal_embeds(v_multi, "ở đây ghi chữ gì?", extra_vit_embeds=extra)
+        e_zero = adapter.build_mfvr_embeds(v_multi, "ở đây ghi chữ gì?", extra_vit_embeds=extra)
+        self.assertEqual(tuple(e_plus.shape), tuple(e_zero.shape))
 
-        # 4. Multi-question generation preserves _cached_vit_embeds immutably & comp_c=False skips foveation
-        img = Image.new("RGB", (200, 120), color=(240, 240, 240))
-        draw = ImageDraw.Draw(img)
-        draw.rectangle([20, 20, 48, 42], fill=(10, 10, 10))
-        draw.line([22, 22, 46, 40], fill=(250, 250, 250), width=2)
-        v1 = adapter.extract_visual_features(img).clone()
-        adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
-        cached_after_q1 = adapter._cached_vit_embeds.clone()
-        adapter.generate(img, "giá bao nhiêu?", max_new_tokens=2)
-        self.assertTrue(torch.equal(v1, cached_after_q1))
-        self.assertTrue(torch.equal(v1, adapter._cached_vit_embeds))
+        # Multi-question generation preserves _cached_vit_embeds immutably across all 4 Stage-A masks
+        pipe = NEVFEPipeline(model=model, tokenizer=_MockTok(), device="cpu")
+        v1 = pipe.adapter.extract_visual_features(img).clone()
+        for mask in [(1, 1, 1), (0, 1, 1), (1, 0, 1), (1, 1, 0)]:
+            pipe.set_ablation_switches(*mask)
+            res = pipe.run(img, "ở đây ghi chữ gì?", max_new_tokens=2)
+            self.assertEqual(res.stage1_bbox, [0, 0, 224, 224])
+            self.assertTrue(torch.equal(v1, pipe.adapter._cached_vit_embeds))
+        pipe.run(img, "giá bao nhiêu?", max_new_tokens=2)
+        self.assertTrue(torch.equal(v1, pipe.adapter._cached_vit_embeds))
+        self.assertEqual(model.language_model.model.seen_seq_lens[-1], model.language_model.model.seen_seq_lens[-2])
 
-        calls_before = len(model.extract_calls)
-        adapter.set_ablation_switches(comp_a=True, comp_b=True, comp_c=False)
-        adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
-        self.assertEqual(len(model.extract_calls), calls_before)
+    def test_19_skg_ttaf_cpu_latency_budget(self):
+        import time
+
+        engine = NEVFEEngine(config=AlgorithmConfig())
+        p_16 = torch.randn(16, 16, 896, dtype=torch.float32)
+        q_e = torch.randn(12, 896, dtype=torch.float32)
+        v_glob = torch.randn(3, 256, 896, dtype=torch.float32)
+        v_crop = torch.randn(2, 256, 896, dtype=torch.float32)
+        t0 = time.perf_counter()
+        for _ in range(25):
+            engine.foveate(p_16, query_embeds=q_e)
+            assemble_foveated_visual_sequence(v_glob, v_crop, comp_c=True)
+        ms_per_step = ((time.perf_counter() - t0) * 1000.0) / 25.0
+        self.assertLess(ms_per_step, 5.0)
+
+        p_32x48 = torch.randn(32, 48, 64, dtype=torch.float32)
+        box, j_s, post = engine.foveate(p_32x48, query_embeds=torch.randn(8, 64))
+        self.assertEqual(len(box), 4)
+        self.assertGreaterEqual(j_s, 0.0)
+        self.assertTrue(torch.isfinite(post).all())
 
 
 if __name__ == "__main__":
