@@ -3,8 +3,16 @@
 - **Team**: `team_1` (**Domain 1 — Input Optical & Native RGB Sensing**)
 - **Backbone**: `5CD-AI/Vintern-1B-v3_5` (`InternViT-300M` `[N_tiles, 256, 896]` `bfloat16`, `448 x 448` tiles + frozen `Qwen2.5-0.5B-Instruct` + locked `IG-VFED` two-stream decoding)
 - **Iterations Executed**: `10 / 10` (`direction_1`: `iter_1..6`; `direction_2`: `iter_7..9`; `direction_3`: `iter_10`) — **`10 / 10` passed Stage A and completed full `1,222`-QID Stage B on Colab L4**
-- **Final `<team_1_best_commit>` (Global Campaign Champion)**: **`0f8a2d4d2bedbb5654c514f1666d9f2748b00bc5`** (`team_1_iter_3`, `FRSA-PBCF` LOO mask `"011"` — Pure Layer-0 Lexical-Semantic Variational Foveation + Exact Poisson–Bregman Subwindow Slicing: **`64.12%` Token F1 (`+3.93 pp` vs baseline), `62.19%` Substring Match (`+0.73 pp`), `63.16%` Composite (`+2.33 pp`), `36.99%` EM (`+5.40 pp`, `453` matched), `55.55%` ANLS (`+6.69 pp`), `CLASS_A <4px` F1 = `25.40%` (`+9.80 pp` vs `15.60%` baseline)** at `1.932 s/Q`; `0`-byte diff verified across `src/nevfe/` and `tests/` at campaign closure)
+- **Final `<team_1_best_commit>` (Global Campaign Champion)**: **`0f8a2d4d2bedbb5654c514f1666d9f2748b00bc5`** (`team_1_iter_3`, `FRSA-PBCF` LOO mask `"011"` — Pure Layer-0 Lexical-Semantic Variational Foveation + Exact Poisson–Bregman Subwindow Slicing, grounded in `PROMOTED_BEST_CHECKPOINT` `direction_1` [[reading_history.md](direction_1/reading_history.md) | [reading_history.bib](direction_1/reading_history.bib)]: **`64.12%` Token F1, `62.19%` Substring Match, `63.16%` Composite (`63.155%`), `36.99%` EM (`453` matched), `55.55%` ANLS, `CLASS_A <4px` F1 = `25.40%`** at `1.932 s/Q`; `0`-byte diff verified across `src/nevfe/` and `tests/` at campaign closure)
 - **Audited Literature Ledger**: **`95` globally distinct peer-reviewed / OA full-text PDFs** (`58 + 28 + 9` across `direction_1..3`; `100%` `1:1` BibTeX parity, `0` key/SHA overlap across directions; **`[Bucket A: 20, Bucket B: 21, Bucket C: 21, Bucket D: 33]`** Q1 journal mathematical primitives with explicit ISSNs)
+
+### Champion (`0f8a2d4d`) Comparison vs. Campaign Baselines (`148f870` & `ab3e9c4`)
+
+| Checkpoint / Reference | Commit SHA | Token F1 (%) | Substring Match (%) | Composite (%) | Champion `ΔF1` vs Ref | Champion `ΔSub` vs Ref | Champion `ΔComposite` vs Ref |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`<team_1_best_commit>` (`FRSA-PBCF` `"011"`)** | **`0f8a2d4d2bedbb5654c514f1666d9f2748b00bc5`** | **`64.12`** | **`62.19`** | **`63.16`** | — | — | — |
+| `iter23_staging` (`IG-VFED` Campaign Anchor) | `148f870` (`d79b650`) | `60.19` | `61.46` | `60.83` | **`+3.93 pp`** | **`+0.73 pp`** | **`+2.33 pp`** |
+| `main` (Legacy `SG-VCD` Baseline) | `ab3e9c4` | `58.50` | `61.70` | `60.10` | **`+5.62 pp`** | **`+0.49 pp`** | **`+3.06 pp`** |
 
 ---
 
@@ -50,9 +58,9 @@
 
 ## 3. Literature & Archival Integrity Summary
 
-| Direction | Iterations | Verdict | Audited Papers (`1:1` BibTeX) | Bucket Breakdown `[A / B / C / D]` | Spec Artifacts Preserved |
-| :--- | :--- | :--- | :---: | :---: | :--- |
-| `direction_1` | `iter_1 .. iter_6` | `PROMOTED_BEST_CHECKPOINT` (`0f8a2d4d`) | `58` | `[12 / 13 / 13 / 20]` | `spec_iter_{1..6}.md` |
-| `direction_2` | `iter_7 .. iter_9` | `FAILED_ROLLED_BACK` | `28` | `[6 / 6 / 6 / 10]` | `spec_iter_{7..9}.md` |
-| `direction_3` | `iter_10` | `FAILED_ROLLED_BACK` | `9` | `[2 / 2 / 2 / 3]` | `spec_iter_10.md` |
-| **Total** | **`10 / 10`** | **Champion locked at `0f8a2d4d`** | **`95` unique keys (`0` overlap)** | **`[20 / 21 / 21 / 33]`** | **All `10` specs + `3` histories intact** |
+| Direction | Iterations | Verdict | Audited Papers (`1:1` BibTeX) | Bucket Breakdown `[A / B / C / D]` | Reading History & BibTeX Links | Spec Artifacts Preserved |
+| :--- | :--- | :--- | :---: | :---: | :--- | :--- |
+| `direction_1` | `iter_1 .. iter_6` | `PROMOTED_BEST_CHECKPOINT` (`0f8a2d4d`) | `58` | `[12 / 13 / 13 / 20]` | [reading_history.md](direction_1/reading_history.md) · [reading_history.bib](direction_1/reading_history.bib) | `spec_iter_{1..6}.md` |
+| `direction_2` | `iter_7 .. iter_9` | `FAILED_ROLLED_BACK` | `28` | `[6 / 6 / 6 / 10]` | [reading_history.md](direction_2/reading_history.md) · [reading_history.bib](direction_2/reading_history.bib) | `spec_iter_{7..9}.md` |
+| `direction_3` | `iter_10` | `FAILED_ROLLED_BACK` | `9` | `[2 / 2 / 2 / 3]` | [reading_history.md](direction_3/reading_history.md) · [reading_history.bib](direction_3/reading_history.bib) | `spec_iter_10.md` |
+| **Total** | **`10 / 10`** | **Champion locked at `0f8a2d4d`** | **`95` unique keys (`0` overlap)** | **`[20 / 21 / 21 / 33]`** | **All `3` direction ledgers linked** | **All `10` specs + `3` histories intact** |
