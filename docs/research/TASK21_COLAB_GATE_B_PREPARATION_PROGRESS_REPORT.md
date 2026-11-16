@@ -2,11 +2,11 @@
 ## Dự án Nghiên cứu SG-VCD / ViTextVQA — Chuẩn bị Gate B Pilot trên Google Colab Tesla T4 (Task 21)
 
 **Mã tài liệu:** `TASK21_COLAB_GATE_B_PREPARATION_PROGRESS_REPORT`  
-**Phiên bản tài liệu:** `v1.0-vi`  
+**Phiên bản tài liệu:** `v1.2-vi`  
 **Tác giả:** Antigravity (Anti) — Chuyên viên Đánh giá Độc lập QA & Đánh giá Hệ thống Nghiên cứu  
 **Kỹ sư Triển khai / Đồng tác giả:** 4argon — Kỹ sư Cấp cao về Hệ thống Học máy (Senior ML Systems Engineer)  
 **Cơ quan Phê duyệt:** Project Owner (Chủ nhiệm Dự án / User)  
-**Ngày lập báo cáo:** `2026-11-16`  
+**Ngày lập báo cáo:** `2026-11-16` (Chuẩn hóa phiên bản `v1.2-vi`: `2026-11-17`)  
 **Điểm mốc kết thúc báo cáo:** Ngay trước thời điểm thực hiện inference thật trên Google Colab  
 **Trạng thái Repository:** Gate A Hoàn thành | Dataset Đã Giải nén trên Drive/Colab | Hardware Đã Khảo sát | Source Package Đã Đóng gói Staging | Gate B Real Inference **ĐANG CHỜ (PENDING)**
 
@@ -17,6 +17,8 @@
 | Phiên bản | Ngày | Tác giả | Tóm tắt Thay đổi |
 | :---: | :---: | :---: | :--- |
 | `v1.0-vi` | 2026-11-16 | Antigravity (Anti) | Bản dịch tiếng Việt toàn diện, đầy đủ của báo cáo tiến độ chuẩn bị Task 21 trước Gate B; giữ nguyên toàn bộ cấu trúc 9 phần, 38 mục, 5 phụ lục, bảng biểu đối chiếu, phân loại bằng chứng và mã băm mật mã. |
+| `v1.1-vi` | 2026-11-17 | Antigravity (Anti) | Chỉnh sửa có kiểm soát (Scope-Alignment Revision): làm rõ ranh giới giữa chuẩn bị kỹ thuật Gate B của Task 21 (pilot 20-QA × 3 nhánh theo phê duyệt của Project Owner) với kế hoạch nghiên cứu đối chiếu các phương pháp decoding baseline liên quan (Original VCD, M3ID, AGLA, AvisC và 5 điều kiện C0–C3) theo định hướng ban đầu của Project Leader; bổ sung Mục 8.1, cập nhật bảng trạng thái, checklist, kết luận và đính chính mô tả CERV tại Phụ lục E. |
+| `v1.2-vi` | 2026-11-17 | Antigravity (Anti) | Chuẩn hóa có kiểm soát lần cuối (Final Controlled Correction): (1) Phân định dứt điểm hai hệ thống thuật ngữ độc lập (`Task Execution Gates: Gate A/B/C` vs. `Research Review Phases: Phase 0–3`), tách bạch `Current Task21 Gate B Integration Pilot` với `Research Review Phase 1`; (2) Xác lập quy tắc nguồn chuẩn cho định nghĩa thuật toán Original VCD và M3ID (`Source Consistency Note — VCD and M3ID Definitions`); (3) Chuẩn hóa đầy đủ từ điển 13 nhãn trạng thái tại Mục 2 và đồng bộ hóa xuyên suốt Mục 8.1, Mục 36, Mục 38, Phụ lục E. |
 
 ---
 
@@ -32,6 +34,7 @@
   - [6. Các Metric Đánh giá và Chính sách Báo cáo Kép (Dual Reporting)](#6-các-metric-đánh-giá-và-chính-sách-báo-cáo-kép-dual-reporting)
   - [7. Thiết kế Ba Nhánh Thử nghiệm Được Phê duyệt](#7-thiết-kế-ba-nhánh-thử-nghiệm-được-phê-duyệt)
   - [8. Lịch sử Quyết định và Phê duyệt của Project Owner](#8-lịch-sử-quyết-định-và-phê-duyệt-của-project-owner)
+    - [8.1. Đối chiếu phạm vi Task21 với yêu cầu nghiên cứu baseline ban đầu của Project Leader](#81-đối-chiếu-phạm-vi-task21-với-yêu-cầu-nghiên-cứu-baseline-ban-đầu-của-project-leader)
 - [PHẦN III — TIẾN TRÌNH TRIỂN KHAI VÀ ĐẢM BẢO CHẤT LƯỢNG (QA) TRƯỚC ĐÓ](#phần-iii--tiến-trình-triển-khai-và-đảm-bảo-chất-lượng-qa-trước-đó)
   - [9. Lịch sử Tối ưu hóa Hiệu năng (Chuỗi OPT-01 đến OPT-06)](#9-lịch-sử-tối-ưu-hóa-hiệu-năng-chuỗi-opt-01-đến-opt-06)
   - [10. Task 18A — Công cụ Kiểm tra Tài nguyên (Resource Preflight)](#10-task-18a--công-cụ-kiểm-tra-tài-nguyên-resource-preflight)
@@ -93,17 +96,44 @@ Task 21 tập trung giải quyết bài toán tương thích độ chính xác s
 **Vai trò của Thử nghiệm Colab T4 Gate B Pilot:**  
 Pilot 20 câu hỏi (20-QA) là chốt chặn kiểm định quan trọng nối liền giữa môi trường phát triển local Gate A (chỉ chạy kiểm thử mô phỏng CPU) và thực nghiệm khoa học quy mô lớn (Gate C). Pilot đánh giá ma trận 3 nhánh phương pháp trên đúng 20 cặp câu hỏi - ảnh thực tế với trọng số mô hình thật trên GPU Colab, nhằm xác nhận độ ổn định số học, mức tiêu thụ VRAM và thời gian suy luận trước khi cấp phép chạy trên toàn bộ tập dữ liệu 400 ảnh.
 
+**Ranh giới Phạm vi của Task 21 so với Lộ trình Nghiên cứu Tổng thể của Project Leader:**  
+- Task 21 tập trung chuyên biệt vào tính tương thích độ chính xác số học (precision compatibility), đóng gói mã nguồn, chuẩn bị môi trường Google Colab và các điều kiện thực thi Gate B.
+- Phạm vi Gate B đã được giới hạn bởi quyết định chính thức của Project Owner (`PROJECT_OWNER_DECISIONS_TASK20.md`, OD-01 Option 1B) thành một pilot tích hợp `20-QA × 3 nhánh` (`CTRL-0`, `Oracle ROI Diagnostic`, `SG-VCD`).
+- Task 21 **không phải** là báo cáo xác nhận đã hoàn thành việc tái hiện (reproduce) hoặc so sánh thực nghiệm với các phương pháp decoding baseline từ các bài báo liên quan (như Original VCD, M3ID, AGLA hay AvisC).
+- Các phương pháp baseline bên ngoài này chưa được triển khai trong runner Gate B và chưa có kết quả thực nghiệm trong Task 21.
+- Do đó, Task 21 là giai đoạn chuẩn bị kỹ thuật và tích hợp thực nghiệm Gate B cho SG-VCD; **task này đóng góp một mắt xích kỹ thuật cần thiết nhưng không đại diện cho toàn bộ chương trình nghiên cứu và đối chiếu các phương pháp baseline liên quan theo định hướng ban đầu của Project Leader** (xem đối chiếu chi tiết tại [Mục 8.1](#81-đối-chiếu-phạm-vi-task21-với-yêu-cầu-nghiên-cứu-baseline-ban-đầu-của-project-leader)).
+
 ---
 
 ## 2. Bảng Trạng thái Tiến độ Hiện tại
 
-Mọi hạng mục công việc được phân loại chính xác theo các nhãn quản trị:
-- `VERIFIED`: Đã kiểm chứng trực tiếp bằng tệp, mã băm SHA256, lệnh console hoặc artifact.
-- `REPORTED`: Đã được ghi nhận trong báo cáo của 4argon/Anti nhưng chưa chạy lại toàn bộ độc lập.
-- `OWNER-PROVIDED EVIDENCE`: Căn cứ trên log, lệnh hoặc ảnh chụp màn hình do Project Owner cung cấp.
-- `PENDING`: Đang chờ thực hiện theo quy trình.
-- `BLOCKED`: Bị nghẽn bởi phụ thuộc kỹ thuật (hiện không có).
-- `NOT APPLICABLE`: Không áp dụng cho giai đoạn hiện tại.
+### Từ điển Trạng thái Thống nhất (Standardized Status Vocabulary)
+
+Mọi hạng mục công việc, phương pháp và nhận định trong báo cáo này tuân thủ nghiêm ngặt từ điển 13 nhãn trạng thái dưới đây:
+
+| Trạng thái | Định nghĩa bắt buộc |
+|---|---|
+| `VERIFIED` | Đã kiểm chứng trực tiếp bằng artifact, log, checksum hoặc bằng chứng có thể truy xuất |
+| `REPORTED` | Được ghi nhận trong báo cáo nguồn nhưng chưa được xác minh độc lập đầy đủ |
+| `OWNER-PROVIDED EVIDENCE` | Bằng chứng do Project Owner cung cấp; phải giữ rõ nguồn |
+| `PENDING` | Công việc thuộc phạm vi đã được phê duyệt nhưng chưa thực hiện hoặc đang chờ điều kiện tiên quyết |
+| `BLOCKED` | Công việc không thể tiếp tục do blocker cụ thể đã được xác định và có bằng chứng |
+| `NOT APPLICABLE` | Không áp dụng đối với hạng mục đang xét |
+| `NOT YET COMPLETED` | Công việc chưa hoàn thành; chưa có artifact đủ chứng minh hoàn thành |
+| `OUTSIDE TASK21 SCOPE` | Công việc không nằm trong phạm vi thực thi Task21 hiện đã được phê duyệt |
+| `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` | Công việc chưa hoàn thành và đồng thời không thuộc phạm vi thực thi Task21 hiện tại; không được hiểu là bị lỗi hoặc bị từ chối vĩnh viễn |
+| `CHƯA ĐƯỢC TRIỂN KHAI` | Chưa có bằng chứng code/experiment cho thấy hạng mục đã được triển khai hoặc thực thi |
+| `CHƯA ĐƯỢC PHÊ DUYỆT` | Chưa có quyết định chính thức cho phép thực hiện; không đồng nghĩa với bị từ chối |
+| `CHƯA CÓ BẰNG CHỨNG` | Chưa tìm thấy artifact/log đủ xác nhận nhận định; không tự suy ra rằng nhận định đó sai |
+| `PENDING DECISIONS` | Các vấn đề quản trị cần Project Owner hoặc Project Leader ra quyết định trước khi được triển khai |
+
+**Quy tắc Áp dụng Nhất quán:**
+- Các hạng mục thuộc **Current Task21 Gate B Integration Pilot (`20-QA × 3 nhánh`)** đang chờ chạy trên Colab dùng nhãn `PENDING` (vì thuộc phạm vi đã được Project Owner phê duyệt có điều kiện).
+- Các phương pháp decoding baseline bên ngoài (**Original VCD, M3ID, AGLA, AvisC**) và 5 điều kiện `C0–C3` chưa thực nghiệm trong Task 21 dùng nhãn `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (kèm `CHƯA ĐƯỢC TRIỂN KHAI`).
+- Đề xuất mẫu sàng lọc `100 ảnh` (Research Review Phase 1) dùng nhãn `CHƯA ĐƯỢC PHÊ DUYỆT` (tuyệt đối không dùng `PENDING` để tránh ngụ ý đã được cấp phép).
+- Các nhận định chưa có log hoặc artifact thực tế dùng nhãn `CHƯA CÓ BẰNG CHỨNG`; không dùng `BLOCKED` khi không có blocker kỹ thuật thực tế.
+
+### Bảng Tổng hợp Tiến độ Hiện tại
 
 | Hạng mục Công việc | Trạng thái | Căn cứ Bằng chứng & Xác minh |
 |---|:---:|---|
@@ -120,8 +150,9 @@ Mọi hạng mục công việc được phân loại chính xác theo các nhã
 | **Tích hợp Đường dẫn Ảnh trên Colab** | `PENDING` | Tự động tạo symlink/copy 6 ảnh pilot vào `data/vitextvqa/st_images/` bằng lệnh `colab_setup_check.py --link`. |
 | **Chạy Preflight Thực tế trên Colab** | `PENDING` | Thực thi lệnh `python -m scripts.benchmark.colab_gate_b_preflight` trên Colab để kiểm tra VRAM/RAM thực tế. |
 | **Smoke Test Suy luận Thật (1 QA)** | `PENDING` | Chạy thử nghiệm 1 mẫu suy luận trên model thật trước khi chạy cả lô. |
-| **Thực thi Gate B Pilot (20 QA × 3 Nhánh)** | `PENDING` | Chạy toàn bộ 3 nhánh sau khi smoke test đạt kết quả hợp lệ. |
+| **Thực thi Gate B Pilot (20 QA × 3 Nhánh)** | `PENDING` | Chạy toàn bộ 3 nhánh (`Current Task21 Gate B Integration Pilot`) sau khi smoke test đạt kết quả hợp lệ. |
 | **Nghiệm thu Độc lập Cuối cùng (Anti QA)** | `PENDING` | Đánh giá độc lập toàn diện do Antigravity thực hiện sau khi có artifact kết quả từ Colab. |
+| **Nghiên cứu và thực nghiệm các phương pháp decoding baseline liên quan theo yêu cầu ban đầu của leader** | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` | Task21 chưa thực hiện đầy đủ các thí nghiệm đối chiếu VCD, M3ID, AGLA và các phương pháp liên quan (`CHƯA ĐƯỢC TRIỂN KHAI`). Đây là phần việc thuộc `Research Review Phase 1–3`, chưa được tính là hoàn thành bởi Gate B preparation. |
 
 ---
 
@@ -253,6 +284,159 @@ Project Owner đã phê duyệt lộ trình thực hiện Task 21:
 3. Nếu FP16 không dùng được, cho phép thử nghiệm bằng cấu hình BF16 dưới dạng ngoại lệ phần cứng được ghi nhận.
 4. Nghiêm cấm tự ý chuyển lùi về FP32 nếu không có sự phê duyệt rõ ràng.
 5. Quyết định này chỉ áp dụng duy nhất cho một pilot tích hợp 20-QA gồm 3 nhánh, không đồng nghĩa với việc cho phép chạy mở rộng Gate C hay chạy full dataset.
+
+---
+
+## 8.1. Đối chiếu phạm vi Task21 với yêu cầu nghiên cứu baseline ban đầu của Project Leader
+
+Yêu cầu nghiên cứu ban đầu của Project Leader được truyền đạt như sau:
+
+> “alu @Trương Phú Triệu, hiện tại mình đang cần đối chiếu baseline, nên m research thêm các bài có phương pháp tương tự mình để chạy thực nghiệm nha. docs/Proposed_Method_SG_VCD.md, proposal của mình t push lên github rồi ấy, cần colab để chạy thì hú nhá”
+
+Để đảm bảo tính minh bạch khoa học và khả năng truy vết quản trị, báo cáo này phân biệt rõ **bốn lớp thông tin độc lập**:
+1. **Yêu cầu nghiên cứu cấp cao ban đầu của Project Leader:** Tìm hiểu các phương pháp nghiên cứu có cơ chế tương tự SG-VCD, lựa chọn những decoding baseline phù hợp và tiến hành thực nghiệm đối chiếu trên bộ dữ liệu ViTextVQA (tách biệt với nhánh so sánh các mô hình VLM nền tảng khác nhau trong `docs/Report.docx` và `docs/HUONG_DAN_CHAY_VASTAI.md`).
+2. **Kế hoạch nghiên cứu đề xuất trong tài liệu review:** Các thiết kế, câu hỏi nghiên cứu và lộ trình baseline (`Research Review Phase 0–3`) được phân tích trong [`docs/SG_VCD_Research_Review_Consolidated_Draft.md`](file:///d:/Trường Đại Học Công Thương/Năm 4_HUIT/Các vấn đề hiện đại trong AI/VLM_Reasoning/docs/SG_VCD_Research_Review_Consolidated_Draft.md) và [`docs/research/SG_VCD_Research_Review_Consolidated_Draft_v2.md`](file:///d:/Trường Đại Học Công Thương/Năm 4_HUIT/Các vấn đề hiện đại trong AI/VLM_Reasoning/docs/research/SG_VCD_Research_Review_Consolidated_Draft_v2.md) (trạng thái thiết kế nghiên cứu, không tự động cấp quyền thực thi).
+3. **Các quyết định thực thi đã được Project Owner phê duyệt:** Bộ quyết định ràng buộc `OD-01` đến `OD-05` tại [`docs/research/PROJECT_OWNER_DECISIONS_TASK20.md`](file:///d:/Trường Đại Học Công Thương/Năm 4_HUIT/Các vấn đề hiện đại trong AI/VLM_Reasoning/docs/research/PROJECT_OWNER_DECISIONS_TASK20.md), giới hạn **Current Task21 Gate B Integration Pilot** ở phạm vi `20-QA × 3 nhánh`.
+4. **Các công việc thực tế đã hoàn thành trong Task 21:** Chuẩn bị kỹ thuật Gate A (bao gồm *Task21 Phase A* về tương thích độ chính xác số học FP16/BF16), kiểm thử mô phỏng local và đóng gói source package cho Colab Tesla T4.
+
+### A. Các phương pháp nghiên cứu được nêu trong tài liệu leader
+
+Dựa trên [`docs/SG_VCD_Research_Review_Consolidated_Draft.md`](file:///d:/Trường Đại Học Công Thương/Năm 4_HUIT/Các vấn đề hiện đại trong AI/VLM_Reasoning/docs/SG_VCD_Research_Review_Consolidated_Draft.md) (Mục 2), các hướng nghiên cứu và phương pháp đối chiếu liên quan bao gồm:
+
+1. **Vanilla Vintern (`5CD-AI/Vintern-1B-v3_5`):**
+   - Sử dụng trực tiếp mô hình nền `5CD-AI/Vintern-1B-v3_5` với giải mã greedy chuẩn.
+   - Đóng vai trò là **backbone control** (mốc kiểm soát mô hình cơ sở), **không phải** là một phương pháp decoding baseline từ bài báo khác.
+2. **Original VCD — Visual Contrastive Decoding (Leng et al., CVPR 2024):**
+   - **Nguồn dẫn chiếu:** Bài báo gốc CVPR 2024 (`https://openaccess.thecvf.com/content/CVPR2024/html/Leng_Mitigating_Object_Hallucinations_in_Large_Vision-Language_Models_through_Visual_Contrastive_CVPR_2024_paper.html`) và official repository (`https://github.com/dungda/VCD`) theo ghi nhận tại Mục 2.2 của `SG_VCD_Research_Review_Consolidated_Draft.md` *(Giới hạn xác minh: môi trường local sandbox không mở kết nối mạng ngoài để kiểm tra trực tiếp kho mã nguồn từ xa; toàn bộ thông số dưới đây căn cứ trực tiếp trên đặc tả đã đối chiếu trong `SG_VCD_Research_Review_Consolidated_Draft.md`)*.
+   - **Định nghĩa thuật toán chuẩn phải sử dụng khi nghiên cứu baseline:**
+     - *Positive branch:* Ảnh gốc (`original image`).
+     - *Negative / reference visual branch:* Ảnh bị nhiễu theo cơ chế khuếch tán tiến (**forward diffusion-style noising**, sử dụng helper `add_diffusion_noise` kèm lịch nhiễu `noise schedule` và tham số `noise_step` của VCD gốc).
+     - *Cơ chế giải mã:* Thực hiện contrastive logit decoding đồng bộ theo từng bước sinh token trên cùng text prefix: $\tilde z_t = (1+\alpha)z_t^{(+)} - \alpha z_t^{(-)}$.
+     - *Yêu cầu tái hiện:* Phải ghi lại chính xác `noise schedule`, `noise_step`, vị trí áp dụng transformation trong preprocessing pipeline và các tham số thực tế.
+     - *Ranh giới nghiêm cấm:* **Không được** gọi Gaussian blur là Original VCD; **không được** thay phép diffusion noise bằng low-pass ROI rồi vẫn tuyên bố đã reproduce Original VCD. Nếu việc port official VCD sang Vintern buộc phải thay đổi thành phần nào, phải ghi rõ là *adaptation* và liệt kê *deviation*, không được tuyên bố *faithful reproduction*.
+3. **M3ID — Multi-Modal Mutual-Information Decoding (Favero et al., CVPR 2024):**
+   - **Nguồn dẫn chiếu:** Bài báo gốc CVPR 2024 (`https://openaccess.thecvf.com/content/CVPR2024/html/Favero_Multi-Modal_Hallucination_Control_by_Visual_Information_Grounding_CVPR_2024_paper.html`) và arXiv (`https://arxiv.org/abs/2403.14003`) theo ghi nhận tại Mục 2.3 của `SG_VCD_Research_Review_Consolidated_Draft.md`.
+   - **Định nghĩa thuật toán chuẩn phải sử dụng khi nghiên cứu baseline:**
+     - *Nhánh chính:* Có điều kiện ảnh (`image-conditioned logits`).
+     - *Nhánh tham chiếu (`text-conditioned reference branch`):* **Loại bỏ điều kiện thị giác (visual conditioning)** khỏi nhánh tham chiếu, nhưng **vẫn giữ nguyên câu hỏi và chuỗi tiền tố văn bản đã sinh (`generated text prefix`)** tương ứng ở mỗi bước.
+     - *Cơ chế hiệu chỉnh:* Giữ cơ chế hệ số phụ thuộc bước thời gian (`step-dependent coefficient`) và cổng độ tự tin (`confidence gating`) theo công thức của phương pháp gốc.
+     - *Ranh giới nghiêm cấm:* **Không được** diễn giải thành một `empty text prompt` làm mất cả câu hỏi và ngữ cảnh prefix; **không được** dùng Gaussian blur hoặc low-pass ROI để mô tả M3ID. Nếu giao diện chat/image-input của Vintern không hỗ trợ bỏ visual conditioning đúng cách, phải ghi nhận đây là vấn đề tương thích khi porting, không được tạo một nhánh khác rồi gọi là M3ID gốc.
+4. **AGLA — Assembly of Global and Local Attention (An et al., CVPR 2025):**
+   - **Nguồn dẫn chiếu:** Bài báo gốc CVPR 2025 (`https://openaccess.thecvf.com/content/CVPR2025/html/An_Mitigating_Object_Hallucinations_in_Large_Vision-Language_Models_with_Assembly_of_CVPR_2025_paper.html`) và official repository (`https://github.com/Lackel/AGLA`).
+   - Phương pháp phối hợp thông tin toàn cục (global image phục vụ sinh từ) và thông tin cục bộ liên quan câu hỏi (local information phục vụ phân biệt thị giác), có cơ chế đối sánh ảnh - câu lệnh (**image-prompt matching**).
+   - Không được đánh đồng AGLA với thao tác chỉ cắt ROI ground-truth rồi làm mờ. Nếu chỉ thực hiện một phiên bản đơn giản hóa (global + ROI), phải định danh rõ là bản điều chỉnh (*adaptation*) hoặc thực nghiệm cắt giảm (*ablation*), tuyệt đối không tự tuyên bố đã tái hiện (reproduce) AGLA gốc.
+5. **AvisC — Attentional Vision Calibration (Woo et al., Findings of ACL 2025):**
+   - **Nguồn dẫn chiếu:** Bài báo gốc Findings of ACL 2025 (`https://aclanthology.org/2025.findings-acl.99/`) và official repository (`https://github.com/sangminwoo/AvisC`).
+   - Xác định các token ảnh bị “mù” (*blind visual tokens*) thông qua phân tích bản đồ attention theo từng tầng và hiệu chỉnh tương phản bằng cách chọn lọc triệt tiêu (zeroing) các đặc trưng tương ứng mà không sửa trực tiếp cơ chế attention.
+   - Trong tài liệu research review, AvisC được giữ ở phần **công trình liên quan (related work)**; chỉ xem xét triển khai sau khi đã kiểm tra thuật toán gốc, đầu ra attention cần thiết và đánh giá tính khả thi trên kiến trúc Vintern.
+
+#### Source Consistency Note — VCD and M3ID Definitions
+
+1. **Sự khác biệt giữa hai tài liệu dự án:** Trong [`docs/Proposed_Method_SG_VCD.md`](file:///d:/Trường Đại Học Công Thương/Năm 4_HUIT/Các vấn đề hiện đại trong AI/VLM_Reasoning/docs/Proposed_Method_SG_VCD.md) (Mục 1, dòng 18), phần mở đầu có cách diễn đạt tóm lược rằng VCD sử dụng *"ảnh mờ Gaussian toàn cục"* và M3ID sử dụng *"prompt ảnh rỗng $\emptyset$"*. Trong khi đó, [`docs/SG_VCD_Research_Review_Consolidated_Draft.md`](file:///d:/Trường Đại Học Công Thương/Năm 4_HUIT/Các vấn đề hiện đại trong AI/VLM_Reasoning/docs/SG_VCD_Research_Review_Consolidated_Draft.md) (Mục 2.2 và 2.3) xác định rõ Original VCD dùng *forward diffusion-style noising* (`add_diffusion_noise`, lịch nhiễu và `noise_step`) và M3ID dùng *text-conditioned reference branch* giữ nguyên câu hỏi cùng generated text prefix nhưng loại bỏ visual conditioning.
+2. **Bản chất sự khác biệt:** Đây là sự khác biệt về cách mô tả giữa các tài liệu nội bộ của dự án; hai cách mô tả này không đồng nhất về mặt thuật toán và **không phải** bằng chứng cho thấy hai cơ chế tương đương nhau.
+3. **Quy tắc nguồn chuẩn để mô tả và tái hiện baseline:** Khi lập kế hoạch và tái hiện một paper-method baseline bên ngoài, thứ tự nguồn chuẩn bắt buộc là:
+   - (1) Bài báo gốc của phương pháp;
+   - (2) Official implementation / repository của tác giả;
+   - (3) `SG_VCD_Research_Review_Consolidated_Draft.md` dùng để tổng hợp, đối chiếu và lập kế hoạch nghiên cứu.
+   - `Proposed_Method_SG_VCD.md` là tài liệu proposal nội bộ của phương pháp SG-VCD; những câu mô tả khái quát về VCD/M3ID trong phần mở đầu proposal không được dùng thay cho đặc tả thuật toán chính thức khi tái hiện các baseline bên ngoài.
+4. **Định nghĩa chuẩn áp dụng xuyên suốt:** Trong báo cáo Task 21 và toàn bộ công việc nghiên cứu baseline tiếp theo, Original VCD và M3ID bắt buộc được hiểu và mô tả đúng theo hai định nghĩa chuẩn tại Mục 8.1.A.2 và Mục 8.1.A.3 nêu trên.
+5. **Bảo toàn nguyên trạng tài liệu gốc của Project Leader:** Tệp `docs/Proposed_Method_SG_VCD.md` được giữ nguyên 100%; nhiệm vụ này chỉ chuẩn hóa quy tắc sử dụng nguồn trong báo cáo Task 21, không tự ý sửa nội dung tệp proposal gốc của Leader. Nếu sau này Project Leader muốn chuẩn hóa câu chữ trong tệp proposal, đó là một công việc quản lý tài liệu riêng biệt, không thuộc phạm vi báo cáo này.
+
+### B. Năm điều kiện thí nghiệm được đề xuất trong research review (`Research Review Phase 1`)
+
+Tài liệu [`docs/SG_VCD_Research_Review_Consolidated_Draft.md`](file:///d:/Trường Đại Học Công Thương/Năm 4_HUIT/Các vấn đề hiện đại trong AI/VLM_Reasoning/docs/SG_VCD_Research_Review_Consolidated_Draft.md) (Mục 5 và Mục 8) đề xuất thiết kế thí nghiệm sàng lọc của **Research Review Phase 1 (Minimal Core Pilot)** gồm 5 điều kiện nhằm tách biệt từng yếu tố nhân quả:
+
+| Condition | Nội dung | Mục đích |
+|---|---|---|
+| **C0: Vanilla** | Global image + question, greedy decoding | Backbone control |
+| **C1: Oracle ROI** | Global image + sharp human-reviewed GT ROI, greedy decoding | Kiểm tra giá trị của ROI khi không dùng contrastive decoding |
+| **C1-lowpass** | Global image + low-pass ROI, greedy decoding | Kiểm tra phản ứng với local view đã lọc |
+| **C2: Original VCD** | Global image nguyên bản và global image bị diffusion-corrupt theo VCD gốc | Đối chiếu whole-image contrastive decoding |
+| **C3: ROI contrastive core** | Global + sharp ROI đối chiếu với global + low-pass ROI, synchronized per-token logits | Kiểm tra giá trị của cơ chế ROI contrastive |
+
+> [!IMPORTANT]
+> **Ghi chú Quản trị Bắt buộc về 5 Điều kiện C0–C3:**
+> - Đây là thiết kế thí nghiệm thuộc **Research Review Phase 1** được đề xuất trong bản nháp `SG_VCD_Research_Review_Consolidated_Draft.md`.
+> - Đây **không phải** là 5 nhánh đã được triển khai trong Task 21 (`NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` — `CHƯA ĐƯỢC TRIỂN KHAI`).
+> - Đây **không phải** là 5 nhánh đã được Project Owner phê duyệt cho Gate B (`CHƯA ĐƯỢC PHÊ DUYỆT`; **Current Task21 Gate B Integration Pilot** chỉ được phê duyệt đúng 3 nhánh theo `OD-01 Option 1B`).
+> - Tuyệt đối không tự ý chuyển 5 điều kiện này vào runner của Task 21 hoặc tuyên bố đã chạy chúng.
+
+### C. Ma trận GAP giữa Leader Plan và Task21 hiện tại
+
+Bảng dưới đây đối chiếu trực tiếp giữa yêu cầu nghiên cứu baseline trong tài liệu của Project Leader với phạm vi thực tế của Task 21 theo đúng từ điển trạng thái tại Mục 2:
+
+| Yêu cầu / phương pháp | Trạng thái trong Task21 | Nhận định |
+|---|---|---|
+| **Vanilla Vintern** | Có nhánh `CTRL-0` (`VERIFIED` ở Gate A; chạy Colab `PENDING`) | Đã có backbone control, không phải paper-method baseline |
+| **Oracle ROI + Stage2 contrastive** | Có nhánh `Oracle ROI` (`VERIFIED` ở Gate A; chạy Colab `PENDING`) | Là oracle diagnostic, không tương đương `C1` sharp ROI greedy |
+| **SG-VCD predicted ROI** | Có nhánh `SG-VCD` (`VERIFIED` ở Gate A; chạy Colab `PENDING`) | Là phương pháp đang phát triển, không thay thế các baseline độc lập |
+| **C1 sharp ROI greedy** | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA ĐƯỢC TRIỂN KHAI`) | Chưa thể kết luận riêng hiệu quả của ROI augmentation không contrastive |
+| **C1-lowpass greedy** | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA ĐƯỢC TRIỂN KHAI`) | Chưa có điều kiện đối chứng low-pass độc lập |
+| **Original VCD** | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA ĐƯỢC TRIỂN KHAI`) | Chưa có so sánh với Original VCD |
+| **M3ID** | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA ĐƯỢC TRIỂN KHAI`) | Là baseline ưu tiên trong `Research Review Phase 2` sau khi hoàn tất core pilot theo review draft |
+| **AGLA** | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA ĐƯỢC TRIỂN KHAI`) | Cần kiểm tra official implementation và chi phí porting trước khi quyết định |
+| **AvisC** | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA ĐƯỢC TRIỂN KHAI`) | Hiện chỉ là related work / hướng xem xét khả thi |
+| **Diacritic-specific evaluation** | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA CÓ BẰNG CHỨNG`) | Không được ghi nhận như metric đã chạy nếu chưa có code và output chứng minh |
+
+**Nhận định Phương pháp luận Bắt buộc:**
+- Việc so sánh `CTRL-0` với `SG-VCD` trong **Current Task21 Gate B Integration Pilot** **không đủ** để cô lập tác động riêng rẽ của việc bổ sung vùng ROI, cơ chế giải mã tương phản (contrastive decoding) và bộ định vị không gian tự động (spatial grounding), bởi vì cả ba yếu tố này thay đổi đồng thời giữa hai nhánh.
+- Việc so sánh `Oracle ROI` (kết hợp Stage 2 contrastive) và `SG-VCD` có giá trị chẩn đoán kỹ thuật về độ lệch giữa ROI ground-truth và ROI dự đoán trong cùng cấu hình Stage 2, nhưng **không thay thế** được việc so sánh độc lập với `C1` (sharp ROI greedy không tương phản), Original VCD, M3ID hoặc các phương pháp đối chứng khác.
+- Do đó, **Task 21 chưa đủ căn cứ để kết luận SG-VCD vượt trội so với toàn bộ các phương pháp baseline liên quan (related-method baselines)**. Ngược lại, cũng không có căn cứ để kết luận SG-VCD kém hơn các phương pháp này vì chưa có kết quả thực nghiệm tương ứng (`CHƯA CÓ BẰNG CHỨNG`).
+
+### D. Phân định Hai Hệ thống Gate/Phase, Quan hệ giữa Gate B và Research Review Phase 1, Quy mô Dữ liệu và Metric
+
+Để loại bỏ triệt để nguy cơ trùng lặp tên gọi giữa các cổng kiểm định kỹ thuật của dự án và các giai đoạn nghiên cứu trong tài liệu của Project Leader, báo cáo sử dụng **hai hệ thống thuật ngữ hoàn toàn độc lập**:
+
+#### 1. Hệ thống A — Task Execution Gates (Cổng Thực thi Kỹ thuật được Project Owner Cấp phép)
+
+| Tên Gate | Ý nghĩa | Phạm vi & Trạng thái Hiện tại |
+|---|---|---|
+| **Gate A** | Phát triển mã nguồn, kiểm thử local, synthetic/mock và kiểm tra kỹ thuật (bao gồm *Task21 Phase A* về tương thích độ chính xác số học FP16/BF16) | Phần chuẩn bị kỹ thuật — Đã hoàn thành (`VERIFIED`) |
+| **Gate B** | **Current Task21 Gate B Integration Pilot** trên Google Colab Tesla T4 | Đúng `20 QA × 3 nhánh` (`CTRL-0`, `Oracle ROI Diagnostic`, `SG-VCD`) đã được Project Owner phê duyệt có điều kiện — Đang chờ thực thi (`PENDING`) |
+| **Gate C** | Giai đoạn thực nghiệm mở rộng tiếp theo | Chưa được tự động cấp phép bởi việc hoàn thành Gate B (`CHƯA ĐƯỢC PHÊ DUYỆT`) |
+
+*(Lưu ý: "Task21 Phase A" là tên gọi lịch sử của bước kiểm tra tương thích độ chính xác local thuộc Gate A; không đổi thành Research Review Phase 0 hay Phase 1. Tuyệt đối không gọi Gate B là Research Phase 1).*
+
+#### 2. Hệ thống B — Research Review Phases (Lộ trình Nghiên cứu theo `SG_VCD_Research_Review_Consolidated_Draft.md` Mục 8)
+
+| Research Review Phase | Tên chính thức | Nội dung theo Research Review Draft | Trạng thái Hiện tại |
+|---|---|---|---|
+| **Phase 0** | **Integrity Checks** | Xác minh annotation đã rà soát, tái tạo tệp dữ liệu gộp có đánh phiên bản (versioned master), kiểm tra provenance các tệp dự đoán lịch sử, xác nhận công thức chuẩn hóa và metric của evaluator | Chuẩn hóa evaluator và manifest 20-QA đã thực hiện cho Gate A/B; việc tái tạo tệp annotation master mới thuộc `PENDING DECISIONS` (`CHƯA ĐƯỢC PHÊ DUYỆT`) |
+| **Phase 1** | **Minimal Core Pilot** | Thử nghiệm năm điều kiện `C0`, `C1`, `C1-lowpass`, `C2`, `C3` trên mẫu exploratory `100 ảnh` theo đề xuất (giữ toàn bộ câu hỏi thuộc mỗi ảnh), chưa bật Stage 1 attention-based localization | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA ĐƯỢC PHÊ DUYỆT` / `CHƯA ĐƯỢC TRIỂN KHAI`) |
+| **Phase 2** | **Baseline Comparison** | Đối chiếu Vanilla, Original VCD, ROI contrastive core và **M3ID** (baseline ưu tiên tiếp theo); kiểm tra official **AGLA** implementation và tính khả thi; giữ **AvisC** ở related work nếu chưa khả thi | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA ĐƯỢC PHÊ DUYỆT` / `CHƯA ĐƯỢC TRIỂN KHAI`) |
+| **Phase 3** | **Full SG-VCD and Ablations** | Chỉ xem xét sau khi ROI contrastive core có tín hiệu đủ tin cậy: automatic spatial grounding, dynamic gates và các ablation riêng biệt (localization, ROI filtering/negative view, dynamic calibration) | `NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` (`CHƯA ĐƯỢC PHÊ DUYỆT` / `CHƯA ĐƯỢC TRIỂN KHAI`) |
+
+#### 3. Quan hệ giữa Current Task21 Gate B Integration Pilot và Research Review Phase 1
+
+**Current Task21 Gate B Integration Pilot (`20 QA × 3 nhánh`) và Research Review Phase 1 (`100 ảnh × 5 điều kiện`) là hai thực nghiệm hoàn toàn khác nhau:**
+
+| Thuộc tính | Current Task21 Gate B Integration Pilot | Research Review Phase 1 |
+|---|---|---|
+| **Mục đích** | Technical integration / engineering pilot | Minimal core-method exploratory pilot |
+| **Quy mô** | `20 QA`, `6 ảnh` | Đề xuất `100 ảnh`, giữ toàn bộ câu hỏi thuộc mỗi ảnh |
+| **Điều kiện** | `CTRL-0`, `Oracle ROI Diagnostic`, `SG-VCD` | `C0`, `C1`, `C1-lowpass`, `C2`, `C3` |
+| **Trạng thái phê duyệt** | Đã được Project Owner phê duyệt có điều kiện (`PENDING` thực thi trên Colab) | Chưa được phê duyệt thực thi (`CHƯA ĐƯỢC PHÊ DUYỆT`) |
+| **Quan hệ** | Gate B hiện tại của Task21 (Hệ thống A) | Research Review Phase 1 trong roadmap nghiên cứu (Hệ thống B) |
+
+- Không được xem việc thực hiện hoặc hoàn thành **Current Task21 Gate B Integration Pilot** là đã hoàn thành **Research Review Phase 1**.
+- Không được lấy kết quả 3 nhánh của Gate B thay thế cho kết quả 5 điều kiện `C0–C3`.
+- Không được coi việc hoàn thành Gate B là quyền tự động chạy mẫu 100 ảnh của Research Review Phase 1.
+
+#### 4. Phân định Quy mô Tập Dữ liệu, Metric theo Giai đoạn và Các Quyết định Mở (`PENDING DECISIONS`)
+
+- **Phân định Quy mô Tập Dữ liệu:**
+  - **Current Task21 Gate B Integration Pilot:** Giới hạn nghiêm ngặt ở **20 QA** (`6 ảnh`) đã được Project Owner phê duyệt.
+  - **Đề xuất trong Research Review Phase 1:** Tập mẫu sàng lọc thăm dò (**100 ảnh** / giữ toàn bộ câu hỏi đi kèm mỗi ảnh) cần phê duyệt riêng trước khi thực hiện (`CHƯA ĐƯỢC PHÊ DUYỆT`).
+  - **Tập 400 ảnh / 1.222 QA hiện có:** Đã tham gia vào quá trình phân tích lỗi và thiết kế phương pháp, do đó phải được xem là **tập phát triển và sàng lọc (development/screening data)**, không được tự nhận là tập kiểm tra độc lập cuối cùng (*untouched final test*). Tuyệt đối không chuyển quy mô 100 ảnh hoặc 400 ảnh thành quyền thực thi của Task 21.
+- **Phân định Metric theo Từng Giai đoạn:**
+  - **Metric đang áp dụng trong Task 21 (Giữ nguyên tuyệt đối):** `Token-F1`, `ANLS` ($\tau = 0.5$), `Substring Match`, cùng các metric phụ `EM` và `VQA Consensus`, áp dụng chính sách Báo cáo Kép (Dual Reporting) và báo cáo riêng biệt trên hai nguồn `gt_answers` và `verified_all_answers`. Không đổi tên `Token-F1` hiện tại thành `Diacritic F1`, và không tuyên bố Task 21 đã đo lường chuyên biệt khả năng bảo toàn dấu tiếng Việt (`CHƯA CÓ BẰNG CHỨNG`).
+  - **Các phân tích và metric đề xuất cho Research Review Phase 1–3 tiếp theo (`NOT YET COMPLETED / OUTSIDE TASK21 SCOPE` — `CHƯA ĐƯỢC TRIỂN KHAI`):** (i) *Accent-preserving ANLS*; (ii) *Character Error Rate (CER)* sau chuẩn hóa giữ nguyên dấu; (iii) *Phân tích lỗi theo grapheme / dấu tiếng Việt* (tách biệt lỗi chữ cái cơ sở, dấu phụ nguyên âm `a/ă/â`, `e/ê`, `o/ô/ơ`, `u/ư`, 5 dấu thanh điệu và `d/đ`); (iv) *Accent-Bearing Word Exact Match (AB-WEM)* khi quy tắc căn chỉnh và định nghĩa được xác minh; (v) *Thống kê tài nguyên thực tế* (latency, throughput, peak VRAM/RAM, failure count); và (vi) *Kiểm định thống kê Paired Image-Level Bootstrap* khi phù hợp với thiết kế đánh giá.
+- **Các Quyết định Mở Chờ Project Leader / Project Owner Xác nhận (`PENDING DECISIONS` — `CHƯA ĐƯỢC PHÊ DUYỆT`):**
+  1. Phê duyệt phạm vi sàng lọc `100 ảnh` cho 5 điều kiện `C0–C3` thuộc `Research Review Phase 1`.
+  2. Phê duyệt đóng băng phiên bản tệp gộp chú giải mới (*versioned annotation master* thuộc `Research Review Phase 0`) sau khi đối chiếu với 4 thư mục thành viên.
+  3. Xác nhận nguồn gốc (provenance) của các con số trong Bảng 5.1 của Proposal (`72.70%` Token F1 và `50.08%` EM là kết quả chạy thử nghiệm sơ bộ, ước lượng hay mục tiêu kỳ vọng — hiện `CHƯA CÓ BẰNG CHỨNG`).
+  4. Quyết định chính sách có cho phép dùng bộ phát hiện văn bản có sẵn (như SwinTextSpotter) làm phương án dự phòng (*Stage 1 fallback*) khi bộ định vị dựa trên attention không ổn định hay không.
+  5. Xác nhận phần dữ liệu độc lập chưa chạm tới (*untouched evaluation split*) và nguồn lực tính toán GPU (Colab / Vast.ai) cho các đợt chạy đối chứng tiếp theo.
 
 ---
 
@@ -810,6 +994,13 @@ cp -r results/colab_t4_gate_b_pilot_* "/content/drive/MyDrive/Document AI/Data/r
     [X] 21 tệp trong gói đã được xác minh; 20 tệp payload đã đăng ký mã băm vào SHA256SUMS.txt.
     [X] Đã loại trừ sạch sẽ tệp nặng, trọng số mô hình, môi trường ảo và mã khóa bảo mật.
     [X] Toàn bộ 9 tiêu chí nghiệm thu gói mã nguồn đều ĐẠT (PASS).
+
+[ ] 6. Nghiên cứu Đối chiếu Các Phương pháp Decoding Baseline Liên quan (`NOT YET COMPLETED / OUTSIDE TASK21 SCOPE`)
+    [ ] Research Review Phase 1 (Minimal Core Pilot — 5 điều kiện C0–C3 trên mẫu đề xuất 100 ảnh): CHƯA ĐƯỢC PHÊ DUYỆT / CHƯA ĐƯỢC TRIỂN KHAI.
+    [ ] Research Review Phase 2 — Tái hiện và đối chiếu Original VCD (forward diffusion-style noising `add_diffusion_noise`): CHƯA ĐƯỢC TRIỂN KHAI.
+    [ ] Research Review Phase 2 — Tái hiện và đối chiếu M3ID (text-conditioned reference giữ nguyên câu hỏi và generated prefix, loại bỏ visual conditioning): CHƯA ĐƯỢC TRIỂN KHAI.
+    [ ] Research Review Phase 2 — Kiểm tra khả thi AGLA / giữ AvisC ở related work: CHƯA ĐƯỢC TRIỂN KHAI.
+    [ ] Research Review Phase 3 (Full SG-VCD & Ablations) và bộ metric chuyên biệt về dấu tiếng Việt (CER, AB-WEM, grapheme errors): CHƯA ĐƯỢC PHÊ DUYỆT / CHƯA ĐƯỢC TRIỂN KHAI.
 ```
 
 ---
@@ -854,6 +1045,12 @@ Project Owner chỉ cần nén thư mục `colab_upload/sg-vcd-task21-source` th
 Việc suy luận mô hình thật bị khóa chặt sau hai điều kiện tự động:
 1. Tập lệnh `colab_gate_b_preflight.py` phải trả về kết luận **`ADMIT`** (xác nhận còn $\ge 6.0\text{ GB}$ VRAM vật lý trống, $\ge 8.0\text{ GB}$ Host RAM, $\ge 15.0\text{ GB}$ ổ đĩa và nhân tính toán FP16 CUDA chạy thông suốt).
 2. Phép thử khói (smoke test) Phase C.1 trên đúng 1 mẫu câu hỏi đầu tiên phải chạy thành công, không phát sinh ngoại lệ, không sinh số `NaN` hay vô cùng.
+
+### 5. Ranh giới Nghiên cứu Tổng thể và Công việc Baseline Tiếp theo
+- **Phần việc Task 21 đã hoàn thành (`VERIFIED` / `OWNER-PROVIDED EVIDENCE`):** Chuẩn bị kỹ thuật Gate A (bao gồm *Task21 Phase A* về tương thích độ chính xác số học FP16/BF16), đóng gói source package và kiểm thử mô phỏng theo đúng các bằng chứng trong báo cáo.
+- **Phần việc Task 21 đang chờ thực thi (`PENDING`):** Chạy preflight thực tế, smoke test 1 mẫu và **Current Task21 Gate B Integration Pilot (`20-QA × 3 nhánh`: `CTRL-0`, `Oracle ROI Diagnostic`, `SG-VCD`)** trên Colab Tesla T4.
+- **Yêu cầu nghiên cứu đối chiếu các phương pháp baseline liên quan của Project Leader (`NOT YET COMPLETED / OUTSIDE TASK21 SCOPE`):** Việc thực hiện **Research Review Phase 1** (`5 điều kiện C0–C3`, đề xuất `100 ảnh`), **Research Review Phase 2** (tái hiện và so sánh với Original VCD, M3ID, đánh giá khả thi AGLA, giữ AvisC ở related work) và **Research Review Phase 3** (Full SG-VCD & Ablations) chưa được thực hiện trong Task 21 (`CHƯA ĐƯỢC TRIỂN KHAI`).
+- **Định hướng nghiên cứu tiếp theo:** **Current Task21 Gate B Integration Pilot** không thay thế và không đồng nghĩa với việc đã hoàn thành **Research Review Phase 1**. Lộ trình `Research Review Phase 0–3` trong tài liệu review mới là định hướng thiết kế nghiên cứu; mọi bước triển khai tiếp theo (bao gồm mẫu 100 ảnh hoặc mở rộng sang Gate C) bắt buộc phải chờ hoàn tất Gate B và có quyết định phê duyệt phạm vi, dữ liệu và nguồn lực tính toán từ Project Owner / Project Leader (`CHƯA ĐƯỢC PHÊ DUYỆT`).
 
 > [!CAUTION]
 > **KẾT LUẬN NGHIỆM THU TỔNG QUAN:**  
@@ -949,15 +1146,20 @@ afac15e8d345b5502fdf420eaadd5ef770df990b062cc39e7dee98346fa0541f  scripts/benchm
 ## Phụ lục E — Bảng Thuật ngữ Kỹ thuật (Glossary)
 
 - **SG-VCD (Saliency-Guided Visual Contrastive Decoding):** Phương pháp giải mã tương phản thị giác có định hướng nổi bật. Khung thuật toán không cần huấn luyện, định vị bằng chứng ở Stage 1 và giải mã tương phản đối chứng với vùng ảnh mờ ở Stage 2.
-- **CERV (Contrastive Evidence Region Voting):** Phương pháp giải mã tương phản trực quan dựa trên bầu chọn vùng bằng chứng (được dùng làm nhánh đối chứng baseline).
+- **CERV:** CERV là phương pháp nghiên cứu riêng được mô tả trong `Proposed_Method_CERV.md`; không thuộc ba nhánh Gate B Pilot đã được phê duyệt trong Task21.
 - **CTRL-0:** Nhánh đối chứng chạy mô hình nền `Vintern-1B-v3_5` nguyên bản bằng thuật toán greedy chuẩn, không can thiệp tương phản.
 - **Oracle ROI:** Điều kiện chẩn đoán sử dụng trực tiếp tọa độ hộp bao chuẩn (`answer_region_bbox`) ở Stage 2 để thiết lập trần hiệu năng lý thuyết của phương pháp giải mã tương phản.
 - **Predicted ROI:** Tọa độ vùng quan tâm do thuật toán lan truyền nổi bật Stage 1 của SG-VCD tự động dự đoán.
 - **Shared Predicted ROI:** Giao thức thực nghiệm trong đó các phương pháp giải mã Stage 2 khác nhau được cung cấp cùng một vùng ROI do SG-VCD Stage 1 dự đoán, nhằm triệt tiêu phương sai do bước định vị gây ra.
-- **Gate A / Gate B / Gate C:**  
-  - *Gate A:* Giai đoạn phát triển mã nguồn, định dạng code và kiểm thử mô phỏng synthetic/mock trên CPU máy local.  
-  - *Gate B:* Giai đoạn chạy thử nghiệm tích hợp đầu tiên (pilot 20 QA × 3 nhánh) trên GPU đám mây (Google Colab Tesla T4) với mô hình thật.  
-  - *Gate C:* Giai đoạn chạy thử nghiệm khoa học toàn diện trên toàn bộ tập dữ liệu lớn.
+- **Gate A / Gate B / Gate C (Task Execution Gates — Hệ thống A):**  
+  - *Gate A:* Giai đoạn phát triển mã nguồn, định dạng code và kiểm thử mô phỏng synthetic/mock trên CPU máy local (bao gồm *Task21 Phase A* về tương thích độ chính xác số học FP16/BF16).  
+  - *Gate B (`Current Task21 Gate B Integration Pilot`):* Giai đoạn chạy thử nghiệm tích hợp kỹ thuật được Project Owner phê duyệt có điều kiện (`20 QA × 3 nhánh`: `CTRL-0`, `Oracle ROI Diagnostic`, `SG-VCD`) trên GPU đám mây (Google Colab Tesla T4) với mô hình thật.  
+  - *Gate C:* Giai đoạn thực nghiệm mở rộng tiếp theo (`CHƯA ĐƯỢC PHÊ DUYỆT`, không tự động được cấp phép bởi việc hoàn thành Gate B).
+- **Research Review Phases (`Phase 0` – `Phase 3` — Hệ thống B):** Hệ thống phân kỳ lộ trình nghiên cứu được đề xuất trong `SG_VCD_Research_Review_Consolidated_Draft.md` (độc lập với `Gate A/B/C`):  
+  - *Research Review Phase 0 (Integrity Checks):* Xác minh annotation, tái tạo tệp dữ liệu gộp versioned master, kiểm tra provenance dự đoán lịch sử và xác nhận công thức evaluator.  
+  - *Research Review Phase 1 (Minimal Core Pilot):* Thử nghiệm 5 điều kiện `C0`, `C1`, `C1-lowpass`, `C2`, `C3` trên mẫu exploratory `100 ảnh` theo đề xuất (`CHƯA ĐƯỢC PHÊ DUYỆT` / `CHƯA ĐƯỢC TRIỂN KHAI`; hoàn toàn khác với `Current Task21 Gate B Integration Pilot`).  
+  - *Research Review Phase 2 (Baseline Comparison):* Đối chiếu Vanilla, Original VCD, ROI contrastive core và M3ID; kiểm tra mã nguồn AGLA và giữ AvisC ở related work (`CHƯA ĐƯỢC PHÊ DUYỆT` / `CHƯA ĐƯỢC TRIỂN KHAI`).  
+  - *Research Review Phase 3 (Full SG-VCD and Ablations):* Tích hợp automatic spatial grounding, dynamic gates và thực hiện các thực nghiệm cắt giảm (ablations) riêng biệt (`CHƯA ĐƯỢC PHÊ DUYỆT` / `CHƯA ĐƯỢC TRIỂN KHAI`).
 - **R-03:** Công thức chấm điểm logit tương phản chuẩn tắc có dấu được phê duyệt: $z_{\mathrm{final}} = (1+\alpha_t) z_{\mathrm{pos}} - \alpha_t z_{\mathrm{neg}}$.
 - **R-04:** Bộ từ vựng schema kết quả trực giao được phê duyệt, phân định rành mạch giữa `run_status`, `answer.status`, `localization.status` và đối tượng `failure`.
 - **CAPC (Contrastive Adaptive Plausibility Constraint):** Ràng buộc tính hợp lý tương phản thích ứng. Lọc các token ứng viên dựa trên hiệu số tương phản dương trước khi tính điểm có dấu.
