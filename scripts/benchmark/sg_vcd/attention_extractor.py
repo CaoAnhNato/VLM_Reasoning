@@ -25,10 +25,23 @@ Mathematical Formulation (Zero-Heuristic, Zero STOPWORDS):
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 from PIL import Image
+
+try:
+    from .feature_cache import (
+        ImageCacheIdentity,
+        build_image_cache_identity,
+        resolve_precision_and_dtype,
+    )
+except ImportError:
+    from scripts.benchmark.sg_vcd.feature_cache import (
+        ImageCacheIdentity,
+        build_image_cache_identity,
+        resolve_precision_and_dtype,
+    )
 
 try:
     import torch
@@ -82,14 +95,14 @@ def compute_pointwise_kl_map(
     return r_map.astype(np.float32)
 
 
-def compute_intrinsic_affinity_field(
-    r_map: np.ndarray,
-    feat_grid: Optional[np.ndarray] = None,
-    a_query_map: Optional[np.ndarray] = None,
+def _compute_intrinsic_affinity_field_numpy_reference(
+    r_map: Union[np.ndarray, "torch.Tensor"],
+    feat_grid: Optional[Union[np.ndarray, "torch.Tensor"]] = None,
+    a_query_map: Optional[Union[np.ndarray, "torch.Tensor"]] = None,
     max_bridge_radius: int = 2,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Compute the parameter-free Intrinsic Affinity Field M_aff(u) and unified field Phi(u)
+    Reference CPU NumPy implementation of the Intrinsic Affinity Field M_aff(u) and unified field Phi(u)
     across 4 canonical lattice directions D = {(0,1), (1,0), (1,1), (1,-1)}:
         1. Bilateral Gap Affinity (bridges inter-word spaces and multi-line gaps):
            M_gap(u) = max_{d in D, k in {1..K}} [ sqrt(R(u - k*d) * R(u + k*d)) * cos_+(v_{u - k*d}, v_{u + k*d}) ]
@@ -97,20 +110,32 @@ def compute_intrinsic_affinity_field(
            M_cont(u) = max_{d in +-D} [ sqrt(R(u - d) * A_tilde(u)) * cos_+(v_{u - d}, v_u)^2 ]
         Phi(u) = max(R(u), M_aff(u))
     """
-    r = np.maximum(np.asarray(r_map, dtype=np.float32), 0.0)
+    if torch is not None and isinstance(r_map, torch.Tensor):
+        r_arr = r_map.detach().cpu().float().numpy()
+    else:
+        r_arr = np.asarray(r_map, dtype=np.float32)
+
+    r = np.maximum(r_arr, 0.0)
     H, W = r.shape
     aff_map = np.zeros((H, W), dtype=np.float32)
 
     if feat_grid is not None:
-        v = np.asarray(feat_grid, dtype=np.float32)
+        if torch is not None and isinstance(feat_grid, torch.Tensor):
+            v = feat_grid.detach().cpu().float().numpy()
+        else:
+            v = np.asarray(feat_grid, dtype=np.float32)
         norms = np.linalg.norm(v, axis=-1, keepdims=True)
         v_norm = v / np.maximum(norms, 1e-8)
     else:
         v_norm = None
 
     if a_query_map is not None:
-        aq = np.maximum(np.asarray(a_query_map, dtype=np.float32), 0.0)
-        aq_max = float(aq.max())
+        if torch is not None and isinstance(a_query_map, torch.Tensor):
+            aq_arr = a_query_map.detach().cpu().float().numpy()
+        else:
+            aq_arr = np.asarray(a_query_map, dtype=np.float32)
+        aq = np.maximum(aq_arr, 0.0)
+        aq_max = float(aq.max()) if aq.size > 0 else 0.0
         a_tilde = aq / aq_max if aq_max > 1e-12 else r.copy()
     else:
         a_tilde = r.copy()
@@ -172,10 +197,196 @@ def compute_intrinsic_affinity_field(
         current_r = np.maximum(current_r, pass_aff)
 
     phi_map = np.maximum(r, aff_map)
-    max_phi = float(phi_map.max())
+    max_phi = float(phi_map.max()) if phi_map.size > 0 else 0.0
     if max_phi > 1e-12:
         phi_map = phi_map / max_phi
     return phi_map.astype(np.float32), aff_map.astype(np.float32)
+
+
+def compute_intrinsic_affinity_field_gpu(
+    r_map: Union["torch.Tensor", np.ndarray],
+    feat_grid: Optional[Union["torch.Tensor", np.ndarray]] = None,
+    a_query_map: Optional[Union["torch.Tensor", np.ndarray]] = None,
+    max_bridge_radius: int = 2,
+) -> Tuple["torch.Tensor", "torch.Tensor"]:
+    """
+    Vectorized PyTorch implementation of the Intrinsic Affinity Field M_aff(u) and unified field Phi(u)
+    (TICKET-OPT-04). Keeps feature tensors on their target device in float32 without CPU round-trips.
+    """
+    if torch is None or F is None:
+        raise RuntimeError("PyTorch is required for compute_intrinsic_affinity_field_gpu.")
+
+    with torch.no_grad():
+        if isinstance(feat_grid, torch.Tensor):
+            device = feat_grid.device
+        elif isinstance(r_map, torch.Tensor):
+            device = r_map.device
+        elif isinstance(a_query_map, torch.Tensor):
+            device = a_query_map.device
+        else:
+            device = torch.device("cpu")
+
+        if isinstance(r_map, torch.Tensor):
+            r_t = r_map.detach().to(device=device, dtype=torch.float32)
+        else:
+            r_t = torch.as_tensor(np.asarray(r_map, dtype=np.float32), device=device, dtype=torch.float32)
+
+        r = torch.clamp(r_t, min=0.0)
+        H, W = int(r.shape[0]), int(r.shape[1])
+        aff_map = torch.zeros((H, W), device=device, dtype=torch.float32)
+
+        if H == 0 or W == 0:
+            return r.clone(), aff_map
+
+        if feat_grid is not None:
+            if isinstance(feat_grid, torch.Tensor):
+                v = feat_grid.detach().to(device=device, dtype=torch.float32)
+            else:
+                v = torch.as_tensor(np.asarray(feat_grid, dtype=np.float32), device=device, dtype=torch.float32)
+            norms = torch.linalg.vector_norm(v, ord=2, dim=-1, keepdim=True)
+            v_norm = v / torch.clamp(norms, min=1e-8)
+        else:
+            v_norm = None
+
+        if a_query_map is not None:
+            if isinstance(a_query_map, torch.Tensor):
+                aq_t = a_query_map.detach().to(device=device, dtype=torch.float32)
+            else:
+                aq_t = torch.as_tensor(np.asarray(a_query_map, dtype=np.float32), device=device, dtype=torch.float32)
+            aq = torch.clamp(aq_t, min=0.0)
+            aq_max = aq.max()
+            a_tilde = torch.where(aq_max > 1e-12, aq / torch.clamp(aq_max, min=1e-12), r.clone())
+        else:
+            a_tilde = r.clone()
+
+        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
+        radius = max(0, int(max_bridge_radius))
+        offsets_a = [
+            (k * dy, k * dx)
+            for dy, dx in directions
+            for k in range(1, radius + 1)
+        ]
+
+        if offsets_a:
+            valid_mask_a = torch.zeros((len(offsets_a), H, W), device=device, dtype=torch.float32)
+            for idx, (ky, kx) in enumerate(offsets_a):
+                abs_ky, abs_kx = abs(ky), abs(kx)
+                if abs_ky < H and abs_kx < W:
+                    y_start, y_end = abs_ky, H - abs_ky
+                    x_start, x_end = abs_kx, W - abs_kx
+                    if y_end > y_start and x_end > x_start:
+                        valid_mask_a[idx, y_start:y_end, x_start:x_end] = 1.0
+
+            if v_norm is not None:
+                v_pad_a = F.pad(v_norm, (0, 0, radius, radius, radius, radius), mode="constant", value=0.0)
+                v_minus_a = torch.stack(
+                    [v_pad_a[radius - ky : radius - ky + H, radius - kx : radius - kx + W, :] for ky, kx in offsets_a],
+                    dim=0,
+                )
+                v_plus_a = torch.stack(
+                    [v_pad_a[radius + ky : radius + ky + H, radius + kx : radius + kx + W, :] for ky, kx in offsets_a],
+                    dim=0,
+                )
+                cos_pos_a = torch.clamp(torch.sum(v_minus_a * v_plus_a, dim=-1), min=0.0) * valid_mask_a
+            else:
+                cos_pos_a = valid_mask_a
+        else:
+            cos_pos_a = None
+
+        offsets_b = [
+            (dy, dx, sign * dy, sign * dx)
+            for dy, dx in directions
+            for sign in (-1, 1)
+        ]
+        if v_norm is not None:
+            valid_mask_b = torch.zeros((len(offsets_b), H, W), device=device, dtype=torch.float32)
+            for idx, (dy, dx, _, _) in enumerate(offsets_b):
+                abs_dy, abs_dx = abs(dy), abs(dx)
+                if abs_dy < H and abs_dx < W:
+                    y_s, y_e = abs_dy, H - abs_dy
+                    x_s, x_e = abs_dx, W - abs_dx
+                    if y_e > y_s and x_e > x_s:
+                        valid_mask_b[idx, y_s:y_e, x_s:x_e] = 1.0
+
+            v_pad_1 = F.pad(v_norm, (0, 0, 1, 1, 1, 1), mode="constant", value=0.0)
+            v_neigh_b = torch.stack(
+                [v_pad_1[1 - sdy : 1 - sdy + H, 1 - sdx : 1 - sdx + W, :] for _, _, sdy, sdx in offsets_b],
+                dim=0,
+            )
+            cos_c_sq_b = (torch.clamp(torch.sum(v_norm.unsqueeze(0) * v_neigh_b, dim=-1), min=0.0) ** 2) * valid_mask_b
+        else:
+            cos_c_sq_b = None
+
+        current_r = r.clone()
+        for _pass in range(2):
+            if offsets_a and cos_pos_a is not None:
+                r_pad_a = F.pad(current_r, (radius, radius, radius, radius), mode="constant", value=0.0)
+                r_minus_a = torch.stack(
+                    [r_pad_a[radius - ky : radius - ky + H, radius - kx : radius - kx + W] for ky, kx in offsets_a],
+                    dim=0,
+                )
+                r_plus_a = torch.stack(
+                    [r_pad_a[radius + ky : radius + ky + H, radius + kx : radius + kx + W] for ky, kx in offsets_a],
+                    dim=0,
+                )
+                geom_mean_a = torch.sqrt(torch.clamp(r_minus_a * r_plus_a, min=0.0))
+                pass_aff = torch.amax(geom_mean_a * cos_pos_a, dim=0)
+            else:
+                pass_aff = torch.zeros((H, W), device=device, dtype=torch.float32)
+
+            if v_norm is not None and _pass == 0 and cos_c_sq_b is not None:
+                r_pad_1 = F.pad(current_r, (1, 1, 1, 1), mode="constant", value=0.0)
+                r_neigh_b = torch.stack(
+                    [r_pad_1[1 - sdy : 1 - sdy + H, 1 - sdx : 1 - sdx + W] for _, _, sdy, sdx in offsets_b],
+                    dim=0,
+                )
+                cont_scores = torch.sqrt(torch.clamp(r_neigh_b * a_tilde.unsqueeze(0), min=0.0)) * cos_c_sq_b
+                pass_aff = torch.maximum(pass_aff, torch.amax(cont_scores, dim=0))
+
+            aff_map = torch.maximum(aff_map, pass_aff)
+            current_r = torch.maximum(current_r, pass_aff)
+
+        phi_map = torch.maximum(r, aff_map)
+        max_phi = phi_map.max()
+        phi_map = torch.where(max_phi > 1e-12, phi_map / torch.clamp(max_phi, min=1e-12), phi_map)
+        return phi_map, aff_map
+
+
+def compute_intrinsic_affinity_field(
+    r_map: Union[np.ndarray, "torch.Tensor"],
+    feat_grid: Optional[Union[np.ndarray, "torch.Tensor"]] = None,
+    a_query_map: Optional[Union[np.ndarray, "torch.Tensor"]] = None,
+    max_bridge_radius: int = 2,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Compute the parameter-free Intrinsic Affinity Field M_aff(u) and unified field Phi(u)
+    across 4 canonical lattice directions D = {(0,1), (1,0), (1,1), (1,-1)}:
+        1. Bilateral Gap Affinity (bridges inter-word spaces and multi-line gaps):
+           M_gap(u) = max_{d in D, k in {1..K}} [ sqrt(R(u - k*d) * R(u + k*d)) * cos_+(v_{u - k*d}, v_{u + k*d}) ]
+        2. Geodesic Stroke-Continuation Affinity (preserves start/end character tails on the same sign):
+           M_cont(u) = max_{d in +-D} [ sqrt(R(u - d) * A_tilde(u)) * cos_+(v_{u - d}, v_u)^2 ]
+        Phi(u) = max(R(u), M_aff(u))
+
+    Delegates to the vectorized PyTorch implementation (TICKET-OPT-04) when PyTorch is available,
+    converting only the final 2D (H, W) maps to float32 NumPy arrays.
+    """
+    if torch is not None and F is not None:
+        phi_t, aff_t = compute_intrinsic_affinity_field_gpu(
+            r_map=r_map,
+            feat_grid=feat_grid,
+            a_query_map=a_query_map,
+            max_bridge_radius=max_bridge_radius,
+        )
+        return (
+            phi_t.detach().cpu().numpy().astype(np.float32),
+            aff_t.detach().cpu().numpy().astype(np.float32),
+        )
+    return _compute_intrinsic_affinity_field_numpy_reference(
+        r_map=r_map,
+        feat_grid=feat_grid,
+        a_query_map=a_query_map,
+        max_bridge_radius=max_bridge_radius,
+    )
 
 
 def find_closest_aspect_ratio(
@@ -256,7 +467,19 @@ class BaseAttentionExtractor(ABC):
     """Strategy interface for extracting the Region-Affinity field Phi(u) from a VLM."""
 
     @abstractmethod
-    def extract(self, image: Image.Image, question: str) -> ExtractionResult:
+    def extract(
+        self,
+        image: Image.Image,
+        question: str,
+        *,
+        image_key: Optional[Union[ImageCacheIdentity, Tuple[Any, ...], str]] = None,
+        image_id: Optional[Union[str, int]] = None,
+        image_path: Optional[str] = None,
+        dataset_root: Optional[str] = None,
+        dataset_version: Optional[str] = None,
+        dataset_namespace: Optional[str] = None,
+        content_fingerprint: Optional[str] = None,
+    ) -> ExtractionResult:
         """Extract Phi(u), R(u), and M_aff(u) for a given image and question."""
         raise NotImplementedError
 
@@ -277,6 +500,8 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
         min_grid_tiles: int = 4,
         max_grid_tiles: int = 6,
         generic_query: str = GENERIC_BASELINE_QUERY,
+        precision: Optional[str] = None,
+        torch_dtype: Optional["torch.dtype"] = None,
         device: str = "cuda",
     ):
         self.model = model
@@ -287,16 +512,44 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
         self.min_grid_tiles = min_grid_tiles
         self.max_grid_tiles = max_grid_tiles
         self.generic_query = generic_query
+        self.precision, self.torch_dtype = resolve_precision_and_dtype(
+            precision=precision, dtype=torch_dtype
+        )
         self.device = device
-        self._cached_img_key: Optional[Tuple[int, int, bytes]] = None
+        self._cached_img_key: Optional[ImageCacheIdentity] = None
         self._cached_img_state: Optional[dict] = None
 
+    def clear_cache(self) -> None:
+        """Explicitly invalidate cached image-level state and key (OPT-06)."""
+        self._cached_img_state = None
+        self._cached_img_key = None
+
     @staticmethod
-    def _make_image_key(image: Image.Image) -> Tuple[int, int, bytes]:
-        """Create a fast, deterministic content key for a PIL Image."""
-        w, h = image.size
-        thumb = image.resize((16, 16), Image.Resampling.NEAREST).convert("RGB")
-        return (w, h, thumb.tobytes())
+    def _make_image_key(
+        image: Image.Image,
+        *,
+        image_key: Optional[Union[ImageCacheIdentity, Tuple[Any, ...], str]] = None,
+        image_id: Optional[Union[str, int]] = None,
+        image_path: Optional[str] = None,
+        dataset_root: Optional[str] = None,
+        dataset_version: Optional[str] = None,
+        dataset_namespace: Optional[str] = None,
+        content_fingerprint: Optional[str] = None,
+    ) -> ImageCacheIdentity:
+        """
+        Create a collision-safe, deterministic cache identity key for a PIL Image (OPT-06).
+        Falls back to content-based thumbnail hashing when stable identity is omitted.
+        """
+        return build_image_cache_identity(
+            image,
+            image_key=image_key,
+            image_id=image_id,
+            image_path=image_path,
+            dataset_root=dataset_root,
+            dataset_version=dataset_version,
+            dataset_namespace=dataset_namespace,
+            content_fingerprint=content_fingerprint,
+        )
 
     @staticmethod
     def _clone_kv_cache(past_kv, max_len: Optional[int] = None):
@@ -434,7 +687,10 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
 
             draft_embeds_list = []
             for _ in range(max_draft_tokens):
-                next_id = int(torch.argmax(logits, dim=-1).item())
+                logits_f32 = logits.float()
+                if torch.isnan(logits_f32).any():
+                    raise ValueError("Non-finite NaN logits encountered during Stage 1 trajectory rollout.")
+                next_id = int(torch.argmax(logits_f32, dim=-1).item())
                 if next_id == eos_id or next_id == self.tokenizer.eos_token_id:
                     break
                 next_tok = torch.tensor([[next_id]], device=self.device, dtype=torch.long)
@@ -617,15 +873,44 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
             del att_g_list, out_g, kv_g
         return map_q, map_g, p_g_heads_dict
 
-    def extract(self, image: Image.Image, question: str) -> ExtractionResult:
+    def extract(
+        self,
+        image: Image.Image,
+        question: str,
+        *,
+        image_key: Optional[Union[ImageCacheIdentity, Tuple[Any, ...], str]] = None,
+        image_id: Optional[Union[str, int]] = None,
+        image_path: Optional[str] = None,
+        dataset_root: Optional[str] = None,
+        dataset_version: Optional[str] = None,
+        dataset_namespace: Optional[str] = None,
+        content_fingerprint: Optional[str] = None,
+    ) -> ExtractionResult:
         """
         Extract R(u), M_aff(u), and Phi(u) on the (16*g_y, 16*g_x) visual patch grid
         using torch.bfloat16 inference with image-level ViT & KV-cache reuse.
         """
-        img_key = self._make_image_key(image)
+        img_key = self._make_image_key(
+            image,
+            image_key=image_key,
+            image_id=image_id,
+            image_path=image_path,
+            dataset_root=dataset_root,
+            dataset_version=dataset_version,
+            dataset_namespace=dataset_namespace,
+            content_fingerprint=content_fingerprint,
+        )
 
         with torch.no_grad():
-            if self._cached_img_key == img_key and self._cached_img_state is not None:
+            cache_valid = (
+                self._cached_img_key == img_key
+                and self._cached_img_state is not None
+                and (
+                    not isinstance(self._cached_img_state.get("vit_embeds"), torch.Tensor)
+                    or self._cached_img_state["vit_embeds"].dtype == self.torch_dtype
+                )
+            )
+            if cache_valid:
                 state = self._cached_img_state
                 vit_embeds = state["vit_embeds"]
                 shared_kv = state["shared_kv"]
@@ -654,7 +939,7 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
                 has_thumbnail = len(tiles) > (gx * gy)
 
                 pixel_values = torch.stack([self.transform(t) for t in tiles]).to(
-                    device=self.device, dtype=torch.bfloat16
+                    device=self.device, dtype=self.torch_dtype
                 )
                 vit_embeds = self.model.extract_feature(pixel_values)
                 del pixel_values
@@ -679,13 +964,12 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
                 num_grid_tiles = gx * gy
                 grid_feats = (
                     vit_embeds[:num_grid_tiles]
+                    .detach()
                     .float()
                     .reshape(gy, gx, 16, 16, -1)
                     .permute(0, 2, 1, 3, 4)
                     .reshape(H_g, W_g, -1)
-                    .detach()
-                    .cpu()
-                    .numpy()
+                    .contiguous()
                 )
                 p_g_heads = None
 
@@ -714,8 +998,7 @@ class PointwiseKLAttentionExtractor(BaseAttentionExtractor):
             }
 
         del suffix_q
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        # CUDA cache cleanup is coordinated at image boundaries by the benchmark runner (TICKET-OPT-02).
 
         r_map = compute_pointwise_kl_map(a_query_map, a_gen_map)
         phi_map, aff_map = compute_intrinsic_affinity_field(

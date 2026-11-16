@@ -1,0 +1,854 @@
+{
+  "metadata": {
+    "manifest_id": "vitextvqa_integration_pilot_20qa_candidate",
+    "status": "CANDIDATE_NOT_FROZEN",
+    "purpose": "Gate B Real-Model ViTextVQA 20-QA Integration Pilot",
+    "target_model": "5CD-AI/Vintern-1B-v3_5",
+    "total_images": 6,
+    "total_questions": 20,
+    "source_dataset": "results/swintextspotter_auto_annot/answer_bboxes_400_verified.json",
+    "image_root": "data/vitextvqa/st_images",
+    "created_date": "2026-11-09",
+    "governance_note": "CANDIDATE ONLY. Pending Independent QA and Project Owner sign-off before freezing as manifest_integration_20qa.json."
+  },
+  "images": [
+    {
+      "image_name": "22.jpg",
+      "relative_path": "data/vitextvqa/st_images/22.jpg",
+      "sha256": "61f86687a45217600936cc30bca5a689410b3c9045ca7974c21277110f95880f",
+      "file_size_bytes": 993978,
+      "file_size_mb": 0.9479,
+      "width": 800,
+      "height": 1422,
+      "mode": "RGB",
+      "grid_ratio": [
+        1,
+        2
+      ],
+      "total_tiles": 3,
+      "question_count": 4
+    },
+    {
+      "image_name": "30.jpg",
+      "relative_path": "data/vitextvqa/st_images/30.jpg",
+      "sha256": "9cc9e427383bb5ee6e4e9fff99e7fc937df4c3cb0438fd93715b328cdde327c3",
+      "file_size_bytes": 176111,
+      "file_size_mb": 0.168,
+      "width": 339,
+      "height": 324,
+      "mode": "RGBA",
+      "grid_ratio": [
+        1,
+        1
+      ],
+      "total_tiles": 1,
+      "question_count": 3
+    },
+    {
+      "image_name": "68.jpg",
+      "relative_path": "data/vitextvqa/st_images/68.jpg",
+      "sha256": "279c3aa1250663e05d0a27eed06644e4a3995202728a3e8c8c8743d530488ee2",
+      "file_size_bytes": 250650,
+      "file_size_mb": 0.239,
+      "width": 1280,
+      "height": 960,
+      "mode": "RGB",
+      "grid_ratio": [
+        3,
+        2
+      ],
+      "total_tiles": 7,
+      "question_count": 4
+    },
+    {
+      "image_name": "76.jpg",
+      "relative_path": "data/vitextvqa/st_images/76.jpg",
+      "sha256": "42d514dca35ddbfe641d31d5a23d6691fff7a12c7a8a147e4e815b1085aea9c8",
+      "file_size_bytes": 741335,
+      "file_size_mb": 0.707,
+      "width": 2448,
+      "height": 3264,
+      "mode": "RGB",
+      "grid_ratio": [
+        2,
+        3
+      ],
+      "total_tiles": 7,
+      "question_count": 3
+    },
+    {
+      "image_name": "111.jpg",
+      "relative_path": "data/vitextvqa/st_images/111.jpg",
+      "sha256": "60f0ba3df0279ed5f7f72a8ab8dd2520f3b2a67f52dff38296a1e190119cbbf0",
+      "file_size_bytes": 9114,
+      "file_size_mb": 0.0087,
+      "width": 300,
+      "height": 168,
+      "mode": "RGB",
+      "grid_ratio": [
+        2,
+        1
+      ],
+      "total_tiles": 3,
+      "question_count": 2
+    },
+    {
+      "image_name": "126.jpg",
+      "relative_path": "data/vitextvqa/st_images/126.jpg",
+      "sha256": "4f3a6a41678af404264ce83fbb2bbe84faa572b292da48403bd0de1d98554694",
+      "file_size_bytes": 165302,
+      "file_size_mb": 0.1576,
+      "width": 800,
+      "height": 532,
+      "mode": "RGB",
+      "grid_ratio": [
+        3,
+        2
+      ],
+      "total_tiles": 7,
+      "question_count": 4
+    }
+  ],
+  "samples": [
+    {
+      "sample_key": "74_22.jpg",
+      "image_name": "22.jpg",
+      "image_id": 22,
+      "question_id": 74,
+      "quest_idx": 1,
+      "question": "cửa tiệm màu xanh là gì ?",
+      "gt_answers": [
+        "nhà thuốc"
+      ],
+      "verified_all_answers": [
+        "nhà thuốc"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        292,
+        655,
+        452,
+        703
+      ],
+      "sub_bboxes": [
+        [
+          292,
+          655,
+          452,
+          703
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "75_22.jpg",
+      "image_name": "22.jpg",
+      "image_id": 22,
+      "question_id": 75,
+      "quest_idx": 2,
+      "question": "nhà thuốc trong ảnh tên gì ?",
+      "gt_answers": [
+        "bảo tâm an"
+      ],
+      "verified_all_answers": [
+        "bảo tâm an"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        246,
+        704,
+        501,
+        767
+      ],
+      "sub_bboxes": [
+        [
+          246,
+          704,
+          501,
+          767
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "76_22.jpg",
+      "image_name": "22.jpg",
+      "image_id": 22,
+      "question_id": 76,
+      "quest_idx": 3,
+      "question": "cửa tiệm bên phải nhà thuốc chuyên gì ?",
+      "gt_answers": [
+        "bán sỉ và lẻ"
+      ],
+      "verified_all_answers": [
+        "bán sỉ và lẻ"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        557,
+        792,
+        783,
+        824
+      ],
+      "sub_bboxes": [
+        [
+          557,
+          792,
+          783,
+          824
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "77_22.jpg",
+      "image_name": "22.jpg",
+      "image_id": 22,
+      "question_id": 77,
+      "quest_idx": 4,
+      "question": "ảnh này lấy nguồn từ đâu ?",
+      "gt_answers": [
+        "wutacam"
+      ],
+      "verified_all_answers": [
+        "wutacam"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        10,
+        1322,
+        141,
+        1363
+      ],
+      "sub_bboxes": [
+        [
+          10,
+          1322,
+          141,
+          1363
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "107_30.jpg",
+      "image_name": "30.jpg",
+      "image_id": 30,
+      "question_id": 107,
+      "quest_idx": 1,
+      "question": "cửa tiệm trong ảnh bán gì ?",
+      "gt_answers": [
+        "bếp gas"
+      ],
+      "verified_all_answers": [
+        "bếp gas",
+        "bếp từ",
+        "hút mùi"
+      ],
+      "added_gt_answers": [
+        "bếp từ",
+        "hút mùi"
+      ],
+      "answer_region_bbox": [
+        104,
+        89,
+        339,
+        324
+      ],
+      "sub_bboxes": [
+        [
+          104,
+          89,
+          339,
+          324
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "108_30.jpg",
+      "image_name": "30.jpg",
+      "image_id": 30,
+      "question_id": 108,
+      "quest_idx": 2,
+      "question": "cửa tiệm trong ảnh bán gì ?",
+      "gt_answers": [
+        "bếp từ"
+      ],
+      "verified_all_answers": [
+        "bếp từ",
+        "bếp gas",
+        "hút mùi"
+      ],
+      "added_gt_answers": [
+        "bếp gas",
+        "hút mùi"
+      ],
+      "answer_region_bbox": [
+        104,
+        89,
+        339,
+        324
+      ],
+      "sub_bboxes": [
+        [
+          104,
+          89,
+          339,
+          324
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "109_30.jpg",
+      "image_name": "30.jpg",
+      "image_id": 30,
+      "question_id": 109,
+      "quest_idx": 3,
+      "question": "cửa tiệm trong ảnh bán gì ?",
+      "gt_answers": [
+        "hút mùi"
+      ],
+      "verified_all_answers": [
+        "hút mùi",
+        "bếp gas",
+        "bếp từ"
+      ],
+      "added_gt_answers": [
+        "bếp gas",
+        "bếp từ"
+      ],
+      "answer_region_bbox": [
+        104,
+        89,
+        339,
+        324
+      ],
+      "sub_bboxes": [
+        [
+          104,
+          89,
+          339,
+          324
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "245_68.jpg",
+      "image_name": "68.jpg",
+      "image_id": 68,
+      "question_id": 245,
+      "quest_idx": 1,
+      "question": "đổi máy mới trong vòng bao nhiêu ngày ?",
+      "gt_answers": [
+        "30 ngày"
+      ],
+      "verified_all_answers": [
+        "30 ngày"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        563,
+        215,
+        838,
+        253
+      ],
+      "sub_bboxes": [
+        [
+          563,
+          215,
+          838,
+          253
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "246_68.jpg",
+      "image_name": "68.jpg",
+      "image_id": 68,
+      "question_id": 246,
+      "quest_idx": 2,
+      "question": "thoải mái đổi trả cái gì ?",
+      "gt_answers": [
+        "điện thoại máy tính bảng"
+      ],
+      "verified_all_answers": [
+        "điện thoại máy tính bảng"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        630,
+        146,
+        841,
+        181
+      ],
+      "sub_bboxes": [
+        [
+          630,
+          146,
+          841,
+          181
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "247_68.jpg",
+      "image_name": "68.jpg",
+      "image_id": 68,
+      "question_id": 247,
+      "quest_idx": 3,
+      "question": "ở đây có bán điện thoại nào ?",
+      "gt_answers": [
+        "galaxy note9"
+      ],
+      "verified_all_answers": [
+        "galaxy note9"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        1024,
+        479,
+        1083,
+        512
+      ],
+      "sub_bboxes": [
+        [
+          1024,
+          479,
+          1083,
+          512
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "248_68.jpg",
+      "image_name": "68.jpg",
+      "image_id": 68,
+      "question_id": 248,
+      "quest_idx": 4,
+      "question": "ở đây có bán điện thoại của hãng nào ?",
+      "gt_answers": [
+        "apple"
+      ],
+      "verified_all_answers": [
+        "apple"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        1100,
+        192,
+        1141,
+        212
+      ],
+      "sub_bboxes": [
+        [
+          1100,
+          192,
+          1141,
+          212
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "267_76.jpg",
+      "image_name": "76.jpg",
+      "image_id": 76,
+      "question_id": 267,
+      "quest_idx": 1,
+      "question": "tên của sản phẩm này là gì ?",
+      "gt_answers": [
+        "nước cốt dừa tươi"
+      ],
+      "verified_all_answers": [
+        "nước cốt dừa tươi"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        950,
+        1090,
+        1841,
+        1541
+      ],
+      "sub_bboxes": [
+        [
+          950,
+          1090,
+          1841,
+          1541
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "268_76.jpg",
+      "image_name": "76.jpg",
+      "image_id": 76,
+      "question_id": 268,
+      "quest_idx": 2,
+      "question": "sản phẩm thuộc của hãng nào ?",
+      "gt_answers": [
+        "cocoxim"
+      ],
+      "verified_all_answers": [
+        "cocoxim"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        1178,
+        829,
+        1674,
+        1102
+      ],
+      "sub_bboxes": [
+        [
+          1178,
+          829,
+          1674,
+          1102
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "269_76.jpg",
+      "image_name": "76.jpg",
+      "image_id": 76,
+      "question_id": 269,
+      "quest_idx": 3,
+      "question": "thể tích thực của sản phẩm là bao nhiêu ?",
+      "gt_answers": [
+        "400ml"
+      ],
+      "verified_all_answers": [
+        "400ml"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        1044,
+        2139,
+        1413,
+        2280
+      ],
+      "sub_bboxes": [
+        [
+          1044,
+          2139,
+          1413,
+          2280
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "348_111.jpg",
+      "image_name": "111.jpg",
+      "image_id": 111,
+      "question_id": 348,
+      "quest_idx": 1,
+      "question": "bản tin thời sự này diễn ra vào ngày nào ?",
+      "gt_answers": [
+        "19 - 12 - 2021"
+      ],
+      "verified_all_answers": [
+        "19 - 12 - 2021"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        10,
+        150,
+        106,
+        167
+      ],
+      "sub_bboxes": [
+        [
+          10,
+          150,
+          106,
+          167
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "349_111.jpg",
+      "image_name": "111.jpg",
+      "image_id": 111,
+      "question_id": 349,
+      "quest_idx": 2,
+      "question": "bản tin thời sự này được phát sóng ở kênh nào ?",
+      "gt_answers": [
+        "ttv11"
+      ],
+      "verified_all_answers": [
+        "ttv11"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        3,
+        92,
+        49,
+        108
+      ],
+      "sub_bboxes": [
+        [
+          3,
+          92,
+          49,
+          108
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "374_126.jpg",
+      "image_name": "126.jpg",
+      "image_id": 126,
+      "question_id": 374,
+      "quest_idx": 1,
+      "question": "bức hình được lấy từ báo nào ?",
+      "gt_answers": [
+        "kiến thức"
+      ],
+      "verified_all_answers": [
+        "kiến thức"
+      ],
+      "added_gt_answers": [],
+      "answer_region_bbox": [
+        577,
+        5,
+        795,
+        63
+      ],
+      "sub_bboxes": [
+        [
+          577,
+          5,
+          795,
+          63
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "375_126.jpg",
+      "image_name": "126.jpg",
+      "image_id": 126,
+      "question_id": 375,
+      "quest_idx": 2,
+      "question": "ở đây có những cửa hàng gì ?",
+      "gt_answers": [
+        "giầy đồ hiệu"
+      ],
+      "verified_all_answers": [
+        "giầy đồ hiệu",
+        "giầy đồ hiệu EU",
+        "anta sports",
+        "in thêu may cờ",
+        "Like Kid'a",
+        "smartshoes",
+        "xèng kids"
+      ],
+      "added_gt_answers": [
+        "giầy đồ hiệu EU",
+        "anta sports",
+        "in thêu may cờ",
+        "Like Kid'a",
+        "smartshoes",
+        "xèng kids"
+      ],
+      "answer_region_bbox": [
+        566,
+        253,
+        639,
+        303
+      ],
+      "sub_bboxes": [
+        [
+          566,
+          253,
+          639,
+          303
+        ],
+        [
+          86,
+          242,
+          188,
+          266
+        ],
+        [
+          383,
+          271,
+          450,
+          288
+        ],
+        [
+          287,
+          225,
+          344,
+          282
+        ],
+        [
+          460,
+          255,
+          556,
+          286
+        ],
+        [
+          652,
+          257,
+          719,
+          297
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "376_126.jpg",
+      "image_name": "126.jpg",
+      "image_id": 126,
+      "question_id": 376,
+      "quest_idx": 3,
+      "question": "ở đây có những cửa hàng gì ?",
+      "gt_answers": [
+        "anta sports"
+      ],
+      "verified_all_answers": [
+        "anta sports",
+        "giầy đồ hiệu EU",
+        "in thêu may cờ",
+        "Like Kid'a",
+        "smartshoes",
+        "xèng kids"
+      ],
+      "added_gt_answers": [
+        "giầy đồ hiệu EU",
+        "in thêu may cờ",
+        "Like Kid'a",
+        "smartshoes",
+        "xèng kids"
+      ],
+      "answer_region_bbox": [
+        86,
+        242,
+        188,
+        266
+      ],
+      "sub_bboxes": [
+        [
+          566,
+          253,
+          639,
+          303
+        ],
+        [
+          86,
+          242,
+          188,
+          266
+        ],
+        [
+          383,
+          271,
+          450,
+          288
+        ],
+        [
+          287,
+          225,
+          344,
+          282
+        ],
+        [
+          460,
+          255,
+          556,
+          286
+        ],
+        [
+          652,
+          257,
+          719,
+          297
+        ]
+      ],
+      "content_fingerprint": null
+    },
+    {
+      "sample_key": "377_126.jpg",
+      "image_name": "126.jpg",
+      "image_id": 126,
+      "question_id": 377,
+      "quest_idx": 4,
+      "question": "ở đây có những cửa hàng gì ?",
+      "gt_answers": [
+        "in thêu may cờ"
+      ],
+      "verified_all_answers": [
+        "in thêu may cờ",
+        "giầy đồ hiệu EU",
+        "anta sports",
+        "Like Kid'a",
+        "smartshoes",
+        "xèng kids"
+      ],
+      "added_gt_answers": [
+        "giầy đồ hiệu EU",
+        "anta sports",
+        "Like Kid'a",
+        "smartshoes",
+        "xèng kids"
+      ],
+      "answer_region_bbox": [
+        383,
+        271,
+        450,
+        288
+      ],
+      "sub_bboxes": [
+        [
+          566,
+          253,
+          639,
+          303
+        ],
+        [
+          86,
+          242,
+          188,
+          266
+        ],
+        [
+          383,
+          271,
+          450,
+          288
+        ],
+        [
+          287,
+          225,
+          344,
+          282
+        ],
+        [
+          460,
+          255,
+          556,
+          286
+        ],
+        [
+          652,
+          257,
+          719,
+          297
+        ]
+      ],
+      "content_fingerprint": null
+    }
+  ]
+}

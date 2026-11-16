@@ -50,9 +50,13 @@ from .dynamic_cd import (
     compute_adaptive_lowpass_radius,
 )
 from .feature_cache import (
+    ImageCacheIdentity,
     VisualFeatureCache,
+    build_image_cache_identity,
+    compute_image_content_fingerprint,
     default_feature_cache,
     get_or_compute_visual_features,
+    resolve_precision_and_dtype,
 )
 from .pipeline import (
     PipelineResult,
@@ -95,6 +99,7 @@ __all__ = [
     "VisualFeatureCache",
     "default_feature_cache",
     "get_or_compute_visual_features",
+    "resolve_precision_and_dtype",
     "PipelineResult",
     "SGVCDPipeline",
     "SyntacticSpanRefiner",

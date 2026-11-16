@@ -112,6 +112,8 @@ class DynamicContrastiveDecoder:
         h_bar_eos: float = 1.80,
         tau_h_eos: float = 0.40,
         delta_peak_min: float = 0.50,
+        # Scoring mode: canonical R-03 signed formula vs historical ReLU-clipped
+        scoring_mode: str = "canonical_signed",
     ):
         """
         Args:
@@ -156,6 +158,18 @@ class DynamicContrastiveDecoder:
         self.h_bar_eos = float(h_bar_eos)
         self.tau_h_eos = float(tau_h_eos)
         self.delta_peak_min = float(delta_peak_min)
+
+        mode_norm = str(scoring_mode).lower().strip()
+        if mode_norm in ("canonical_signed", "canonical_r03", "signed"):
+            self.scoring_mode = "canonical_signed"
+        elif mode_norm in ("historical_relu", "legacy_relu", "relu"):
+            self.scoring_mode = "historical_relu"
+        else:
+            raise ValueError(
+                f"Unknown scoring_mode '{scoring_mode}'. Allowed modes are "
+                f"'canonical_signed' (or 'canonical_r03') and 'historical_relu' (or 'legacy_relu')."
+            )
+
         self._current_step0_d_js: Optional[float] = None
         self._peak_delta_z: float = 0.0
 
@@ -168,11 +182,14 @@ class DynamicContrastiveDecoder:
         """
         Compute Jensen-Shannon Divergence D_JS(P || Q) = 0.5 * D_KL(P || M) + 0.5 * D_KL(Q || M)
         where M = 0.5 * (P + Q). Guaranteed symmetric and bounded in [0, log(2)].
+        Always executes in FP32 to prevent FP16 clamp underflow to zero.
         """
-        m = 0.5 * (p_pos + p_neg)
+        p_pos_f32 = p_pos.float()
+        p_neg_f32 = p_neg.float()
+        m = 0.5 * (p_pos_f32 + p_neg_f32)
         log_m = torch.log(m.clamp(min=eps))
-        kl_p_m = (p_pos * (torch.log(p_pos.clamp(min=eps)) - log_m)).sum(dim=-1, keepdim=True)
-        kl_q_m = (p_neg * (torch.log(p_neg.clamp(min=eps)) - log_m)).sum(dim=-1, keepdim=True)
+        kl_p_m = (p_pos_f32 * (torch.log(p_pos_f32.clamp(min=eps)) - log_m)).sum(dim=-1, keepdim=True)
+        kl_q_m = (p_neg_f32 * (torch.log(p_neg_f32.clamp(min=eps)) - log_m)).sum(dim=-1, keepdim=True)
         d_js = 0.5 * (kl_p_m + kl_q_m)
         return torch.clamp(d_js, min=0.0)
 
@@ -188,6 +205,8 @@ class DynamicContrastiveDecoder:
     ) -> Tuple[int, float, float, float]:
         """
         Execute a single calibrated decoding step.
+        Promotes logits to FP32 for numerical stability in softmax, entropy,
+        KL/JS divergence, alpha_t, and canonical R-03 / historical scoring.
         
         Returns:
             next_token_id: Selected token ID
@@ -195,8 +214,36 @@ class DynamicContrastiveDecoder:
             entropy_t: Predictive entropy of positive distribution
             d_js_val: Jensen-Shannon divergence
         """
-        p_pos = F.softmax(pos_logits, dim=-1)
-        p_neg = F.softmax(neg_logits, dim=-1)
+        if pos_logits.shape != neg_logits.shape:
+            raise ValueError(
+                f"pos_logits and neg_logits must have identical shapes, "
+                f"got {tuple(pos_logits.shape)} vs {tuple(neg_logits.shape)}."
+            )
+        if pos_logits.dtype != neg_logits.dtype:
+            raise ValueError(
+                f"pos_logits and neg_logits must have identical dtypes (no mixed-branch precision), "
+                f"got {pos_logits.dtype} vs {neg_logits.dtype}."
+            )
+
+        pos_f32 = pos_logits.float()
+        neg_f32 = neg_logits.float()
+
+        if (
+            torch.isnan(pos_f32).any()
+            or torch.isnan(neg_f32).any()
+            or torch.isposinf(pos_f32).any()
+            or torch.isposinf(neg_f32).any()
+        ):
+            raise ValueError(
+                "Non-finite logits (NaN or +inf) detected in DynamicContrastiveDecoder.decode_step."
+            )
+        if not torch.isfinite(pos_f32).any(dim=-1).all() or not torch.isfinite(neg_f32).any(dim=-1).all():
+            raise ValueError(
+                "All logits in a decoding row are -inf; cannot form valid probability distribution."
+            )
+
+        p_pos = F.softmax(pos_f32, dim=-1)
+        p_neg = F.softmax(neg_f32, dim=-1)
 
         # 1. Predictive Entropy H(P_pos)
         log_p_pos = torch.log(p_pos.clamp(min=1e-12))
@@ -209,10 +256,10 @@ class DynamicContrastiveDecoder:
         max_p_pos = p_pos.max(dim=-1, keepdim=True).values
         apc_mask = p_pos >= (beta_t * max_p_pos)
 
-        delta_z = torch.relu(pos_logits - neg_logits)
-        max_delta_z = delta_z.max(dim=-1, keepdim=True).values
+        delta_z_candidate = torch.relu(pos_f32 - neg_f32)
+        max_delta_z = delta_z_candidate.max(dim=-1, keepdim=True).values
         has_contrast = max_delta_z > 1e-6
-        contrast_mask = (delta_z >= (self.theta_c * max_delta_z)) & has_contrast
+        contrast_mask = (delta_z_candidate >= (self.theta_c * max_delta_z)) & has_contrast
         valid_mask = apc_mask | contrast_mask
 
         # Track historical peak visual contrast across generation steps (DCEB sensor)
@@ -269,10 +316,18 @@ class DynamicContrastiveDecoder:
             alpha_t *= (self.gamma_phase ** phase_cooldown_step)
         alpha_t = max(0.0, min(2.0, alpha_t))
 
-        # TESG: z_t^*(w) = (z_t^(+)(w) + alpha_t * Delta z_t(w)) / T(H_t)
+        # Contrastive Logit Scoring:
+        # Canonical R-03 signed formula: z_score = (1 + alpha_t) * z_pos - alpha_t * z_neg
+        # Historical ReLU-clipped formula: z_score = z_pos + alpha_t * relu(z_pos - z_neg)
+        if self.scoring_mode == "canonical_signed":
+            contrastive_score = (1.0 + alpha_t) * pos_f32 - alpha_t * neg_f32
+        else:
+            contrastive_score = pos_f32 + alpha_t * delta_z_candidate
+
+        # TESG: z_t^*(w) = contrastive_score(w) / T(H_t)
         # where T(H_t) = 1.0 - eta_T * tanh(H_t / tau_H)
         t_entropy = max(0.05, 1.0 - self.eta_temp * math.tanh(entropy_val / self.tau_h))
-        calibrated_logits = (pos_logits + alpha_t * delta_z) / t_entropy
+        calibrated_logits = contrastive_score / t_entropy
 
         # 4. Dynamic Contrastive EOS Boosting (DCEB) & CAPC EOS Preservation:
         effective_peak = max(self._peak_delta_z, self.delta_peak_min)
@@ -288,5 +343,9 @@ class DynamicContrastiveDecoder:
                     calibrated_logits[..., eid] += tau_eos
 
         calibrated_logits = calibrated_logits.masked_fill(~valid_mask, float("-inf"))
+        if not torch.isfinite(calibrated_logits).any():
+            raise ValueError(
+                "No finite candidate logits remain after CAPC/APC plausibility masking."
+            )
         next_token_id = int(torch.argmax(calibrated_logits, dim=-1).item())
         return next_token_id, alpha_t, entropy_val, d_js_val

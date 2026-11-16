@@ -12,6 +12,9 @@ ENV/
 # Data and large binaries (except X-AnyLabeling 400-image collaborative workspace)
 data/*
 !data/xanylabeling_workspace/
+!data/vitextvqa/
+data/vitextvqa/*
+!data/vitextvqa/*.json
 datasets/
 *.tar.gz
 *.zip

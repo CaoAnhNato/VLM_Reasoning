@@ -45,6 +45,11 @@ def normalize_answer(text: Any) -> str:
     return " ".join(text_clean.split())
 
 
+def normalize_vietnamese_text(text: Any) -> str:
+    """Alias for normalize_answer conforming to P0 v1.1 status schema naming."""
+    return normalize_answer(text)
+
+
 def _normalized_edit_similarity(a: str, b: str) -> float:
     """Compute Normalized Levenshtein Similarity 1 - d_edit(a, b) / max(|a|, |b|) in [0, 1]."""
     if a == b:
@@ -360,11 +365,22 @@ def compute_stage1_metrics(
 class MetricsAggregator:
     """
     Streaming accumulator for Stage 1 and Stage 2 evaluation metrics.
-    Accumulates per-sample records and computes mean metrics and percentage rates.
+    Supports OD-02 Policy 2C Dual Reporting:
+      - Primary Benchmark: Strict Fixed Manifest Denominator (N_manifest, e.g. 20)
+      - Secondary Diagnostic: Conditional Quality over valid responses (N_valid)
+      - Separate evaluation for original gt_answers and human-verified verified_all_answers
+      - Explicit failure taxonomy tracking
     """
 
-    def __init__(self):
+    def __init__(self, manifest_count: Optional[int] = None):
         self.count = 0
+        self.manifest_count = manifest_count
+        self.valid_count = 0
+        self.failed_count = 0
+        self.failure_breakdown: Dict[str, int] = Counter()
+        self.gt_available_count = 0
+        self.verified_available_count = 0
+
         self.stage1_accum = {
             "iou": 0.0,
             "recall": 0.0,
@@ -376,7 +392,21 @@ class MetricsAggregator:
             "max_sub_iou": 0.0,
             "multi_box_hit": 0.0,
         }
+        # Fixed denominator accumulator (failures contribute 0.0)
         self.stage2_accum = {
+            "em_gt": 0.0,
+            "vqa_acc_gt": 0.0,
+            "f1_gt": 0.0,
+            "substring_gt": 0.0,
+            "anls_gt": 0.0,
+            "em_verified": 0.0,
+            "vqa_acc_verified": 0.0,
+            "f1_verified": 0.0,
+            "substring_verified": 0.0,
+            "anls_verified": 0.0,
+        }
+        # Conditional quality accumulator (sums over valid generations only)
+        self.stage2_accum_valid = {
             "em_gt": 0.0,
             "vqa_acc_gt": 0.0,
             "f1_gt": 0.0,
@@ -395,52 +425,140 @@ class MetricsAggregator:
         stage1_metrics: Optional[Dict[str, float]] = None,
         stage2_metrics: Optional[Dict[str, float]] = None,
         latency_s: Optional[float] = None,
+        *,
+        is_valid: bool = True,
+        error_category: Optional[str] = None,
+        has_gt: bool = True,
+        has_verified: bool = True,
     ):
         """Add a single evaluated sample."""
         self.count += 1
+        if has_gt:
+            self.gt_available_count += 1
+        if has_verified:
+            self.verified_available_count += 1
+
+        if is_valid:
+            self.valid_count += 1
+        else:
+            self.failed_count += 1
+            cat = error_category or "unspecified_failure"
+            self.failure_breakdown[cat] = self.failure_breakdown.get(cat, 0) + 1
+
         if stage1_metrics:
             for k in self.stage1_accum:
                 if k in stage1_metrics:
                     self.stage1_accum[k] += float(stage1_metrics[k])
+
         if stage2_metrics:
             for k in self.stage2_accum:
                 if k in stage2_metrics:
-                    self.stage2_accum[k] += float(stage2_metrics[k])
+                    val = float(stage2_metrics[k])
+                    self.stage2_accum[k] += val
+                    if is_valid:
+                        self.stage2_accum_valid[k] += val
+
         if latency_s is not None and latency_s >= 0:
             self.latencies.append(float(latency_s))
 
-    def summary(self) -> Dict[str, Any]:
-        """Compute summary statistics across all accumulated samples."""
-        n = max(1, self.count)
+    def summary(self, target_denominator: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Compute summary statistics adhering strictly to OD-02 Policy 2C:
+          - Primary Benchmark: Strict Fixed Manifest Denominator
+          - Secondary Diagnostic: Conditional Quality over valid responses
+        """
+        # Primary fixed manifest denominator
+        n_fixed = target_denominator or self.manifest_count or max(1, self.count)
+        # Conditional valid denominator
+        n_valid = self.valid_count
+
         avg_lat = sum(self.latencies) / max(1, len(self.latencies)) if self.latencies else 0.0
         throughput = (60.0 / avg_lat) if avg_lat > 0.0 else 0.0
 
+        # Stage 1 spatial metrics
+        n_s1 = max(1, self.count)
+        stage1_summary = {
+            "mean_iou_pct": round((self.stage1_accum["iou"] / n_s1) * 100.0, 2),
+            "mean_recall_pct": round((self.stage1_accum["recall"] / n_s1) * 100.0, 2),
+            "mean_gt_inclusion_recall_pct": round((self.stage1_accum["recall"] / n_s1) * 100.0, 2),
+            "mean_precision_pct": round((self.stage1_accum["precision"] / n_s1) * 100.0, 2),
+            "hit_rate_iou_03_pct": round((self.stage1_accum["hit_iou_03"] / n_s1) * 100.0, 2),
+            "hit_rate_iou_05_pct": round((self.stage1_accum["hit_iou_05"] / n_s1) * 100.0, 2),
+            "hit_rate_recall_05_pct": round((self.stage1_accum["hit_recall_05"] / n_s1) * 100.0, 2),
+            "multi_box_hit_rate_pct": round((self.stage1_accum["multi_box_hit"] / n_s1) * 100.0, 2),
+            "multi_box_text_coverage_pct": round((self.stage1_accum["multi_box_hit"] / n_s1) * 100.0, 2),
+            "sub_coverage_recall_pct": round((self.stage1_accum["sub_coverage_recall"] / n_s1) * 100.0, 2),
+        }
+
+        # Primary Fixed Manifest Denominator (Option 2B / 2C Primary)
+        primary_fixed = {
+            "exact_match_gt_pct": round((self.stage2_accum["em_gt"] / n_fixed) * 100.0, 2),
+            "vqa_acc_gt_pct": round((self.stage2_accum["vqa_acc_gt"] / n_fixed) * 100.0, 2),
+            "f1_gt_pct": round((self.stage2_accum["f1_gt"] / n_fixed) * 100.0, 2),
+            "substring_match_gt_pct": round((self.stage2_accum["substring_gt"] / n_fixed) * 100.0, 2),
+            "anls_gt_pct": round((self.stage2_accum["anls_gt"] / n_fixed) * 100.0, 2),
+            "exact_match_verified_pct": round((self.stage2_accum["em_verified"] / n_fixed) * 100.0, 2),
+            "vqa_acc_verified_pct": round((self.stage2_accum["vqa_acc_verified"] / n_fixed) * 100.0, 2),
+            "f1_verified_pct": round((self.stage2_accum["f1_verified"] / n_fixed) * 100.0, 2),
+            "substring_match_verified_pct": round((self.stage2_accum["substring_verified"] / n_fixed) * 100.0, 2),
+            "anls_verified_pct": round((self.stage2_accum["anls_verified"] / n_fixed) * 100.0, 2),
+        }
+
+        # Secondary Conditional Diagnostic (Option 2A / 2C Diagnostic)
+        if n_valid > 0:
+            conditional_diag = {
+                "status": "available",
+                "exact_match_gt_pct": round((self.stage2_accum_valid["em_gt"] / n_valid) * 100.0, 2),
+                "vqa_acc_gt_pct": round((self.stage2_accum_valid["vqa_acc_gt"] / n_valid) * 100.0, 2),
+                "f1_gt_pct": round((self.stage2_accum_valid["f1_gt"] / n_valid) * 100.0, 2),
+                "substring_match_gt_pct": round((self.stage2_accum_valid["substring_gt"] / n_valid) * 100.0, 2),
+                "anls_gt_pct": round((self.stage2_accum_valid["anls_gt"] / n_valid) * 100.0, 2),
+                "exact_match_verified_pct": round((self.stage2_accum_valid["em_verified"] / n_valid) * 100.0, 2),
+                "vqa_acc_verified_pct": round((self.stage2_accum_valid["vqa_acc_verified"] / n_valid) * 100.0, 2),
+                "f1_verified_pct": round((self.stage2_accum_valid["f1_verified"] / n_valid) * 100.0, 2),
+                "substring_match_verified_pct": round((self.stage2_accum_valid["substring_verified"] / n_valid) * 100.0, 2),
+                "anls_verified_pct": round((self.stage2_accum_valid["anls_verified"] / n_valid) * 100.0, 2),
+            }
+        else:
+            conditional_diag = {
+                "status": "unavailable",
+                "exact_match_gt_pct": None,
+                "vqa_acc_gt_pct": None,
+                "f1_gt_pct": None,
+                "substring_match_gt_pct": None,
+                "anls_gt_pct": None,
+                "exact_match_verified_pct": None,
+                "vqa_acc_verified_pct": None,
+                "f1_verified_pct": None,
+                "substring_match_verified_pct": None,
+                "anls_verified_pct": None,
+            }
+
         return {
             "total_evaluated_samples": self.count,
-            "stage1": {
-                "mean_iou_pct": round((self.stage1_accum["iou"] / n) * 100.0, 2),
-                "mean_recall_pct": round((self.stage1_accum["recall"] / n) * 100.0, 2),
-                "mean_gt_inclusion_recall_pct": round((self.stage1_accum["recall"] / n) * 100.0, 2),
-                "mean_precision_pct": round((self.stage1_accum["precision"] / n) * 100.0, 2),
-                "hit_rate_iou_03_pct": round((self.stage1_accum["hit_iou_03"] / n) * 100.0, 2),
-                "hit_rate_iou_05_pct": round((self.stage1_accum["hit_iou_05"] / n) * 100.0, 2),
-                "hit_rate_recall_05_pct": round((self.stage1_accum["hit_recall_05"] / n) * 100.0, 2),
-                "multi_box_hit_rate_pct": round((self.stage1_accum["multi_box_hit"] / n) * 100.0, 2),
-                "multi_box_text_coverage_pct": round((self.stage1_accum["multi_box_hit"] / n) * 100.0, 2),
-                "sub_coverage_recall_pct": round((self.stage1_accum["sub_coverage_recall"] / n) * 100.0, 2),
+            "manifest_total_samples": n_fixed,
+            "policy": "OD-02_2C_DUAL_REPORTING",
+            "primary_fixed_denominator": {
+                "denominator": n_fixed,
+                "metrics": primary_fixed,
             },
-            "stage2": {
-                "exact_match_gt_pct": round((self.stage2_accum["em_gt"] / n) * 100.0, 2),
-                "vqa_acc_gt_pct": round((self.stage2_accum["vqa_acc_gt"] / n) * 100.0, 2),
-                "f1_gt_pct": round((self.stage2_accum["f1_gt"] / n) * 100.0, 2),
-                "substring_match_gt_pct": round((self.stage2_accum["substring_gt"] / n) * 100.0, 2),
-                "anls_gt_pct": round((self.stage2_accum["anls_gt"] / n) * 100.0, 2),
-                "exact_match_verified_pct": round((self.stage2_accum["em_verified"] / n) * 100.0, 2),
-                "vqa_acc_verified_pct": round((self.stage2_accum["vqa_acc_verified"] / n) * 100.0, 2),
-                "f1_verified_pct": round((self.stage2_accum["f1_verified"] / n) * 100.0, 2),
-                "substring_match_verified_pct": round((self.stage2_accum["substring_verified"] / n) * 100.0, 2),
-                "anls_verified_pct": round((self.stage2_accum["anls_verified"] / n) * 100.0, 2),
+            "conditional_diagnostic": {
+                "denominator": n_valid,
+                "metrics": conditional_diag,
             },
+            "diagnostic_metadata": {
+                "n_manifest": n_fixed,
+                "n_evaluated": self.count,
+                "n_valid": self.valid_count,
+                "n_failed": self.failed_count,
+                "failure_breakdown": dict(self.failure_breakdown),
+                "gt_availability": {
+                    "gt_answers_count": self.gt_available_count,
+                    "verified_all_answers_count": self.verified_available_count,
+                },
+            },
+            "stage1": stage1_summary,
+            "stage2": primary_fixed,  # backward compatibility
             "performance": {
                 "avg_latency_s": round(avg_lat, 3),
                 "throughput_samples_per_min": round(throughput, 2),

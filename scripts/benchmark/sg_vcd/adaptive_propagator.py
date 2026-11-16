@@ -23,7 +23,8 @@ Step 2 — Decoupled Directional Propagation (Prototype Locking + Vietnamese Dia
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+import inspect
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image
@@ -146,6 +147,42 @@ def compute_autocorrelation_char_scale_1d(
     return float(min_scale)
 
 
+def _is_valid_working_maps(working_maps: Optional[Tuple[Any, ...]]) -> bool:
+    """
+    Validate that `working_maps` is a well-formed 6-tuple
+    `(opp_t, bg_smooth_t, stroke_energy_t, horiz_mod_t, scale_x, scale_y)` (OPT-03).
+    """
+    if not isinstance(working_maps, tuple) or len(working_maps) != 6:
+        return False
+    opp_t, bg_smooth_t, stroke_energy_t, horiz_mod_t, scale_x, scale_y = working_maps
+    if not (
+        isinstance(opp_t, torch.Tensor)
+        and isinstance(bg_smooth_t, torch.Tensor)
+        and isinstance(stroke_energy_t, torch.Tensor)
+        and isinstance(horiz_mod_t, torch.Tensor)
+    ):
+        return False
+    if (
+        opp_t.ndim != 3
+        or bg_smooth_t.ndim != 3
+        or stroke_energy_t.ndim != 2
+        or horiz_mod_t.ndim != 2
+    ):
+        return False
+    if (
+        opp_t.shape[:2] != stroke_energy_t.shape
+        or bg_smooth_t.shape[:2] != stroke_energy_t.shape
+        or horiz_mod_t.shape != stroke_energy_t.shape
+    ):
+        return False
+    try:
+        if float(scale_x) <= 0.0 or float(scale_y) <= 0.0:
+            return False
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
 class BaseSeedPropagator(ABC):
     """Strategy interface for seed-based region propagation."""
 
@@ -157,6 +194,7 @@ class BaseSeedPropagator(ABC):
         grid_ratio: Tuple[int, int],
         seed_pixel: Optional[Tuple[int, int]] = None,
         feat_grid: Optional[np.ndarray] = None,
+        working_maps: Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, float, float]] = None,
     ) -> SeedPropagationResult:
         """Propagate from a single seed patch/pixel to cover the target text region."""
         raise NotImplementedError
@@ -167,12 +205,24 @@ class BaseSeedPropagator(ABC):
         seed_patches: List[Tuple[int, int]],
         grid_ratio: Tuple[int, int],
         seed_pixels: Optional[List[Optional[Tuple[int, int]]]] = None,
+        working_maps: Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, float, float]] = None,
     ) -> List[SeedPropagationResult]:
         """Propagate from multiple seed patches/pixels."""
         results = []
+        prop_params = inspect.signature(self.propagate).parameters
+        accepts_working_maps = "working_maps" in prop_params or any(
+            p.kind == inspect.Parameter.VAR_KEYWORD for p in prop_params.values()
+        )
         for i, sp in enumerate(seed_patches):
             px = seed_pixels[i] if seed_pixels is not None and i < len(seed_pixels) else None
-            results.append(self.propagate(image, sp, grid_ratio, seed_pixel=px))
+            if working_maps is not None and accepts_working_maps:
+                results.append(
+                    self.propagate(
+                        image, sp, grid_ratio, seed_pixel=px, working_maps=working_maps
+                    )
+                )
+            else:
+                results.append(self.propagate(image, sp, grid_ratio, seed_pixel=px))
         return results
 
 
@@ -545,7 +595,8 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
             sgx = int(np.clip(int(px0 * W_g / max(1, W)), 0, W_g - 1))
             sgy = int(np.clip(int(py0 * H_g / max(1, H)), 0, H_g - 1))
 
-        if working_maps is not None:
+        has_valid_working_maps = _is_valid_working_maps(working_maps)
+        if has_valid_working_maps:
             opp_t, bg_smooth_t, stroke_energy_t, horiz_mod_t, scale_x, scale_y = working_maps
         else:
             opp_t, bg_smooth_t, stroke_energy_t, horiz_mod_t, scale_x, scale_y = self._compute_working_maps(image)
@@ -1220,7 +1271,7 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
             pad_y = max(2, int(round(0.25 * h_char_work)))
 
         compat_map = compat_t.detach().cpu().numpy().astype(np.float32)
-        if working_maps is None:
+        if not has_valid_working_maps:
             del horiz_mod_t
         del compat_t, sim_bg_t, fg_sim_gated_t, pure_fg_gated_t, stroke_gate_t
 
@@ -1266,14 +1317,17 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
         seed_patches: List[Tuple[int, int]],
         grid_ratio: Tuple[int, int],
         seed_pixels: Optional[List[Optional[Tuple[int, int]]]] = None,
+        working_maps: Optional[Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, float, float]] = None,
     ) -> List[SeedPropagationResult]:
         """
-        Execute multi-seed propagation by computing GPU working maps ONCE and reusing
-        across all seeds, calibrating local scale H_char^(k) independently for each candidate.
+        Execute multi-seed propagation by reusing supplied `working_maps` (OPT-03) or
+        computing GPU working maps ONCE and reusing across all seeds, calibrating local
+        scale H_char^(k) independently for each candidate.
         """
         if not seed_patches:
             return []
-        working_maps = self._compute_working_maps(image)
+        has_supplied_maps = _is_valid_working_maps(working_maps)
+        active_maps = working_maps if has_supplied_maps else self._compute_working_maps(image)
         results = []
         for i, seed_patch in enumerate(seed_patches):
             sp_pix = seed_pixels[i] if seed_pixels is not None and i < len(seed_pixels) else None
@@ -1282,10 +1336,11 @@ class AdaptiveScalePropagator(BaseSeedPropagator):
                 seed_patch=seed_patch,
                 grid_ratio=grid_ratio,
                 seed_pixel=sp_pix,
-                working_maps=working_maps,
+                working_maps=active_maps,
             )
             results.append(res)
-        del working_maps
+        if not has_supplied_maps:
+            del active_maps
         return results
 
 
