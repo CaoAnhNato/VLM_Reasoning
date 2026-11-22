@@ -550,43 +550,27 @@ def _export_benchmark_csvs(output_dir: str, summary: Dict[str, Any], records: Li
         print(f"[WARN] Could not export predictions.csv: {e}")
 
 
-def _parse_ablation_bits(mask_str: Optional[str]) -> Tuple[int, int, int]:
-    cleaned = str(mask_str or "1,1,1").strip()
-    if "," in cleaned:
-        parts = [p.strip() for p in cleaned.split(",") if p.strip()]
-    elif len(cleaned) >= 3 and all(ch in "01" for ch in cleaned):
-        parts = list(cleaned)
-    else:
-        raise ValueError(f"Invalid ablation mask: {mask_str!r}")
-    if len(parts) < 3:
-        raise ValueError(f"Expected >= 3 ablation mask bits, got {mask_str!r}")
-    return int(bool(int(parts[0]))), int(bool(int(parts[1]))), int(bool(int(parts[2])))
+def _parse_ablation_bits(mask_str: Optional[str]) -> Tuple[int, ...]:
+    from src.nevfe.core.engine import COMPONENT_NAMES
+    from src.nevfe.pipeline import parse_ablation_mask
+
+    raw = "base" if mask_str is None else str(mask_str)
+    return parse_ablation_mask(raw, expected_len=len(COMPONENT_NAMES))
 
 
 def _resolve_nevfe_config(args: argparse.Namespace):
-    from src.nevfe.core.engine import AlgorithmConfig
+    from src.nevfe.pipeline import resolve_algorithm_config
 
-    defaults = AlgorithmConfig()
-    lam = defaults.lambda_param
-    beta = defaults.beta_param
-    mask_bits = defaults.ablation_mask
-    if getattr(args, "config_json", None) and os.path.isfile(args.config_json):
-        with open(args.config_json, "r", encoding="utf-8") as cf:
-            cfg = json.load(cf)
-        if cfg.get("lambda_param") is not None:
-            lam = float(cfg["lambda_param"])
-        if cfg.get("beta_param") is not None:
-            beta = float(cfg["beta_param"])
-        if cfg.get("ablation_mask") is not None:
-            raw_m = cfg["ablation_mask"]
-            mask_bits = tuple(int(x) for x in raw_m[:3]) if isinstance(raw_m, (list, tuple)) else _parse_ablation_bits(str(raw_m))
+    overrides: Dict[str, Any] = {}
     if getattr(args, "lambda_param", None) is not None:
-        lam = float(args.lambda_param)
+        overrides["lambda_param"] = float(args.lambda_param)
     if getattr(args, "beta_param", None) is not None:
-        beta = float(args.beta_param)
-    if getattr(args, "ablation_mask", None) is not None:
-        mask_bits = _parse_ablation_bits(args.ablation_mask)
-    return AlgorithmConfig(lambda_param=lam, beta_param=beta, ablation_mask=mask_bits)
+        overrides["beta_param"] = float(args.beta_param)
+    return resolve_algorithm_config(
+        config_json=getattr(args, "config_json", None),
+        ablation_mask_str=getattr(args, "ablation_mask", None),
+        overrides=overrides,
+    )
 
 
 def _preflight_dataset_images(samples: List[Dict[str, Any]]) -> None:
@@ -922,11 +906,15 @@ def aggregate_shards(
                 out_log.write("\n")
 
     # 7. Write extended contract artifacts + sha256sum.txt
+    merged_meta = dict(config_meta or {"method": method, "model_name": model_name})
+    fwd_vals = [float(r.get("decoder_forward_calls_per_step_max", 0.0) or 0.0) for r in all_records]
+    if fwd_vals and "decoder_forward_calls_per_step_max" not in merged_meta:
+        merged_meta["decoder_forward_calls_per_step_max"] = max(fwd_vals)
     _write_extended_benchmark_artifacts(
         output_dir,
         summary,
         all_records,
-        config_meta=config_meta or {"method": method, "model_name": model_name},
+        config_meta=merged_meta,
     )
 
     # Print summary
@@ -1044,7 +1032,7 @@ def run_multiprocess_coordinator(args: argparse.Namespace):
         "model_name": args.model_name,
         "lambda_param": cfg.lambda_param if cfg else args.lambda_param,
         "beta_param": cfg.beta_param if cfg else args.beta_param,
-        "ablation_mask": "".join(str(x) for x in cfg.ablation_mask) if cfg else args.ablation_mask,
+        "ablation_mask": ("".join(str(x) for x in cfg.ablation_mask) or "base") if cfg else (args.ablation_mask or "base"),
         "config_json": getattr(args, "config_json", None),
         "device": args.device,
     }
@@ -1247,7 +1235,7 @@ def run_benchmark(args: argparse.Namespace):
         "model_name": args.model_name,
         "lambda_param": nevfe_cfg.lambda_param if nevfe_cfg else args.lambda_param,
         "beta_param": nevfe_cfg.beta_param if nevfe_cfg else args.beta_param,
-        "ablation_mask": "".join(str(x) for x in nevfe_cfg.ablation_mask) if nevfe_cfg else args.ablation_mask,
+        "ablation_mask": ("".join(str(x) for x in nevfe_cfg.ablation_mask) or "base") if nevfe_cfg else (args.ablation_mask or "base"),
         "config_json": getattr(args, "config_json", None),
         "device": device,
     }
@@ -1317,6 +1305,7 @@ def run_benchmark(args: argparse.Namespace):
             pred_raw = ""
             spatial_conf = 0.0
             cerv_diagnostics = {}
+            decoder_fwd_per_step = 0.0
 
             try:
                 if getattr(args, "mock", False):
@@ -1390,6 +1379,9 @@ def run_benchmark(args: argparse.Namespace):
                         pred_answer = res.pred_text
                         pred_bbox = res.stage1_bbox
                         spatial_conf = 1.0
+                        decoder_fwd_per_step = float(
+                            getattr(pipeline.adapter, "last_decoder_forward_calls_per_step_max", 0.0)
+                        )
             except Exception as e:
                 print(f"[ERROR] Inference exception for question {qid} on {img_name}: {e}")
                 raise
@@ -1420,6 +1412,7 @@ def run_benchmark(args: argparse.Namespace):
                 "stage2_metrics": s2_metrics,
                 "spatial_confidence": float(spatial_conf),
                 "cerv_diagnostics": cerv_diagnostics,
+                "decoder_forward_calls_per_step_max": float(decoder_fwd_per_step),
                 "latency_s": round(elapsed, 3),
             }
 
@@ -1500,7 +1493,17 @@ def run_benchmark(args: argparse.Namespace):
             json.dump(summary, smf, ensure_ascii=False, indent=2)
         _export_benchmark_csvs(args.output_dir, summary, ckpt_mgr.records)
         generate_benchmark_report(args.output_dir, summary, total_time=total_time, method=args.method)
-        _write_extended_benchmark_artifacts(args.output_dir, summary, ckpt_mgr.records, config_meta=config_meta)
+        _write_extended_benchmark_artifacts(
+            args.output_dir,
+            summary,
+            ckpt_mgr.records,
+            config_meta={
+                **config_meta,
+                "decoder_forward_calls_per_step_max": max(
+                    [float(r.get("decoder_forward_calls_per_step_max", 0.0) or 0.0) for r in ckpt_mgr.records] or [0.0]
+                ),
+            },
+        )
 
     try:
         if os.path.exists(lock_file):
@@ -1535,7 +1538,7 @@ def main():
     parser.add_argument("--data-dir", type=str, default="data/vitextvqa", help="Path to ViTextVQA dataset root.")
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to checkpoint JSON file.")
     parser.add_argument("--output-dir", type=str, default="results/sg_vcd_400_benchmark", help="Output directory.")
-    parser.add_argument("--ablation-mask", "--ablation_mask", type=str, default="1,1,1", help="Ablation mask for NE-VFE components A,B,C.")
+    parser.add_argument("--ablation-mask", "--ablation_mask", type=str, default=None, help="Compact binary ablation mask ('base', '0', '1', '01', '11').")
     parser.add_argument("--device", type=str, default="cuda", help="Device (cuda or cpu).")
     parser.add_argument("--mock", action="store_true", help="Run with synthetic mock pipeline for safe local testing without loading models.")
     args = parser.parse_args()

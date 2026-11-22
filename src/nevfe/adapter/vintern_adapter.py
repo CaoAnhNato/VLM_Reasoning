@@ -11,6 +11,7 @@ Handles:
 """
 
 from contextlib import contextmanager
+import inspect
 import math
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 import numpy as np
@@ -18,11 +19,11 @@ from PIL import Image
 import torch
 import torch.nn.functional as F
 
+from scripts.benchmark.sg_vcd.attention_extractor import PointwiseKLAttentionExtractor
 from src.nevfe.core.engine import (
     AlgorithmConfig,
     NEVFEEngine,
     compute_mean_field_reference_embeddings,
-    nevfe_step_logits,
 )
 
 
@@ -166,6 +167,128 @@ def managed_forward_hooks(
                 pass
 
 
+def resolve_relative_decoder_layer_indices(
+    num_layers: int,
+    fraction: Tuple[float, float] = (0.5, 1.0),
+) -> List[int]:
+    """Resolve 0-based decoder layer indices spanning [fraction[0], fraction[1]) of total layers."""
+    n = int(num_layers)
+    if n <= 0:
+        raise ValueError(f"num_layers must be positive, got {num_layers}")
+    lo_f, hi_f = float(fraction[0]), float(fraction[1])
+    if not (0.0 <= lo_f < hi_f <= 1.0):
+        raise ValueError(f"fraction must satisfy 0.0 <= lo < hi <= 1.0, got {fraction}")
+    start = max(0, int(math.floor(lo_f * n)))
+    end = min(n, int(math.ceil(hi_f * n)))
+    return list(range(start, end))
+
+
+def extract_kv_pairs(past_kv: Any) -> List[Tuple[torch.Tensor, torch.Tensor]]:
+    """Extract per-layer (key, value) tensors across transformers DynamicCache layouts and tuples."""
+    if past_kv is None:
+        return []
+    if hasattr(past_kv, "layers"):
+        return [(layer.keys, layer.values) for layer in past_kv.layers]
+    if hasattr(past_kv, "key_cache") and hasattr(past_kv, "value_cache"):
+        return list(zip(past_kv.key_cache, past_kv.value_cache))
+    if isinstance(past_kv, (tuple, list)):
+        return [(layer_kv[0], layer_kv[1]) for layer_kv in past_kv]
+    raise TypeError(f"Unsupported past_key_values type: {type(past_kv).__name__}")
+
+
+def clone_kv_cache(past_kv: Any, max_len: Optional[int] = None) -> Any:
+    """Clone DynamicCache or legacy KV tuples without mutating source tensors."""
+    if past_kv is None:
+        return None
+    if hasattr(past_kv, "layers"):
+        from transformers.cache_utils import DynamicCache
+
+        new_cache = DynamicCache()
+        for layer_idx, layer in enumerate(past_kv.layers):
+            k = layer.keys[:, :, :max_len, :] if max_len is not None else layer.keys
+            v = layer.values[:, :, :max_len, :] if max_len is not None else layer.values
+            new_cache.update(k.detach().clone(), v.detach().clone(), layer_idx)
+        return new_cache
+    return PointwiseKLAttentionExtractor._clone_kv_cache(past_kv, max_len=max_len)
+
+
+@contextmanager
+def capture_upper_decoder_states(
+    model: Any,
+    fraction: Tuple[float, float] = (0.5, 1.0),
+) -> Iterator[Dict[str, Any]]:
+    """
+    Read-only context manager capturing last-token hidden states over decoder layers in
+    [fraction[0], fraction[1]). Uses register_forward_pre_hook / register_forward_hook
+    with detached copies only, keeping KV caches and model outputs bit-identical.
+    """
+    lm = getattr(model, "language_model", model)
+    decoder = getattr(lm, "model", lm)
+    layers = getattr(decoder, "layers", None)
+    if layers is None or len(layers) == 0:
+        raise ValueError("Model decoder exposes no transformer layers for upper-state capture")
+
+    upper_indices = resolve_relative_decoder_layer_indices(len(layers), fraction=fraction)
+    state: Dict[str, Any] = {
+        "upper_indices": list(upper_indices),
+        "h_in_upper": None,
+        "h_post_attn_upper": {},
+        "h_post_ffn_upper": {},
+    }
+
+    def _clear() -> None:
+        state["h_in_upper"] = None
+        state["h_post_attn_upper"].clear()
+        state["h_post_ffn_upper"].clear()
+
+    state["clear"] = _clear
+    handles: List[Any] = []
+    try:
+        if upper_indices:
+            first_layer = layers[upper_indices[0]]
+            if hasattr(first_layer, "register_forward_pre_hook"):
+                def _in_pre_hook(_mod: Any, args: Tuple[Any, ...]) -> None:
+                    if args and isinstance(args[0], torch.Tensor):
+                        state["h_in_upper"] = args[0][:, -1:, :].detach()
+                    return None
+
+                handles.append(first_layer.register_forward_pre_hook(_in_pre_hook))
+
+        for layer_idx in upper_indices:
+            layer = layers[layer_idx]
+            post_attn_ln = getattr(layer, "post_attention_layernorm", None)
+            if post_attn_ln is not None and hasattr(post_attn_ln, "register_forward_pre_hook"):
+                def _make_post_attn_hook(idx: int) -> Callable[..., None]:
+                    def _hook(_mod: Any, args: Tuple[Any, ...]) -> None:
+                        if args and isinstance(args[0], torch.Tensor):
+                            state["h_post_attn_upper"][idx] = args[0][:, -1:, :].detach()
+                        return None
+
+                    return _hook
+
+                handles.append(post_attn_ln.register_forward_pre_hook(_make_post_attn_hook(layer_idx)))
+
+            if hasattr(layer, "register_forward_hook"):
+                def _make_post_ffn_hook(idx: int) -> Callable[..., None]:
+                    def _hook(_mod: Any, _args: Tuple[Any, ...], output: Any) -> None:
+                        out_t = output[0] if isinstance(output, (tuple, list)) else output
+                        if isinstance(out_t, torch.Tensor):
+                            state["h_post_ffn_upper"][idx] = out_t[:, -1:, :].detach()
+                        return None
+
+                    return _hook
+
+                handles.append(layer.register_forward_hook(_make_post_ffn_hook(layer_idx)))
+
+        yield state
+    finally:
+        for h in handles:
+            try:
+                h.remove()
+            except Exception:
+                pass
+
+
 class VinternNEVFEAdapter:
     """
     Vintern-1B-v3_5 VLM Adapter driving Information-Geometric Variational Free Energy Decoding.
@@ -179,7 +302,7 @@ class VinternNEVFEAdapter:
         device: str = "cuda",
         lambda_param: float = 0.50,
         beta_param: float = 0.05,
-        gamma_param: float = 0.50,
+        ablation_mask: Optional[Tuple[int, ...]] = None,
         config: Optional[AlgorithmConfig] = None,
     ) -> None:
         self.model = model
@@ -206,7 +329,7 @@ class VinternNEVFEAdapter:
             else AlgorithmConfig(
                 lambda_param=lambda_param,
                 beta_param=beta_param,
-                gamma_param=gamma_param,
+                ablation_mask=ablation_mask if ablation_mask is not None else (),
             )
         )
         self.engine = NEVFEEngine(config=resolved_cfg)
@@ -214,6 +337,9 @@ class VinternNEVFEAdapter:
         self.max_dynamic_patch = getattr(model_cfg, "max_dynamic_patch", 6)
         self.num_image_token = getattr(model, "num_image_token", 256)
         self.system_message = getattr(model, "system_message", "Bạn là một trợ lý AI hữu ích.")
+        self.last_decoder_forward_calls: int = 0
+        self.last_decode_steps: int = 0
+        self.last_decoder_forward_calls_per_step_max: float = 0.0
 
         # Immutable per-image visual cache
         self._cached_img_key: Optional[Tuple[int, int, bytes]] = None
@@ -221,12 +347,11 @@ class VinternNEVFEAdapter:
 
     def set_ablation_switches(
         self,
-        comp_a: bool = True,
-        comp_b: bool = True,
-        comp_c: bool = True,
+        *bits: Any,
+        ablation_mask: Optional[Tuple[int, ...]] = None,
     ) -> None:
-        """Dynamically configure micro-ablation toggles for Factorial Interaction testing."""
-        self.engine.set_ablation_switches(comp_a=comp_a, comp_b=comp_b, comp_c=comp_c)
+        """Dynamically configure variable-length ablation toggles for Track evaluations."""
+        self.engine.set_ablation_switches(*bits, ablation_mask=ablation_mask)
 
     @staticmethod
     def _build_default_transform(input_size: int = 448):
@@ -483,10 +608,10 @@ class VinternNEVFEAdapter:
         vit_embeds: torch.Tensor,
         question: str,
     ) -> Optional[torch.Tensor]:
-        """Run FRSA-PBCF foveation and extract transient RGB sub-tile features without mutating vit_embeds."""
+        """Run frozen FRSA-PBCF ('011') foveation and extract transient RGB sub-tile features."""
         patch_embeds, optical_energy, img_w, img_h = self._extract_lattice_and_energy(image, vit_embeds)
         query_embeds = self._extract_query_embeds(question, vit_embeds.device)
-        box, j_star, _ = self.engine.foveate(optical_energy, patch_embeds, query_embeds=query_embeds)
+        box, j_star, _ = self.engine.foveate(patch_embeds, query_embeds=query_embeds)
         if j_star <= 1e-6:
             return None
         _, gx_glob, gy_glob = self._resolve_tile_grid(image, int(vit_embeds.shape[0]))
@@ -573,13 +698,46 @@ class VinternNEVFEAdapter:
         embed_layer = self.model.language_model.get_input_embeddings()
         return embed_layer(prompt_ids)
 
+    @staticmethod
+    def _decoder_accepts_output_attentions(decoder_mod: Any) -> bool:
+        try:
+            target = getattr(decoder_mod, "forward", decoder_mod)
+            params = inspect.signature(target).parameters
+            return "output_attentions" in params or any(
+                p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values()
+            )
+        except Exception:
+            return False
+
+    def _decoder_forward(
+        self,
+        decoder_mod: Any,
+        inputs_embeds: torch.Tensor,
+        past_key_values: Any = None,
+    ) -> Any:
+        call_kwargs: Dict[str, Any] = {
+            "inputs_embeds": inputs_embeds,
+            "use_cache": True,
+            "return_dict": True,
+        }
+        if past_key_values is not None:
+            call_kwargs["past_key_values"] = past_key_values
+        if self._decoder_accepts_output_attentions(decoder_mod):
+            call_kwargs["output_attentions"] = False
+        self.last_decoder_forward_calls += 1
+        return decoder_mod(**call_kwargs)
+
     def generate(
         self,
         image: Image.Image,
         question: str,
         max_new_tokens: int = 64,
     ) -> str:
-        """Dual-Stream Autoregressive Generation with VRE-OF + locked IG-VFED."""
+        """Dual-Stream Autoregressive Generation routed uniformly through NEVFEEngine.decode_step()."""
+        self.last_decoder_forward_calls = 0
+        self.last_decode_steps = 0
+        self.last_decoder_forward_calls_per_step_max = 0.0
+
         with torch.no_grad():
             vit_embeds = self.extract_visual_features(image)
             extra_vit_embeds = self.extract_foveated_roi_crops(image, vit_embeds, question)
@@ -592,38 +750,74 @@ class VinternNEVFEAdapter:
             )
 
             embed_layer = self.model.language_model.get_input_embeddings()
+            decoder_mod = self.model.language_model.model
+            lm_head = self.model.language_model.lm_head
             eos_im_end = self.tokenizer.convert_tokens_to_ids("<|im_end|>")
             eos_std = self.tokenizer.eos_token_id
 
-            out_plus = self.model.language_model.model(
-                inputs_embeds=multimodal_embeds,
-                use_cache=True,
-                return_dict=True,
-            )
+            out_plus = self._decoder_forward(decoder_mod, multimodal_embeds)
             kv_plus = out_plus.past_key_values
-            logits_plus = self.model.language_model.lm_head(out_plus.last_hidden_state[:, -1:, :])[:, -1, :]
+            logits_plus = lm_head(out_plus.last_hidden_state[:, -1:, :])[:, -1, :]
 
-            out_zero = self.model.language_model.model(
-                inputs_embeds=mfvr_embeds,
-                use_cache=True,
-                return_dict=True,
-            )
+            out_zero = self._decoder_forward(decoder_mod, mfvr_embeds)
             kv_zero = out_zero.past_key_values
-            logits_zero = self.model.language_model.lm_head(out_zero.last_hidden_state[:, -1:, :])[:, -1, :]
+            logits_zero = lm_head(out_zero.last_hidden_state[:, -1:, :])[:, -1, :]
 
             generated_ids: List[int] = []
+            history_plus_steps: List[torch.Tensor] = []
 
             for step in range(1, max_new_tokens + 1):
-                next_tok_tensor, _, _, _ = nevfe_step_logits(
+                history_plus_steps.append(logits_plus.detach())
+                history_tensor = torch.stack(history_plus_steps, dim=0)
+
+                def _rollout_fn(candidate_ids: torch.Tensor, steps: int = 1) -> Tuple[torch.Tensor, torch.Tensor]:
+                    cand = candidate_ids.reshape(-1).to(device=self.device, dtype=torch.long)
+                    if cand.numel() == 0 or steps <= 0:
+                        empty = torch.empty(
+                            (0, int(logits_plus.shape[-1])),
+                            device=self.device,
+                            dtype=logits_plus.dtype,
+                        )
+                        return empty, empty
+                    roll_plus: List[torch.Tensor] = []
+                    roll_zero: List[torch.Tensor] = []
+                    for cid in cand.tolist():
+                        cur_kv_p = clone_kv_cache(kv_plus)
+                        cur_kv_z = clone_kv_cache(kv_zero)
+                        cur_emb = embed_layer(torch.tensor([[int(cid)]], dtype=torch.long, device=self.device))
+                        for _ in range(int(steps)):
+                            r_out_p = self._decoder_forward(decoder_mod, cur_emb, past_key_values=cur_kv_p)
+                            cur_kv_p = r_out_p.past_key_values
+                            r_lp = lm_head(r_out_p.last_hidden_state[:, -1:, :])[:, -1, :]
+                            r_out_z = self._decoder_forward(decoder_mod, cur_emb, past_key_values=cur_kv_z)
+                            cur_kv_z = r_out_z.past_key_values
+                            r_lz = lm_head(r_out_z.last_hidden_state[:, -1:, :])[:, -1, :]
+                            roll_tok = int(torch.argmax(r_lp, dim=-1).item())
+                            cur_emb = embed_layer(
+                                torch.tensor([[roll_tok]], dtype=torch.long, device=self.device)
+                            )
+                        roll_plus.append(r_lp.squeeze(0))
+                        roll_zero.append(r_lz.squeeze(0))
+                    return torch.stack(roll_plus, dim=0), torch.stack(roll_zero, dim=0)
+
+                step_context = {
+                    "history_logits": history_tensor,
+                    "upper_hidden_states": None,
+                    "rollout_fn": _rollout_fn,
+                }
+                calls_before_decode = self.last_decoder_forward_calls
+                next_tok_tensor, _, _, _ = self.engine.decode_step(
                     logits_plus,
                     logits_zero,
-                    lambda_param=self.engine.lambda_param,
-                    beta_param=self.engine.beta_param,
                     q_mask=None,
                     step_idx=step,
-                    comp_a=True,
-                    comp_b=True,
-                    comp_c=True,
+                    step_context=step_context,
+                )
+                extra_calls = self.last_decoder_forward_calls - calls_before_decode
+                self.last_decode_steps += 1
+                self.last_decoder_forward_calls_per_step_max = max(
+                    self.last_decoder_forward_calls_per_step_max,
+                    1.0 + (float(extra_calls) / 2.0),
                 )
                 next_id = int(next_tok_tensor.item())
 
@@ -638,23 +832,13 @@ class VinternNEVFEAdapter:
                 next_tok = torch.tensor([[next_id]], dtype=torch.long, device=self.device)
                 next_emb = embed_layer(next_tok)
 
-                out_plus = self.model.language_model.model(
-                    inputs_embeds=next_emb,
-                    past_key_values=kv_plus,
-                    use_cache=True,
-                    return_dict=True,
-                )
+                out_plus = self._decoder_forward(decoder_mod, next_emb, past_key_values=kv_plus)
                 kv_plus = out_plus.past_key_values
-                logits_plus = self.model.language_model.lm_head(out_plus.last_hidden_state[:, -1:, :])[:, -1, :]
+                logits_plus = lm_head(out_plus.last_hidden_state[:, -1:, :])[:, -1, :]
 
-                out_zero = self.model.language_model.model(
-                    inputs_embeds=next_emb,
-                    past_key_values=kv_zero,
-                    use_cache=True,
-                    return_dict=True,
-                )
+                out_zero = self._decoder_forward(decoder_mod, next_emb, past_key_values=kv_zero)
                 kv_zero = out_zero.past_key_values
-                logits_zero = self.model.language_model.lm_head(out_zero.last_hidden_state[:, -1:, :])[:, -1, :]
+                logits_zero = lm_head(out_zero.last_hidden_state[:, -1:, :])[:, -1, :]
 
             del kv_plus, kv_zero, out_plus, out_zero
 

@@ -1,0 +1,72 @@
+{
+  "commit_sha": "0f8a2d4d",
+  "branch": "base/frsa-011-frozen",
+  "method": "FRSA-PBCF (011) + IG-VFED (1,1,1)",
+  "config": {
+    "lambda_param": 0.5,
+    "beta_param": 0.05,
+    "ablation_mask": []
+  },
+  "probe_70_heldout": {
+    "count": 70,
+    "token_f1_pct": 46.12,
+    "substring_match_pct": 35.71,
+    "anls_pct": 36.14,
+    "exact_match_pct": 11.43,
+    "composite_pct": 40.92
+  },
+  "probe_100_full": {
+    "count": 100,
+    "token_f1_pct": 46.56,
+    "substring_match_pct": 39.0,
+    "anls_pct": 36.08,
+    "exact_match_pct": 14.0,
+    "composite_pct": 42.78
+  },
+  "benchmark_1222": {
+    "count": 1222,
+    "token_f1_pct": 64.12,
+    "substring_match_pct": 62.19,
+    "anls_pct": 55.55,
+    "exact_match_pct": 36.99,
+    "composite_pct": 63.16,
+    "avg_latency_s": 1.932
+  },
+  "per_class_probe_100": {
+    "CLASS_A": {
+      "count": 30,
+      "f1": 25.4,
+      "substring": 33.33,
+      "anls": 18.87,
+      "em": 6.67
+    },
+    "CLASS_B": {
+      "count": 35,
+      "f1": 64.71,
+      "substring": 37.14,
+      "anls": 53.2,
+      "em": 17.14
+    },
+    "CLASS_C": {
+      "count": 12,
+      "f1": 52.46,
+      "substring": 41.67,
+      "anls": 31.23,
+      "em": 8.33
+    },
+    "CLASS_D": {
+      "count": 20,
+      "f1": 44.56,
+      "substring": 50.0,
+      "anls": 35.25,
+      "em": 20.0
+    },
+    "CLASS_E": {
+      "count": 3,
+      "f1": 36.23,
+      "substring": 33.33,
+      "anls": 33.33,
+      "em": 33.33
+    }
+  }
+}

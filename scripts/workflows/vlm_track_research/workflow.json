@@ -1,0 +1,35 @@
+{
+  "name": "vlm_track_research",
+  "version": "1.0.0",
+  "description": "Reusable, token-bounded training-free VLM decoding track research workflow (Track 1 / Track 2).",
+  "entry": "main.py",
+  "args": {
+    "type": "object",
+    "required": ["track"],
+    "additionalProperties": false,
+    "properties": {
+      "track": {
+        "type": "integer",
+        "enum": [1, 2],
+        "description": "Research track ID (1 = post-lm_head output trajectory, 2 = read-only intra-decoder verification)."
+      },
+      "mode": {
+        "type": "string",
+        "enum": ["run", "post_boost", "preflight", "status"],
+        "default": "run",
+        "description": "Execution mode."
+      },
+      "max_burst_iters": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 10,
+        "default": 2,
+        "description": "Maximum research iterations per workflow burst."
+      },
+      "boost_notes_path": {
+        "type": "string",
+        "description": "Optional path to BOOST_RESOLUTION_iter_<k>.md for mode=post_boost when no post-halt commit is on HEAD."
+      }
+    }
+  }
+}

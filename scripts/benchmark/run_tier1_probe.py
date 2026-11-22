@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 TIER 1 FAST FALSIFICATION PROBE RUNNER (N=100; 30 cal + 70 held-out)
-Multi-Worker Sharded Architecture with 1x model load per worker across --ablation-masks.
+Multi-Worker Sharded Architecture with 1x model load per worker across --ablation-masks
+and Leave-One-Out (LOO) net-contribution gating.
 """
 
 import argparse
@@ -36,30 +37,30 @@ if PROJECT_ROOT not in sys.path:
 
 from scripts.benchmark.metrics import compute_stage2_metrics
 from scripts.benchmark.evaluate_vitextvqa import load_vintern_model
-from src.nevfe.core.engine import AlgorithmConfig
-from src.nevfe.pipeline import NEVFEPipeline
+from src.nevfe.core.engine import AlgorithmConfig, COMPONENT_NAMES
+from src.nevfe.pipeline import NEVFEPipeline, parse_ablation_mask, resolve_algorithm_config
 
 DEFAULT_MANIFEST_PATH = os.path.join(PROJECT_ROOT, "configs", "probe_100_manifest.json")
-DEFAULT_BASELINE_PROBE_JSON = os.path.join(PROJECT_ROOT, "configs", "iter23_baseline_summary.json")
+DEFAULT_BASELINE_PROBE_JSON = os.path.join(PROJECT_ROOT, "configs", "frsa011_baseline_summary.json")
 DEFAULT_VERIFIED_DATASET = os.path.join(
     PROJECT_ROOT, "results", "swintextspotter_auto_annot", "answer_bboxes_400_verified.json"
 )
 DEFAULT_IMAGE_DIR = os.path.join(PROJECT_ROOT, "data", "vitextvqa", "st_images")
 
 CHAMPION_PROBE_SCORES = {
-    "token_f1": 44.17,
-    "substring_match": 35.00,
-    "comp_100": 39.59,
-    "comp_70": 37.19,
-    "anls": 30.86,
-    "exact_match": 10.00,
+    "token_f1": 46.56,
+    "substring_match": 39.00,
+    "comp_100": 42.78,
+    "comp_70": 40.92,
+    "anls": 36.08,
+    "exact_match": 14.00,
 }
 
 CHAMPION_CLASS_SCORES = {
-    "CLASS_A": {"count": 30, "f1": 15.60, "substring": 26.67, "anls": 7.93, "em": 0.00},
-    "CLASS_B": {"count": 35, "f1": 62.88, "substring": 37.14, "anls": 50.93, "em": 11.43},
-    "CLASS_C": {"count": 12, "f1": 42.09, "substring": 33.33, "anls": 23.44, "em": 0.00},
-    "CLASS_D": {"count": 20, "f1": 45.58, "substring": 40.00, "anls": 30.78, "em": 20.00},
+    "CLASS_A": {"count": 30, "f1": 25.40, "substring": 33.33, "anls": 18.87, "em": 6.67},
+    "CLASS_B": {"count": 35, "f1": 64.71, "substring": 37.14, "anls": 53.20, "em": 17.14},
+    "CLASS_C": {"count": 12, "f1": 52.46, "substring": 41.67, "anls": 31.23, "em": 8.33},
+    "CLASS_D": {"count": 20, "f1": 44.56, "substring": 50.00, "anls": 35.25, "em": 20.00},
     "CLASS_E": {"count": 3, "f1": 36.23, "substring": 33.33, "anls": 33.33, "em": 33.33},
 }
 
@@ -74,27 +75,16 @@ def resolve_image_path(image_name: str, candidate_dirs: List[str]) -> Optional[s
     return None
 
 
-def parse_ablation_mask(mask_str: str) -> Tuple[bool, bool, bool]:
-    """Parse either compact bits ('101') or comma-separated ('1,0,1') into 3 bool flags."""
-    cleaned = str(mask_str).strip()
-    if "," in cleaned:
-        parts = [p.strip() for p in cleaned.split(",") if p.strip()]
-    elif len(cleaned) >= 3 and all(ch in "01" for ch in cleaned):
-        parts = list(cleaned)
-    else:
-        raise ValueError(f"Invalid ablation mask: {mask_str!r}")
-    if len(parts) < 3:
-        raise ValueError(f"Expected >= 3 ablation mask bits, got {mask_str!r}")
-    return bool(int(parts[0])), bool(int(parts[1])), bool(int(parts[2]))
-
-
 def normalize_mask_bits(mask_str: str) -> str:
-    b_a, b_b, b_c = parse_ablation_mask(mask_str)
-    return f"{int(b_a)}{int(b_b)}{int(b_c)}"
+    bits = parse_ablation_mask(mask_str, expected_len=len(COMPONENT_NAMES))
+    return "".join(str(b) for b in bits) if bits else "base"
 
 
-def load_baseline_probe_scores(baseline_json_path: Optional[str]) -> Dict[str, float]:
+def load_baseline_probe_scores(
+    baseline_json_path: Optional[str],
+) -> Tuple[Dict[str, float], Dict[str, Dict[str, float]]]:
     scores = dict(CHAMPION_PROBE_SCORES)
+    class_scores = {k: dict(v) for k, v in CHAMPION_CLASS_SCORES.items()}
     if baseline_json_path and os.path.isfile(baseline_json_path):
         with open(baseline_json_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -108,41 +98,35 @@ def load_baseline_probe_scores(baseline_json_path: Optional[str]) -> Dict[str, f
             scores["substring_match"] = float(p100["substring_match_pct"])
         if "composite_pct" in p100:
             scores["comp_100"] = float(p100["composite_pct"])
-    return scores
+        if "anls_pct" in p100:
+            scores["anls"] = float(p100["anls_pct"])
+        if "exact_match_pct" in p100:
+            scores["exact_match"] = float(p100["exact_match_pct"])
+        per_cls = data.get("per_class_probe_100")
+        if isinstance(per_cls, dict):
+            for cls_name, cls_vals in per_cls.items():
+                if isinstance(cls_vals, dict):
+                    class_scores[cls_name] = {k: float(v) for k, v in cls_vals.items()}
+    return scores, class_scores
 
 
 def _resolve_algorithm_config(args: argparse.Namespace, mask_bits: str) -> AlgorithmConfig:
-    defaults = AlgorithmConfig()
-    lam = defaults.lambda_param
-    beta = defaults.beta_param
-    if getattr(args, "config_json", None) and os.path.isfile(args.config_json):
-        with open(args.config_json, "r", encoding="utf-8") as cf:
-            cfg = json.load(cf)
-        if cfg.get("lambda_param") is not None:
-            lam = float(cfg["lambda_param"])
-        if cfg.get("beta_param") is not None:
-            beta = float(cfg["beta_param"])
+    overrides: Dict[str, Any] = {}
     if getattr(args, "lambda_param", None) is not None:
-        lam = float(args.lambda_param)
+        overrides["lambda_param"] = float(args.lambda_param)
     if getattr(args, "beta_param", None) is not None:
-        beta = float(args.beta_param)
-    b_a, b_b, b_c = parse_ablation_mask(mask_bits)
-    if getattr(args, "enable_comp_a", None) is not None:
-        b_a = bool(args.enable_comp_a)
-    if getattr(args, "enable_comp_b", None) is not None:
-        b_b = bool(args.enable_comp_b)
-    if getattr(args, "enable_comp_c", None) is not None:
-        b_c = bool(args.enable_comp_c)
-    return AlgorithmConfig(
-        lambda_param=lam,
-        beta_param=beta,
-        ablation_mask=(int(b_a), int(b_b), int(b_c)),
+        overrides["beta_param"] = float(args.beta_param)
+    return resolve_algorithm_config(
+        config_json=getattr(args, "config_json", None),
+        ablation_mask_str=mask_bits,
+        overrides=overrides,
     )
 
 
 def _resolve_mask_list(args: argparse.Namespace) -> List[str]:
-    if getattr(args, "ablation_masks", None):
-        raw = [m.strip() for m in str(args.ablation_masks).split(",") if m.strip()]
+    raw_masks = getattr(args, "ablation_masks", None)
+    if raw_masks:
+        raw = [m.strip() for m in str(raw_masks).split(",") if m.strip()]
         seen: List[str] = []
         for m in raw:
             bits = normalize_mask_bits(m)
@@ -150,7 +134,11 @@ def _resolve_mask_list(args: argparse.Namespace) -> List[str]:
                 seen.append(bits)
         if seen:
             return seen
-    return [normalize_mask_bits(args.ablation_mask)]
+    single_mask = getattr(args, "ablation_mask", None)
+    if single_mask is not None:
+        return [normalize_mask_bits(single_mask)]
+    default_bits = AlgorithmConfig().ablation_mask
+    return ["".join(str(b) for b in default_bits) if default_bits else "base"]
 
 
 def _preflight_images(manifest_items: List[Dict[str, Any]], candidate_image_dirs: List[str]) -> None:
@@ -184,6 +172,137 @@ def _compute_split_metrics(records: List[Dict[str, Any]]) -> Dict[str, float]:
         "comp": round(comp, 2),
         "anls": round(anls, 2),
         "em": round(em, 2),
+    }
+
+
+def _load_provenance_header(provenance_json_path: Optional[str]) -> Optional[List[Dict[str, Any]]]:
+    if not provenance_json_path or not os.path.isfile(provenance_json_path):
+        return None
+    with open(provenance_json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    papers = data.get("papers") if isinstance(data, dict) else data
+    if not isinstance(papers, list):
+        return None
+    return [
+        {
+            "paper_id": p.get("paper_id", p.get("id")),
+            "status": p.get("status"),
+            "section": p.get("section", p.get("target_section")),
+            "source_sha256": p.get("source_sha256"),
+        }
+        for p in papers
+    ]
+
+
+def evaluate_loo_gate(
+    masks_out: Dict[str, Dict[str, Any]],
+    best_probe_70_comp: float,
+) -> Dict[str, Any]:
+    """
+    Evaluate Stage A Leave-One-Out net-contribution gate:
+      - M = 0 ('base'): FULL_PASS iff full_comp_70 > best_probe_70_comp.
+      - M >= 1 ('1'*M vs proper sub-masks):
+          FULL_PASS iff full_comp_70 > best_probe_70_comp AND full_comp_70 > max(sub_comp_70).
+          SUBMASK_HINT iff not FULL_PASS and best proper sub-mask m* satisfies
+            m*_comp_70 > best_probe_70_comp AND m*_comp_70 >= full_comp_70
+            (ties break in favor of fewer active bits).
+          FAIL otherwise.
+    """
+    if not masks_out:
+        return {
+            "loo_decision": "FAIL",
+            "pass_stage_a": False,
+            "selected_mask": None,
+            "submask_hint": None,
+            "full_comp_70": 0.0,
+            "best_probe_70_comp": round(float(best_probe_70_comp), 2),
+            "loo_deltas": {},
+        }
+
+    if "base" in masks_out and len(masks_out) == 1:
+        full_mask = "base"
+        m_count = 0
+    else:
+        non_base = [m for m in masks_out if m != "base"]
+        m_count = max(len(m) for m in non_base) if non_base else 0
+        full_mask = ("1" * m_count) if m_count > 0 else "base"
+
+    if full_mask not in masks_out:
+        return {
+            "loo_decision": "FAIL",
+            "pass_stage_a": False,
+            "selected_mask": None,
+            "submask_hint": None,
+            "full_comp_70": 0.0,
+            "best_probe_70_comp": round(float(best_probe_70_comp), 2),
+            "loo_deltas": {},
+        }
+
+    full_comp = float(masks_out[full_mask]["comp_70"])
+    sub_masks = [m for m in masks_out if m != full_mask]
+    loo_deltas = {m: round(full_comp - float(masks_out[m]["comp_70"]), 2) for m in sub_masks}
+
+    if m_count == 0:
+        if full_comp > float(best_probe_70_comp) + 1e-9:
+            return {
+                "loo_decision": "FULL_PASS",
+                "pass_stage_a": True,
+                "selected_mask": full_mask,
+                "submask_hint": None,
+                "full_comp_70": round(full_comp, 2),
+                "best_probe_70_comp": round(float(best_probe_70_comp), 2),
+                "loo_deltas": loo_deltas,
+            }
+        return {
+            "loo_decision": "FAIL",
+            "pass_stage_a": False,
+            "selected_mask": None,
+            "submask_hint": None,
+            "full_comp_70": round(full_comp, 2),
+            "best_probe_70_comp": round(float(best_probe_70_comp), 2),
+            "loo_deltas": loo_deltas,
+        }
+
+    if sub_masks:
+        best_sub = min(
+            sub_masks,
+            key=lambda m: (-float(masks_out[m]["comp_70"]), 0 if m == "base" else m.count("1"), m),
+        )
+        best_sub_comp = float(masks_out[best_sub]["comp_70"])
+    else:
+        best_sub = None
+        best_sub_comp = float("-inf")
+
+    if full_comp > float(best_probe_70_comp) + 1e-9 and (not sub_masks or full_comp > best_sub_comp + 1e-9):
+        return {
+            "loo_decision": "FULL_PASS",
+            "pass_stage_a": True,
+            "selected_mask": full_mask,
+            "submask_hint": None,
+            "full_comp_70": round(full_comp, 2),
+            "best_probe_70_comp": round(float(best_probe_70_comp), 2),
+            "loo_deltas": loo_deltas,
+        }
+
+    if best_sub is not None and best_sub_comp > float(best_probe_70_comp) + 1e-9 and best_sub_comp >= full_comp - 1e-9:
+        return {
+            "loo_decision": "SUBMASK_HINT",
+            "pass_stage_a": False,
+            "selected_mask": best_sub,
+            "submask_hint": best_sub,
+            "full_comp_70": round(full_comp, 2),
+            "best_probe_70_comp": round(float(best_probe_70_comp), 2),
+            "loo_deltas": loo_deltas,
+        }
+
+    return {
+        "loo_decision": "FAIL",
+        "pass_stage_a": False,
+        "selected_mask": None,
+        "submask_hint": None,
+        "full_comp_70": round(full_comp, 2),
+        "best_probe_70_comp": round(float(best_probe_70_comp), 2),
+        "loo_deltas": loo_deltas,
     }
 
 
@@ -244,7 +363,9 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
 
     mask_list = _resolve_mask_list(args)
     multi_mask_mode = bool(getattr(args, "ablation_masks", None))
-    baseline_scores = load_baseline_probe_scores(getattr(args, "baseline_probe_json", None))
+    baseline_scores, baseline_class_scores = load_baseline_probe_scores(
+        getattr(args, "baseline_probe_json", None)
+    )
     device = args.device if (args.device == "cuda" and torch.cuda.is_available()) else "cpu"
 
     pipeline = None
@@ -266,9 +387,8 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
 
     for mask_bits in mask_list:
         cfg = _resolve_algorithm_config(args, mask_bits)
-        b_a, b_b, b_c = (bool(x) for x in cfg.ablation_mask[:3])
         if pipeline is not None and hasattr(pipeline, "set_ablation_switches"):
-            pipeline.set_ablation_switches(comp_a=b_a, comp_b=b_b, comp_c=b_c)
+            pipeline.set_ablation_switches(ablation_mask=cfg.ablation_mask)
 
         mask_dir = os.path.join(args.output_dir, f"mask_{mask_bits}") if multi_mask_mode else args.output_dir
         os.makedirs(mask_dir, exist_ok=True)
@@ -285,7 +405,7 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
         results_records: List[Dict[str, Any]] = []
         t_start = time.time()
 
-        with open(jsonl_output_path, "w", encoding="utf-8") as jsonl_file:
+        with open(jsonl_output_path, "w", encoding="utf-8", newline="\n") as jsonl_file:
             for img_name, q_list in grouped_by_image.items():
                 image = None
                 if not is_mock:
@@ -351,7 +471,7 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
 
         if args.num_workers > 1:
             shard_summary_path = os.path.join(mask_dir, f"summary_shard_{args.worker_id}.json")
-            with open(shard_summary_path, "w", encoding="utf-8") as sf:
+            with open(shard_summary_path, "w", encoding="utf-8", newline="\n") as sf:
                 json.dump(
                     {
                         "worker_id": args.worker_id,
@@ -365,11 +485,23 @@ def run_tier1_probe_worker(args: argparse.Namespace) -> Dict[str, Any]:
             last_summary = {"worker_id": args.worker_id, "count": len(results_records), "peak_vram_gb": peak_vram_gb}
         else:
             last_summary = aggregate_and_report_probe(
-                results_records, total_time, mask_dir, mask_bits, baseline_scores, peak_vram_gb
+                results_records,
+                total_time,
+                mask_dir,
+                mask_bits,
+                baseline_scores,
+                peak_vram_gb,
+                baseline_class_scores=baseline_class_scores,
             )
 
     if multi_mask_mode and args.num_workers <= 1:
-        _write_ablation_summary(args.output_dir, mask_list, baseline_scores)
+        _write_ablation_summary(
+            args.output_dir,
+            mask_list,
+            baseline_scores,
+            best_probe_comp=getattr(args, "best_probe_comp", None),
+            provenance_json_path=getattr(args, "provenance_json", None),
+        )
     return last_summary
 
 
@@ -377,11 +509,13 @@ def aggregate_and_report_probe(
     results_records: List[Dict[str, Any]],
     total_time: float,
     output_dir: str,
-    ablation_str: str = "111",
+    ablation_str: str = "base",
     baseline_scores: Optional[Dict[str, float]] = None,
     peak_vram_gb: float = 0.0,
+    baseline_class_scores: Optional[Dict[str, Dict[str, float]]] = None,
 ) -> Dict[str, Any]:
     base = baseline_scores or CHAMPION_PROBE_SCORES
+    cls_base_map = baseline_class_scores or CHAMPION_CLASS_SCORES
     m100 = _compute_split_metrics(results_records)
     held70_recs = [r for r in results_records if not bool(r.get("is_calibration", False))]
     m70 = _compute_split_metrics(held70_recs) if held70_recs else m100
@@ -392,7 +526,7 @@ def aggregate_and_report_probe(
         c_recs = [r for r in results_records if r.get("error_class") == c]
         if c_recs:
             cm = _compute_split_metrics(c_recs)
-            champ_c = CHAMPION_CLASS_SCORES.get(c, {})
+            champ_c = cls_base_map.get(c, {})
             class_stats[c] = {
                 "count": len(c_recs),
                 "candidate_f1": cm["f1"],
@@ -405,7 +539,7 @@ def aggregate_and_report_probe(
                 "candidate_em": cm["em"],
             }
 
-    gate_passed = m70["comp"] >= (base["comp_70"] - 0.75)
+    gate_passed = m70["comp"] > base["comp_70"]
     summary = {
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "total_probe_samples": len(results_records),
@@ -435,15 +569,15 @@ def aggregate_and_report_probe(
         },
         "per_class_diagnostics": class_stats,
         "falsification_gate": {
-            "criterion": f"comp_70 >= {base['comp_70']:.2f} - 0.75 ({base['comp_70'] - 0.75:.2f})",
+            "criterion": f"comp_70 > {base['comp_70']:.2f}",
             "achieved_comp_70": m70["comp"],
             "gate_passed": gate_passed,
-            "action": "CLEAR FOR TIER 2 FULL RUN" if gate_passed else "IMMEDIATE VETO & GIT ROLLBACK TO REIGNING CHAMPION",
+            "action": "CLEAR FOR STAGE B LOO EVALUATION" if gate_passed else "BELOW PROBE ANCHOR",
         },
     }
 
     summary_json_path = os.path.join(output_dir, "summary_metrics.json")
-    with open(summary_json_path, "w", encoding="utf-8") as sf:
+    with open(summary_json_path, "w", encoding="utf-8", newline="\n") as sf:
         json.dump(summary, sf, ensure_ascii=False, indent=2)
     print(
         f"[PROBE {ablation_str}] N={len(results_records)} | 70-Q comp={m70['comp']:.2f}% "
@@ -458,6 +592,8 @@ def _write_ablation_summary(
     mask_list: List[str],
     baseline_scores: Dict[str, float],
     peak_vram_gb: float = 0.0,
+    best_probe_comp: Optional[float] = None,
+    provenance_json_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     masks_out: Dict[str, Dict[str, Any]] = {}
     best_mask = None
@@ -471,11 +607,11 @@ def _write_ablation_summary(
         h70 = s.get("heldout_70", {})
         ov = s.get("overall", {})
         entry = {
-            "f1_70": h70.get("f1_70", 0.0),
-            "sub_70": h70.get("sub_70", 0.0),
-            "comp_70": h70.get("comp_70", 0.0),
-            "f1_100": ov.get("candidate_token_f1", 0.0),
-            "sub_100": ov.get("candidate_substring_match", 0.0),
+            "f1_70": float(h70.get("f1_70", 0.0)),
+            "sub_70": float(h70.get("sub_70", 0.0)),
+            "comp_70": float(h70.get("comp_70", 0.0)),
+            "f1_100": float(ov.get("candidate_token_f1", 0.0)),
+            "sub_100": float(ov.get("candidate_substring_match", 0.0)),
         }
         masks_out[bits] = entry
         peak_vram_gb = max(peak_vram_gb, float(s.get("peak_vram_gb", 0.0)))
@@ -483,16 +619,26 @@ def _write_ablation_summary(
             best_comp = entry["comp_70"]
             best_mask = bits
 
-    pass_stage_a = bool(masks_out) and (best_comp >= (baseline_scores["comp_70"] - 0.75))
+    eff_best_probe = float(best_probe_comp) if best_probe_comp is not None else float(baseline_scores["comp_70"])
+    loo_res = evaluate_loo_gate(masks_out, eff_best_probe)
+    provenance_header = _load_provenance_header(provenance_json_path)
+
     ablation_summary = {
         "masks": masks_out,
-        "best_mask": best_mask,
+        "loo_decision": loo_res["loo_decision"],
+        "pass_stage_a": loo_res["pass_stage_a"],
+        "selected_mask": loo_res["selected_mask"],
+        "submask_hint": loo_res["submask_hint"],
+        "full_comp_70": loo_res["full_comp_70"],
+        "best_probe_70_comp": loo_res["best_probe_70_comp"],
+        "loo_deltas": loo_res["loo_deltas"],
+        "provenance_header": provenance_header,
+        "best_mask": loo_res["selected_mask"] or best_mask,
         "best_comp_70": round(best_comp, 2) if best_mask else 0.0,
         "baseline_comp_70": baseline_scores["comp_70"],
-        "pass_stage_a": pass_stage_a,
         "peak_vram_gb": round(peak_vram_gb, 3),
     }
-    with open(os.path.join(output_dir, "probe_ablation_summary.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(output_dir, "probe_ablation_summary.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(ablation_summary, f, indent=2, ensure_ascii=False)
     return ablation_summary
 
@@ -502,7 +648,9 @@ def run_probe_multiprocess_coordinator(args: argparse.Namespace) -> Dict[str, An
     os.makedirs(args.output_dir, exist_ok=True)
     mask_list = _resolve_mask_list(args)
     multi_mask_mode = bool(getattr(args, "ablation_masks", None))
-    baseline_scores = load_baseline_probe_scores(getattr(args, "baseline_probe_json", None))
+    baseline_scores, baseline_class_scores = load_baseline_probe_scores(
+        getattr(args, "baseline_probe_json", None)
+    )
     start_time = time.time()
 
     with open(args.probe_manifest, "r", encoding="utf-8") as f:
@@ -549,19 +697,18 @@ def run_probe_multiprocess_coordinator(args: argparse.Namespace) -> Dict[str, An
             "--verified-dataset", str(args.verified_dataset),
             "--image-dir", str(args.image_dir),
             "--output-dir", str(args.output_dir),
-            "--ablation-mask", str(args.ablation_mask),
             "--max-new-tokens", str(args.max_new_tokens),
         ]
+        if getattr(args, "ablation_mask", None) is not None:
+            cmd += ["--ablation-mask", str(args.ablation_mask)]
         if getattr(args, "ablation_masks", None):
             cmd += ["--ablation-masks", str(args.ablation_masks)]
         if getattr(args, "config_json", None):
             cmd += ["--config-json", str(args.config_json)]
-        if getattr(args, "enable_comp_a", None) is not None:
-            cmd += ["--enable-comp-a", str(args.enable_comp_a)]
-        if getattr(args, "enable_comp_b", None) is not None:
-            cmd += ["--enable-comp-b", str(args.enable_comp_b)]
-        if getattr(args, "enable_comp_c", None) is not None:
-            cmd += ["--enable-comp-c", str(args.enable_comp_c)]
+        if getattr(args, "best_probe_comp", None) is not None:
+            cmd += ["--best-probe-comp", str(args.best_probe_comp)]
+        if getattr(args, "provenance_json", None):
+            cmd += ["--provenance-json", str(args.provenance_json)]
         if getattr(args, "mock", False):
             cmd.append("--mock")
         if getattr(args, "test_samples", 0) and args.test_samples > 0:
@@ -607,15 +754,28 @@ def run_probe_multiprocess_coordinator(args: argparse.Namespace) -> Dict[str, An
                             if qid not in seen_qids:
                                 seen_qids.add(qid)
                                 all_records.append(rec)
-        with open(master_jsonl, "w", encoding="utf-8") as out_f:
+        with open(master_jsonl, "w", encoding="utf-8", newline="\n") as out_f:
             for rec in all_records:
                 out_f.write(json.dumps(rec, ensure_ascii=False) + "\n")
         last_summary = aggregate_and_report_probe(
-            all_records, total_time, mdir, bits, baseline_scores, peak_vram_gb
+            all_records,
+            total_time,
+            mdir,
+            bits,
+            baseline_scores,
+            peak_vram_gb,
+            baseline_class_scores=baseline_class_scores,
         )
 
     if multi_mask_mode:
-        return _write_ablation_summary(args.output_dir, mask_list, baseline_scores, peak_vram_gb)
+        return _write_ablation_summary(
+            args.output_dir,
+            mask_list,
+            baseline_scores,
+            peak_vram_gb,
+            best_probe_comp=getattr(args, "best_probe_comp", None),
+            provenance_json_path=getattr(args, "provenance_json", None),
+        )
     return last_summary
 
 
@@ -631,12 +791,10 @@ def main():
     parser.add_argument("--config-json", dest="config_json", type=str, default=None)
     parser.add_argument("--lambda-param", "--lambda", dest="lambda_param", type=float, default=None)
     parser.add_argument("--beta-param", "--beta", dest="beta_param", type=float, default=None)
-    parser.add_argument("--mu-param", "--mu", dest="mu_param", type=float, default=0.0)
-    parser.add_argument("--ablation-mask", dest="ablation_mask", type=str, default="1,1,1")
+    parser.add_argument("--ablation-mask", dest="ablation_mask", type=str, default=None)
     parser.add_argument("--ablation-masks", dest="ablation_masks", type=str, default="")
-    parser.add_argument("--enable-comp-a", dest="enable_comp_a", type=lambda x: (str(x).lower() == "true"), default=None)
-    parser.add_argument("--enable-comp-b", dest="enable_comp_b", type=lambda x: (str(x).lower() == "true"), default=None)
-    parser.add_argument("--enable-comp-c", dest="enable_comp_c", type=lambda x: (str(x).lower() == "true"), default=None)
+    parser.add_argument("--best-probe-comp", dest="best_probe_comp", type=float, default=None)
+    parser.add_argument("--provenance-json", dest="provenance_json", type=str, default=None)
     parser.add_argument("--output-dir", dest="output_dir", type=str, default="results/tier1_probe_nevfe")
     parser.add_argument("--max-new-tokens", dest="max_new_tokens", type=int, default=64)
     parser.add_argument("--limit", dest="limit", type=int, default=0)

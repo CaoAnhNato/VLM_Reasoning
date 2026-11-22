@@ -43,3 +43,8 @@ runs/
 # Swarm transient outputs & local runtime artifacts
 results/swarm_runs/
 .agents/swarm_runtime/
+
+# VLM Track Research Workflow runtime state & pulled outputs
+.workflow_state/
+results/track_runs/
+

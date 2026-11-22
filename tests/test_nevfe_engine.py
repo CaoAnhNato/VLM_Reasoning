@@ -25,16 +25,19 @@ import torch.nn.functional as F
 
 from src.nevfe.core.engine import (
     AlgorithmConfig,
+    COMPONENT_NAMES,
     NEVFEEngine,
+    SPEC_REF,
     compute_bhattacharyya_coefficient,
-    compute_bregman_optical_distribution,
     compute_dynamic_coupling,
     compute_dynamic_plausibility_floor,
+    compute_unnormalized_entropy,
+    nevfe_step_logits,
+)
+from src.nevfe.core.frozen_foveation import (
     compute_lexical_spatial_distribution,
     compute_mean_field_reference_embeddings,
-    compute_unnormalized_entropy,
-    compute_variational_posterior,
-    nevfe_step_logits,
+    foveate_frozen_011,
     select_poisson_bregman_subwindow,
 )
 
@@ -109,13 +112,22 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         cfg = AlgorithmConfig()
         self.assertEqual(cfg.lambda_param, 0.50)
         self.assertEqual(cfg.beta_param, 0.05)
-        self.assertEqual(cfg.ablation_mask, (1, 1, 1))
+        self.assertEqual(cfg.ablation_mask, ())
+        self.assertEqual(COMPONENT_NAMES, ())
+        self.assertFalse(hasattr(cfg, "gamma_param"))
+        self.assertIn("baseline_frsa011.md", SPEC_REF)
         with self.assertRaises(ValueError):
-            AlgorithmConfig(ablation_mask=(1, 1))
+            AlgorithmConfig(ablation_mask=(1,))
+        with self.assertRaises(ValueError):
+            AlgorithmConfig(ablation_mask=(2,))
         with self.assertRaises(ValueError):
             AlgorithmConfig(lambda_param=-0.1)
         with self.assertRaises(ValueError):
+            AlgorithmConfig(lambda_param=0.40)
+        with self.assertRaises(ValueError):
             AlgorithmConfig(beta_param=0.0)
+        with self.assertRaises(ValueError):
+            AlgorithmConfig(beta_param=0.10)
 
     def test_02_theorem_2_spatial_information_oblivion(self):
         N_tiles, N_tokens, D = 3, 256, 896
@@ -283,9 +295,8 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         engine = NEVFEEngine(config=AlgorithmConfig())
         self.assertEqual(engine.lambda_param, 0.50)
         self.assertEqual(engine.beta_param, 0.05)
-
-        engine_edge = NEVFEEngine(lambda_param=0.0, beta_param=0.01)
-        self.assertEqual(engine_edge.lambda_param, 0.0)
+        self.assertEqual(engine.ablation_mask, ())
+        self.assertFalse(hasattr(engine, "gamma_param"))
 
         with self.assertRaises(ValueError):
             NEVFEEngine(lambda_param=-0.1)
@@ -293,14 +304,21 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             NEVFEEngine(lambda_param=1.6)
         with self.assertRaises(ValueError):
             NEVFEEngine(beta_param=-0.01)
+        with self.assertRaises(ValueError):
+            NEVFEEngine(ablation_mask=(1,))
 
         b_plus = torch.randn(2, 32)
         b_zero = torch.randn(2, 32)
-        tokens, logits, dyn_lam, ent = engine.decode_step(b_plus, b_zero)
+        tokens, logits, dyn_lam, ent = engine.decode_step(
+            b_plus, b_zero, step_context={"history_logits": b_plus}
+        )
         self.assertEqual(tokens.shape, torch.Size([2]))
         self.assertEqual(logits.shape, torch.Size([2, 32]))
         self.assertEqual(dyn_lam.shape, torch.Size([2, 1]))
         self.assertEqual(ent.shape, torch.Size([2, 1]))
+
+        engine.set_ablation_switches(ablation_mask=())
+        self.assertEqual(engine.ablation_mask, ())
 
     def test_12_adapter_hook_cleanup_and_dynamic_image_size(self):
         from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter, managed_forward_hooks
@@ -369,27 +387,65 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
     def test_14_iter23_equivalence_across_ablation_masks(self):
         lp = torch.randn(3, 64)
         lz = torch.randn(3, 64)
+        engine = NEVFEEngine(config=AlgorithmConfig())
+        for step_idx in (1, 2):
+            got = engine.decode_step(lp, lz, step_idx=step_idx)
+            ref = _reference_iter23_step(lp, lz, 0.50, 0.05, step_idx, True, True, True)
+            self.assertTrue(torch.equal(got[0], ref[0]))
+            self.assertLess((got[1] - ref[1]).abs().max().item(), 1e-7)
+            self.assertLess((got[2] - ref[2]).abs().max().item(), 1e-7)
+            self.assertLess((got[3] - ref[3]).abs().max().item(), 1e-7)
+
         for mask in [(a, b, c) for a in (0, 1) for b in (0, 1) for c in (0, 1)]:
-            cfg = AlgorithmConfig(lambda_param=0.50, beta_param=0.05, ablation_mask=mask)
-            engine = NEVFEEngine(config=cfg)
             for step_idx in (1, 2):
-                got = engine.decode_step(lp, lz, step_idx=step_idx)
+                got = nevfe_step_logits(
+                    lp,
+                    lz,
+                    lambda_param=0.50,
+                    beta_param=0.05,
+                    step_idx=step_idx,
+                    comp_a=bool(mask[0]),
+                    comp_b=bool(mask[1]),
+                    comp_c=bool(mask[2]),
+                )
                 ref = _reference_iter23_step(lp, lz, 0.50, 0.05, step_idx, bool(mask[0]), bool(mask[1]), bool(mask[2]))
                 self.assertTrue(torch.equal(got[0], ref[0]))
                 self.assertLess((got[1] - ref[1]).abs().max().item(), 1e-7)
                 self.assertLess((got[2] - ref[2]).abs().max().item(), 1e-7)
                 self.assertLess((got[3] - ref[3]).abs().max().item(), 1e-7)
 
+    def test_15_pipeline_locked_constants_and_shared_config_resolver(self):
+        import json
+        import tempfile
+        import os
+        from src.nevfe.pipeline import NEVFEPipeline, parse_ablation_mask, resolve_algorithm_config
 
-    def test_15_vre_of_gamma_param_and_pipeline_preservation(self):
-        from src.nevfe.pipeline import NEVFEPipeline
+        self.assertEqual(parse_ablation_mask("base"), ())
+        self.assertEqual(parse_ablation_mask(""), ())
+        self.assertEqual(parse_ablation_mask("01"), (0, 1))
+        self.assertEqual(parse_ablation_mask("1"), (1,))
+        with self.assertRaises(ValueError):
+            parse_ablation_mask("1,0")
+        with self.assertRaises(ValueError):
+            parse_ablation_mask("12")
+        with self.assertRaises(ValueError):
+            parse_ablation_mask("01", expected_len=1)
 
-        cfg = AlgorithmConfig(gamma_param=0.35)
-        self.assertEqual(cfg.gamma_param, 0.35)
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg_path = os.path.join(tmp, "cfg.json")
+            with open(cfg_path, "w", encoding="utf-8") as cf:
+                json.dump({"lambda_param": 0.5, "beta_param": 0.05, "ablation_mask": "base"}, cf)
+            resolved = resolve_algorithm_config(cfg_path, ablation_mask_str="base")
+            self.assertEqual(resolved, AlgorithmConfig())
+
+            bad_cfg = os.path.join(tmp, "bad.json")
+            with open(bad_cfg, "w", encoding="utf-8") as cf:
+                json.dump({"unknown_field": 1.0}, cf)
+            with self.assertRaises(ValueError):
+                resolve_algorithm_config(bad_cfg)
+
         with self.assertRaises(ValueError):
-            AlgorithmConfig(gamma_param=-0.05)
-        with self.assertRaises(ValueError):
-            AlgorithmConfig(gamma_param=1.05)
+            resolve_algorithm_config(overrides={"unknown_override": 1.0})
 
         class _MockCfg:
             force_image_size = 448
@@ -400,51 +456,40 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
             language_model = type("_LM", (), {"config": _MockCfg()})()
             num_image_token = 16
 
-        pipe = NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu", gamma_param=0.72)
-        self.assertEqual(pipe.gamma_param, 0.72)
-        pipe.set_ablation_switches(comp_a=False, comp_b=True, comp_c=True)
-        self.assertEqual(pipe.config.gamma_param, 0.72)
-        self.assertEqual(pipe.adapter.engine.gamma_param, 0.72)
-        self.assertEqual(pipe.config.ablation_mask, (0, 1, 1))
+        with self.assertRaises(TypeError):
+            NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu", gamma_param=0.5)
+        with self.assertRaises(ValueError):
+            NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu", lambda_param=0.4)
+        bad_lam_cfg = AlgorithmConfig.__new__(AlgorithmConfig)
+        object.__setattr__(bad_lam_cfg, "lambda_param", 0.4)
+        with self.assertRaises(ValueError):
+            NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu", config=bad_lam_cfg)
+        bad_bet_cfg = AlgorithmConfig.__new__(AlgorithmConfig)
+        object.__setattr__(bad_bet_cfg, "beta_param", 0.1)
+        with self.assertRaises(ValueError):
+            NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu", config=bad_bet_cfg)
 
-    def test_16_fr_stvf_eq1_optical_and_eq2_lexical_boundaries(self):
-        unif_e = torch.full((4, 4), 2.5)
-        p_unif = compute_bregman_optical_distribution(unif_e)
-        self.assertTrue(torch.allclose(p_unif, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+        pipe = NEVFEPipeline(model=_MockModel(), tokenizer=_OfflineMockTokenizer(), device="cpu")
+        self.assertEqual(pipe.lambda_param, 0.50)
+        self.assertEqual(pipe.beta_param, 0.05)
+        self.assertEqual(pipe.config.ablation_mask, ())
+        pipe.set_ablation_switches(ablation_mask=())
+        self.assertEqual(pipe.adapter.engine.ablation_mask, ())
 
-        nan_e = torch.tensor([[float("nan"), float("inf")], [float("-inf"), 0.0]])
-        p_nan = compute_bregman_optical_distribution(nan_e)
-        self.assertTrue(torch.isfinite(p_nan).all())
-        self.assertTrue(torch.allclose(p_nan, torch.full((2, 2), 0.25), atol=1e-6))
-
-        # 0-homogeneity & FLT_MAX overflow immunity + 0.0% background leakage below mean
-        peak_e = torch.full((4, 4), 0.1)
-        peak_e[1, 2] = 5.0
-        p_peak = compute_bregman_optical_distribution(peak_e)
-        p_huge = compute_bregman_optical_distribution(peak_e * 1e36)
-        self.assertTrue(torch.isfinite(p_huge).all())
-        self.assertTrue(torch.allclose(p_peak, p_huge, atol=1e-5))
-        self.assertAlmostEqual(float(p_peak[0, 0].item()), 0.0, places=6)
-        self.assertAlmostEqual(float(p_peak[1, 2].item()), 1.0, places=6)
-
-        # ULP-perturbed constant energy must stay uniform
-        ulp_e = torch.full((4, 4), 100.0)
-        ulp_e[0, 0] += 1e-5
-        self.assertTrue(torch.allclose(compute_bregman_optical_distribution(ulp_e), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
-
-        # Constant patch embeddings + float32 ULP perturbation < 1e-6 must hit uniform branch
+    def test_16_frozen_foveation_lexical_boundaries(self):
         const_v = torch.ones((4, 4, 8), dtype=torch.float32) * 3.0
         const_v[0, 0, 0] += 1e-7
         q_emb = torch.randn(3, 8)
         p_lex_const = compute_lexical_spatial_distribution(const_v, q_emb)
         self.assertTrue(torch.allclose(p_lex_const, torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
         self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, None), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
+        self.assertTrue(torch.allclose(compute_lexical_spatial_distribution(const_v, torch.empty((0, 8))), torch.full((4, 4), 1.0 / 16.0), atol=1e-6))
 
-        # Mismatched query dim raises ValueError
+        with self.assertRaises(ValueError):
+            compute_lexical_spatial_distribution(torch.zeros((4, 8)), q_emb)
         with self.assertRaises(ValueError):
             compute_lexical_spatial_distribution(const_v, torch.randn(2, 5))
 
-        # Discriminative patch alignment concentrates mass on matching cell even at large scale
         disc_v = torch.zeros((4, 4, 8), dtype=torch.float32)
         disc_v[:, :, 0] = 1.0
         disc_v[2, 3, :] = torch.tensor([0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) * 1e30
@@ -453,28 +498,26 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertTrue(torch.isfinite(p_lex_disc).all())
         self.assertEqual(tuple(torch.nonzero(p_lex_disc == p_lex_disc.max(), as_tuple=False)[0].tolist()), (2, 3))
 
-    def test_17_frsa_pbcf_eq3_fisher_rao_and_eq4_poisson_bregman(self):
+        box, j_star, p_out = foveate_frozen_011(disc_v, q_target)
+        self.assertEqual(box, (2, 3, 3, 4))
+        self.assertGreater(j_star, 0.0)
+        self.assertTrue(torch.allclose(p_out, p_lex_disc))
+
+        engine = NEVFEEngine()
+        e_box, e_j, _ = engine.foveate(disc_v, q_target)
+        self.assertEqual(e_box, box)
+        self.assertAlmostEqual(e_j, j_star, places=6)
+
+    def test_17_frozen_foveation_poisson_bregman_subwindow(self):
+        with self.assertRaises(ValueError):
+            select_poisson_bregman_subwindow(torch.zeros((2, 2, 2)))
+        self.assertEqual(select_poisson_bregman_subwindow(torch.zeros((0, 0))), ((0, 0, 0, 0), 0.0, 0.0, 0.0))
+        self.assertEqual(select_poisson_bregman_subwindow(torch.ones((1, 1))), ((0, 0, 1, 1), 0.0, 1.0, 1.0))
+
         p_opt = torch.zeros((8, 8), dtype=torch.float32)
-        p_opt[1:3, 2:4] = 0.25  # p(C) == 1.0 exact on 2x2 subwindow (area = 4/64 = 0.0625 <= 0.5)
-        p_lex = torch.full((8, 8), 1.0 / 64.0, dtype=torch.float32)
+        p_opt[1:3, 2:4] = 0.25
+        p_unif = torch.full((8, 8), 1.0 / 64.0, dtype=torch.float32)
 
-        # Eq. (3) Fisher-Rao spherical geodesic: disjoint supports never collapse to zero/cliffs
-        disjoint_lex = torch.zeros((8, 8), dtype=torch.float32)
-        disjoint_lex[5:7, 5:7] = 0.25
-        post_disjoint = compute_variational_posterior(p_opt, disjoint_lex, gamma_param=0.5, comp_a=True, comp_b=True)
-        self.assertTrue(torch.isfinite(post_disjoint).all())
-        self.assertAlmostEqual(float(post_disjoint[1:3, 2:4].sum().item()), 0.5, places=5)
-        self.assertAlmostEqual(float(post_disjoint[5:7, 5:7].sum().item()), 0.5, places=5)
-
-        # Eq. (3) ablation branches
-        post_opt = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=True, comp_b=False)
-        self.assertAlmostEqual(float(post_opt[1:3, 2:4].sum().item()), 1.0, places=4)
-        post_lex = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=True)
-        self.assertTrue(torch.allclose(post_lex, p_lex, atol=1e-5))
-        post_none = compute_variational_posterior(p_opt, p_lex, gamma_param=0.5, comp_a=False, comp_b=False)
-        self.assertTrue(torch.allclose(post_none, p_lex, atol=1e-6))
-
-        # Eq. (4) Poisson-Bregman compact support selects tight (1, 2, 3, 4) without exterior-depletion inflation
         box, j_star, p_mass, area_frac = select_poisson_bregman_subwindow(p_opt, comp_c=True)
         self.assertTrue(math.isfinite(j_star))
         self.assertGreater(j_star, 0.0)
@@ -483,7 +526,6 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertAlmostEqual(area_frac, 4.0 / 64.0, places=5)
         self.assertAlmostEqual(j_star, math.log(16.0) - (1.0 - 4.0 / 64.0), places=4)
 
-        # Anti-inflation on elevated spot + uniform floor: must stay tight on spot, not expand to 50%
         spot = torch.full((8, 8), 0.005, dtype=torch.float32)
         spot[3:5, 4:6] = 0.18
         spot_box, spot_j, _, spot_area = select_poisson_bregman_subwindow(spot, comp_c=True)
@@ -491,12 +533,10 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertLessEqual(spot_area, 0.1)
         self.assertGreater(spot_j, 0.0)
 
-        # Uniform/solid posterior yields j_star == 0.0
-        box_u, j_u, _, _ = select_poisson_bregman_subwindow(p_lex, comp_c=True)
+        box_u, j_u, _, _ = select_poisson_bregman_subwindow(p_unif, comp_c=True)
         self.assertEqual(j_u, 0.0)
         self.assertEqual(box_u, (0, 0, 8, 8))
 
-        # comp_c=False disables subwindow selection
         box_off, j_off, _, _ = select_poisson_bregman_subwindow(p_opt, comp_c=False)
         self.assertEqual(j_off, 0.0)
         self.assertEqual(box_off, (0, 0, 8, 8))
@@ -504,7 +544,8 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
     def test_18_adapter_cst_isoluminant_nyquist_gate_and_immutability(self):
         import numpy as np
         from PIL import Image, ImageDraw
-        from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter
+        from src.nevfe.adapter.vintern_adapter import VinternNEVFEAdapter, resolve_relative_decoder_layer_indices
+        from src.nevfe.pipeline import NEVFEPipeline
 
         class _MockCfg:
             force_image_size = 112
@@ -581,8 +622,6 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         diag_img = Image.fromarray(np.stack([diag_ramp, diag_ramp, diag_ramp], axis=-1))
         _, e_diag, _, _ = adapter._extract_lattice_and_energy(diag_img, torch.zeros(1, 16, 16))
         self.assertLess(float(e_diag[:-1, :-1].max().item()), 1e-6)
-        p_diag = compute_bregman_optical_distribution(e_diag[:-1, :-1])
-        self.assertTrue(torch.allclose(p_diag, torch.full((3, 3), 1.0 / 9.0), atol=1e-5))
 
         # 2. Isoluminant colored corner junctions (R+G+B=300 everywhere -> grayscale blind, CST detects)
         iso_img = Image.new("RGB", (64, 64), color=(200, 50, 50))
@@ -602,22 +641,31 @@ class TestNEVFEEngineMFCD(unittest.TestCase):
         self.assertGreaterEqual(model.extract_calls[-1], 2)
         self.assertLessEqual(model.extract_calls[-1], 3)
 
-        # 4. Multi-question generation preserves _cached_vit_embeds immutably & comp_c=False skips foveation
+        # 4. Multi-question generation preserves _cached_vit_embeds immutably & tracks decoder forward calls
         img = Image.new("RGB", (200, 120), color=(240, 240, 240))
         draw = ImageDraw.Draw(img)
         draw.rectangle([20, 20, 48, 42], fill=(10, 10, 10))
         draw.line([22, 22, 46, 40], fill=(250, 250, 250), width=2)
         v1 = adapter.extract_visual_features(img).clone()
         adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
+        self.assertEqual(adapter.last_decoder_forward_calls, 2)
         cached_after_q1 = adapter._cached_vit_embeds.clone()
         adapter.generate(img, "giá bao nhiêu?", max_new_tokens=2)
         self.assertTrue(torch.equal(v1, cached_after_q1))
         self.assertTrue(torch.equal(v1, adapter._cached_vit_embeds))
 
-        calls_before = len(model.extract_calls)
-        adapter.set_ablation_switches(comp_a=True, comp_b=True, comp_c=False)
-        adapter.generate(img, "ở đây ghi chữ gì?", max_new_tokens=2)
-        self.assertEqual(len(model.extract_calls), calls_before)
+        pipe = NEVFEPipeline(model=model, tokenizer=_MockTok(), device="cpu")
+        res = pipe.run(img, "ở đây ghi chữ gì?", max_new_tokens=2)
+        self.assertEqual(res.diagnostics["component_names"], [])
+        self.assertEqual(res.diagnostics["ablation_mask"], [])
+        self.assertEqual(res.diagnostics["decoder_forward_calls"], 2)
+        self.assertNotIn("gamma_param", res.diagnostics)
+
+        self.assertEqual(resolve_relative_decoder_layer_indices(24, (0.5, 1.0)), list(range(12, 24)))
+        with self.assertRaises(ValueError):
+            resolve_relative_decoder_layer_indices(0, (0.5, 1.0))
+        with self.assertRaises(ValueError):
+            resolve_relative_decoder_layer_indices(24, (0.8, 0.5))
 
 
 if __name__ == "__main__":

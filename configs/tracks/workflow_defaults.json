@@ -1,0 +1,36 @@
+{
+  "base_ref": "base/frsa-011-frozen",
+  "baseline_summary_path": "configs/frsa011_baseline_summary.json",
+  "baseline_predictions_path": "configs/frsa011_baseline_predictions.jsonl",
+  "probe_manifest_path": "configs/probe_100_manifest.json",
+  "cal_bank_dir": "data/calibration_bank_v2",
+  "allowed_mutable_paths": [
+    "src/nevfe/core/engine.py",
+    "src/nevfe/adapter/vintern_adapter.py",
+    "src/nevfe/pipeline.py",
+    "tests/test_track_candidate.py"
+  ],
+  "immutable_paths": [
+    "scripts/benchmark/metrics.py",
+    "tests/test_metrics_relaxation.py",
+    "src/nevfe/core/frozen_foveation.py"
+  ],
+  "pinned_sha256": {
+    "scripts/benchmark/metrics.py": "7908ca075862694dab1e959ad0b2e170ca70bab850243f450a651d36bb0b7cb1",
+    "tests/test_metrics_relaxation.py": "71300eb40214a16a574369ce9e4a7063f16d7428e1f18d713593432a96ef7092",
+    "src/nevfe/core/frozen_foveation.py": "fac7eb19fc6805bb1d4cfbafee73f22b76dd5e57deebcc78477998067a9feacf"
+  },
+  "max_new_scalars": 2,
+  "budgets": {
+    "max_iterations": 10,
+    "max_cu": 60.0,
+    "min_stage_b_cu": 5.0,
+    "cu_rate_per_hr": 5.0,
+    "default_max_burst_iters": 2,
+    "max_mech_retries_flash": 2,
+    "max_mech_retries_inherit": 1,
+    "no_gain_halt_threshold": 2,
+    "active_wave_ttl_s": 6000
+  },
+  "drive_root": "VLM_Track_Runs"
+}
