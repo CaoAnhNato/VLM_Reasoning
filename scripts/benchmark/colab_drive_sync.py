@@ -45,7 +45,7 @@ def write_streaming_sha256sum(local_dir: str) -> str:
     return manifest_path
 
 
-def verify_refresh_creds(env_var: str = "RCLONE_DRIVE_TOKEN_JSON") -> Dict[str, Any]:
+def verify_refresh_creds(env_var: str = "RCLONE_DRIVE_TOKEN_JSON", live: bool = False) -> Dict[str, Any]:
     """Validate auto-refreshing Drive OAuth credentials without printing secret values."""
     raw = os.environ.get(env_var, "").strip()
     if not raw:
@@ -87,7 +87,7 @@ def verify_refresh_creds(env_var: str = "RCLONE_DRIVE_TOKEN_JSON") -> Dict[str, 
     has_acc = bool(str(data.get("access_token") or data.get("token") or "").strip())
     valid = has_cid and has_csec and has_ref
     reason = "ok" if valid else "Missing required auto-refresh fields (client_id, client_secret, refresh_token)"
-    return {
+    result: Dict[str, Any] = {
         "valid": valid,
         "env_var": env_var,
         "reason": reason,
@@ -96,6 +96,16 @@ def verify_refresh_creds(env_var: str = "RCLONE_DRIVE_TOKEN_JSON") -> Dict[str, 
         "has_refresh_token": has_ref,
         "has_access_token": has_acc,
     }
+    if live and valid:
+        try:
+            about = build_drive_service(env_var).about().get(fields="user(emailAddress)").execute()
+            result["live_verified"] = True
+            result["user_email"] = (about.get("user") or {}).get("emailAddress")
+        except Exception as exc:
+            result["valid"] = False
+            result["live_verified"] = False
+            result["reason"] = f"Live Drive auth failed: {type(exc).__name__}: {exc}"
+    return result
 
 
 def build_drive_service(env_var: str = "RCLONE_DRIVE_TOKEN_JSON") -> Any:
@@ -331,6 +341,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         help="Verify RCLONE_DRIVE_TOKEN_JSON includes client_id, client_secret, and refresh_token",
     )
     parser.add_argument(
+        "--live",
+        action="store_true",
+        default=False,
+        help="With --verify-refresh-creds, run a live Drive API about.get check to verify refresh_token works",
+    )
+    parser.add_argument(
         "--poll-markers",
         action="store_true",
         default=False,
@@ -344,7 +360,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     if args.verify_refresh_creds:
-        res = verify_refresh_creds()
+        res = verify_refresh_creds(live=args.live)
         print(json.dumps(res, ensure_ascii=False))
         return 0 if res["valid"] else 1
 

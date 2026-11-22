@@ -75,7 +75,7 @@ upload_out_to_drive() {
   local dir="$1"
   local folder="$2"
   if [[ -n "${RCLONE_DRIVE_TOKEN_JSON:-}" && -f "$SYNC_HELPER" && -n "$folder" ]]; then
-    python3 "$SYNC_HELPER" --local-dir "$dir" --folder "$folder" --write-sha256 >> "$LOG_FILE" 2>&1 || true
+    python3 "$SYNC_HELPER" --local-dir "$dir" --folder "$folder" --write-sha256 >> "$LOG_FILE" 2>&1
   fi
 }
 
@@ -155,7 +155,7 @@ cleanup_and_unassign() {
     if [[ ! -f "$OUT_DIR/colab_run_telemetry.json" ]]; then
       write_telemetry "$rc" "$STAGE_A_DECISION" "$SELECTED_MASK" "$SUBMASK_HINT" "$STAGE_B_RAN" "$CHOSEN_W" "" || true
     fi
-    upload_out_to_drive "$OUT_DIR" "$DRIVE_FOLDER"
+    upload_out_to_drive "$OUT_DIR" "$DRIVE_FOLDER" || true
   fi
 
   echo "[UNASSIGN] Invoking Python runtime.unassign()" >> "$LOG_FILE"
@@ -261,7 +261,7 @@ python3 -c "import timm, einops, datasets, googleapiclient, google.oauth2" 2>/de
 cp -f "$REPO_DIR/scripts/benchmark/colab_drive_sync.py" "$SYNC_HELPER"
 
 if [[ -n "${RCLONE_DRIVE_TOKEN_JSON:-}" ]]; then
-  python3 "$SYNC_HELPER" --verify-refresh-creds 2>&1 | tee -a "$LOG_FILE"
+  python3 "$SYNC_HELPER" --verify-refresh-creds --live 2>&1 | tee -a "$LOG_FILE"
 fi
 
 DATASET_JSON="$REPO_DIR/results/swintextspotter_auto_annot/answer_bboxes_400_verified.json"

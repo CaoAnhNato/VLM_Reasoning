@@ -385,6 +385,34 @@ class TestVLMTrackWorkflow(unittest.TestCase):
                     "client_id": "cid", "client_secret": "csec", "refresh_token": "rtok", "access_token": "atok"
                 })
                 self.assertEqual(colab_drive_sync.main(["--verify-refresh-creds"]), 0)
+                orig_builder = colab_drive_sync.build_drive_service
+                try:
+                    def _fail_builder(env_var="RCLONE_DRIVE_TOKEN_JSON"):
+                        raise RuntimeError("invalid_grant")
+
+                    colab_drive_sync.build_drive_service = _fail_builder
+                    fail_res = colab_drive_sync.verify_refresh_creds(live=True)
+                    self.assertFalse(fail_res["valid"])
+                    self.assertFalse(fail_res["live_verified"])
+                    self.assertEqual(colab_drive_sync.main(["--verify-refresh-creds", "--live"]), 1)
+
+                    def _ok_builder(env_var="RCLONE_DRIVE_TOKEN_JSON"):
+                        return SimpleNamespace(
+                            about=lambda: SimpleNamespace(
+                                get=lambda fields="": SimpleNamespace(
+                                    execute=lambda: {"user": {"emailAddress": "ok@example.com"}}
+                                )
+                            )
+                        )
+
+                    colab_drive_sync.build_drive_service = _ok_builder
+                    ok_res = colab_drive_sync.verify_refresh_creds(live=True)
+                    self.assertTrue(ok_res["valid"])
+                    self.assertTrue(ok_res["live_verified"])
+                    self.assertEqual(ok_res["user_email"], "ok@example.com")
+                    self.assertEqual(colab_drive_sync.main(["--verify-refresh-creds", "--live"]), 0)
+                finally:
+                    colab_drive_sync.build_drive_service = orig_builder
             finally:
                 if old_tok is None:
                     os.environ.pop("RCLONE_DRIVE_TOKEN_JSON", None)
