@@ -543,6 +543,55 @@ class TestVLMTrackWorkflow(unittest.TestCase):
         self.assertEqual(args_props["mode"]["enum"], ["run", "post_boost", "preflight", "status"])
         self.assertEqual(args_props["max_burst_iters"]["default"], 2)
 
+        # Validate every Gemini FunctionDeclaration finish schema in main.py recursively
+        schema_nodes = [
+            node for node in tree.body
+            if (isinstance(node, ast.FunctionDef) and node.name in ("_obj", "_arr"))
+            or (isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "SCHEMAS" for t in node.targets))
+        ]
+        ns = {}
+        exec(compile(ast.Module(body=schema_nodes, type_ignores=[]), main_p, "exec"), ns)
+        schemas = ns["SCHEMAS"]
+        self.assertEqual(set(schemas), {"teardown", "research_t1", "paper_extractor", "research_t2", "implementer", "colab_launch", "mini_boost"})
+
+        def _check_openapi_schema(sch, ctx):
+            self.assertIsInstance(sch, dict, ctx)
+            tp = sch.get("type")
+            self.assertIn(tp, {"object", "array", "string", "integer", "number", "boolean"}, ctx)
+            if tp == "object":
+                props = sch.get("properties")
+                self.assertIsInstance(props, dict, f"{ctx}: object missing properties dict")
+                self.assertGreater(len(props), 0, f"{ctx}: object properties must be non-empty")
+                for req in sch.get("required", []):
+                    self.assertIn(req, props, f"{ctx}: required key {req!r} missing from properties")
+                for k, v in props.items():
+                    _check_openapi_schema(v, f"{ctx}.properties[{k}]")
+            elif tp == "array":
+                items = sch.get("items")
+                self.assertIsInstance(items, dict, f"{ctx}: array missing items schema")
+                _check_openapi_schema(items, f"{ctx}.items")
+
+        for s_name, s_def in schemas.items():
+            _check_openapi_schema(s_def, f"SCHEMAS[{s_name!r}]")
+
+        referenced_keys = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                for arg in list(node.args) + [kw.value for kw in node.keywords]:
+                    if isinstance(arg, ast.Subscript) and isinstance(arg.value, ast.Name) and arg.value.id == "SCHEMAS":
+                        if isinstance(arg.slice, ast.Constant) and isinstance(arg.slice.value, str):
+                            referenced_keys.add(arg.slice.value)
+                fn = node.func
+                if isinstance(fn, ast.Name) and fn.id in ("agent", "r"):
+                    for kw in node.keywords:
+                        if kw.arg == "schema":
+                            self.assertIsInstance(kw.value, ast.Subscript, "agent/r schema kwarg must reference SCHEMAS[...]")
+                    if len(node.args) >= 2 and fn.id == "r":
+                        self.assertIsInstance(node.args[1], ast.Subscript, "r() turn schema must reference SCHEMAS[...]")
+                    if fn.id == "agent" and len(node.args) >= 2 and isinstance(node.args[1], ast.Dict):
+                        self.fail("agent() must use SCHEMAS[...] instead of bare inline dict")
+        self.assertEqual(referenced_keys, set(schemas))
+
     def test_05_predicate_branch_coverage(self):
         # 1. evaluate_loo_gate remaining edge branches
         self.assertEqual(evaluate_loo_gate({}, 40.92)["loo_decision"], "FAIL")
