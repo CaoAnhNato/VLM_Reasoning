@@ -16,6 +16,7 @@ AUDITOR = str(ROOT / "scripts" / "audit" / "run_auditor_checks.py")
 DIFF_CLI = str(ROOT / "scripts" / "benchmark" / "diff_predictions.py")
 SYNC_CLI = str(ROOT / "scripts" / "benchmark" / "colab_drive_sync.py")
 PROMPTS_DIR = ROOT / "scripts" / "workflows" / "vlm_track_research" / "prompts"
+GDRIVE_ACCOUNT = os.environ.get("VLM_GDRIVE_ACCOUNT", "doantranlacanh@gmail.com")
 
 
 def _resolve_py() -> str:
@@ -80,8 +81,11 @@ async def _poll_and_teardown(track: int, iter_k: int, state: dict, cfg: dict) ->
             if rc == 0 and isinstance(data, dict) and "complete" in data:
                 complete, stalled = bool(data["complete"]), bool(data["stalled"])
         if not (complete or stalled):
-            raw = await call_tool("run_command", CommandLine=f"gdrive readonly ls {folder_id} --json", WaitMsBeforeAsync=10000, toolSummary="Poll Colab Drive markers")
-            names = {f.get("name", "") for f in json.loads(raw) if isinstance(f, dict)} if raw.strip().startswith("[") else set()
+            poll_cmd = f"$env:AGY_ACCOUNT='{GDRIVE_ACCOUNT}'; gdrive readonly ls {folder_id} --max 0 --json"
+            raw = await call_tool("run_command", CommandLine=poll_cmd, WaitMsBeforeAsync=10000, toolSummary="Poll Colab Drive markers")
+            s_idx, e_idx = raw.find("["), raw.rfind("]")
+            items = json.loads(raw[s_idx : e_idx + 1]) if (s_idx != -1 and e_idx > s_idx) else []
+            names = {f.get("name", "") for f in items if isinstance(f, dict)}
             complete = "WAVE_COMPLETE_MARKER" in names
             stalled = "WAVE_STALLED_MARKER" in names
         if complete or stalled:
@@ -99,7 +103,18 @@ async def _poll_and_teardown(track: int, iter_k: int, state: dict, cfg: dict) ->
     out_dir = ROOT / "results" / "track_runs" / f"track_{track}_iter_{iter_k}"
     shutil.rmtree(out_dir, ignore_errors=True)
     out_dir.mkdir(parents=True, exist_ok=True)
-    await call_tool("run_command", CommandLine=f"gdrive readonly download {folder_id} --out \"{out_dir}\" --recursive", WaitMsBeforeAsync=10000, toolSummary="Pull Colab track artifacts")
+    sync_ps = (
+        f"$ErrorActionPreference='Stop'; $env:AGY_ACCOUNT='{GDRIVE_ACCOUNT}'; "
+        "function Invoke-Retry([scriptblock]$Fn){ for($i=0;$i -lt 3;$i++){ try{ return & $Fn }catch{ if($i -eq 2){throw}; Start-Sleep -Seconds ([int][Math]::Pow(2,$i)) } } }; "
+        "function Sync-Folder($fid,$dst){ New-Item -ItemType Directory -Force -Path $dst | Out-Null; "
+        "$raw = Invoke-Retry { $o = & gdrive readonly ls $fid --max 0 --json; if($LASTEXITCODE -ne 0){throw 'gdrive ls failed'}; $o -join [Environment]::NewLine }; "
+        "$s=$raw.IndexOf('['); $e=$raw.LastIndexOf(']'); if($s -lt 0 -or $e -le $s){return}; "
+        "foreach($it in @($raw.Substring($s,$e-$s+1) | ConvertFrom-Json)){ "
+        "if($it.mimeType -eq 'application/vnd.google-apps.folder'){ Sync-Folder $it.id (Join-Path $dst $it.name) } "
+        "elseif($it.mimeType -notlike 'application/vnd.google-apps.*'){ Invoke-Retry { & gdrive readonly download $it.id --out (Join-Path $dst $it.name); if($LASTEXITCODE -ne 0){throw 'gdrive download failed'} } } } }; "
+        f"Sync-Folder '{folder_id}' '{out_dir}'"
+    )
+    await call_tool("run_command", CommandLine=sync_ps, WaitMsBeforeAsync=10000, toolSummary="Pull Colab track artifacts")
     return stalled, out_dir, cur_cells
 
 
